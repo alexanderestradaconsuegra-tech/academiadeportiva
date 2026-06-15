@@ -73,7 +73,7 @@ export default function ActivitiesPage() {
 
   return (
     <AppShell>
-      <div className="p-6 xl:p-8 animate-fade-in">
+      <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
         <PageHeader title="Actividades" subtitle={`${activities.length} registros de entrenamiento`}>
           <Button onClick={() => setShowForm(true)}>
             <Plus size={16} /> Registrar Actividad

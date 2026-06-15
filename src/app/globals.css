@@ -98,3 +98,24 @@ body {
 /* No scrollbar */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Safe area (iPhone notch / home indicator) */
+.safe-area-top    { padding-top: env(safe-area-inset-top); }
+.safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.pb-safe { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+
+/* Touch-friendly tap targets */
+@media (max-width: 767px) {
+  button, a, [role="button"] { min-height: 40px; }
+  select, input, textarea { font-size: 16px !important; } /* prevent iOS zoom */
+}
+
+/* Mobile card adjustments */
+@media (max-width: 767px) {
+  .card-hover:hover { transform: none; }
+}
+
+/* Glassmorphism for mobile header */
+@supports (backdrop-filter: blur(12px)) {
+  .backdrop-blur-xl { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+}

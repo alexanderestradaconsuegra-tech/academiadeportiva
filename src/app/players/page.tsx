@@ -27,7 +27,7 @@ export default function PlayersPage() {
 
   return (
     <AppShell>
-      <div className="p-6 xl:p-8 animate-fade-in">
+      <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
         <PageHeader title="Jugadores" subtitle={`${players.length} jugadores registrados en el sistema`}>
           <Link href="/players/new">
             <Button size="md">
@@ -37,8 +37,8 @@ export default function PlayersPage() {
         </PageHeader>
 
         {/* Filters */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-100 mb-6 flex flex-wrap gap-3 items-center">
-          <div className="relative flex-1 min-w-48">
+        <div className="bg-white rounded-2xl p-3 md:p-4 border border-slate-100 mb-5 flex flex-wrap gap-2 md:gap-3 items-center">
+          <div className="relative flex-1 min-w-40">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text" placeholder="Buscar jugador o posición..." value={search}
@@ -74,7 +74,7 @@ export default function PlayersPage() {
             <p className="text-sm mt-1">Ajusta los filtros o agrega un nuevo jugador</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
             {filtered.map(player => (
               <PlayerCard
                 key={player.id}

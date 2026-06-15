@@ -59,7 +59,7 @@ export default function ChartsPage() {
 
   return (
     <AppShell>
-      <div className="p-6 xl:p-8 animate-fade-in">
+      <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
         <PageHeader title="Gráficos y Análisis" subtitle="Visualiza el rendimiento y progreso del equipo" />
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">

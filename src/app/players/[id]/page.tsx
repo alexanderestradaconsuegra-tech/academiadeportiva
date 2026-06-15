@@ -80,7 +80,7 @@ export default function PlayerProfilePage() {
     <AppShell>
       <div className="animate-fade-in">
         {/* Hero header */}
-        <div className="bg-gradient-to-r from-[#071B4D] via-[#0A2E8A] to-[#0B5CFF] px-6 xl:px-8 pt-6 pb-24 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-[#071B4D] via-[#0A2E8A] to-[#0B5CFF] px-4 md:px-6 xl:px-8 pt-4 md:pt-6 pb-20 md:pb-24 relative overflow-hidden">
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
           <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#F5F7FB]/30 to-transparent" />
 
@@ -99,11 +99,11 @@ export default function PlayerProfilePage() {
           </div>
 
           <div className="flex items-end gap-5 relative z-10">
-            <div className="w-24 h-24 xl:w-28 xl:h-28 rounded-2xl border-3 border-white/30 shadow-2xl overflow-hidden shrink-0 bg-white/10">
+            <div className="w-20 h-20 md:w-24 md:h-24 xl:w-28 xl:h-28 rounded-2xl border-2 border-white/30 shadow-2xl overflow-hidden shrink-0 bg-white/10">
               <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover" />
             </div>
             <div className="flex-1 pb-1">
-              <h1 className="text-2xl xl:text-3xl font-black text-white tracking-tight leading-tight">{player.name}</h1>
+              <h1 className="text-lg md:text-2xl xl:text-3xl font-black text-white tracking-tight leading-tight">{player.name}</h1>
               <div className="flex items-center gap-2 mt-2 flex-wrap">
                 <span className="bg-white/15 text-white text-xs font-semibold px-2.5 py-1 rounded-lg">{player.position}</span>
                 <span className="text-blue-200/70 text-sm">·</span>
@@ -120,9 +120,9 @@ export default function PlayerProfilePage() {
           </div>
         </div>
 
-        <div className="px-6 xl:px-8 -mt-14 pb-8">
+        <div className="pb-6 md:pb-8">
           {/* Bio cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3 mb-4 md:mb-6 px-4 md:px-6 xl:px-8 -mt-12 md:-mt-14 relative z-10">
             {[
               { icon: Ruler, label: "Altura", value: `${player.height} cm` },
               { icon: Weight, label: "Peso", value: `${player.weight} kg` },
@@ -141,7 +141,7 @@ export default function PlayerProfilePage() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 px-4 md:px-6 xl:px-8">
             {/* Left column */}
             <div className="xl:col-span-2 space-y-6">
               {/* Attribute scores */}

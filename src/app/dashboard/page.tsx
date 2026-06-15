@@ -33,9 +33,9 @@ export default function DashboardPage() {
 
   return (
     <AppShell>
-      <div className="p-6 xl:p-8 animate-fade-in">
+      <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
         {/* Welcome banner */}
-        <div className="bg-gradient-to-r from-[#071B4D] to-[#0B5CFF] rounded-2xl p-6 mb-6 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-[#071B4D] to-[#0B5CFF] rounded-2xl p-5 md:p-6 mb-5 relative overflow-hidden">
           <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 50%, white 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
           <div className="relative z-10">
             <p className="text-blue-200 text-sm font-medium mb-1">Bienvenido de vuelta 👋</p>
@@ -45,7 +45,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stat cards */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4 mb-5">
           <StatCard
             title="Total Jugadores"
             value={players.length}
@@ -78,7 +78,7 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-5">
           {/* Progress chart */}
           <div className="xl:col-span-2 bg-white rounded-2xl p-5 border border-slate-100">
             <div className="flex items-center justify-between mb-5">
@@ -128,7 +128,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {/* Top players */}
           <div className="bg-white rounded-2xl p-5 border border-slate-100">
             <div className="flex items-center justify-between mb-4">

@@ -275,7 +275,7 @@ export default function HealthPage() {
 
   return (
     <AppShell>
-      <div className="p-6 xl:p-8 animate-fade-in">
+      <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
         <PageHeader
           title="Salud en Vivo"
           subtitle="Monitor de ritmo cardíaco, velocidad y métricas biométricas en tiempo real"

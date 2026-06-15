@@ -46,7 +46,7 @@ export default function ReportsPage() {
 
   return (
     <AppShell>
-      <div className="p-6 xl:p-8 animate-fade-in">
+      <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
         <PageHeader title="Reporte del Jugador" subtitle="Vista detallada de rendimiento y evolución">
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -67,7 +67,7 @@ export default function ReportsPage() {
         {/* Report card */}
         <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden mb-6 print:border-none">
           {/* Header */}
-          <div className="bg-gradient-to-r from-[#071B4D] to-[#0B5CFF] px-8 py-8 relative overflow-hidden">
+          <div className="bg-gradient-to-r from-[#071B4D] to-[#0B5CFF] px-4 py-6 md:px-8 md:py-8 relative overflow-hidden">
             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 30%, white 1px, transparent 1px)", backgroundSize: "35px 35px" }} />
             <div className="flex items-center gap-6 relative z-10">
               <img src={player.photo_url} alt={player.name} className="w-20 h-20 rounded-2xl border-2 border-white/30 shadow-xl object-cover" />
@@ -90,8 +90,8 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          <div className="p-8">
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          <div className="p-4 md:p-8">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 md:gap-8">
               {/* Left */}
               <div className="xl:col-span-2 space-y-6">
                 {/* Attribute bars */}

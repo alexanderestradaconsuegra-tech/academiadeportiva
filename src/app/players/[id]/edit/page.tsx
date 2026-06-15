@@ -70,7 +70,7 @@ export default function EditPlayerPage() {
 
   return (
     <AppShell>
-      <div className="p-6 xl:p-8 animate-fade-in max-w-4xl">
+      <div className="p-4 md:p-6 xl:p-8 animate-fade-in max-w-4xl">
         <div className="flex items-center gap-3 mb-6">
           <Link href={`/players/${id}`} className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors">
             <ArrowLeft size={16} />

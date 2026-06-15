@@ -21,7 +21,7 @@ export default function Sidebar() {
   const { currentUser, logout } = useApp()
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-slate-100 flex flex-col z-30 shadow-sm">
+    <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 bg-white border-r border-slate-100 flex-col z-30 shadow-sm">
       {/* Logo */}
       <div className="px-6 py-5 border-b border-slate-100">
         <div className="flex items-center gap-3">
