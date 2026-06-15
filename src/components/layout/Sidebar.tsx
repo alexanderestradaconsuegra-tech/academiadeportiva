@@ -1,0 +1,82 @@
+"use client"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { useApp } from "@/context/AppContext"
+import { cn } from "@/lib/utils"
+import {
+  LayoutDashboard, Users, Dumbbell, BarChart3, FileText, LogOut, Trophy, ChevronRight
+} from "lucide-react"
+
+const NAV = [
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/players", icon: Users, label: "Jugadores" },
+  { href: "/activities", icon: Dumbbell, label: "Actividades" },
+  { href: "/charts", icon: BarChart3, label: "Gráficos" },
+  { href: "/reports", icon: FileText, label: "Reportes" },
+]
+
+export default function Sidebar() {
+  const pathname = usePathname()
+  const { currentUser, logout } = useApp()
+
+  return (
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-slate-100 flex flex-col z-30 shadow-sm">
+      {/* Logo */}
+      <div className="px-6 py-5 border-b border-slate-100">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-brand-blue flex items-center justify-center shadow-md shadow-blue-200">
+            <Trophy className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <span className="text-[15px] font-bold text-slate-900 tracking-tight">FutbolMetrics</span>
+            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Pro</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 px-3 py-4 space-y-0.5">
+        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-3">Menú</p>
+        {NAV.map(({ href, icon: Icon, label }) => {
+          const active = pathname.startsWith(href)
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
+                active
+                  ? "bg-blue-50 text-[#0B5CFF] border-l-[3px] border-[#0B5CFF] pl-[9px]"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+              )}
+            >
+              <Icon className={cn("w-4.5 h-4.5", active ? "text-[#0B5CFF]" : "text-slate-400 group-hover:text-slate-600")} size={18} />
+              <span>{label}</span>
+              {active && <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#0B5CFF]" />}
+            </Link>
+          )
+        })}
+      </nav>
+
+      {/* User */}
+      <div className="px-3 py-4 border-t border-slate-100">
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-50">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0B5CFF] to-[#071B4D] flex items-center justify-center text-white text-xs font-bold shrink-0">
+            {currentUser?.name.charAt(0) ?? "E"}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-slate-800 truncate">{currentUser?.name ?? "Entrenador"}</p>
+            <p className="text-[10px] text-slate-400">{currentUser?.role ?? "Coach"}</p>
+          </div>
+          <button
+            onClick={logout}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+            title="Cerrar sesión"
+          >
+            <LogOut size={14} />
+          </button>
+        </div>
+      </div>
+    </aside>
+  )
+}
