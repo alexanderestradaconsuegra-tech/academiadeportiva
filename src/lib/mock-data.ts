@@ -1,4 +1,4 @@
-import type { Player, Activity, Evaluation } from "./types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample } from "./types"
 
 export const MOCK_PLAYERS: Player[] = [
   {
@@ -196,6 +196,60 @@ export const MOCK_ACTIVITIES: Activity[] = [
   { id: "a12", player_id: "p1", date: "2024-11-02", category: "Potencia", exercise: "Salto vertical", value: 58, unit: "metros", intensity: "Alta", notes: "", created_at: "2024-11-02T10:00:00Z" },
   { id: "a13", player_id: "p6", date: "2024-11-08", category: "Fuerza", exercise: "Press de banca", value: 55, unit: "kg", intensity: "Media", notes: "Progreso constante", created_at: "2024-11-08T10:00:00Z" },
   { id: "a14", player_id: "p6", date: "2024-11-06", category: "Resistencia", exercise: "Fartlek 20min", value: 20, unit: "repeticiones", intensity: "Media", notes: "", created_at: "2024-11-06T10:00:00Z" },
+]
+
+// ── Health Profiles ──────────────────────────────────────────────────────
+export const MOCK_HEALTH_PROFILES: HealthProfile[] = [
+  { id: "h1", player_id: "p1", resting_hr: 58, max_hr: 203, hrv: 72, vo2max: 54.2, recovery_index: 88, blood_pressure_sys: 118, blood_pressure_dia: 74, weight: 72, body_fat_pct: 10.2, date: "2024-11-01" },
+  { id: "h2", player_id: "p2", resting_hr: 62, max_hr: 205, hrv: 65, vo2max: 51.8, recovery_index: 82, blood_pressure_sys: 116, blood_pressure_dia: 72, weight: 65, body_fat_pct: 11.5, date: "2024-11-01" },
+  { id: "h3", player_id: "p3", resting_hr: 55, max_hr: 204, hrv: 78, vo2max: 56.1, recovery_index: 91, blood_pressure_sys: 114, blood_pressure_dia: 70, weight: 70, body_fat_pct: 9.8, date: "2024-11-01" },
+  { id: "h4", player_id: "p4", resting_hr: 64, max_hr: 206, hrv: 60, vo2max: 49.5, recovery_index: 76, blood_pressure_sys: 120, blood_pressure_dia: 76, weight: 78, body_fat_pct: 14.1, date: "2024-11-01" },
+  { id: "h5", player_id: "p5", resting_hr: 52, max_hr: 202, hrv: 85, vo2max: 57.3, recovery_index: 93, blood_pressure_sys: 112, blood_pressure_dia: 68, weight: 68, body_fat_pct: 9.1, date: "2024-11-01" },
+  { id: "h6", player_id: "p6", resting_hr: 68, max_hr: 207, hrv: 55, vo2max: 46.2, recovery_index: 70, blood_pressure_sys: 122, blood_pressure_dia: 78, weight: 60, body_fat_pct: 15.3, date: "2024-11-01" },
+]
+
+// ── Mock Live Sessions ───────────────────────────────────────────────────
+function genHRSamples(durationS: number, baseHR: number, maxHR: number): HRSample[] {
+  const samples: HRSample[] = []
+  let hr = baseHR
+  for (let t = 0; t <= durationS; t += 5) {
+    const phase = t / durationS
+    let target = phase < 0.1 ? baseHR + 20 :
+                 phase < 0.5 ? baseHR + 60 + (maxHR - baseHR - 60) * ((phase - 0.1) / 0.4) :
+                 phase < 0.8 ? maxHR - 10 + Math.random() * 15 :
+                 baseHR + 40 - (phase - 0.8) / 0.2 * 30
+    hr = hr * 0.85 + target * 0.15 + (Math.random() - 0.5) * 4
+    hr = Math.max(baseHR - 5, Math.min(maxHR, hr))
+    const bpm = Math.round(hr)
+    const pct = (bpm - baseHR) / (maxHR - baseHR)
+    const zone = pct < 0.1 ? "reposo" : pct < 0.35 ? "calentamiento" : pct < 0.6 ? "aeróbica" : pct < 0.8 ? "anaeróbica" : "máxima"
+    samples.push({ ts: t, bpm, zone })
+  }
+  return samples
+}
+
+export const MOCK_LIVE_SESSIONS: LiveSession[] = [
+  {
+    id: "ls1", player_id: "p1", started_at: "2024-11-10T09:00:00Z", ended_at: "2024-11-10T09:45:00Z",
+    device_name: "Polar H10 - Carlos", device_type: "polar_h10",
+    hr_samples: genHRSamples(2700, 58, 188), speed_samples: [],
+    avg_hr: 162, max_hr_session: 188, min_hr_session: 58, avg_speed_kmh: 14.2,
+    max_speed_kmh: 28.6, distance_m: 5340, duration_s: 2700, calories_est: 612, notes: "Sesión de pressing y sprints",
+  },
+  {
+    id: "ls2", player_id: "p5", started_at: "2024-11-09T10:00:00Z", ended_at: "2024-11-09T10:40:00Z",
+    device_name: "Wahoo TICKR - Julián", device_type: "wahoo_tickr",
+    hr_samples: genHRSamples(2400, 52, 185), speed_samples: [],
+    avg_hr: 158, max_hr_session: 185, min_hr_session: 52, avg_speed_kmh: 16.1,
+    max_speed_kmh: 31.2, distance_m: 6420, duration_s: 2400, calories_est: 548, notes: "Trabajo de agilidad y velocidad",
+  },
+  {
+    id: "ls3", player_id: "p3", started_at: "2024-11-08T08:30:00Z", ended_at: "2024-11-08T09:15:00Z",
+    device_name: "Garmin HRM-Pro - Diego", device_type: "garmin_hrm",
+    hr_samples: genHRSamples(2700, 55, 190), speed_samples: [],
+    avg_hr: 165, max_hr_session: 190, min_hr_session: 55, avg_speed_kmh: 15.5,
+    max_speed_kmh: 32.1, distance_m: 6980, duration_s: 2700, calories_est: 631, notes: "Trabajo de laterales y cruces",
+  },
 ]
 
 export const PROGRESS_DATA = [

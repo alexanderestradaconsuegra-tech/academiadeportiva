@@ -12,6 +12,7 @@ import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area
 } from "recharts"
+import { Heart, Zap, Wind, Activity as ActivityIcon } from "lucide-react"
 
 const ATTR_LABELS: Record<string, string> = {
   speed_score: "Velocidad",
@@ -33,12 +34,14 @@ const ATTR_COLORS: Record<string, string> = {
 
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
-  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation } = useApp()
+  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions } = useApp()
 
   const player = getPlayer(id)
   const activities = getPlayerActivities(id)
   const evaluations = getPlayerEvaluations(id)
   const latestEval = getLatestEvaluation(id)
+  const health = getPlayerHealth(id)
+  const sessions = getPlayerSessions(id)
 
   if (!player) {
     return (
@@ -272,6 +275,68 @@ export default function PlayerProfilePage() {
                   <p className="text-2xl font-black">{bestActivity.value} <span className="text-base font-normal text-blue-200">{bestActivity.unit}</span></p>
                   <p className="text-sm text-blue-100 mt-1">{bestActivity.exercise}</p>
                   <p className="text-xs text-blue-200/60 mt-0.5">{formatDate(bestActivity.date)}</p>
+                </div>
+              )}
+
+              {/* Health metrics */}
+              {health && (
+                <div className="bg-white rounded-2xl p-5 border border-slate-100">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Heart size={15} className="text-red-500" fill="#EF4444" />
+                    <h2 className="text-sm font-bold text-slate-900">Salud Biométrica</h2>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: "FC Reposo", value: `${health.resting_hr} bpm`, icon: "❤️", color: "text-red-500" },
+                      { label: "FC Máxima", value: `${health.max_hr} bpm`, icon: "⚡", color: "text-orange-500" },
+                      { label: "HRV", value: `${health.hrv} ms`, icon: "📊", color: "text-purple-500" },
+                      { label: "VO₂ Máx", value: `${health.vo2max}`, icon: "💨", color: "text-blue-500" },
+                      { label: "Rec. Index", value: `${health.recovery_index}%`, icon: "🔋", color: health.recovery_index >= 80 ? "text-emerald-500" : "text-amber-500" },
+                      { label: "% Grasa", value: `${health.body_fat_pct}%`, icon: "⚖️", color: "text-slate-600" },
+                    ].map(m => (
+                      <div key={m.label} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-xs">{m.icon}</span>
+                          <span className="text-[10px] text-slate-400 font-medium">{m.label}</span>
+                        </div>
+                        <p className={cn("text-sm font-black", m.color)}>{m.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-500">Presión arterial</span>
+                      <span className="font-bold text-slate-800">{health.blood_pressure_sys}/{health.blood_pressure_dia} mmHg</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sessions summary */}
+              {sessions.length > 0 && (
+                <div className="bg-white rounded-2xl p-5 border border-slate-100">
+                  <div className="flex items-center gap-2 mb-3">
+                    <ActivityIcon size={15} className="text-[#0B5CFF]" />
+                    <h2 className="text-sm font-bold text-slate-900">Últimas Sesiones en Vivo</h2>
+                  </div>
+                  {sessions.slice(0, 2).map(s => (
+                    <div key={s.id} className="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0">
+                      <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                        <Heart size={14} className="text-red-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-slate-900">{s.device_name ?? s.device_type}</p>
+                        <p className="text-[10px] text-slate-400">{formatDate(s.started_at.split("T")[0])} · {Math.floor(s.duration_s / 60)}min</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-red-500">{s.avg_hr}</p>
+                        <p className="text-[9px] text-slate-400">bpm</p>
+                      </div>
+                    </div>
+                  ))}
+                  <Link href="/health" className="mt-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#0B5CFF] hover:underline">
+                    Ver monitor en vivo →
+                  </Link>
                 </div>
               )}
 

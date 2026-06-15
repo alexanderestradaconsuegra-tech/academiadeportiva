@@ -87,3 +87,55 @@ export interface PlayerWithStats extends Player {
   activities_count?: number
   progress_trend?: number
 }
+
+// ── Health / Biometrics ────────────────────────────────────────────────────
+
+export type HRZone = "reposo" | "calentamiento" | "aeróbica" | "anaeróbica" | "máxima"
+
+export interface HealthProfile {
+  id: string
+  player_id: string
+  resting_hr: number          // bpm en reposo
+  max_hr: number              // bpm máximo (220 - edad estimado)
+  hrv: number                 // HRV ms
+  vo2max: number              // mL/kg/min estimado
+  recovery_index: number      // 0–100
+  blood_pressure_sys: number  // mmHg sistólica
+  blood_pressure_dia: number  // mmHg diastólica
+  weight: number              // kg (puede variar con el tiempo)
+  body_fat_pct: number        // % grasa corporal
+  date: string
+}
+
+export interface LiveSession {
+  id: string
+  player_id: string
+  started_at: string
+  ended_at?: string
+  device_name?: string
+  device_type: "polar_h10" | "wahoo_tickr" | "garmin_hrm" | "generic_ble" | "manual"
+  hr_samples: HRSample[]      // muestras de ritmo cardíaco
+  speed_samples: SpeedSample[]
+  avg_hr: number
+  max_hr_session: number
+  min_hr_session: number
+  avg_speed_kmh: number
+  max_speed_kmh: number
+  distance_m: number
+  duration_s: number
+  calories_est: number
+  notes: string
+}
+
+export interface HRSample {
+  ts: number   // timestamp relativo en segundos desde inicio
+  bpm: number
+  zone: HRZone
+}
+
+export interface SpeedSample {
+  ts: number
+  kmh: number
+  lat?: number
+  lng?: number
+}

@@ -1,12 +1,14 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback } from "react"
-import type { Player, Activity, Evaluation } from "@/lib/types"
-import { MOCK_PLAYERS, MOCK_ACTIVITIES, MOCK_EVALUATIONS } from "@/lib/mock-data"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession } from "@/lib/types"
+import { MOCK_PLAYERS, MOCK_ACTIVITIES, MOCK_EVALUATIONS, MOCK_HEALTH_PROFILES, MOCK_LIVE_SESSIONS } from "@/lib/mock-data"
 
 interface AppState {
   players: Player[]
   activities: Activity[]
   evaluations: Evaluation[]
+  healthProfiles: HealthProfile[]
+  liveSessions: LiveSession[]
   isAuthenticated: boolean
   currentUser: { name: string; role: string } | null
 }
@@ -19,10 +21,13 @@ interface AppContextType extends AppState {
   deletePlayer: (id: string) => void
   addActivity: (activity: Omit<Activity, "id" | "created_at">) => Activity
   addEvaluation: (evaluation: Omit<Evaluation, "id">) => Evaluation
+  addLiveSession: (session: Omit<LiveSession, "id">) => LiveSession
   getPlayer: (id: string) => Player | undefined
   getPlayerActivities: (playerId: string) => Activity[]
   getPlayerEvaluations: (playerId: string) => Evaluation[]
   getLatestEvaluation: (playerId: string) => Evaluation | undefined
+  getPlayerHealth: (playerId: string) => HealthProfile | undefined
+  getPlayerSessions: (playerId: string) => LiveSession[]
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -32,6 +37,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     players: MOCK_PLAYERS,
     activities: MOCK_ACTIVITIES,
     evaluations: MOCK_EVALUATIONS,
+    healthProfiles: MOCK_HEALTH_PROFILES,
+    liveSessions: MOCK_LIVE_SESSIONS,
     isAuthenticated: false,
     currentUser: null,
   })
@@ -106,6 +113,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [getPlayerEvaluations]
   )
 
+  const addLiveSession = useCallback((data: Omit<LiveSession, "id">): LiveSession => {
+    const session: LiveSession = { ...data, id: `ls${Date.now()}` }
+    setState(s => ({ ...s, liveSessions: [session, ...s.liveSessions] }))
+    return session
+  }, [])
+
+  const getPlayerHealth = useCallback(
+    (playerId: string) => state.healthProfiles.find(h => h.player_id === playerId),
+    [state.healthProfiles]
+  )
+
+  const getPlayerSessions = useCallback(
+    (playerId: string) => state.liveSessions.filter(s => s.player_id === playerId).sort((a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime()),
+    [state.liveSessions]
+  )
+
   return (
     <AppContext.Provider
       value={{
@@ -117,10 +140,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         deletePlayer,
         addActivity,
         addEvaluation,
+        addLiveSession,
         getPlayer,
         getPlayerActivities,
         getPlayerEvaluations,
         getLatestEvaluation,
+        getPlayerHealth,
+        getPlayerSessions,
       }}
     >
       {children}

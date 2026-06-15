@@ -4,13 +4,14 @@ import { usePathname } from "next/navigation"
 import { useApp } from "@/context/AppContext"
 import { cn } from "@/lib/utils"
 import {
-  LayoutDashboard, Users, Dumbbell, BarChart3, FileText, LogOut, Trophy, ChevronRight
+  LayoutDashboard, Users, Dumbbell, BarChart3, FileText, LogOut, Trophy, ChevronRight, Heart
 } from "lucide-react"
 
 const NAV = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/players", icon: Users, label: "Jugadores" },
   { href: "/activities", icon: Dumbbell, label: "Actividades" },
+  { href: "/health", icon: Heart, label: "Salud en Vivo", badge: "LIVE" },
   { href: "/charts", icon: BarChart3, label: "Gráficos" },
   { href: "/reports", icon: FileText, label: "Reportes" },
 ]
@@ -37,7 +38,7 @@ export default function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
         <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-3 mb-3">Menú</p>
-        {NAV.map(({ href, icon: Icon, label }) => {
+        {NAV.map(({ href, icon: Icon, label, badge }) => {
           const active = pathname.startsWith(href)
           return (
             <Link
@@ -51,8 +52,11 @@ export default function Sidebar() {
               )}
             >
               <Icon className={cn("w-4.5 h-4.5", active ? "text-[#0B5CFF]" : "text-slate-400 group-hover:text-slate-600")} size={18} />
-              <span>{label}</span>
-              {active && <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#0B5CFF]" />}
+              <span className="flex-1">{label}</span>
+              {badge && !active && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-600 animate-pulse">{badge}</span>
+              )}
+              {active && <ChevronRight className="w-3.5 h-3.5 text-[#0B5CFF]" />}
             </Link>
           )
         })}
