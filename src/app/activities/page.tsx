@@ -18,10 +18,17 @@ const INTENSITIES: Intensity[] = ["Baja","Media","Alta"]
 
 const EXERCISES: Record<ActivityCategory, string[]> = {
   Velocidad: ["Sprint 20m","Sprint 40m","Sprint 60m","Sprint 100m","Velocidad de reacción"],
-  Fuerza: ["Sentadilla","Press de banca","Peso muerto","Prensa de piernas","Extensión de cuádriceps"],
+  Fuerza: [
+    "Sentadilla","Sentadilla búlgara","Zancada","Peso muerto","Peso muerto rumano",
+    "Press de banca","Press militar","Remo con barra","Dominadas","Hip thrust",
+    "Prensa de piernas","Extensión de cuádriceps","Curl femoral","Elevación de talones","Plancha abdominal",
+  ],
   Técnica: ["Conducción slalom","Pases de precisión","Control de balón","Regate 1v1","Atajadas al arco"],
   Resistencia: ["Cooper Test","Carrera continua 5km","Fartlek","Yo-Yo test","Resistencia aeróbica"],
-  Potencia: ["Salto vertical","Salto horizontal","Lanzamiento balón medicinal","CMJ","Drop jump"],
+  Potencia: [
+    "Salto vertical","Salto horizontal","Lanzamiento balón medicinal","CMJ","Drop jump",
+    "Box jump","Depth jump","Bounding","Salto a una pierna","Salto con contramovimiento lateral",
+  ],
   Agilidad: ["Escalera de agilidad","Slalom con balón","T-test","Hexagonal","Illinois agility"],
 }
 
