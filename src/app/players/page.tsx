@@ -74,7 +74,7 @@ export default function PlayersPage() {
             <p className="text-sm mt-1">Ajusta los filtros o agrega un nuevo jugador</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
             {filtered.map(player => (
               <PlayerCard
                 key={player.id}
