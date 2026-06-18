@@ -8,8 +8,75 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
 import PhotoUpload from "@/components/ui/PhotoUpload"
-import { Trophy, Check, KeyRound, UserCheck, Sun, Moon } from "lucide-react"
+import { Trophy, Check, KeyRound, UserCheck, Sun, Moon, Send } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { Category } from "@/lib/types"
+
+const CATEGORIES: Category[] = ["Sub-10", "Sub-12", "Sub-14", "Sub-16", "Sub-18", "Juvenil", "Senior"]
+
+function NotificationBroadcast() {
+  const [title, setTitle] = useState("")
+  const [body, setBody] = useState("")
+  const [category, setCategory] = useState<string>("all")
+  const [sending, setSending] = useState(false)
+  const [result, setResult] = useState<{ sent: number; failed: number } | null>(null)
+  const [error, setError] = useState("")
+
+  async function handleSend() {
+    setError("")
+    setResult(null)
+    setSending(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const res = await fetch("/api/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ title, body, category }),
+    })
+    const data = await res.json()
+    setSending(false)
+    if (!res.ok) {
+      setError(data.error || "No se pudo enviar la notificación.")
+      return
+    }
+    setResult(data)
+    setTitle("")
+    setBody("")
+  }
+
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+      <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Enviar notificación push</h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Envía un aviso a los jugadores que tengan las notificaciones activadas en su dispositivo.</p>
+      <div className="space-y-3">
+        <Input label="Título" placeholder="Entrenamiento cancelado" value={title} onChange={e => setTitle(e.target.value)} />
+        <Textarea label="Mensaje" placeholder="Escribe el mensaje..." value={body} onChange={e => setBody(e.target.value)} rows={3} />
+        <div>
+          <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5 block">Enviar a</label>
+          <select
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 outline-none focus:border-[#0B5CFF] w-full sm:w-auto"
+          >
+            <option value="all">Todos los jugadores</option>
+            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        {error && <p className="text-xs text-red-600">{error}</p>}
+        {result && (
+          <p className="text-xs text-emerald-600">
+            Enviado a {result.sent} dispositivo{result.sent === 1 ? "" : "s"}{result.failed > 0 ? ` · ${result.failed} fallidos` : ""}.
+          </p>
+        )}
+        <div className="flex justify-end">
+          <Button size="sm" type="button" loading={sending} disabled={!title.trim() || !body.trim()} onClick={handleSend}>
+            <Send size={13} /> Enviar
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function AccessManager() {
   const { players } = useApp()
@@ -230,7 +297,8 @@ export default function SettingsPage() {
         </form>
 
         {isCoach && (
-          <div className="mt-6">
+          <div className="mt-6 space-y-6">
+            <NotificationBroadcast />
             <AccessManager />
           </div>
         )}

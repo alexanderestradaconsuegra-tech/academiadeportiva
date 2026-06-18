@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react"
 import { useApp } from "@/context/AppContext"
+import { supabase } from "@/lib/supabase"
 import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/ui/PageHeader"
 import Button from "@/components/ui/Button"
@@ -17,6 +18,25 @@ const CATEGORIES: Category[] = ["Sub-10", "Sub-12", "Sub-14", "Sub-16", "Sub-18"
 const emptyForm = {
   title: "", date: new Date().toISOString().split("T")[0], time: "",
   category: "" as Category | "", location: "", notes: "",
+}
+
+async function notifyNewTraining(data: { title: string; date: string; time: string; category: Category | null }) {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    if (!token) return
+    await fetch("/api/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        title: "Nuevo entrenamiento",
+        body: `${data.title} · ${formatDate(data.date)}${data.time ? " " + data.time : ""}`,
+        category: data.category || "all",
+      }),
+    })
+  } catch {
+    /* notificación es de mejor esfuerzo, no bloquea la creación */
+  }
 }
 
 export default function CalendarPage() {
@@ -59,8 +79,12 @@ export default function CalendarPage() {
       location: form.location,
       notes: form.notes,
     }
-    if (editingId) updateTraining(editingId, data)
-    else addTraining(data)
+    if (editingId) {
+      updateTraining(editingId, data)
+    } else {
+      addTraining(data)
+      notifyNewTraining(data)
+    }
     setShowForm(false)
     setForm(emptyForm)
     setSaving(false)

@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
 import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
+import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
 
 interface AppState {
@@ -185,6 +186,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const dark = stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches
     document.documentElement.classList.toggle("dark", dark)
     setState(s => ({ ...s, darkMode: dark }))
+  }, [])
+
+  useEffect(() => {
+    registerServiceWorker()
   }, [])
 
   const toggleDarkMode = useCallback(() => {

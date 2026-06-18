@@ -7,6 +7,7 @@ import AppShell from "@/components/layout/AppShell"
 import ScoreRing from "@/components/ui/ScoreRing"
 import Badge from "@/components/ui/Badge"
 import Button from "@/components/ui/Button"
+import NotificationToggle from "@/components/ui/NotificationToggle"
 import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight } from "lucide-react"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
 import type { Evaluation } from "@/lib/types"
@@ -331,6 +332,8 @@ export default function PlayerProfilePage() {
 
             {/* Right column */}
             <div className="space-y-6">
+              {!isCoach && <NotificationToggle />}
+
               {/* Radar chart */}
               {radarData.length > 0 && (
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
