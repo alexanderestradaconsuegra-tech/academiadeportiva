@@ -8,9 +8,17 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
 import PhotoUpload from "@/components/ui/PhotoUpload"
-import { Trophy, Check, KeyRound, UserCheck, Sun, Moon, Send } from "lucide-react"
+import { Trophy, Check, KeyRound, UserCheck, Sun, Moon, Send, Languages } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { Category } from "@/lib/types"
+import type { Category, Language } from "@/lib/types"
+import { useT } from "@/lib/i18n/useT"
+import { settings } from "@/lib/i18n/dictionaries/settings"
+
+const LANGUAGES: { code: Language; label: string }[] = [
+  { code: "es", label: "Español" },
+  { code: "en", label: "English" },
+  { code: "pt", label: "Português" },
+]
 
 const CATEGORIES: Category[] = ["Sub-10", "Sub-12", "Sub-14", "Sub-16", "Sub-18", "Juvenil", "Senior"]
 
@@ -174,9 +182,10 @@ function AccessManager() {
 }
 
 export default function SettingsPage() {
-  const { teamSettings, updateTeamSettings, currentUser, darkMode, toggleDarkMode } = useApp()
+  const { teamSettings, updateTeamSettings, currentUser, darkMode, toggleDarkMode, language } = useApp()
   const isCoach = currentUser?.role === "coach"
   const [saved, setSaved] = useState(false)
+  const t = useT(settings)
   const [form, setForm] = useState({
     name: "", logo_url: "", city: "", founded_year: "", description: "",
   })
@@ -211,12 +220,12 @@ export default function SettingsPage() {
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in max-w-3xl">
-        <PageHeader title="Configuración" subtitle="Datos del equipo / academia que se muestran en toda la app" />
+        <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 mb-6 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Apariencia</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Elige cómo se ve la app en este dispositivo.</p>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{t("appearanceTitle")}</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t("appearanceSubtitle")}</p>
           </div>
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
             <button
@@ -227,7 +236,7 @@ export default function SettingsPage() {
                 !darkMode ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-slate-400"
               )}
             >
-              <Sun size={14} /> Claro
+              <Sun size={14} /> {t("light")}
             </button>
             <button
               type="button"
@@ -237,10 +246,36 @@ export default function SettingsPage() {
                 darkMode ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-slate-400"
               )}
             >
-              <Moon size={14} /> Oscuro
+              <Moon size={14} /> {t("dark")}
             </button>
           </div>
         </div>
+
+        {isCoach && (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 mb-6 flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-1.5">
+                <Languages size={14} className="text-[#0B5CFF]" /> {t("languageTitle")}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t("languageSubtitle")}</p>
+            </div>
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+              {LANGUAGES.map(l => (
+                <button
+                  key={l.code}
+                  type="button"
+                  onClick={() => updateTeamSettings({ language: l.code })}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors",
+                    language === l.code ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-slate-400"
+                  )}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -254,11 +289,11 @@ export default function SettingsPage() {
                 )}
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 text-center leading-relaxed">
-                Sube una imagen o pega la URL de una imagen para usarla como logo del equipo.
+                {t("logoHint")}
               </p>
               <PhotoUpload folder="team" onUploaded={url => set("logo_url", url)} />
               <Input
-                label="URL del logo"
+                label={t("logoUrlLabel")}
                 placeholder="https://..."
                 value={form.logo_url}
                 onChange={e => set("logo_url", e.target.value)}
@@ -269,28 +304,28 @@ export default function SettingsPage() {
             {/* Right: Form */}
             <div className="lg:col-span-2 space-y-5">
               <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Información del Equipo</h3>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("teamInfoTitle")}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
-                    <Input label="Nombre del equipo *" placeholder="FutbolMetrics" value={form.name} onChange={e => set("name", e.target.value)} required />
+                    <Input label={t("teamNameLabel")} placeholder="FutbolMetrics" value={form.name} onChange={e => set("name", e.target.value)} required />
                   </div>
-                  <Input label="Ciudad" placeholder="Bogotá" value={form.city} onChange={e => set("city", e.target.value)} />
-                  <Input label="Año de fundación" type="number" placeholder="2018" min={1900} max={2100} value={form.founded_year} onChange={e => set("founded_year", e.target.value)} />
+                  <Input label={t("cityLabel")} placeholder="Bogotá" value={form.city} onChange={e => set("city", e.target.value)} />
+                  <Input label={t("foundedYearLabel")} type="number" placeholder="2018" min={1900} max={2100} value={form.founded_year} onChange={e => set("founded_year", e.target.value)} />
                 </div>
               </div>
 
               <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Descripción</h3>
-                <Textarea label="Descripción / lema" placeholder="Academia Deportiva..." value={form.description} onChange={e => set("description", e.target.value)} rows={3} />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("descriptionTitle")}</h3>
+                <Textarea label={t("descriptionLabel")} placeholder="Academia Deportiva..." value={form.description} onChange={e => set("description", e.target.value)} rows={3} />
               </div>
 
               <div className="flex items-center gap-3 justify-end">
                 {saved && (
                   <span className="text-emerald-600 text-sm font-medium flex items-center gap-1.5">
-                    <Check size={16} /> Guardado
+                    <Check size={16} /> {t("saved")}
                   </span>
                 )}
-                <Button type="submit">Guardar cambios</Button>
+                <Button type="submit">{t("saveChanges")}</Button>
               </div>
             </div>
           </div>

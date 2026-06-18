@@ -1,3 +1,5 @@
+export type Language = "es" | "en" | "pt"
+
 export type Position =
   | "Portero"
   | "Defensa Central"
@@ -113,6 +115,7 @@ export interface TeamSettings {
   city: string
   founded_year: number | null
   description: string
+  language: Language
   updated_at: string
   calib_p0_lat: number | null
   calib_p0_lng: number | null

@@ -529,6 +529,7 @@ export type Database = {
           description: string | null
           founded_year: number | null
           id: string
+          language: string
           logo_url: string | null
           name: string
           updated_at: string
@@ -544,6 +545,7 @@ export type Database = {
           description?: string | null
           founded_year?: number | null
           id?: string
+          language?: string
           logo_url?: string | null
           name?: string
           updated_at?: string
@@ -559,6 +561,7 @@ export type Database = {
           description?: string | null
           founded_year?: number | null
           id?: string
+          language?: string
           logo_url?: string | null
           name?: string
           updated_at?: string

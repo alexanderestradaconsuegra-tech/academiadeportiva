@@ -1,0 +1,27 @@
+import type { Translations } from "@/lib/i18n/useT"
+
+export const dashboard = {
+  welcomeBack: { es: "Bienvenido de vuelta 👋", en: "Welcome back 👋", pt: "Bem-vindo de volta 👋" },
+  controlPanel: { es: "Panel de Control", en: "Control Panel", pt: "Painel de Controle" },
+  performanceSummary: { es: "Resumen de rendimiento", en: "Performance summary", pt: "Resumo de desempenho" },
+  totalPlayers: { es: "Total Jugadores", en: "Total Players", pt: "Total de Jogadores" },
+  registeredInSystem: { es: "Registrados en el sistema", en: "Registered in the system", pt: "Registrados no sistema" },
+  thisMonth: { es: "este mes", en: "this month", pt: "este mês" },
+  activePlayers: { es: "Jugadores Activos", en: "Active Players", pt: "Jogadores Ativos" },
+  optimalPerformance: { es: "Con rendimiento óptimo", en: "With optimal performance", pt: "Com desempenho ideal" },
+  averageScore: { es: "Score Promedio", en: "Average Score", pt: "Pontuação Média" },
+  teamGeneralEvaluation: { es: "Evaluación general del equipo", en: "General team evaluation", pt: "Avaliação geral da equipe" },
+  vsLastMonth: { es: "vs mes anterior", en: "vs last month", pt: "vs mês anterior" },
+  lowPerformance: { es: "Bajo Rendimiento", en: "Low Performance", pt: "Baixo Desempenho" },
+  needsSpecialAttention: { es: "Requieren atención especial", en: "Need special attention", pt: "Precisam de atenção especial" },
+  teamProgress: { es: "Progreso del Equipo", en: "Team Progress", pt: "Progresso da Equipe" },
+  averageScoreLast6Months: { es: "Score promedio — últimos 6 meses", en: "Average score — last 6 months", pt: "Pontuação média — últimos 6 meses" },
+  byCategory: { es: "Por Categoría", en: "By Category", pt: "Por Categoria" },
+  teamAverageScore: { es: "Score promedio del equipo", en: "Team average score", pt: "Pontuação média da equipe" },
+  topPlayers: { es: "Top Jugadores", en: "Top Players", pt: "Melhores Jogadores" },
+  viewAll: { es: "Ver todos", en: "View all", pt: "Ver todos" },
+  viewAllFem: { es: "Ver todas", en: "View all", pt: "Ver todas" },
+  latestActivities: { es: "Últimas Actividades", en: "Latest Activities", pt: "Últimas Atividades" },
+  points: { es: "pts", en: "pts", pt: "pts" },
+  score: { es: "Score", en: "Score", pt: "Pontuação" },
+} satisfies Translations

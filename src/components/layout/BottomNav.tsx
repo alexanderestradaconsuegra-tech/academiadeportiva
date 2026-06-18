@@ -3,21 +3,24 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { LayoutDashboard, Users, Heart, Dumbbell, BarChart3, CalendarDays, PenTool, Radar, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-const NAV = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Inicio" },
-  { href: "/players",   icon: Users,          label: "Jugadores" },
-  { href: "/health",    icon: Heart,           label: "Salud",    live: true },
-  { href: "/activities",icon: Dumbbell,        label: "Actividad" },
-  { href: "/matches",   icon: Trophy,          label: "Partidos" },
-  { href: "/calendar",  icon: CalendarDays,    label: "Calendario" },
-  { href: "/tactics",   icon: PenTool,         label: "Táctica" },
-  { href: "/heatmap",   icon: Radar,           label: "Calor" },
-  { href: "/charts",    icon: BarChart3,       label: "Análisis"  },
-]
+import { useT } from "@/lib/i18n/useT"
+import { nav } from "@/lib/i18n/dictionaries/nav"
 
 export default function BottomNav() {
   const pathname = usePathname()
+  const t = useT(nav)
+
+  const NAV = [
+    { href: "/dashboard", icon: LayoutDashboard, label: t("home") },
+    { href: "/players",   icon: Users,          label: t("players") },
+    { href: "/health",    icon: Heart,           label: t("healthShort"), live: true },
+    { href: "/activities",icon: Dumbbell,        label: t("activity") },
+    { href: "/matches",   icon: Trophy,          label: t("matches") },
+    { href: "/calendar",  icon: CalendarDays,    label: t("calendar") },
+    { href: "/tactics",   icon: PenTool,         label: t("tacticsShort") },
+    { href: "/heatmap",   icon: Radar,           label: t("heatmapShort") },
+    { href: "/charts",    icon: BarChart3,       label: t("chartsShort") },
+  ]
   return (
     <nav className="no-print fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800/80 safe-area-bottom">
       <div className="flex items-end justify-around px-1 pt-2 pb-safe">

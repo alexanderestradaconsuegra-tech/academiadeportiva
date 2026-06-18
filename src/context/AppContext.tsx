@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
@@ -24,6 +24,7 @@ interface AppState {
 }
 
 interface AppContextType extends AppState {
+  language: Language
   login: (email: string, password: string) => Promise<string | null>
   logout: () => void
   addPlayer: (player: Omit<Player, "id" | "created_at">) => Player
@@ -64,6 +65,19 @@ interface AppContextType extends AppState {
 }
 
 const AppContext = createContext<AppContextType | null>(null)
+
+const AUTH_ERRORS: Record<"invalidCredentials" | "noAccess", Record<Language, string>> = {
+  invalidCredentials: {
+    es: "Credenciales incorrectas. Intenta de nuevo.",
+    en: "Incorrect credentials. Please try again.",
+    pt: "Credenciais incorretas. Tente novamente.",
+  },
+  noAccess: {
+    es: "Tu cuenta no tiene un acceso asignado. Contacta al entrenador.",
+    en: "Your account doesn't have an access assigned. Contact the coach.",
+    pt: "Sua conta não tem um acesso atribuído. Contate o treinador.",
+  },
+}
 
 function mapPlayer(row: Tables<"players">): Player {
   return {
@@ -161,6 +175,7 @@ function mapTeamSettings(row: Tables<"team_settings">): TeamSettings {
     city: row.city ?? "",
     founded_year: row.founded_year,
     description: row.description ?? "",
+    language: (row.language as Language) ?? "es",
     updated_at: row.updated_at,
     calib_p0_lat: row.calib_p0_lat,
     calib_p0_lng: row.calib_p0_lng,
@@ -367,17 +382,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [loadTeamSettings, loadPlayerData, loadProfileFor])
 
   const login = useCallback(async (email: string, password: string): Promise<string | null> => {
+    const lang = state.teamSettings?.language ?? "es"
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error || !data.user) return "Credenciales incorrectas. Intenta de nuevo."
+    if (error || !data.user) return AUTH_ERRORS.invalidCredentials[lang]
     const profile = await loadProfileFor(data.user.id)
     if (!profile) {
       await supabase.auth.signOut()
-      return "Tu cuenta no tiene un acceso asignado. Contacta al entrenador."
+      return AUTH_ERRORS.noAccess[lang]
     }
     setState(s => ({ ...s, isAuthenticated: true, currentUser: profile }))
     await loadPlayerData()
     return null
-  }, [loadProfileFor, loadPlayerData])
+  }, [loadProfileFor, loadPlayerData, state.teamSettings?.language])
 
   const logout = useCallback(() => {
     supabase.auth.signOut()
@@ -781,6 +797,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <AppContext.Provider
       value={{
         ...state,
+        language: state.teamSettings?.language ?? "es",
         login,
         logout,
         addPlayer,

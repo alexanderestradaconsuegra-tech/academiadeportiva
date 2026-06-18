@@ -3,25 +3,31 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { Trophy, Settings, LogOut, Sun, Moon } from "lucide-react"
 import { useApp } from "@/context/AppContext"
-
-const TITLES: Record<string, string> = {
-  "/dashboard":  "Dashboard",
-  "/players":    "Jugadores",
-  "/health":     "Salud en Vivo",
-  "/activities": "Actividades",
-  "/calendar":   "Calendario",
-  "/matches":    "Partidos",
-  "/tactics":    "Tablero Táctico",
-  "/heatmap":    "Mapa de Calor",
-  "/charts":     "Gráficos",
-  "/reports":    "Reportes",
-  "/settings":   "Configuración",
-}
+import { useT } from "@/lib/i18n/useT"
+import { nav } from "@/lib/i18n/dictionaries/nav"
+import { common } from "@/lib/i18n/dictionaries/common"
 
 export default function MobileHeader() {
   const pathname = usePathname()
   const { currentUser, teamSettings, logout, darkMode, toggleDarkMode } = useApp()
+  const t = useT(nav)
+  const tCommon = useT(common)
   const isPlayer = currentUser?.role === "player"
+
+  const TITLES: Record<string, string> = {
+    "/dashboard":  t("dashboard"),
+    "/players":    t("players"),
+    "/health":     t("health"),
+    "/activities": t("activities"),
+    "/calendar":   t("calendar"),
+    "/matches":    t("matches"),
+    "/tactics":    t("tactics"),
+    "/heatmap":    t("heatmap"),
+    "/charts":     t("charts"),
+    "/reports":    t("reports"),
+    "/settings":   t("settings"),
+  }
+
   const title = Object.entries(TITLES).find(([k]) => pathname.startsWith(k))?.[1] ?? (teamSettings?.name || "FutbolMetrics")
   const isHealth = pathname.startsWith("/health")
 
@@ -41,11 +47,11 @@ export default function MobileHeader() {
         )}
       </div>
       <div className="flex items-center gap-2">
-        <button onClick={toggleDarkMode} className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" title="Cambiar tema">
+        <button onClick={toggleDarkMode} className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" title={t("changeTheme")}>
           {darkMode ? <Sun size={16} /> : <Moon size={16} />}
         </button>
         {isPlayer ? (
-          <button onClick={logout} className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors" title="Cerrar sesión">
+          <button onClick={logout} className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors" title={tCommon("logout")}>
             <LogOut size={16} />
           </button>
         ) : (

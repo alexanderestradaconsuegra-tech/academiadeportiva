@@ -3,27 +3,32 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useApp } from "@/context/AppContext"
 import { cn } from "@/lib/utils"
+import { useT } from "@/lib/i18n/useT"
+import { nav } from "@/lib/i18n/dictionaries/nav"
+import { common } from "@/lib/i18n/dictionaries/common"
 import {
   LayoutDashboard, Users, Dumbbell, BarChart3, FileText, LogOut, Trophy, ChevronRight, Heart, Settings, CalendarDays, Sun, Moon, PenTool, Radar
 } from "lucide-react"
 
-const NAV = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/players", icon: Users, label: "Jugadores" },
-  { href: "/activities", icon: Dumbbell, label: "Actividades" },
-  { href: "/calendar", icon: CalendarDays, label: "Calendario" },
-  { href: "/matches", icon: Trophy, label: "Partidos" },
-  { href: "/health", icon: Heart, label: "Salud en Vivo", badge: "LIVE" },
-  { href: "/tactics", icon: PenTool, label: "Tablero Táctico" },
-  { href: "/heatmap", icon: Radar, label: "Mapa de Calor" },
-  { href: "/charts", icon: BarChart3, label: "Gráficos" },
-  { href: "/reports", icon: FileText, label: "Reportes" },
-  { href: "/settings", icon: Settings, label: "Configuración" },
-]
-
 export default function Sidebar() {
   const pathname = usePathname()
   const { currentUser, logout, teamSettings, darkMode, toggleDarkMode } = useApp()
+  const t = useT(nav)
+  const tCommon = useT(common)
+
+  const NAV = [
+    { href: "/dashboard", icon: LayoutDashboard, label: t("dashboard") },
+    { href: "/players", icon: Users, label: t("players") },
+    { href: "/activities", icon: Dumbbell, label: t("activities") },
+    { href: "/calendar", icon: CalendarDays, label: t("calendar") },
+    { href: "/matches", icon: Trophy, label: t("matches") },
+    { href: "/health", icon: Heart, label: t("health"), badge: "LIVE" },
+    { href: "/tactics", icon: PenTool, label: t("tactics") },
+    { href: "/heatmap", icon: Radar, label: t("heatmap") },
+    { href: "/charts", icon: BarChart3, label: t("charts") },
+    { href: "/reports", icon: FileText, label: t("reports") },
+    { href: "/settings", icon: Settings, label: t("settings") },
+  ]
 
   return (
     <aside className="no-print hidden md:flex fixed left-0 top-0 h-screen w-64 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 flex-col z-30 shadow-sm">
@@ -46,7 +51,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
-        <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-3 mb-3">Menú</p>
+        <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-3 mb-3">{t("menu")}</p>
         {NAV.map(({ href, icon: Icon, label, badge }) => {
           const active = pathname.startsWith(href)
           return (
@@ -78,20 +83,20 @@ export default function Sidebar() {
             {currentUser?.full_name.charAt(0) ?? "E"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">{currentUser?.full_name || "Entrenador"}</p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500">Coach</p>
+            <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">{currentUser?.full_name || t("trainer")}</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500">{t("coach")}</p>
           </div>
           <button
             onClick={toggleDarkMode}
             className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-            title="Cambiar tema"
+            title={t("changeTheme")}
           >
             {darkMode ? <Sun size={14} /> : <Moon size={14} />}
           </button>
           <button
             onClick={logout}
             className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors"
-            title="Cerrar sesión"
+            title={tCommon("logout")}
           >
             <LogOut size={14} />
           </button>

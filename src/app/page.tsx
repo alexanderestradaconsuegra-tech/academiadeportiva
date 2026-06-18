@@ -3,11 +3,14 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useApp } from "@/context/AppContext"
 import { Trophy, Eye, EyeOff, Lock, Mail, AlertCircle, User } from "lucide-react"
+import { useT } from "@/lib/i18n/useT"
+import { login as loginDict } from "@/lib/i18n/dictionaries/login"
 
 export default function LoginPage() {
   const { login, isAuthenticated, authReady, teamSettings } = useApp()
   const teamName = teamSettings?.name || "FutbolMetrics"
   const router = useRouter()
+  const t = useT(loginDict)
 
   const [checkingSetup, setCheckingSetup] = useState(true)
   const [needsSetup, setNeedsSetup] = useState(false)
@@ -42,7 +45,7 @@ export default function LoginPage() {
     })
     const data = await res.json()
     if (!res.ok) {
-      setError(data.error || "No se pudo crear la cuenta.")
+      setError(data.error || t("genericError"))
       setLoading(false)
       return
     }
@@ -100,19 +103,19 @@ export default function LoginPage() {
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-4 py-1.5 mb-6">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-slow" />
-            <span className="text-white/80 text-xs font-medium">Sistema Premium para Entrenadores</span>
+            <span className="text-white/80 text-xs font-medium">{t("premiumBadge")}</span>
           </div>
           <h1 className="text-4xl xl:text-5xl font-black text-white leading-tight mb-5">
-            Lleva el rendimiento<br />
-            <span className="text-blue-200">al siguiente nivel.</span>
+            {t("heroTitle1")}<br />
+            <span className="text-blue-200">{t("heroTitle2")}</span>
           </h1>
           <p className="text-blue-100/70 text-base max-w-sm leading-relaxed">
-            Monitorea el progreso de tus jugadores, registra actividades y visualiza la evolución con métricas de alto rendimiento.
+            {t("heroSubtitle")}
           </p>
 
           {/* Feature pills */}
           <div className="flex flex-wrap gap-2 mt-8">
-            {["Métricas en tiempo real", "Gráficos avanzados", "Reportes detallados", "Supabase Ready"].map(f => (
+            {[t("featureRealtime"), t("featureCharts"), t("featureReports"), t("featureSupabase")].map(f => (
               <span key={f} className="bg-white/10 backdrop-blur text-white/80 text-xs font-medium px-3 py-1.5 rounded-full border border-white/10">
                 {f}
               </span>
@@ -123,9 +126,9 @@ export default function LoginPage() {
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-4 relative z-10">
           {[
-            { value: "6+", label: "Jugadores" },
-            { value: "14+", label: "Actividades" },
-            { value: "6", label: "Evaluaciones" },
+            { value: "6+", label: t("statPlayers") },
+            { value: "14+", label: t("statActivities") },
+            { value: "6", label: t("statEvaluations") },
           ].map(s => (
             <div key={s.label} className="bg-white/8 backdrop-blur rounded-2xl p-4 border border-white/10 text-center">
               <p className="text-2xl font-black text-white">{s.value}</p>
@@ -154,13 +157,13 @@ export default function LoginPage() {
             {needsSetup ? (
               <>
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Crear cuenta de entrenador</h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Esta es la primera vez que se usa el sistema. Crea el acceso principal.</p>
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{t("setupTitle")}</h2>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{t("setupSubtitle")}</p>
                 </div>
 
                 <form onSubmit={handleSetup} className="space-y-5">
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">Nombre completo</label>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">{t("fullName")}</label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                       <input
@@ -171,7 +174,7 @@ export default function LoginPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">Correo electrónico</label>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">{t("email")}</label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                       <input
@@ -182,7 +185,7 @@ export default function LoginPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">Contraseña</label>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">{t("password")}</label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                       <input
@@ -206,20 +209,20 @@ export default function LoginPage() {
                     type="submit" disabled={loading}
                     className="w-full h-11 bg-[#0B5CFF] text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-200 disabled:opacity-60 flex items-center justify-center gap-2"
                   >
-                    {loading ? "Creando cuenta..." : "Crear cuenta y entrar"}
+                    {loading ? t("creatingAccount") : t("createAccountSubmit")}
                   </button>
                 </form>
               </>
             ) : (
               <>
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Bienvenido de vuelta</h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Accede a tu panel</p>
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{t("welcomeBack")}</h2>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">{t("accessPanel")}</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">Correo electrónico</label>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">{t("email")}</label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                       <input
@@ -230,7 +233,7 @@ export default function LoginPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">Contraseña</label>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">{t("password")}</label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                       <input
@@ -260,9 +263,9 @@ export default function LoginPage() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                         </svg>
-                        Ingresando...
+                        {t("signingIn")}
                       </>
-                    ) : "Ingresar al panel"}
+                    ) : t("signIn")}
                   </button>
                 </form>
               </>
@@ -270,7 +273,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-6">
-            © 2024 {teamName} · Sistema para academias de fútbol
+            © 2024 {teamName} · {t("footer")}
           </p>
         </div>
       </div>
