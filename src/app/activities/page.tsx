@@ -1,5 +1,6 @@
 "use client"
 import { useState } from "react"
+import Link from "next/link"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/ui/PageHeader"
@@ -8,7 +9,7 @@ import Select from "@/components/ui/Select"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
 import Badge from "@/components/ui/Badge"
-import { Plus, X, Dumbbell } from "lucide-react"
+import { Plus, X, Dumbbell, Film } from "lucide-react"
 import { cn, formatDate, getCategoryColor, getIntensityColor } from "@/lib/utils"
 import type { ActivityCategory, ActivityUnit, Intensity } from "@/lib/types"
 
@@ -16,29 +17,12 @@ const CATEGORIES: ActivityCategory[] = ["Velocidad","Fuerza","Técnica","Resiste
 const UNITS: ActivityUnit[] = ["segundos","kg","repeticiones","metros","puntos"]
 const INTENSITIES: Intensity[] = ["Baja","Media","Alta"]
 
-const EXERCISES: Record<ActivityCategory, string[]> = {
-  Velocidad: ["Sprint 20m","Sprint 40m","Sprint 60m","Sprint 100m","Velocidad de reacción"],
-  Fuerza: [
-    "Sentadilla","Sentadilla búlgara","Zancada","Peso muerto","Peso muerto rumano",
-    "Press de banca","Press militar","Remo con barra","Dominadas","Hip thrust",
-    "Prensa de piernas","Extensión de cuádriceps","Curl femoral","Elevación de talones","Plancha abdominal",
-  ],
-  Técnica: ["Conducción slalom","Pases de precisión","Control de balón","Regate 1v1","Atajadas al arco"],
-  Resistencia: ["Cooper Test","Carrera continua 5km","Fartlek","Yo-Yo test","Resistencia aeróbica"],
-  Potencia: ["Lanzamiento balón medicinal","Salida explosiva 10m","Aceleración explosiva"],
-  Pliometría: [
-    "CMJ","Drop jump","Box jump","Depth jump","Bounding",
-    "Salto vertical","Salto horizontal","Salto a una pierna","Salto con contramovimiento lateral",
-  ],
-  Agilidad: ["Escalera de agilidad","Slalom con balón","T-test","Hexagonal","Illinois agility"],
-}
-
 const catBadgeMap: Record<string, "amber" | "red" | "blue" | "green" | "orange" | "purple" | "pink"> = {
   Velocidad: "amber", Fuerza: "red", Técnica: "blue", Resistencia: "green", Potencia: "orange", Pliometría: "pink", Agilidad: "purple"
 }
 
 export default function ActivitiesPage() {
-  const { players, activities, addActivity } = useApp()
+  const { players, activities, exercises, addActivity } = useApp()
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [filterPlayer, setFilterPlayer] = useState("all")
@@ -52,7 +36,14 @@ export default function ActivitiesPage() {
 
   const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))
 
-  const exercises = form.category ? EXERCISES[form.category as ActivityCategory] || [] : []
+  const categoryExercises = form.category
+    ? exercises.filter(ex => ex.category === form.category).sort((a, b) => a.name.localeCompare(b.name))
+    : []
+  const selectedExercise = exercises.find(ex => ex.category === form.category && ex.name === form.exercise)
+
+  function findExerciseVideo(category: ActivityCategory, exerciseName: string) {
+    return exercises.find(ex => ex.category === category && ex.name === exerciseName)?.video_url
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -83,6 +74,11 @@ export default function ActivitiesPage() {
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
         <PageHeader title="Actividades" subtitle={`${activities.length} registros de entrenamiento`}>
+          <Link href="/activities/exercises">
+            <Button variant="outline">
+              <Film size={15} /> Videos de Ejercicios
+            </Button>
+          </Link>
           <Button onClick={() => setShowForm(true)}>
             <Plus size={16} /> Registrar Actividad
           </Button>
@@ -110,8 +106,15 @@ export default function ActivitiesPage() {
                     placeholder="Seleccionar..." options={INTENSITIES.map(i => ({ value: i, label: i }))} />
                   <Select label="Categoría *" value={form.category} onChange={e => { set("category", e.target.value); set("exercise", "") }} required
                     placeholder="Seleccionar..." options={CATEGORIES.map(c => ({ value: c, label: c }))} />
-                  <Select label="Ejercicio *" value={form.exercise} onChange={e => set("exercise", e.target.value)} required
-                    placeholder="Seleccionar..." options={exercises.map(ex => ({ value: ex, label: ex }))} />
+                  <div>
+                    <Select label="Ejercicio *" value={form.exercise} onChange={e => set("exercise", e.target.value)} required
+                      placeholder="Seleccionar..." options={categoryExercises.map(ex => ({ value: ex.name, label: ex.name }))} />
+                    {selectedExercise?.video_url && (
+                      <a href={selectedExercise.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-500 hover:underline mt-1.5">
+                        <Film size={11} /> Ver video de referencia
+                      </a>
+                    )}
+                  </div>
                   <Input label="Resultado *" type="number" step="0.01" placeholder="0" value={form.value} onChange={e => set("value", e.target.value)} required />
                   <Select label="Unidad *" value={form.unit} onChange={e => set("unit", e.target.value)} required
                     placeholder="Seleccionar..." options={UNITS.map(u => ({ value: u, label: u }))} />
@@ -154,6 +157,7 @@ export default function ActivitiesPage() {
             <div className="divide-y divide-slate-50 dark:divide-slate-800">
               {filtered.map(a => {
                 const player = players.find(p => p.id === a.player_id)
+                const videoUrl = findExerciseVideo(a.category, a.exercise)
                 return (
                   <div key={a.id} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
                     <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0", getCategoryColor(a.category))}>
@@ -165,6 +169,14 @@ export default function ActivitiesPage() {
                         <span className="text-xs text-slate-400 dark:text-slate-500">{player?.name ?? "?"}</span>
                         <span className="text-slate-200">·</span>
                         <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(a.date)}</span>
+                        {videoUrl && (
+                          <>
+                            <span className="text-slate-200">·</span>
+                            <a href={videoUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 flex items-center gap-1 hover:underline">
+                              <Film size={11} /> Video
+                            </a>
+                          </>
+                        )}
                         {a.notes && <><span className="text-slate-200">·</span><span className="text-xs text-slate-400 dark:text-slate-500 truncate max-w-32">{a.notes}</span></>}
                       </div>
                     </div>

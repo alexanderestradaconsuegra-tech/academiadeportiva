@@ -70,6 +70,14 @@ export interface Activity {
   created_at: string
 }
 
+export interface Exercise {
+  id: string
+  category: ActivityCategory
+  name: string
+  video_url: string // link de referencia (ej. YouTube) mostrando la técnica correcta
+  created_at: string
+}
+
 export interface Evaluation {
   id: string
   player_id: string

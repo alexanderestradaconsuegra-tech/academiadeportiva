@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
@@ -16,6 +16,7 @@ interface AppState {
   positionSamples: PositionSample[]
   matches: Match[]
   matchStats: MatchPlayerStat[]
+  exercises: Exercise[]
   isAuthenticated: boolean
   authReady: boolean
   currentUser: Profile | null
@@ -45,6 +46,9 @@ interface AppContextType extends AppState {
   deleteMatchStat: (id: string) => void
   getMatchStats: (matchId: string) => MatchPlayerStat[]
   getPlayerMatches: (playerId: string) => { match: Match; stat: MatchPlayerStat }[]
+  addExercise: (exercise: Omit<Exercise, "id" | "created_at">) => Exercise
+  updateExercise: (id: string, data: Partial<Omit<Exercise, "id" | "created_at">>) => void
+  deleteExercise: (id: string) => void
   getPlayer: (id: string) => Player | undefined
   getPlayerActivities: (playerId: string) => Activity[]
   getPlayerEvaluations: (playerId: string) => Evaluation[]
@@ -227,6 +231,16 @@ function mapMatchStat(row: Tables<"match_player_stats">): MatchPlayerStat {
   }
 }
 
+function mapExercise(row: Tables<"exercises">): Exercise {
+  return {
+    id: row.id,
+    category: row.category,
+    name: row.name,
+    video_url: row.video_url ?? "",
+    created_at: row.created_at,
+  }
+}
+
 function mapProfile(row: Tables<"profiles">): Profile {
   return {
     id: row.id,
@@ -248,6 +262,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     positionSamples: [],
     matches: [],
     matchStats: [],
+    exercises: [],
     isAuthenticated: false,
     authReady: false,
     currentUser: null,
@@ -280,7 +295,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const loadPlayerData = useCallback(async () => {
-    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes, positionSamplesRes, matchesRes, matchStatsRes] = await Promise.all([
+    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes, positionSamplesRes, matchesRes, matchStatsRes, exercisesRes] = await Promise.all([
       supabase.from("players").select("*"),
       supabase.from("activities").select("*"),
       supabase.from("evaluations").select("*"),
@@ -290,6 +305,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from("position_samples").select("*"),
       supabase.from("matches").select("*"),
       supabase.from("match_player_stats").select("*"),
+      supabase.from("exercises").select("*"),
     ])
     setState(s => ({
       ...s,
@@ -302,6 +318,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       positionSamples: (positionSamplesRes.data ?? []).map(mapPositionSample),
       matches: (matchesRes.data ?? []).map(mapMatch),
       matchStats: (matchStatsRes.data ?? []).map(mapMatchStat),
+      exercises: (exercisesRes.data ?? []).map(mapExercise),
     }))
   }, [])
 
@@ -342,6 +359,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           positionSamples: [],
           matches: [],
           matchStats: [],
+          exercises: [],
         }))
       }
     })
@@ -676,6 +694,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .sort((a, b) => new Date(b.match.date).getTime() - new Date(a.match.date).getTime())
   }, [state.matchStats, state.matches])
 
+  const addExercise = useCallback((data: Omit<Exercise, "id" | "created_at">): Exercise => {
+    const exercise: Exercise = {
+      ...data,
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+    }
+    setState(s => ({ ...s, exercises: [...s.exercises, exercise] }))
+    supabase.from("exercises").insert({
+      id: exercise.id,
+      category: exercise.category,
+      name: exercise.name,
+      video_url: exercise.video_url || null,
+      created_at: exercise.created_at,
+    }).then(({ error }) => { if (error) console.error("addExercise:", error) })
+    return exercise
+  }, [])
+
+  const updateExercise = useCallback((id: string, data: Partial<Omit<Exercise, "id" | "created_at">>) => {
+    setState(s => ({
+      ...s,
+      exercises: s.exercises.map(e => e.id === id ? { ...e, ...data } : e),
+    }))
+    const update: TablesUpdate<"exercises"> = { ...data }
+    if ("video_url" in update) update.video_url = update.video_url || null
+    supabase.from("exercises").update(update).eq("id", id).then(({ error }) => { if (error) console.error("updateExercise:", error) })
+  }, [])
+
+  const deleteExercise = useCallback((id: string) => {
+    setState(s => ({ ...s, exercises: s.exercises.filter(e => e.id !== id) }))
+    supabase.from("exercises").delete().eq("id", id).then(({ error }) => { if (error) console.error("deleteExercise:", error) })
+  }, [])
+
   const addPositionSample = useCallback((data: Omit<PositionSample, "id" | "created_at">) => {
     const sample: PositionSample = { ...data, id: crypto.randomUUID(), created_at: new Date().toISOString() }
     setState(s => ({ ...s, positionSamples: [...s.positionSamples, sample] }))
@@ -753,6 +803,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         deleteMatchStat,
         getMatchStats,
         getPlayerMatches,
+        addExercise,
+        updateExercise,
+        deleteExercise,
         getPlayer,
         getPlayerActivities,
         getPlayerEvaluations,

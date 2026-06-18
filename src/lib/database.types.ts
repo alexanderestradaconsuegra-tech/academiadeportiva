@@ -108,6 +108,30 @@ export type Database = {
           },
         ]
       }
+      exercises: {
+        Row: {
+          category: Database["public"]["Enums"]["activity_category"]
+          created_at: string
+          id: string
+          name: string
+          video_url: string | null
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["activity_category"]
+          created_at?: string
+          id?: string
+          name: string
+          video_url?: string | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["activity_category"]
+          created_at?: string
+          id?: string
+          name?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       health_profiles: {
         Row: {
           blood_pressure_dia: number | null
