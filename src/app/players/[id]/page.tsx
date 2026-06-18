@@ -1,4 +1,5 @@
 "use client"
+import { useState } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
@@ -6,11 +7,12 @@ import AppShell from "@/components/layout/AppShell"
 import ScoreRing from "@/components/ui/ScoreRing"
 import Badge from "@/components/ui/Badge"
 import Button from "@/components/ui/Button"
-import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp } from "lucide-react"
+import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight } from "lucide-react"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
+import type { Evaluation } from "@/lib/types"
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area, Legend
 } from "recharts"
 import { Heart, Zap, Wind, Activity as ActivityIcon } from "lucide-react"
 
@@ -30,6 +32,97 @@ const ATTR_COLORS: Record<string, string> = {
   resistance_score: "#10B981",
   power_score: "#F97316",
   agility_score: "#8B5CF6",
+}
+
+function EvaluationComparison({ evaluations }: { evaluations: Evaluation[] }) {
+  const sorted = [...evaluations].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  const [beforeId, setBeforeId] = useState(sorted[0].id)
+  const [afterId, setAfterId] = useState(sorted[sorted.length - 1].id)
+  const before = sorted.find(e => e.id === beforeId) ?? sorted[0]
+  const after = sorted.find(e => e.id === afterId) ?? sorted[sorted.length - 1]
+
+  const radarData = Object.entries(ATTR_LABELS).map(([k, label]) => ({
+    subject: label.substring(0, 3),
+    Antes: before[k as keyof Evaluation] as number,
+    Después: after[k as keyof Evaluation] as number,
+  }))
+
+  const rows = Object.entries(ATTR_LABELS).map(([k, label]) => {
+    const b = before[k as keyof Evaluation] as number
+    const a = after[k as keyof Evaluation] as number
+    return { key: k, label, before: b, after: a, delta: a - b }
+  })
+
+  const generalDelta = after.general_score - before.general_score
+  const selectClass = "h-8 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer"
+
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+      <div className="flex items-center justify-between mb-5 gap-4 flex-wrap">
+        <div>
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white">Comparativa Antes / Después</h2>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Evolución entre dos evaluaciones</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <select value={beforeId} onChange={e => setBeforeId(e.target.value)} className={selectClass}>
+            {sorted.map(e => <option key={e.id} value={e.id}>{formatDate(e.date)}</option>)}
+          </select>
+          <ArrowRight size={13} className="text-slate-400 dark:text-slate-500 shrink-0" />
+          <select value={afterId} onChange={e => setAfterId(e.target.value)} className={selectClass}>
+            {sorted.map(e => <option key={e.id} value={e.id}>{formatDate(e.date)}</option>)}
+          </select>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4 mb-5 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+        <ScoreRing score={before.general_score} size={56} strokeWidth={5} />
+        <ArrowRight size={16} className="text-slate-300 dark:text-slate-600 shrink-0" />
+        <ScoreRing score={after.general_score} size={56} strokeWidth={5} />
+        <div className="flex-1 text-right">
+          <span className={cn(
+            "inline-flex items-center gap-1 text-sm font-black px-2.5 py-1 rounded-lg",
+            generalDelta > 0 ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10" :
+            generalDelta < 0 ? "text-red-500 bg-red-50 dark:bg-red-500/10" :
+            "text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800"
+          )}>
+            {generalDelta > 0 ? <ArrowUp size={13} /> : generalDelta < 0 ? <ArrowDown size={13} /> : null}
+            {generalDelta > 0 ? "+" : ""}{generalDelta} pts
+          </span>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Score general</p>
+        </div>
+      </div>
+
+      <ResponsiveContainer width="100%" height={220}>
+        <RadarChart data={radarData}>
+          <PolarGrid stroke="#E2E8F0" />
+          <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "#64748B" }} />
+          <Radar name="Antes" dataKey="Antes" stroke="#94A3B8" fill="#94A3B8" fillOpacity={0.12} strokeWidth={2} dot={{ r: 3, fill: "#94A3B8", strokeWidth: 0 }} />
+          <Radar name="Después" dataKey="Después" stroke="#0B5CFF" fill="#0B5CFF" fillOpacity={0.15} strokeWidth={2} dot={{ r: 3, fill: "#0B5CFF", strokeWidth: 0 }} />
+          <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
+        </RadarChart>
+      </ResponsiveContainer>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5">
+        {rows.map(r => (
+          <div key={r.key} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+            <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">{r.label}</p>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm text-slate-400 dark:text-slate-500">
+                {r.before} <ArrowRight size={10} className="inline -mt-0.5" /> <span className="font-bold text-slate-800 dark:text-slate-100">{r.after}</span>
+              </span>
+              <span className={cn(
+                "text-xs font-bold flex items-center gap-0.5 shrink-0",
+                r.delta > 0 ? "text-emerald-600" : r.delta < 0 ? "text-red-500" : "text-slate-400 dark:text-slate-500"
+              )}>
+                {r.delta > 0 ? <ArrowUp size={11} /> : r.delta < 0 ? <ArrowDown size={11} /> : null}
+                {r.delta !== 0 ? `${r.delta > 0 ? "+" : ""}${r.delta}` : "="}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default function PlayerProfilePage() {
@@ -199,6 +292,9 @@ export default function PlayerProfilePage() {
                   </ResponsiveContainer>
                 </div>
               )}
+
+              {/* Before/after comparison */}
+              {evaluations.length > 1 && <EvaluationComparison evaluations={evaluations} />}
 
               {/* Activities */}
               <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
