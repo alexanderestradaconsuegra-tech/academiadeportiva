@@ -170,3 +170,14 @@ export interface SpeedSample {
   lat?: number
   lng?: number
 }
+
+// ── Mapas de calor (posiciones en cancha) ──────────────────────────────────
+
+export interface PositionSample {
+  id: string
+  player_id: string
+  session_label: string
+  x: number
+  y: number
+  created_at: string
+}

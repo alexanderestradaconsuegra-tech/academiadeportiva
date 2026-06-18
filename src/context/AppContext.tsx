@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
@@ -13,6 +13,7 @@ interface AppState {
   liveSessions: LiveSession[]
   teamSettings: TeamSettings | null
   trainings: Training[]
+  positionSamples: PositionSample[]
   isAuthenticated: boolean
   authReady: boolean
   currentUser: Profile | null
@@ -40,6 +41,9 @@ interface AppContextType extends AppState {
   getPlayerSessions: (playerId: string) => LiveSession[]
   getUpcomingTrainings: (category?: Category | null) => Training[]
   toggleDarkMode: () => void
+  addPositionSample: (sample: Omit<PositionSample, "id" | "created_at">) => void
+  deletePositionSession: (playerId: string, sessionLabel: string) => void
+  getPlayerPositionSamples: (playerId: string) => PositionSample[]
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -157,6 +161,17 @@ function mapTraining(row: Tables<"trainings">): Training {
   }
 }
 
+function mapPositionSample(row: Tables<"position_samples">): PositionSample {
+  return {
+    id: row.id,
+    player_id: row.player_id,
+    session_label: row.session_label,
+    x: row.x,
+    y: row.y,
+    created_at: row.created_at,
+  }
+}
+
 function mapProfile(row: Tables<"profiles">): Profile {
   return {
     id: row.id,
@@ -175,6 +190,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     liveSessions: [],
     teamSettings: null,
     trainings: [],
+    positionSamples: [],
     isAuthenticated: false,
     authReady: false,
     currentUser: null,
@@ -207,13 +223,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const loadPlayerData = useCallback(async () => {
-    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes] = await Promise.all([
+    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes, positionSamplesRes] = await Promise.all([
       supabase.from("players").select("*"),
       supabase.from("activities").select("*"),
       supabase.from("evaluations").select("*"),
       supabase.from("health_profiles").select("*"),
       supabase.from("live_sessions").select("*"),
       supabase.from("trainings").select("*"),
+      supabase.from("position_samples").select("*"),
     ])
     setState(s => ({
       ...s,
@@ -223,6 +240,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       healthProfiles: (healthRes.data ?? []).map(mapHealthProfile),
       liveSessions: (sessionsRes.data ?? []).map(mapLiveSession),
       trainings: (trainingsRes.data ?? []).map(mapTraining),
+      positionSamples: (positionSamplesRes.data ?? []).map(mapPositionSample),
     }))
   }, [])
 
@@ -260,6 +278,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           healthProfiles: [],
           liveSessions: [],
           trainings: [],
+          positionSamples: [],
         }))
       }
     })
@@ -290,6 +309,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       evaluations: [],
       healthProfiles: [],
       liveSessions: [],
+      positionSamples: [],
     }))
   }, [])
 
@@ -340,6 +360,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       evaluations: s.evaluations.filter(e => e.player_id !== id),
       healthProfiles: s.healthProfiles.filter(h => h.player_id !== id),
       liveSessions: s.liveSessions.filter(ls => ls.player_id !== id),
+      positionSamples: s.positionSamples.filter(p => p.player_id !== id),
     }))
     supabase.from("players").delete().eq("id", id).then(({ error }) => { if (error) console.error("deletePlayer:", error) })
   }, [])
@@ -476,6 +497,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     supabase.from("trainings").delete().eq("id", id).then(({ error }) => { if (error) console.error("deleteTraining:", error) })
   }, [])
 
+  const addPositionSample = useCallback((data: Omit<PositionSample, "id" | "created_at">) => {
+    const sample: PositionSample = { ...data, id: crypto.randomUUID(), created_at: new Date().toISOString() }
+    setState(s => ({ ...s, positionSamples: [...s.positionSamples, sample] }))
+    supabase.from("position_samples").insert({
+      id: sample.id,
+      player_id: sample.player_id,
+      session_label: sample.session_label,
+      x: sample.x,
+      y: sample.y,
+      created_at: sample.created_at,
+    }).then(({ error }) => { if (error) console.error("addPositionSample:", error) })
+  }, [])
+
+  const deletePositionSession = useCallback((playerId: string, sessionLabel: string) => {
+    setState(s => ({
+      ...s,
+      positionSamples: s.positionSamples.filter(p => !(p.player_id === playerId && p.session_label === sessionLabel)),
+    }))
+    supabase.from("position_samples").delete().eq("player_id", playerId).eq("session_label", sessionLabel)
+      .then(({ error }) => { if (error) console.error("deletePositionSession:", error) })
+  }, [])
+
+  const getPlayerPositionSamples = useCallback(
+    (playerId: string) => state.positionSamples.filter(p => p.player_id === playerId),
+    [state.positionSamples]
+  )
+
   const getUpcomingTrainings = useCallback((category?: Category | null) => {
     const today = new Date().toISOString().split("T")[0]
     return state.trainings
@@ -507,6 +555,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         getPlayerSessions,
         getUpcomingTrainings,
         toggleDarkMode,
+        addPositionSample,
+        deletePositionSession,
+        getPlayerPositionSamples,
       }}
     >
       {children}

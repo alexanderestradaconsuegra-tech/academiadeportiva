@@ -280,6 +280,41 @@ export type Database = {
         }
         Relationships: []
       }
+      position_samples: {
+        Row: {
+          created_at: string
+          id: string
+          player_id: string
+          session_label: string
+          x: number
+          y: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          player_id: string
+          session_label: string
+          x: number
+          y: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          player_id?: string
+          session_label?: string
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "position_samples_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string

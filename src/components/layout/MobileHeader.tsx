@@ -11,6 +11,7 @@ const TITLES: Record<string, string> = {
   "/activities": "Actividades",
   "/calendar":   "Calendario",
   "/tactics":    "Tablero Táctico",
+  "/heatmap":    "Mapa de Calor",
   "/charts":     "Gráficos",
   "/reports":    "Reportes",
   "/settings":   "Configuración",
