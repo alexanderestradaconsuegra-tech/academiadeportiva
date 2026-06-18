@@ -42,7 +42,7 @@ export default function PhotoUpload({ folder, onUploaded }: PhotoUploadProps) {
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        className="w-full h-9 rounded-xl border border-dashed border-slate-300 text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+        className="w-full h-9 rounded-xl border border-dashed border-slate-300 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
       >
         <Upload size={13} />
         {uploading ? "Subiendo..." : "Subir foto desde el dispositivo"}

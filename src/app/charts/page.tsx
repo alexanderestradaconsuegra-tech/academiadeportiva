@@ -64,13 +64,13 @@ export default function ChartsPage() {
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
           {/* Progress line */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-100">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-sm font-bold text-slate-900">Progreso del Equipo</h2>
-                <p className="text-xs text-slate-400 mt-0.5">Score promedio mensual</p>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Progreso del Equipo</h2>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Score promedio mensual</p>
               </div>
-              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">+12 pts ↑</span>
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg">+12 pts ↑</span>
             </div>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={PROGRESS_DATA} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
@@ -90,10 +90,10 @@ export default function ChartsPage() {
           </div>
 
           {/* Category bar */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-100">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
             <div className="mb-4">
-              <h2 className="text-sm font-bold text-slate-900">Score por Categoría</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Promedio del equipo completo</p>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Score por Categoría</h2>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Promedio del equipo completo</p>
             </div>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={CATEGORY_SCORES} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
@@ -109,10 +109,10 @@ export default function ChartsPage() {
           </div>
 
           {/* Evolution multi-line */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-100">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
             <div className="mb-4">
-              <h2 className="text-sm font-bold text-slate-900">Evolución Mensual por Jugador</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Top 3 jugadores</p>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Evolución Mensual por Jugador</h2>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Top 3 jugadores</p>
             </div>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={monthlyData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
@@ -129,20 +129,20 @@ export default function ChartsPage() {
           </div>
 
           {/* Comparison bars */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-100">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
             <div className="flex items-start justify-between mb-4 gap-4 flex-wrap">
               <div>
-                <h2 className="text-sm font-bold text-slate-900">Comparación entre Jugadores</h2>
-                <p className="text-xs text-slate-400 mt-0.5">Atributos cara a cara</p>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Comparación entre Jugadores</h2>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Atributos cara a cara</p>
               </div>
               <div className="flex items-center gap-2">
                 <select value={compareA} onChange={e => setCompareA(e.target.value)}
-                  className="h-8 px-2.5 rounded-xl border border-slate-200 text-xs bg-white focus:border-[#0B5CFF] outline-none cursor-pointer">
+                  className="h-8 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
                   {players.map(p => <option key={p.id} value={p.id}>{p.name.split(" ")[0]}</option>)}
                 </select>
-                <span className="text-xs text-slate-400 font-bold">vs</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500 font-bold">vs</span>
                 <select value={compareB} onChange={e => setCompareB(e.target.value)}
-                  className="h-8 px-2.5 rounded-xl border border-slate-200 text-xs bg-white focus:border-[#0B5CFF] outline-none cursor-pointer">
+                  className="h-8 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
                   {players.map(p => <option key={p.id} value={p.id}>{p.name.split(" ")[0]}</option>)}
                 </select>
               </div>
@@ -162,16 +162,16 @@ export default function ChartsPage() {
         </div>
 
         {/* Radar comparison */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-100">
-          <h2 className="text-sm font-bold text-slate-900 mb-1">Radar de Atributos — Comparación</h2>
-          <p className="text-xs text-slate-400 mb-5">{playerA?.name.split(" ")[0]} vs {playerB?.name.split(" ")[0]}</p>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Radar de Atributos — Comparación</h2>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mb-5">{playerA?.name.split(" ")[0]} vs {playerB?.name.split(" ")[0]}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {[
               { name: playerA?.name ?? "A", data: radarA, color: "#0B5CFF" },
               { name: playerB?.name ?? "B", data: radarB, color: "#10B981" },
             ].map(({ name, data, color }) => (
               <div key={name}>
-                <p className="text-xs font-semibold text-slate-600 text-center mb-3">{name}</p>
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 text-center mb-3">{name}</p>
                 <ResponsiveContainer width="100%" height={220}>
                   <RadarChart data={data}>
                     <PolarGrid stroke="#E2E8F0" />

@@ -31,7 +31,7 @@ export default function PlayerCard({ player, evaluation }: PlayerCardProps) {
   const posColor = (positionColorMap[player.position] ?? "default") as "blue" | "red" | "orange" | "green" | "amber" | "purple" | "default"
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden card-hover animate-fade-in">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden card-hover animate-fade-in">
       {/* Header gradient */}
       <div className="h-20 bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] relative">
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='white' fill-opacity='0.3'%3E%3Ccircle cx='20' cy='20' r='1'/%3E%3C/g%3E%3C/svg%3E\")" }} />
@@ -44,7 +44,7 @@ export default function PlayerCard({ player, evaluation }: PlayerCardProps) {
       <div className="px-3 md:px-5 pb-4 md:pb-5">
         {/* Avatar */}
         <div className="-mt-4 mb-3 flex items-end justify-between">
-          <div className="w-16 h-16 rounded-2xl border-4 border-white shadow-md bg-slate-100 overflow-hidden ring-2 ring-slate-100">
+          <div className="w-16 h-16 rounded-2xl border-4 border-white shadow-md bg-slate-100 dark:bg-slate-800 overflow-hidden ring-2 ring-slate-100">
             <img
               src={player.photo_url || avatarUrl(player.name, player.id)}
               alt={player.name}
@@ -56,18 +56,18 @@ export default function PlayerCard({ player, evaluation }: PlayerCardProps) {
 
         {/* Info */}
         <div className="mb-2">
-          <h3 className="text-xs md:text-sm font-bold text-slate-900 leading-tight">{player.name}</h3>
+          <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-white leading-tight">{player.name}</h3>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <Badge variant={posColor}>{getPositionShort(player.position)}</Badge>
-            <span className="text-xs text-slate-400">{player.age} años</span>
-            <span className="text-xs text-slate-300">•</span>
-            <span className="text-xs text-slate-400">{player.dominant_foot}</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">{player.age} años</span>
+            <span className="text-xs text-slate-300 dark:text-slate-600">•</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">{player.dominant_foot}</span>
           </div>
         </div>
 
         {/* Stats row */}
         {evaluation && (
-          <div className="grid grid-cols-3 gap-2 mb-4 p-3 bg-slate-50 rounded-xl">
+          <div className="grid grid-cols-3 gap-2 mb-4 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl">
             {[
               { label: "Vel", value: evaluation.speed_score },
               { label: "Téc", value: evaluation.technique_score },
@@ -75,7 +75,7 @@ export default function PlayerCard({ player, evaluation }: PlayerCardProps) {
             ].map(s => (
               <div key={s.label} className="text-center">
                 <p className={cn("text-sm font-bold", getScoreColor(s.value))}>{s.value}</p>
-                <p className="text-[10px] text-slate-400 font-medium">{s.label}</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{s.label}</p>
               </div>
             ))}
           </div>

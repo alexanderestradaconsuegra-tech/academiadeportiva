@@ -58,7 +58,7 @@ export default function NewPlayerPage() {
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in max-w-4xl">
         <div className="flex items-center gap-3 mb-6">
-          <Link href="/players" className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors">
+          <Link href="/players" className="w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
             <ArrowLeft size={16} />
           </Link>
           <PageHeader title="Nuevo Jugador" subtitle="Completa el formulario para registrar un jugador" className="mb-0 flex-1" />
@@ -67,15 +67,15 @@ export default function NewPlayerPage() {
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left: Photo */}
-            <div className="bg-white rounded-2xl p-6 border border-slate-100 flex flex-col items-center gap-4 h-fit">
-              <div className="w-28 h-28 rounded-2xl bg-slate-100 overflow-hidden border-2 border-slate-200 flex items-center justify-center">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 flex flex-col items-center gap-4 h-fit">
+              <div className="w-28 h-28 rounded-2xl bg-slate-100 dark:bg-slate-800 overflow-hidden border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center">
                 {previewAvatar ? (
                   <img src={previewAvatar} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
-                  <UserCircle className="w-16 h-16 text-slate-300" />
+                  <UserCircle className="w-16 h-16 text-slate-300 dark:text-slate-600" />
                 )}
               </div>
-              <p className="text-xs text-slate-500 text-center leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-slate-400 text-center leading-relaxed">
                 Se genera automáticamente un avatar si no subes una foto.
               </p>
               <PhotoUpload folder="players" onUploaded={url => set("photo_url", url)} />
@@ -91,8 +91,8 @@ export default function NewPlayerPage() {
             {/* Right: Form */}
             <div className="lg:col-span-2 space-y-5">
               {/* Personal info */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-100">
-                <h3 className="text-sm font-bold text-slate-900 mb-4">Información Personal</h3>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Información Personal</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <Input label="Nombre completo *" placeholder="Carlos Andrés Martínez" value={form.name} onChange={e => set("name", e.target.value)} required />
@@ -105,8 +105,8 @@ export default function NewPlayerPage() {
               </div>
 
               {/* Sports info */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-100">
-                <h3 className="text-sm font-bold text-slate-900 mb-4">Información Deportiva</h3>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Información Deportiva</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Select
                     label="Posición *"
@@ -131,8 +131,8 @@ export default function NewPlayerPage() {
               </div>
 
               {/* Notes */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-100">
-                <h3 className="text-sm font-bold text-slate-900 mb-4">Objetivos y Observaciones</h3>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Objetivos y Observaciones</h3>
                 <div className="space-y-4">
                   <Textarea label="Objetivo deportivo" placeholder="Llegar al fútbol profesional..." value={form.objective} onChange={e => set("objective", e.target.value)} rows={2} />
                   <Textarea label="Observaciones del entrenador" placeholder="Notas adicionales sobre el jugador..." value={form.notes} onChange={e => set("notes", e.target.value)} rows={2} />

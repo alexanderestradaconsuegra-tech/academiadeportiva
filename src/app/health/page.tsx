@@ -281,7 +281,7 @@ export default function HealthPage() {
           subtitle="Monitor de ritmo cardíaco, velocidad y métricas biométricas en tiempo real"
         >
           {showSavedMsg && (
-            <div className="flex items-center gap-2 text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2">
+            <div className="flex items-center gap-2 text-sm font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 rounded-xl px-4 py-2">
               <CheckCircle size={14} /> Sesión guardada
             </div>
           )}
@@ -359,9 +359,9 @@ function SetupPanel({
       {/* Config */}
       <div className="xl:col-span-2 space-y-5">
         {/* Player */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-100">
-          <h2 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-lg bg-blue-100 text-[#0B5CFF] text-xs font-black flex items-center justify-center">1</span>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-500/15 text-[#0B5CFF] text-xs font-black flex items-center justify-center">1</span>
             Seleccionar Jugador
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -372,14 +372,14 @@ function SetupPanel({
                 className={cn(
                   "flex items-center gap-3 p-3 rounded-xl border text-left transition-all",
                   selectedPlayer === p.id
-                    ? "border-[#0B5CFF] bg-blue-50 ring-2 ring-blue-100"
-                    : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                    ? "border-[#0B5CFF] bg-blue-50 dark:bg-blue-500/10 ring-2 ring-blue-100"
+                    : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/60"
                 )}
               >
                 <img src={p.photo_url} alt={p.name} className="w-9 h-9 rounded-xl object-cover shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 truncate">{p.name.split(" ")[0]}</p>
-                  <p className="text-[10px] text-slate-400">{p.position.split(" ").slice(-1)[0]}</p>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{p.name.split(" ")[0]}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500">{p.position.split(" ").slice(-1)[0]}</p>
                 </div>
               </button>
             ))}
@@ -387,9 +387,9 @@ function SetupPanel({
         </div>
 
         {/* Device */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-100">
-          <h2 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-lg bg-blue-100 text-[#0B5CFF] text-xs font-black flex items-center justify-center">2</span>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-500/15 text-[#0B5CFF] text-xs font-black flex items-center justify-center">2</span>
             Tipo de Dispositivo
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
@@ -400,14 +400,14 @@ function SetupPanel({
                 className={cn(
                   "flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all",
                   selectedDevice === d.id
-                    ? "border-[#0B5CFF] bg-blue-50 ring-2 ring-blue-100"
-                    : "border-slate-200 hover:border-slate-300"
+                    ? "border-[#0B5CFF] bg-blue-50 dark:bg-blue-500/10 ring-2 ring-blue-100"
+                    : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
                 )}
               >
                 <span className="text-2xl">{d.icon}</span>
                 <div>
-                  <p className="text-xs font-bold text-slate-900">{d.name}</p>
-                  <p className="text-[10px] text-slate-400">{d.desc}</p>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">{d.name}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500">{d.desc}</p>
                 </div>
               </button>
             ))}
@@ -416,23 +416,23 @@ function SetupPanel({
           {/* BLE connect */}
           {selectedDevice !== "manual" && (
             <div className={cn("rounded-xl p-4 border flex items-center gap-4", {
-              "bg-slate-50 border-slate-200": btStatus === "disconnected",
-              "bg-blue-50 border-blue-200": btStatus === "connecting",
-              "bg-emerald-50 border-emerald-200": btStatus === "connected",
-              "bg-red-50 border-red-200": btStatus === "error",
+              "bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700": btStatus === "disconnected",
+              "bg-blue-50 dark:bg-blue-500/10 border-blue-200": btStatus === "connecting",
+              "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200": btStatus === "connected",
+              "bg-red-50 dark:bg-red-500/10 border-red-200": btStatus === "error",
             })}>
               {btStatus === "connected" ? (
                 <BluetoothConnected size={20} className="text-emerald-600 shrink-0" />
               ) : btStatus === "error" ? (
                 <BluetoothOff size={20} className="text-red-500 shrink-0" />
               ) : (
-                <Bluetooth size={20} className={cn("shrink-0", btStatus === "connecting" ? "text-blue-500 animate-pulse" : "text-slate-400")} />
+                <Bluetooth size={20} className={cn("shrink-0", btStatus === "connecting" ? "text-blue-500 animate-pulse" : "text-slate-400 dark:text-slate-500")} />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-slate-900">
+                <p className="text-xs font-bold text-slate-900 dark:text-white">
                   {btStatus === "connected" ? btDevice : btStatus === "connecting" ? "Buscando dispositivos..." : "Conectar vía Bluetooth"}
                 </p>
-                <p className="text-[10px] text-slate-500">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">
                   {btStatus === "connected" ? "Dispositivo conectado y listo" :
                    btStatus === "error" ? "Error de conexión. Intenta de nuevo." :
                    "Requiere Chrome en desktop o Android"}
@@ -449,11 +449,11 @@ function SetupPanel({
           )}
 
           {/* GPS */}
-          <div className={cn("rounded-xl p-4 border flex items-center gap-4 mt-3", gpsEnabled ? "bg-emerald-50 border-emerald-200" : "bg-slate-50 border-slate-200")}>
-            <MapPin size={20} className={cn("shrink-0", gpsEnabled ? "text-emerald-600" : "text-slate-400")} />
+          <div className={cn("rounded-xl p-4 border flex items-center gap-4 mt-3", gpsEnabled ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200" : "bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700")}>
+            <MapPin size={20} className={cn("shrink-0", gpsEnabled ? "text-emerald-600" : "text-slate-400 dark:text-slate-500")} />
             <div className="flex-1">
-              <p className="text-xs font-bold text-slate-900">Velocidad GPS</p>
-              <p className="text-[10px] text-slate-500">{gpsEnabled ? "GPS activo — velocidad en tiempo real" : gpsError || "Usa el GPS del teléfono para medir velocidad"}</p>
+              <p className="text-xs font-bold text-slate-900 dark:text-white">Velocidad GPS</p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">{gpsEnabled ? "GPS activo — velocidad en tiempo real" : gpsError || "Usa el GPS del teléfono para medir velocidad"}</p>
             </div>
             {gpsEnabled ? (
               <Button variant="secondary" size="sm" onClick={onStopGPS}>Desactivar</Button>
@@ -474,10 +474,10 @@ function SetupPanel({
 
       {/* Recent sessions */}
       <div className="space-y-4">
-        <div className="bg-white rounded-2xl p-5 border border-slate-100">
-          <h2 className="text-sm font-bold text-slate-900 mb-4">Sesiones Anteriores</h2>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Sesiones Anteriores</h2>
           {sessions.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">
+            <div className="text-center py-8 text-slate-400 dark:text-slate-500">
               <Activity size={28} className="mx-auto mb-2 opacity-30" />
               <p className="text-xs">Sin sesiones registradas</p>
             </div>
@@ -533,7 +533,7 @@ function LivePanel({
       {/* Live HUD */}
       <div className={cn(
         "rounded-2xl p-6 border transition-all duration-500 relative overflow-hidden",
-        zoneConfig ? `border-2` : "border-slate-200 bg-white"
+        zoneConfig ? `border-2` : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
       )} style={{ borderColor: zoneConfig?.color ?? "#E2E8F0", background: zoneConfig ? `${zoneConfig.bg}` : "#fff" }}>
         <div className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-10 blur-3xl" style={{ background: zoneConfig?.color }} />
 
@@ -541,30 +541,30 @@ function LivePanel({
         <div className="flex items-center justify-between mb-6 relative z-10">
           <div className="flex items-center gap-3">
             <div className={cn("w-2.5 h-2.5 rounded-full", sessionState === "running" ? "bg-red-500 animate-pulse" : "bg-amber-400")} />
-            <span className="text-xs font-bold text-slate-600 uppercase tracking-wide">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
               {sessionState === "running" ? "GRABANDO" : "PAUSADO"}
             </span>
             {player && (
               <>
-                <span className="text-slate-300">·</span>
-                <span className="text-xs font-semibold text-slate-500">{player.name.split(" ")[0]} {player.name.split(" ")[1]}</span>
+                <span className="text-slate-300 dark:text-slate-600">·</span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{player.name.split(" ")[0]} {player.name.split(" ")[1]}</span>
               </>
             )}
           </div>
           <div className="flex items-center gap-3">
             {selectedDevice !== "manual" && (
               <div className={cn("flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg",
-                btStatus === "connected" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500")}>
+                btStatus === "connected" ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400")}>
                 <BluetoothConnected size={11} />
                 {btStatus === "connected" ? "BLE" : "Sin BT"}
               </div>
             )}
             {gpsEnabled && (
-              <div className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700">
+              <div className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700">
                 <MapPin size={11} /> GPS
               </div>
             )}
-            <div className="text-2xl font-black text-slate-800 tabular-nums">{formatDuration(elapsed)}</div>
+            <div className="text-2xl font-black text-slate-800 dark:text-slate-100 tabular-nums">{formatDuration(elapsed)}</div>
           </div>
         </div>
 
@@ -574,12 +574,12 @@ function LivePanel({
           <div className="bg-white/80 backdrop-blur rounded-2xl p-4 text-center border border-white/60 shadow-sm">
             <div className="flex items-center justify-center gap-1.5 mb-2">
               <Heart size={14} className="text-red-500" fill="#EF4444" />
-              <span className="text-xs font-semibold text-slate-500">Ritmo Cardíaco</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Ritmo Cardíaco</span>
             </div>
             <div className="text-4xl font-black tabular-nums" style={{ color: zoneConfig?.color ?? "#94A3B8" }}>
               {currentHR || "—"}
             </div>
-            <div className="text-xs text-slate-400 font-medium mt-1">bpm</div>
+            <div className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-1">bpm</div>
             {zoneConfig && (
               <div className="mt-2 text-[10px] font-bold px-2 py-0.5 rounded-md inline-block" style={{ color: zoneConfig.color, background: `${zoneConfig.color}20` }}>
                 Zona {zoneConfig.label}
@@ -591,12 +591,12 @@ function LivePanel({
           <div className="bg-white/80 backdrop-blur rounded-2xl p-4 text-center border border-white/60 shadow-sm">
             <div className="flex items-center justify-center gap-1.5 mb-2">
               <Gauge size={14} className="text-[#0B5CFF]" />
-              <span className="text-xs font-semibold text-slate-500">Velocidad</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Velocidad</span>
             </div>
             <div className="text-4xl font-black tabular-nums text-[#0B5CFF]">{currentSpeed || "—"}</div>
-            <div className="text-xs text-slate-400 font-medium mt-1">km/h</div>
+            <div className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-1">km/h</div>
             {!gpsEnabled && selectedDevice === "manual" && (
-              <div className="mt-2 text-[9px] text-slate-400">Simulado</div>
+              <div className="mt-2 text-[9px] text-slate-400 dark:text-slate-500">Simulado</div>
             )}
           </div>
 
@@ -604,27 +604,27 @@ function LivePanel({
           <div className="bg-white/80 backdrop-blur rounded-2xl p-4 text-center border border-white/60 shadow-sm">
             <div className="flex items-center justify-center gap-1.5 mb-2">
               <Flame size={14} className="text-orange-500" />
-              <span className="text-xs font-semibold text-slate-500">Calorías</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Calorías</span>
             </div>
             <div className="text-4xl font-black tabular-nums text-orange-500">{calories || "—"}</div>
-            <div className="text-xs text-slate-400 font-medium mt-1">kcal</div>
+            <div className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-1">kcal</div>
           </div>
 
           {/* Max HR */}
           <div className="bg-white/80 backdrop-blur rounded-2xl p-4 text-center border border-white/60 shadow-sm">
             <div className="flex items-center justify-center gap-1.5 mb-2">
               <TrendingUp size={14} className="text-purple-500" />
-              <span className="text-xs font-semibold text-slate-500">Pico Máximo</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Pico Máximo</span>
             </div>
             <div className="text-4xl font-black tabular-nums text-purple-500">{maxHR || "—"}</div>
-            <div className="text-xs text-slate-400 font-medium mt-1">bpm máx</div>
+            <div className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-1">bpm máx</div>
           </div>
         </div>
 
         {/* HR progress bar */}
         {health && currentHR > 0 && (
           <div className="relative z-10 mb-4">
-            <div className="flex justify-between text-[10px] text-slate-400 font-medium mb-1.5">
+            <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 font-medium mb-1.5">
               <span>{health.resting_hr} bpm</span>
               <span className="font-bold" style={{ color: zoneConfig?.color }}>{hrPct}% FC máx</span>
               <span>{health.max_hr} bpm</span>
@@ -646,33 +646,33 @@ function LivePanel({
         {selectedDevice === "manual" && sessionState === "running" && (
           <div className="relative z-10 bg-white/60 rounded-xl p-3 flex items-center gap-3">
             <Heart size={14} className="text-red-400 shrink-0" />
-            <span className="text-xs font-semibold text-slate-600">Ingresar HR manual:</span>
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Ingresar HR manual:</span>
             <input
               type="number" min={30} max={250} placeholder="ej. 165"
               value={manualHR} onChange={e => onManualHR(e.target.value)}
               onKeyDown={e => e.key === "Enter" && onSubmitManualHR()}
-              className="h-8 w-24 rounded-lg border border-slate-200 px-3 text-sm font-bold text-center outline-none focus:border-[#0B5CFF]"
+              className="h-8 w-24 rounded-lg border border-slate-200 dark:border-slate-700 px-3 text-sm font-bold text-center outline-none focus:border-[#0B5CFF]"
             />
             <Button size="sm" onClick={onSubmitManualHR} disabled={!manualHR}>Registrar</Button>
-            <span className="text-[10px] text-slate-400 ml-auto">Los datos se simulan automáticamente también</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">Los datos se simulan automáticamente también</span>
           </div>
         )}
 
         {/* Controls */}
         <div className="flex items-center gap-3 mt-5 relative z-10">
           {sessionState === "running" ? (
-            <button onClick={onPause} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-100 text-amber-700 font-semibold text-sm hover:bg-amber-200 transition-colors">
+            <button onClick={onPause} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-100 dark:bg-amber-500/15 text-amber-700 font-semibold text-sm hover:bg-amber-200 transition-colors">
               <Pause size={16} /> Pausar
             </button>
           ) : (
-            <button onClick={onResume} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-100 text-emerald-700 font-semibold text-sm hover:bg-emerald-200 transition-colors">
+            <button onClick={onResume} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 font-semibold text-sm hover:bg-emerald-200 transition-colors">
               <Play size={16} /> Reanudar
             </button>
           )}
-          <button onClick={onFinish} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-50 text-red-600 font-semibold text-sm hover:bg-red-100 transition-colors border border-red-200">
+          <button onClick={onFinish} className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 font-semibold text-sm hover:bg-red-100 transition-colors border border-red-200">
             <Square size={14} fill="currentColor" /> Finalizar sesión
           </button>
-          <div className="ml-auto text-xs text-slate-400">
+          <div className="ml-auto text-xs text-slate-400 dark:text-slate-500">
             {totalSamples} muestras · {(hrSamples as HRSample[]).filter((s: HRSample) => s.zone === "máxima").length} en zona máxima
           </div>
         </div>
@@ -680,16 +680,16 @@ function LivePanel({
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
         {/* Live HR chart */}
-        <div className="xl:col-span-2 bg-white rounded-2xl p-5 border border-slate-100">
+        <div className="xl:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold text-slate-900">Ritmo Cardíaco en Tiempo Real</h2>
-            <div className="flex items-center gap-2 text-xs text-slate-400">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">Ritmo Cardíaco en Tiempo Real</h2>
+            <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
               <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
               En vivo
             </div>
           </div>
           {liveChartData.length < 2 ? (
-            <div className="h-48 flex items-center justify-center text-slate-400">
+            <div className="h-48 flex items-center justify-center text-slate-400 dark:text-slate-500">
               <div className="text-center">
                 <Heart size={28} className="mx-auto mb-2 opacity-30" />
                 <p className="text-sm">Esperando datos de ritmo cardíaco...</p>
@@ -719,8 +719,8 @@ function LivePanel({
         </div>
 
         {/* Zone distribution */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-100">
-          <h2 className="text-sm font-bold text-slate-900 mb-4">Distribución por Zona</h2>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Distribución por Zona</h2>
           <div className="space-y-2.5">
             {zoneKeys.map(z => {
               const zc = HR_ZONES[z]
@@ -732,25 +732,25 @@ function LivePanel({
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full" style={{ background: zc.color }} />
-                      <span className="text-xs font-semibold text-slate-700">{zc.label}</span>
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{zc.label}</span>
                       {currentZone === z && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${zc.color}25`, color: zc.color }}>ACTIVO</span>}
                     </div>
                     <span className="text-xs font-bold" style={{ color: zc.color }}>{pct}%</span>
                   </div>
-                  <div className="h-1.5 bg-white rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-white dark:bg-slate-900 rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: zc.color }} />
                   </div>
-                  <p className="text-[9px] text-slate-400 mt-1">{zc.desc}</p>
+                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-1">{zc.desc}</p>
                 </div>
               )
             })}
           </div>
           {totalSamples > 0 && (
-            <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100">
+            <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div><p className="text-sm font-bold text-slate-800">{avgHR}</p><p className="text-[10px] text-slate-400">Prom</p></div>
-                <div><p className="text-sm font-bold text-red-500">{maxHR}</p><p className="text-[10px] text-slate-400">Máx</p></div>
-                <div><p className="text-sm font-bold text-blue-500">{minHR}</p><p className="text-[10px] text-slate-400">Mín</p></div>
+                <div><p className="text-sm font-bold text-slate-800 dark:text-slate-100">{avgHR}</p><p className="text-[10px] text-slate-400 dark:text-slate-500">Prom</p></div>
+                <div><p className="text-sm font-bold text-red-500">{maxHR}</p><p className="text-[10px] text-slate-400 dark:text-slate-500">Máx</p></div>
+                <div><p className="text-sm font-bold text-blue-500">{minHR}</p><p className="text-[10px] text-slate-400 dark:text-slate-500">Mín</p></div>
               </div>
             </div>
           )}
@@ -769,18 +769,18 @@ function SessionHistoryCard({ session }: { session: LiveSession }) {
   const h = Math.floor(dur / 3600), m = Math.floor((dur % 3600) / 60)
   const durStr = h > 0 ? `${h}h ${m}m` : `${m}m`
   return (
-    <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-lg">{deviceIcons[session.device_type] ?? "📡"}</span>
           <div>
-            <p className="text-xs font-bold text-slate-900">{session.device_name ?? session.device_type}</p>
-            <p className="text-[10px] text-slate-400">{formatDate(session.started_at.split("T")[0])} · {durStr}</p>
+            <p className="text-xs font-bold text-slate-900 dark:text-white">{session.device_name ?? session.device_type}</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500">{formatDate(session.started_at.split("T")[0])} · {durStr}</p>
           </div>
         </div>
         <div className="text-right">
           <p className="text-sm font-black text-red-500">{session.avg_hr}</p>
-          <p className="text-[9px] text-slate-400">bpm prom</p>
+          <p className="text-[9px] text-slate-400 dark:text-slate-500">bpm prom</p>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-2">
@@ -789,9 +789,9 @@ function SessionHistoryCard({ session }: { session: LiveSession }) {
           { icon: "🔥", label: "Calorías", value: `${session.calories_est} kcal` },
           { icon: "📍", label: "Distancia", value: `${(session.distance_m / 1000).toFixed(1)} km` },
         ].map(s => (
-          <div key={s.label} className="bg-white rounded-lg p-2 text-center border border-slate-100">
-            <p className="text-[9px] text-slate-400">{s.icon} {s.label}</p>
-            <p className="text-xs font-bold text-slate-800">{s.value}</p>
+          <div key={s.label} className="bg-white dark:bg-slate-900 rounded-lg p-2 text-center border border-slate-100 dark:border-slate-800">
+            <p className="text-[9px] text-slate-400 dark:text-slate-500">{s.icon} {s.label}</p>
+            <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{s.value}</p>
           </div>
         ))}
       </div>

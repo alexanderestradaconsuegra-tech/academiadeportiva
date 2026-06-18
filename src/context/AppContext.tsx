@@ -15,6 +15,7 @@ interface AppState {
   isAuthenticated: boolean
   authReady: boolean
   currentUser: Profile | null
+  darkMode: boolean
 }
 
 interface AppContextType extends AppState {
@@ -37,6 +38,7 @@ interface AppContextType extends AppState {
   getPlayerHealth: (playerId: string) => HealthProfile | undefined
   getPlayerSessions: (playerId: string) => LiveSession[]
   getUpcomingTrainings: (category?: Category | null) => Training[]
+  toggleDarkMode: () => void
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -175,7 +177,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: false,
     authReady: false,
     currentUser: null,
+    darkMode: false,
   })
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme")
+    const dark = stored ? stored === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches
+    document.documentElement.classList.toggle("dark", dark)
+    setState(s => ({ ...s, darkMode: dark }))
+  }, [])
+
+  const toggleDarkMode = useCallback(() => {
+    setState(s => {
+      const dark = !s.darkMode
+      document.documentElement.classList.toggle("dark", dark)
+      localStorage.setItem("theme", dark ? "dark" : "light")
+      return { ...s, darkMode: dark }
+    })
+  }, [])
 
   const loadTeamSettings = useCallback(async () => {
     const { data } = await supabase.from("team_settings").select("*").limit(1).maybeSingle()
@@ -482,6 +501,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         getPlayerHealth,
         getPlayerSessions,
         getUpcomingTrainings,
+        toggleDarkMode,
       }}
     >
       {children}

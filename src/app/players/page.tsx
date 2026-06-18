@@ -37,38 +37,38 @@ export default function PlayersPage() {
         </PageHeader>
 
         {/* Filters */}
-        <div className="bg-white rounded-2xl p-3 md:p-4 border border-slate-100 mb-5 flex flex-wrap gap-2 md:gap-3 items-center">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-3 md:p-4 border border-slate-100 dark:border-slate-800 mb-5 flex flex-wrap gap-2 md:gap-3 items-center">
           <div className="relative flex-1 min-w-40">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
             <input
               type="text" placeholder="Buscar jugador o posición..." value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full h-9 pl-9 pr-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+              className="w-full h-9 pl-9 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <SlidersHorizontal size={14} className="text-slate-400" />
+            <SlidersHorizontal size={14} className="text-slate-400 dark:text-slate-500" />
             <select value={catFilter} onChange={e => setCatFilter(e.target.value)}
-              className="h-9 px-3 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] outline-none cursor-pointer">
+              className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
               <option value="all">Todas las categorías</option>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
             <select value={posFilter} onChange={e => setPosFilter(e.target.value)}
-              className="h-9 px-3 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] outline-none cursor-pointer">
+              className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
               <option value="all">Todas las posiciones</option>
               {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
 
-          <span className="text-xs text-slate-400 font-medium ml-auto">
+          <span className="text-xs text-slate-400 dark:text-slate-500 font-medium ml-auto">
             {filtered.length} resultado{filtered.length !== 1 ? "s" : ""}
           </span>
         </div>
 
         {/* Grid */}
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400 dark:text-slate-500">
             <Users size={40} className="mb-3 opacity-30" />
             <p className="font-semibold">No se encontraron jugadores</p>
             <p className="text-sm mt-1">Ajusta los filtros o agrega un nuevo jugador</p>

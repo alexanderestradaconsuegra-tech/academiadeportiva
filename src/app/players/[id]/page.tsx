@@ -48,7 +48,7 @@ export default function PlayerProfilePage() {
   if (!player) {
     return (
       <AppShell>
-        <div className="flex items-center justify-center h-96 text-slate-400">
+        <div className="flex items-center justify-center h-96 text-slate-400 dark:text-slate-500">
           <div className="text-center">
             <p className="text-2xl font-bold mb-2">Jugador no encontrado</p>
             <Link href="/players" className="text-[#0B5CFF] text-sm">← Volver a jugadores</Link>
@@ -133,13 +133,13 @@ export default function PlayerProfilePage() {
               { icon: Calendar, label: "Nacimiento", value: player.birth_date ? formatDate(player.birth_date) : "—" },
               { icon: Star, label: "Pierna hábil", value: player.dominant_foot },
             ].map(({ icon: Icon, label, value }) => (
-              <div key={label} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+              <div key={label} className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
                   <Icon size={16} className="text-[#0B5CFF]" />
                 </div>
                 <div>
-                  <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">{label}</p>
-                  <p className="text-sm font-bold text-slate-800">{value}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide">{label}</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{value}</p>
                 </div>
               </div>
             ))}
@@ -150,22 +150,22 @@ export default function PlayerProfilePage() {
             <div className="xl:col-span-2 space-y-6">
               {/* Attribute scores */}
               {latestEval && (
-                <div className="bg-white rounded-2xl p-6 border border-slate-100">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-sm font-bold text-slate-900">Atributos Físicos y Técnicos</h2>
-                    <span className="text-xs text-slate-400">{formatDate(latestEval.date)}</span>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Atributos Físicos y Técnicos</h2>
+                    <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(latestEval.date)}</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {attrs.map(([k, label]) => {
                       const v = latestEval[k as keyof typeof latestEval] as number
                       const pct = v
                       return (
-                        <div key={k} className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <div key={k} className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-semibold text-slate-600">{label}</span>
+                            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{label}</span>
                             <span className={cn("text-sm font-black", getScoreColor(v))}>{v}</span>
                           </div>
-                          <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                          <div className="h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                             <div
                               className="h-full rounded-full transition-all duration-700"
                               style={{ width: `${pct}%`, background: ATTR_COLORS[k] }}
@@ -180,8 +180,8 @@ export default function PlayerProfilePage() {
 
               {/* Progress line chart */}
               {progressData.length > 1 && (
-                <div className="bg-white rounded-2xl p-6 border border-slate-100">
-                  <h2 className="text-sm font-bold text-slate-900 mb-4">Evolución del Score</h2>
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Evolución del Score</h2>
                   <ResponsiveContainer width="100%" height={180}>
                     <AreaChart data={progressData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                       <defs>
@@ -201,30 +201,30 @@ export default function PlayerProfilePage() {
               )}
 
               {/* Activities */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-100">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-sm font-bold text-slate-900">Historial de Entrenamientos</h2>
-                  <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">{activities.length} registros</span>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">Historial de Entrenamientos</h2>
+                  <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">{activities.length} registros</span>
                 </div>
                 {activities.length === 0 ? (
-                  <div className="text-center py-8 text-slate-400">
+                  <div className="text-center py-8 text-slate-400 dark:text-slate-500">
                     <Dumbbell size={28} className="mx-auto mb-2 opacity-30" />
                     <p className="text-sm">Sin actividades registradas</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {activities.map(a => (
-                      <div key={a.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                      <div key={a.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
                         <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0", getCategoryColor(a.category))}>
                           {a.category.substring(0, 1)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-slate-900">{a.exercise}</p>
-                          <p className="text-xs text-slate-400">{formatDate(a.date)} · <span className={cn("font-medium", getIntensityColor(a.intensity).split(" ")[0])}>{a.intensity}</span></p>
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white">{a.exercise}</p>
+                          <p className="text-xs text-slate-400 dark:text-slate-500">{formatDate(a.date)} · <span className={cn("font-medium", getIntensityColor(a.intensity).split(" ")[0])}>{a.intensity}</span></p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-sm font-bold text-slate-800">{a.value}</p>
-                          <p className="text-xs text-slate-400">{a.unit}</p>
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{a.value}</p>
+                          <p className="text-xs text-slate-400 dark:text-slate-500">{a.unit}</p>
                         </div>
                       </div>
                     ))}
@@ -237,8 +237,8 @@ export default function PlayerProfilePage() {
             <div className="space-y-6">
               {/* Radar chart */}
               {radarData.length > 0 && (
-                <div className="bg-white rounded-2xl p-6 border border-slate-100">
-                  <h2 className="text-sm font-bold text-slate-900 mb-4">Radar de Atributos</h2>
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Radar de Atributos</h2>
                   <ResponsiveContainer width="100%" height={220}>
                     <RadarChart data={radarData}>
                       <PolarGrid stroke="#E2E8F0" />
@@ -250,48 +250,48 @@ export default function PlayerProfilePage() {
               )}
 
               {/* Info */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-100 space-y-4">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 space-y-4">
                 {player.objective && (
                   <div>
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Objetivo deportivo</p>
-                    <p className="text-sm text-slate-700 leading-relaxed">{player.objective}</p>
+                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">Objetivo deportivo</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{player.objective}</p>
                   </div>
                 )}
                 {player.notes && (
                   <div>
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Observaciones</p>
-                    <p className="text-sm text-slate-700 leading-relaxed">{player.notes}</p>
+                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">Observaciones</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{player.notes}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1.5">Club</p>
-                  <p className="text-sm text-slate-700 font-medium">{player.club}</p>
+                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">Club</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">{player.club}</p>
                 </div>
               </div>
 
               {/* Upcoming trainings */}
               {upcomingTrainings.length > 0 && (
-                <div className="bg-white rounded-2xl p-5 border border-slate-100">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2 mb-3">
                     <CalendarDays size={15} className="text-[#0B5CFF]" />
-                    <h2 className="text-sm font-bold text-slate-900">Próximos Entrenamientos</h2>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Próximos Entrenamientos</h2>
                   </div>
                   <div className="space-y-2">
                     {upcomingTrainings.map(t => (
-                      <div key={t.id} className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                        <p className="text-sm font-semibold text-slate-900">{t.title}</p>
+                      <div key={t.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{t.title}</p>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <span className="text-xs text-slate-400">{formatDate(t.date)}</span>
+                          <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(t.date)}</span>
                           {t.time && (
                             <>
                               <span className="text-slate-200">·</span>
-                              <span className="text-xs text-slate-400 flex items-center gap-1"><Clock size={11} /> {t.time}</span>
+                              <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1"><Clock size={11} /> {t.time}</span>
                             </>
                           )}
                           {t.location && (
                             <>
                               <span className="text-slate-200">·</span>
-                              <span className="text-xs text-slate-400 flex items-center gap-1"><MapPin size={11} /> {t.location}</span>
+                              <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1"><MapPin size={11} /> {t.location}</span>
                             </>
                           )}
                         </div>
@@ -316,10 +316,10 @@ export default function PlayerProfilePage() {
 
               {/* Health metrics */}
               {health && (
-                <div className="bg-white rounded-2xl p-5 border border-slate-100">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2 mb-4">
                     <Heart size={15} className="text-red-500" fill="#EF4444" />
-                    <h2 className="text-sm font-bold text-slate-900">Salud Biométrica</h2>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Salud Biométrica</h2>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {[
@@ -328,21 +328,21 @@ export default function PlayerProfilePage() {
                       { label: "HRV", value: `${health.hrv} ms`, icon: "📊", color: "text-purple-500" },
                       { label: "VO₂ Máx", value: `${health.vo2max}`, icon: "💨", color: "text-blue-500" },
                       { label: "Rec. Index", value: `${health.recovery_index}%`, icon: "🔋", color: health.recovery_index >= 80 ? "text-emerald-500" : "text-amber-500" },
-                      { label: "% Grasa", value: `${health.body_fat_pct}%`, icon: "⚖️", color: "text-slate-600" },
+                      { label: "% Grasa", value: `${health.body_fat_pct}%`, icon: "⚖️", color: "text-slate-600 dark:text-slate-400" },
                     ].map(m => (
-                      <div key={m.label} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                      <div key={m.label} className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-1.5 mb-1">
                           <span className="text-xs">{m.icon}</span>
-                          <span className="text-[10px] text-slate-400 font-medium">{m.label}</span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{m.label}</span>
                         </div>
                         <p className={cn("text-sm font-black", m.color)}>{m.value}</p>
                       </div>
                     ))}
                   </div>
-                  <div className="mt-3 p-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                  <div className="mt-3 p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-500">Presión arterial</span>
-                      <span className="font-bold text-slate-800">{health.blood_pressure_sys}/{health.blood_pressure_dia} mmHg</span>
+                      <span className="text-slate-500 dark:text-slate-400">Presión arterial</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100">{health.blood_pressure_sys}/{health.blood_pressure_dia} mmHg</span>
                     </div>
                   </div>
                 </div>
@@ -350,23 +350,23 @@ export default function PlayerProfilePage() {
 
               {/* Sessions summary */}
               {sessions.length > 0 && (
-                <div className="bg-white rounded-2xl p-5 border border-slate-100">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2 mb-3">
                     <ActivityIcon size={15} className="text-[#0B5CFF]" />
-                    <h2 className="text-sm font-bold text-slate-900">Últimas Sesiones en Vivo</h2>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Últimas Sesiones en Vivo</h2>
                   </div>
                   {sessions.slice(0, 2).map(s => (
-                    <div key={s.id} className="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0">
-                      <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+                    <div key={s.id} className="flex items-center gap-3 py-2.5 border-b border-slate-50 dark:border-slate-800 last:border-0">
+                      <div className="w-8 h-8 rounded-xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center shrink-0">
                         <Heart size={14} className="text-red-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-slate-900">{s.device_name ?? s.device_type}</p>
-                        <p className="text-[10px] text-slate-400">{formatDate(s.started_at.split("T")[0])} · {Math.floor(s.duration_s / 60)}min</p>
+                        <p className="text-xs font-semibold text-slate-900 dark:text-white">{s.device_name ?? s.device_type}</p>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500">{formatDate(s.started_at.split("T")[0])} · {Math.floor(s.duration_s / 60)}min</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-red-500">{s.avg_hr}</p>
-                        <p className="text-[9px] text-slate-400">bpm</p>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500">bpm</p>
                       </div>
                     </div>
                   ))}
@@ -379,22 +379,22 @@ export default function PlayerProfilePage() {
               {/* Quick actions */}
               {isCoach && (
                 <div className="space-y-2">
-                  <Link href="/activities" className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-[#0B5CFF] transition-colors">
+                  <Link href="/activities" className="flex items-center gap-3 p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center group-hover:bg-[#0B5CFF] transition-colors">
                       <Dumbbell size={16} className="text-[#0B5CFF] group-hover:text-white transition-colors" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">Registrar actividad</p>
-                      <p className="text-xs text-slate-400">Agregar nuevo entrenamiento</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">Registrar actividad</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">Agregar nuevo entrenamiento</p>
                     </div>
                   </Link>
-                  <Link href={`/reports?player=${id}`} className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-[#0B5CFF] transition-colors">
+                  <Link href={`/reports?player=${id}`} className="flex items-center gap-3 p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center group-hover:bg-[#0B5CFF] transition-colors">
                       <Target size={16} className="text-[#0B5CFF] group-hover:text-white transition-colors" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">Ver reporte</p>
-                      <p className="text-xs text-slate-400">Informe completo del jugador</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">Ver reporte</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">Informe completo del jugador</p>
                     </div>
                   </Link>
                 </div>

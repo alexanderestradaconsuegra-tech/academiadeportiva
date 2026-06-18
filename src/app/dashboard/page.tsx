@@ -80,13 +80,13 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-5">
           {/* Progress chart */}
-          <div className="xl:col-span-2 bg-white rounded-2xl p-5 border border-slate-100">
+          <div className="xl:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-sm font-bold text-slate-900">Progreso del Equipo</h2>
-                <p className="text-xs text-slate-400 mt-0.5">Score promedio — últimos 6 meses</p>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Progreso del Equipo</h2>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Score promedio — últimos 6 meses</p>
               </div>
-              <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">↑ +12 pts</span>
+              <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg">↑ +12 pts</span>
             </div>
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={PROGRESS_DATA} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
@@ -109,9 +109,9 @@ export default function DashboardPage() {
           </div>
 
           {/* Category bar chart */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-100">
-            <h2 className="text-sm font-bold text-slate-900 mb-1">Por Categoría</h2>
-            <p className="text-xs text-slate-400 mb-4">Score promedio del equipo</p>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Por Categoría</h2>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">Score promedio del equipo</p>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={CATEGORY_SCORES} layout="vertical" margin={{ top: 0, right: 8, left: -8, bottom: 0 }}>
                 <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
@@ -130,9 +130,9 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
           {/* Top players */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-100">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-slate-900">Top Jugadores</h2>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Top Jugadores</h2>
               <Link href="/players" className="text-xs text-[#0B5CFF] font-semibold hover:underline flex items-center gap-1">
                 Ver todos <ChevronRight size={12} />
               </Link>
@@ -143,18 +143,18 @@ export default function DashboardPage() {
                 const score = ev?.general_score ?? 0
                 return (
                   <Link key={player.id} href={`/players/${player.id}`}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group">
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors group">
                     <span className={cn("w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold shrink-0",
-                      i === 0 ? "bg-amber-100 text-amber-600" : i === 1 ? "bg-slate-100 text-slate-600" : "bg-orange-50 text-orange-500"
+                      i === 0 ? "bg-amber-100 dark:bg-amber-500/15 text-amber-600" : i === 1 ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400" : "bg-orange-50 dark:bg-orange-500/10 text-orange-500"
                     )}>{i + 1}</span>
                     <img src={player.photo_url} alt={player.name} className="w-9 h-9 rounded-xl object-cover shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 truncate">{player.name}</p>
-                      <p className="text-xs text-slate-400">{player.position} · {player.category}</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{player.name}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{player.position} · {player.category}</p>
                     </div>
                     <div className="text-right shrink-0">
                       <p className={cn("text-sm font-bold", score >= 85 ? "text-emerald-500" : score >= 70 ? "text-[#0B5CFF]" : "text-amber-500")}>{score}</p>
-                      <p className="text-[10px] text-slate-400">pts</p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500">pts</p>
                     </div>
                     {i === 0 && <Star className="w-4 h-4 text-amber-400 shrink-0" fill="currentColor" />}
                   </Link>
@@ -164,9 +164,9 @@ export default function DashboardPage() {
           </div>
 
           {/* Recent activities */}
-          <div className="bg-white rounded-2xl p-5 border border-slate-100">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-slate-900">Últimas Actividades</h2>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Últimas Actividades</h2>
               <Link href="/activities" className="text-xs text-[#0B5CFF] font-semibold hover:underline flex items-center gap-1">
                 Ver todas <ChevronRight size={12} />
               </Link>
@@ -175,16 +175,16 @@ export default function DashboardPage() {
               {recentActivities.map(a => {
                 const player = players.find(p => p.id === a.player_id)
                 return (
-                  <div key={a.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors">
+                  <div key={a.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
                     <div className={cn("w-2 h-2 rounded-full shrink-0", getCategoryColor(a.category).split(" ")[0].replace("text-", "bg-"))}>
                       <div className={cn("w-2 h-2 rounded-full", a.category === "Velocidad" ? "bg-yellow-400" : a.category === "Técnica" ? "bg-blue-400" : a.category === "Fuerza" ? "bg-red-400" : a.category === "Resistencia" ? "bg-emerald-400" : a.category === "Potencia" ? "bg-orange-400" : a.category === "Pliometría" ? "bg-pink-400" : "bg-purple-400")} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-slate-900 truncate">{a.exercise}</p>
-                      <p className="text-[10px] text-slate-400">{player?.name ?? "?"} · {formatDate(a.date)}</p>
+                      <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">{a.exercise}</p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500">{player?.name ?? "?"} · {formatDate(a.date)}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-xs font-bold text-slate-700">{a.value} <span className="font-normal text-slate-400">{a.unit}</span></p>
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-300">{a.value} <span className="font-normal text-slate-400 dark:text-slate-500">{a.unit}</span></p>
                     </div>
                   </div>
                 )

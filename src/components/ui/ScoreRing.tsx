@@ -41,7 +41,7 @@ export default function ScoreRing({ score, size = 80, strokeWidth = 7, className
           <span className={cn("font-bold leading-none", getScoreColor(score), size >= 70 ? "text-xl" : "text-base")}>
             {score}
           </span>
-          <span className="text-[10px] text-slate-400 font-medium">Score</span>
+          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Score</span>
         </div>
       )}
     </div>

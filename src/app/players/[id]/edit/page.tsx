@@ -46,7 +46,7 @@ export default function EditPlayerPage() {
 
   const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))
 
-  if (!player) return <AppShell><div className="p-8 text-slate-400">Jugador no encontrado.</div></AppShell>
+  if (!player) return <AppShell><div className="p-8 text-slate-400 dark:text-slate-500">Jugador no encontrado.</div></AppShell>
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -73,7 +73,7 @@ export default function EditPlayerPage() {
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in max-w-4xl">
         <div className="flex items-center gap-3 mb-6">
-          <Link href={`/players/${id}`} className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors">
+          <Link href={`/players/${id}`} className="w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
             <ArrowLeft size={16} />
           </Link>
           <PageHeader title="Editar Jugador" subtitle={player.name} className="mb-0 flex-1" />
@@ -84,8 +84,8 @@ export default function EditPlayerPage() {
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="bg-white rounded-2xl p-6 border border-slate-100 h-fit">
-              <div className="w-28 h-28 rounded-2xl overflow-hidden border-2 border-slate-200 mx-auto mb-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 h-fit">
+              <div className="w-28 h-28 rounded-2xl overflow-hidden border-2 border-slate-200 dark:border-slate-700 mx-auto mb-4">
                 <img src={form.photo_url || player.photo_url} alt={player.name} className="w-full h-full object-cover" />
               </div>
               <div className="space-y-3">
@@ -95,8 +95,8 @@ export default function EditPlayerPage() {
             </div>
 
             <div className="lg:col-span-2 space-y-5">
-              <div className="bg-white rounded-2xl p-6 border border-slate-100">
-                <h3 className="text-sm font-bold text-slate-900 mb-4">Información Personal</h3>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Información Personal</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2"><Input label="Nombre completo *" value={form.name} onChange={e => set("name", e.target.value)} required /></div>
                   <Input label="Edad" type="number" min={5} max={40} value={form.age} onChange={e => set("age", e.target.value)} />
@@ -106,8 +106,8 @@ export default function EditPlayerPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 border border-slate-100">
-                <h3 className="text-sm font-bold text-slate-900 mb-4">Información Deportiva</h3>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Información Deportiva</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Select label="Posición *" value={form.position} onChange={e => set("position", e.target.value)} required options={POSITIONS.map(p => ({ value: p, label: p }))} />
                   <Select label="Pierna hábil *" value={form.dominant_foot} onChange={e => set("dominant_foot", e.target.value)} required options={FEET.map(f => ({ value: f, label: f }))} />
@@ -116,8 +116,8 @@ export default function EditPlayerPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 border border-slate-100">
-                <h3 className="text-sm font-bold text-slate-900 mb-4">Objetivos y Observaciones</h3>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Objetivos y Observaciones</h3>
                 <div className="space-y-4">
                   <Textarea label="Objetivo deportivo" value={form.objective} onChange={e => set("objective", e.target.value)} rows={2} />
                   <Textarea label="Observaciones" value={form.notes} onChange={e => set("notes", e.target.value)} rows={2} />

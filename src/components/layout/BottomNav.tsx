@@ -16,7 +16,7 @@ const NAV = [
 export default function BottomNav() {
   const pathname = usePathname()
   return (
-    <nav className="no-print fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/90 backdrop-blur-xl border-t border-slate-200/80 safe-area-bottom">
+    <nav className="no-print fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800/80 safe-area-bottom">
       <div className="flex items-end justify-around px-1 pt-2 pb-safe">
         {NAV.map(({ href, icon: Icon, label, live }) => {
           const active = pathname.startsWith(href)
@@ -32,7 +32,7 @@ export default function BottomNav() {
                 live
                   ? active
                     ? "bg-gradient-to-br from-red-500 to-pink-500 shadow-lg shadow-red-200"
-                    : "bg-red-50"
+                    : "bg-red-50 dark:bg-red-500/10"
                   : active
                     ? "bg-[#0B5CFF] shadow-md shadow-blue-200"
                     : "bg-transparent"
@@ -43,7 +43,7 @@ export default function BottomNav() {
                     "transition-colors",
                     live
                       ? active ? "text-white" : "text-red-500"
-                      : active ? "text-white" : "text-slate-400"
+                      : active ? "text-white" : "text-slate-400 dark:text-slate-500"
                   )}
                   fill={live && active ? "currentColor" : "none"}
                 />
@@ -52,7 +52,7 @@ export default function BottomNav() {
                 "text-[10px] font-semibold transition-colors leading-none",
                 active
                   ? live ? "text-red-500" : "text-[#0B5CFF]"
-                  : "text-slate-400"
+                  : "text-slate-400 dark:text-slate-500"
               )}>
                 {label}
               </span>

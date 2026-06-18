@@ -29,7 +29,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (isPlayer && ownPlayerPath && pathname !== ownPlayerPath) return null
 
   return (
-    <div className="flex min-h-screen bg-[#F5F7FB]">
+    <div className="flex min-h-screen bg-[#F5F7FB] dark:bg-[#0B1120]">
       {/* Desktop sidebar — hidden on mobile */}
       {!isPlayer && <Sidebar />}
 

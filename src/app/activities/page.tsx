@@ -91,10 +91,10 @@ export default function ActivitiesPage() {
         {/* Modal form */}
         {showForm && (
           <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-scale-in">
-              <div className="flex items-center justify-between p-5 border-b border-slate-100">
-                <h2 className="text-sm font-bold text-slate-900">Registrar Actividad</h2>
-                <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-500 transition-colors">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg animate-scale-in">
+              <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Registrar Actividad</h2>
+                <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
                   <X size={16} />
                 </button>
               </div>
@@ -129,51 +129,51 @@ export default function ActivitiesPage() {
         )}
 
         {/* Filters */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-100 mb-6 flex flex-wrap gap-3">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 mb-6 flex flex-wrap gap-3">
           <select value={filterPlayer} onChange={e => setFilterPlayer(e.target.value)}
-            className="h-9 px-3 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] outline-none cursor-pointer">
+            className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
             <option value="all">Todos los jugadores</option>
             {players.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           <select value={filterCat} onChange={e => setFilterCat(e.target.value)}
-            className="h-9 px-3 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] outline-none cursor-pointer">
+            className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
             <option value="all">Todas las categorías</option>
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <span className="text-xs text-slate-400 font-medium ml-auto self-center">{filtered.length} resultado{filtered.length !== 1 ? "s" : ""}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 font-medium ml-auto self-center">{filtered.length} resultado{filtered.length !== 1 ? "s" : ""}</span>
         </div>
 
         {/* List */}
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400 dark:text-slate-500">
             <Dumbbell size={40} className="mb-3 opacity-30" />
             <p className="font-semibold">No hay actividades registradas</p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-            <div className="divide-y divide-slate-50">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <div className="divide-y divide-slate-50 dark:divide-slate-800">
               {filtered.map(a => {
                 const player = players.find(p => p.id === a.player_id)
                 return (
-                  <div key={a.id} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 transition-colors">
+                  <div key={a.id} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
                     <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0", getCategoryColor(a.category))}>
                       {a.category.substring(0, 1)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-900">{a.exercise}</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{a.exercise}</p>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-xs text-slate-400">{player?.name ?? "?"}</span>
+                        <span className="text-xs text-slate-400 dark:text-slate-500">{player?.name ?? "?"}</span>
                         <span className="text-slate-200">·</span>
-                        <span className="text-xs text-slate-400">{formatDate(a.date)}</span>
-                        {a.notes && <><span className="text-slate-200">·</span><span className="text-xs text-slate-400 truncate max-w-32">{a.notes}</span></>}
+                        <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(a.date)}</span>
+                        {a.notes && <><span className="text-slate-200">·</span><span className="text-xs text-slate-400 dark:text-slate-500 truncate max-w-32">{a.notes}</span></>}
                       </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <Badge variant={catBadgeMap[a.category] ?? "default"}>{a.category}</Badge>
                       <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-md", getIntensityColor(a.intensity))}>{a.intensity}</span>
                       <div className="text-right min-w-16">
-                        <p className="text-sm font-bold text-slate-800">{a.value}</p>
-                        <p className="text-xs text-slate-400">{a.unit}</p>
+                        <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{a.value}</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">{a.unit}</p>
                       </div>
                     </div>
                   </div>

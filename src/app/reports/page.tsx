@@ -46,7 +46,7 @@ export default function ReportsPage() {
     setDownloading(false)
   }
 
-  if (!player) return <AppShell><div className="p-8 text-slate-400">Selecciona un jugador para ver el reporte.</div></AppShell>
+  if (!player) return <AppShell><div className="p-8 text-slate-400 dark:text-slate-500">Selecciona un jugador para ver el reporte.</div></AppShell>
 
   const attrs = evaluation ? ATTRS.map(a => ({
     ...a,
@@ -69,11 +69,11 @@ export default function ReportsPage() {
             <div className="relative">
               <select
                 value={selectedId} onChange={e => setSelectedId(e.target.value)}
-                className="h-9 pl-3 pr-8 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] outline-none cursor-pointer appearance-none"
+                className="h-9 pl-3 pr-8 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer appearance-none"
               >
                 {players.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-slate-500 pointer-events-none" />
             </div>
             <Button variant="outline" size="sm" onClick={() => window.print()}>
               <Printer size={14} /> Imprimir
@@ -85,7 +85,7 @@ export default function ReportsPage() {
         </PageHeader>
 
         {/* Report card */}
-        <div ref={reportRef} className="bg-white rounded-2xl border border-slate-100 overflow-hidden mb-6 print:border-none">
+        <div ref={reportRef} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden mb-6 print:border-none">
           {/* Header */}
           <div className="bg-gradient-to-r from-[#071B4D] to-[#0B5CFF] px-4 py-6 md:px-8 md:py-8 relative overflow-hidden">
             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 30%, white 1px, transparent 1px)", backgroundSize: "35px 35px" }} />
@@ -117,15 +117,15 @@ export default function ReportsPage() {
                 {/* Attribute bars */}
                 {evaluation && (
                   <div>
-                    <h2 className="text-sm font-bold text-slate-900 mb-4">Métricas de Rendimiento</h2>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Métricas de Rendimiento</h2>
                     <div className="space-y-3">
                       {attrs.map(a => (
                         <div key={a.key}>
                           <div className="flex items-center justify-between mb-1.5">
-                            <span className="text-xs font-semibold text-slate-700">{a.label}</span>
+                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{a.label}</span>
                             <span className={cn("text-xs font-bold", getScoreColor(a.value))}>{a.value} pts</span>
                           </div>
-                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                             <div className="h-full rounded-full transition-all duration-700" style={{ width: `${a.value}%`, background: a.fill }} />
                           </div>
                         </div>
@@ -136,36 +136,36 @@ export default function ReportsPage() {
 
                 {/* Strengths & weaknesses */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+                  <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-4 border border-emerald-100 dark:border-emerald-500/20">
                     <div className="flex items-center gap-2 mb-3">
                       <TrendingUp size={14} className="text-emerald-600" />
                       <h3 className="text-xs font-bold text-emerald-700 uppercase tracking-wide">Fortalezas</h3>
                     </div>
                     {strengths.length === 0 ? (
-                      <p className="text-xs text-slate-400">Sin fortalezas destacadas aún</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">Sin fortalezas destacadas aún</p>
                     ) : (
                       <ul className="space-y-1.5">
                         {strengths.map(s => (
                           <li key={s.key} className="flex items-center justify-between text-xs">
-                            <span className="text-slate-700 font-medium">{s.label}</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-medium">{s.label}</span>
                             <span className="font-bold text-emerald-600">{s.value}</span>
                           </li>
                         ))}
                       </ul>
                     )}
                   </div>
-                  <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
+                  <div className="bg-amber-50 dark:bg-amber-500/10 rounded-xl p-4 border border-amber-100 dark:border-amber-500/20">
                     <div className="flex items-center gap-2 mb-3">
                       <TrendingDown size={14} className="text-amber-600" />
                       <h3 className="text-xs font-bold text-amber-700 uppercase tracking-wide">Áreas a Mejorar</h3>
                     </div>
                     {weaknesses.length === 0 ? (
-                      <p className="text-xs text-slate-400">¡Excelente rendimiento en todas las áreas!</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">¡Excelente rendimiento en todas las áreas!</p>
                     ) : (
                       <ul className="space-y-1.5">
                         {weaknesses.map(w => (
                           <li key={w.key} className="flex items-center justify-between text-xs">
-                            <span className="text-slate-700 font-medium">{w.label}</span>
+                            <span className="text-slate-700 dark:text-slate-300 font-medium">{w.label}</span>
                             <span className="font-bold text-amber-600">{w.value}</span>
                           </li>
                         ))}
@@ -176,21 +176,21 @@ export default function ReportsPage() {
 
                 {/* Objective */}
                 {player.objective && (
-                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                  <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-4 border border-blue-100 dark:border-blue-500/20">
                     <div className="flex items-center gap-2 mb-2">
                       <Target size={14} className="text-[#0B5CFF]" />
                       <h3 className="text-xs font-bold text-[#0B5CFF] uppercase tracking-wide">Objetivo Deportivo</h3>
                     </div>
-                    <p className="text-sm text-slate-700 leading-relaxed">{player.objective}</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{player.objective}</p>
                   </div>
                 )}
 
                 {/* Recommendations */}
                 <div>
-                  <h2 className="text-sm font-bold text-slate-900 mb-3">Recomendaciones del Entrenador</h2>
-                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 space-y-2">
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Recomendaciones del Entrenador</h2>
+                  <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-100 dark:border-slate-800 space-y-2">
                     {(weaknesses.length > 0 ? weaknesses : strengths).slice(0, 3).map((a, i) => (
-                      <div key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                      <div key={i} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
                         <span className="text-[#0B5CFF] font-bold mt-0.5">→</span>
                         {weaknesses.length > 0
                           ? `Reforzar ${a.label.toLowerCase()} con ejercicios específicos. Score actual: ${a.value}/100.`
@@ -199,7 +199,7 @@ export default function ReportsPage() {
                       </div>
                     ))}
                     {player.notes && (
-                      <div className="flex items-start gap-2 text-sm text-slate-700 pt-1 border-t border-slate-200">
+                      <div className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 pt-1 border-t border-slate-200 dark:border-slate-700">
                         <span className="text-[#0B5CFF] font-bold mt-0.5">→</span>
                         {player.notes}
                       </div>
@@ -210,18 +210,18 @@ export default function ReportsPage() {
                 {/* Recent activities */}
                 {recentActs.length > 0 && (
                   <div>
-                    <h2 className="text-sm font-bold text-slate-900 mb-3">Progreso del Mes — Actividades Recientes</h2>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Progreso del Mes — Actividades Recientes</h2>
                     <div className="space-y-2">
                       {recentActs.map(a => (
-                        <div key={a.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <div key={a.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
                           <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold shrink-0", getCategoryColor(a.category))}>
                             {a.category.substring(0, 1)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-slate-800">{a.exercise}</p>
-                            <p className="text-[10px] text-slate-400">{formatDate(a.date)}</p>
+                            <p className="text-xs font-semibold text-slate-800 dark:text-slate-100">{a.exercise}</p>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500">{formatDate(a.date)}</p>
                           </div>
-                          <p className="text-sm font-bold text-slate-800 shrink-0">{a.value} <span className="text-xs font-normal text-slate-400">{a.unit}</span></p>
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-100 shrink-0">{a.value} <span className="text-xs font-normal text-slate-400 dark:text-slate-500">{a.unit}</span></p>
                         </div>
                       ))}
                     </div>
@@ -234,7 +234,7 @@ export default function ReportsPage() {
                 {/* Radar */}
                 {radarData.length > 0 && (
                   <div>
-                    <h2 className="text-sm font-bold text-slate-900 mb-4 text-center">Perfil de Habilidades</h2>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4 text-center">Perfil de Habilidades</h2>
                     <ResponsiveContainer width="100%" height={220}>
                       <RadarChart data={radarData}>
                         <PolarGrid stroke="#E2E8F0" />

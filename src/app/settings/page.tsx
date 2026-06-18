@@ -8,7 +8,8 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
 import PhotoUpload from "@/components/ui/PhotoUpload"
-import { Trophy, Check, KeyRound, UserCheck } from "lucide-react"
+import { Trophy, Check, KeyRound, UserCheck, Sun, Moon } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 function AccessManager() {
   const { players } = useApp()
@@ -50,30 +51,30 @@ function AccessManager() {
   }
 
   return (
-    <div className="bg-white rounded-2xl p-6 border border-slate-100">
-      <h3 className="text-sm font-bold text-slate-900 mb-1">Accesos de jugadores / padres</h3>
-      <p className="text-xs text-slate-500 mb-4">Crea un correo y contraseña para que un jugador o su acudiente vea su propio perfil.</p>
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+      <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Accesos de jugadores / padres</h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Crea un correo y contraseña para que un jugador o su acudiente vea su propio perfil.</p>
 
       {loadingList ? (
-        <p className="text-xs text-slate-400">Cargando...</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500">Cargando...</p>
       ) : players.length === 0 ? (
-        <p className="text-xs text-slate-400">No hay jugadores registrados todavía.</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500">No hay jugadores registrados todavía.</p>
       ) : (
         <div className="space-y-2">
           {players.map(p => {
             const has = withAccess.has(p.id)
             return (
-              <div key={p.id} className="rounded-xl border border-slate-100">
+              <div key={p.id} className="rounded-xl border border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-3 p-3">
-                  <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-slate-100">
+                  <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-slate-100 dark:bg-slate-800">
                     <img src={p.photo_url} alt={p.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 truncate">{p.name}</p>
-                    <p className="text-xs text-slate-400">{p.position}</p>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{p.name}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">{p.position}</p>
                   </div>
                   {has ? (
-                    <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold bg-emerald-50 px-2.5 py-1 rounded-lg">
+                    <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg">
                       <UserCheck size={12} /> Con acceso
                     </span>
                   ) : (
@@ -83,7 +84,7 @@ function AccessManager() {
                   )}
                 </div>
                 {openFor === p.id && !has && (
-                  <div className="p-3 pt-0 space-y-3 border-t border-slate-100 mt-1">
+                  <div className="p-3 pt-0 space-y-3 border-t border-slate-100 dark:border-slate-800 mt-1">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
                       <Input label="Correo" type="email" placeholder="jugador@correo.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
                       <Input label="Contraseña" type="text" placeholder="mínimo 6 caracteres" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
@@ -106,7 +107,7 @@ function AccessManager() {
 }
 
 export default function SettingsPage() {
-  const { teamSettings, updateTeamSettings, currentUser } = useApp()
+  const { teamSettings, updateTeamSettings, currentUser, darkMode, toggleDarkMode } = useApp()
   const isCoach = currentUser?.role === "coach"
   const [saved, setSaved] = useState(false)
   const [form, setForm] = useState({
@@ -145,18 +146,47 @@ export default function SettingsPage() {
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in max-w-3xl">
         <PageHeader title="Configuración" subtitle="Datos del equipo / academia que se muestran en toda la app" />
 
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 mb-6 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Apariencia</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Elige cómo se ve la app en este dispositivo.</p>
+          </div>
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+            <button
+              type="button"
+              onClick={() => darkMode && toggleDarkMode()}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors",
+                !darkMode ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-slate-400"
+              )}
+            >
+              <Sun size={14} /> Claro
+            </button>
+            <button
+              type="button"
+              onClick={() => !darkMode && toggleDarkMode()}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors",
+                darkMode ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-slate-400"
+              )}
+            >
+              <Moon size={14} /> Oscuro
+            </button>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left: Logo preview */}
-            <div className="bg-white rounded-2xl p-6 border border-slate-100 flex flex-col items-center gap-4 h-fit">
-              <div className="w-28 h-28 rounded-2xl bg-slate-100 overflow-hidden border-2 border-slate-200 flex items-center justify-center">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 flex flex-col items-center gap-4 h-fit">
+              <div className="w-28 h-28 rounded-2xl bg-slate-100 dark:bg-slate-800 overflow-hidden border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center">
                 {form.logo_url ? (
                   <img src={form.logo_url} alt="Logo" className="w-full h-full object-cover" />
                 ) : (
-                  <Trophy className="w-12 h-12 text-slate-300" />
+                  <Trophy className="w-12 h-12 text-slate-300 dark:text-slate-600" />
                 )}
               </div>
-              <p className="text-xs text-slate-500 text-center leading-relaxed">
+              <p className="text-xs text-slate-500 dark:text-slate-400 text-center leading-relaxed">
                 Sube una imagen o pega la URL de una imagen para usarla como logo del equipo.
               </p>
               <PhotoUpload folder="team" onUploaded={url => set("logo_url", url)} />
@@ -171,8 +201,8 @@ export default function SettingsPage() {
 
             {/* Right: Form */}
             <div className="lg:col-span-2 space-y-5">
-              <div className="bg-white rounded-2xl p-6 border border-slate-100">
-                <h3 className="text-sm font-bold text-slate-900 mb-4">Información del Equipo</h3>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Información del Equipo</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <Input label="Nombre del equipo *" placeholder="FutbolMetrics" value={form.name} onChange={e => set("name", e.target.value)} required />
@@ -182,8 +212,8 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 border border-slate-100">
-                <h3 className="text-sm font-bold text-slate-900 mb-4">Descripción</h3>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Descripción</h3>
                 <Textarea label="Descripción / lema" placeholder="Academia Deportiva..." value={form.description} onChange={e => set("description", e.target.value)} rows={3} />
               </div>
 

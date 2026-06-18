@@ -7,14 +7,14 @@ interface BadgeProps {
 }
 
 const variants = {
-  default: "bg-slate-100 text-slate-600",
-  blue: "bg-blue-50 text-[#0B5CFF]",
-  green: "bg-emerald-50 text-emerald-700",
-  amber: "bg-amber-50 text-amber-700",
-  red: "bg-red-50 text-red-700",
-  purple: "bg-purple-50 text-purple-700",
-  orange: "bg-orange-50 text-orange-700",
-  pink: "bg-pink-50 text-pink-700",
+  default: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
+  blue: "bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF]",
+  green: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700",
+  amber: "bg-amber-50 dark:bg-amber-500/10 text-amber-700",
+  red: "bg-red-50 dark:bg-red-500/10 text-red-700",
+  purple: "bg-purple-50 dark:bg-purple-500/10 text-purple-700",
+  orange: "bg-orange-50 dark:bg-orange-500/10 text-orange-700",
+  pink: "bg-pink-50 dark:bg-pink-500/10 text-pink-700",
 }
 
 export default function Badge({ children, className, variant = "default" }: BadgeProps) {
