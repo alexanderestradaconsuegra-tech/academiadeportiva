@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
 
@@ -10,6 +10,7 @@ interface AppState {
   evaluations: Evaluation[]
   healthProfiles: HealthProfile[]
   liveSessions: LiveSession[]
+  teamSettings: TeamSettings | null
   isAuthenticated: boolean
   currentUser: { name: string; role: string } | null
 }
@@ -23,6 +24,7 @@ interface AppContextType extends AppState {
   addActivity: (activity: Omit<Activity, "id" | "created_at">) => Activity
   addEvaluation: (evaluation: Omit<Evaluation, "id">) => Evaluation
   addLiveSession: (session: Omit<LiveSession, "id">) => LiveSession
+  updateTeamSettings: (data: Partial<Omit<TeamSettings, "id" | "updated_at">>) => void
   getPlayer: (id: string) => Player | undefined
   getPlayerActivities: (playerId: string) => Activity[]
   getPlayerEvaluations: (playerId: string) => Evaluation[]
@@ -121,6 +123,18 @@ function mapLiveSession(row: Tables<"live_sessions">): LiveSession {
   }
 }
 
+function mapTeamSettings(row: Tables<"team_settings">): TeamSettings {
+  return {
+    id: row.id,
+    name: row.name,
+    logo_url: row.logo_url ?? "",
+    city: row.city ?? "",
+    founded_year: row.founded_year,
+    description: row.description ?? "",
+    updated_at: row.updated_at,
+  }
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState>({
     players: [],
@@ -128,18 +142,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     evaluations: [],
     healthProfiles: [],
     liveSessions: [],
+    teamSettings: null,
     isAuthenticated: false,
     currentUser: null,
   })
 
   useEffect(() => {
     async function loadAll() {
-      const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes] = await Promise.all([
+      const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, teamRes] = await Promise.all([
         supabase.from("players").select("*"),
         supabase.from("activities").select("*"),
         supabase.from("evaluations").select("*"),
         supabase.from("health_profiles").select("*"),
         supabase.from("live_sessions").select("*"),
+        supabase.from("team_settings").select("*").limit(1).maybeSingle(),
       ])
       setState(s => ({
         ...s,
@@ -148,6 +164,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         evaluations: (evaluationsRes.data ?? []).map(mapEvaluation),
         healthProfiles: (healthRes.data ?? []).map(mapHealthProfile),
         liveSessions: (sessionsRes.data ?? []).map(mapLiveSession),
+        teamSettings: teamRes.data ? mapTeamSettings(teamRes.data) : null,
       }))
     }
     loadAll()
@@ -301,6 +318,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [state.liveSessions]
   )
 
+  const updateTeamSettings = useCallback((data: Partial<Omit<TeamSettings, "id" | "updated_at">>) => {
+    if (!state.teamSettings) return
+    const id = state.teamSettings.id
+    setState(s => ({
+      ...s,
+      teamSettings: s.teamSettings ? { ...s.teamSettings, ...data } : null,
+    }))
+    const update: TablesUpdate<"team_settings"> = { ...data, updated_at: new Date().toISOString() }
+    if ("logo_url" in update) update.logo_url = update.logo_url || null
+    if ("city" in update) update.city = update.city || null
+    if ("description" in update) update.description = update.description || null
+    supabase.from("team_settings").update(update).eq("id", id).then(({ error }) => { if (error) console.error("updateTeamSettings:", error) })
+  }, [state.teamSettings])
+
   return (
     <AppContext.Provider
       value={{
@@ -313,6 +344,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addActivity,
         addEvaluation,
         addLiveSession,
+        updateTeamSettings,
         getPlayer,
         getPlayerActivities,
         getPlayerEvaluations,

@@ -89,6 +89,16 @@ export interface PlayerWithStats extends Player {
   progress_trend?: number
 }
 
+export interface TeamSettings {
+  id: string
+  name: string
+  logo_url: string
+  city: string
+  founded_year: number | null
+  description: string
+  updated_at: string
+}
+
 // ── Health / Biometrics ────────────────────────────────────────────────────
 
 export type HRZone = "reposo" | "calentamiento" | "aeróbica" | "anaeróbica" | "máxima"

@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation"
 import { useApp } from "@/context/AppContext"
 import { cn } from "@/lib/utils"
 import {
-  LayoutDashboard, Users, Dumbbell, BarChart3, FileText, LogOut, Trophy, ChevronRight, Heart
+  LayoutDashboard, Users, Dumbbell, BarChart3, FileText, LogOut, Trophy, ChevronRight, Heart, Settings
 } from "lucide-react"
 
 const NAV = [
@@ -14,22 +14,27 @@ const NAV = [
   { href: "/health", icon: Heart, label: "Salud en Vivo", badge: "LIVE" },
   { href: "/charts", icon: BarChart3, label: "Gráficos" },
   { href: "/reports", icon: FileText, label: "Reportes" },
+  { href: "/settings", icon: Settings, label: "Configuración" },
 ]
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const { currentUser, logout } = useApp()
+  const { currentUser, logout, teamSettings } = useApp()
 
   return (
     <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 bg-white border-r border-slate-100 flex-col z-30 shadow-sm">
       {/* Logo */}
       <div className="px-6 py-5 border-b border-slate-100">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-brand-blue flex items-center justify-center shadow-md shadow-blue-200">
-            <Trophy className="w-5 h-5 text-white" />
+          <div className="w-9 h-9 rounded-xl bg-brand-blue flex items-center justify-center shadow-md shadow-blue-200 overflow-hidden shrink-0">
+            {teamSettings?.logo_url ? (
+              <img src={teamSettings.logo_url} alt={teamSettings.name} className="w-full h-full object-cover" />
+            ) : (
+              <Trophy className="w-5 h-5 text-white" />
+            )}
           </div>
-          <div>
-            <span className="text-[15px] font-bold text-slate-900 tracking-tight">FutbolMetrics</span>
+          <div className="min-w-0">
+            <span className="text-[15px] font-bold text-slate-900 tracking-tight truncate block">{teamSettings?.name || "FutbolMetrics"}</span>
             <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Pro</p>
           </div>
         </div>

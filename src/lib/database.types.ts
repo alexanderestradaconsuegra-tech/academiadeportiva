@@ -280,6 +280,36 @@ export type Database = {
         }
         Relationships: []
       }
+      team_settings: {
+        Row: {
+          city: string | null
+          description: string | null
+          founded_year: number | null
+          id: string
+          logo_url: string | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          description?: string | null
+          founded_year?: number | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          description?: string | null
+          founded_year?: number | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -5,7 +5,8 @@ import { useApp } from "@/context/AppContext"
 import { Trophy, Eye, EyeOff, Lock, Mail, AlertCircle } from "lucide-react"
 
 export default function LoginPage() {
-  const { login, isAuthenticated } = useApp()
+  const { login, isAuthenticated, teamSettings } = useApp()
+  const teamName = teamSettings?.name || "FutbolMetrics"
   const router = useRouter()
   const [email, setEmail] = useState("entrenador@futbolmetrics.com")
   const [password, setPassword] = useState("coach2024")
@@ -44,12 +45,16 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="flex items-center gap-3 relative z-10">
-          <div className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center">
-            <Trophy className="w-6 h-6 text-white" />
+          <div className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center overflow-hidden shrink-0">
+            {teamSettings?.logo_url ? (
+              <img src={teamSettings.logo_url} alt={teamName} className="w-full h-full object-cover" />
+            ) : (
+              <Trophy className="w-6 h-6 text-white" />
+            )}
           </div>
           <div>
-            <span className="text-xl font-bold text-white tracking-tight">FutbolMetrics</span>
-            <p className="text-blue-200/60 text-xs font-medium">Academia Deportiva</p>
+            <span className="text-xl font-bold text-white tracking-tight">{teamName}</span>
+            <p className="text-blue-200/60 text-xs font-medium">{teamSettings?.description || "Academia Deportiva"}</p>
           </div>
         </div>
 
@@ -97,10 +102,14 @@ export default function LoginPage() {
         <div className="w-full max-w-md animate-fade-in">
           {/* Mobile logo */}
           <div className="flex lg:hidden items-center gap-3 mb-10 justify-center">
-            <div className="w-10 h-10 rounded-xl bg-[#0B5CFF] flex items-center justify-center shadow-md shadow-blue-200">
-              <Trophy className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl bg-[#0B5CFF] flex items-center justify-center shadow-md shadow-blue-200 overflow-hidden shrink-0">
+              {teamSettings?.logo_url ? (
+                <img src={teamSettings.logo_url} alt={teamName} className="w-full h-full object-cover" />
+              ) : (
+                <Trophy className="w-5 h-5 text-white" />
+              )}
             </div>
-            <span className="text-xl font-bold text-slate-900">FutbolMetrics</span>
+            <span className="text-xl font-bold text-slate-900">{teamName}</span>
           </div>
 
           <div className="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100">
@@ -170,7 +179,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-xs text-slate-400 mt-6">
-            © 2024 FutbolMetrics · Sistema para academias de fútbol
+            © 2024 {teamName} · Sistema para academias de fútbol
           </p>
         </div>
       </div>
