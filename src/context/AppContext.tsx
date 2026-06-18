@@ -28,6 +28,8 @@ interface AppContextType extends AppState {
   deletePlayer: (id: string) => void
   addActivity: (activity: Omit<Activity, "id" | "created_at">) => Activity
   addEvaluation: (evaluation: Omit<Evaluation, "id">) => Evaluation
+  updateEvaluation: (id: string, evaluation: Partial<Omit<Evaluation, "id" | "player_id">>) => void
+  deleteEvaluation: (id: string) => void
   addLiveSession: (session: Omit<LiveSession, "id">) => LiveSession
   updateTeamSettings: (data: Partial<Omit<TeamSettings, "id" | "updated_at">>) => void
   addTraining: (training: Omit<Training, "id" | "created_at">) => Training
@@ -401,6 +403,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return evaluation
   }, [])
 
+  const updateEvaluation = useCallback((id: string, data: Partial<Omit<Evaluation, "id" | "player_id">>) => {
+    setState(s => ({
+      ...s,
+      evaluations: s.evaluations.map(e => e.id === id ? { ...e, ...data } : e),
+    }))
+    supabase.from("evaluations").update(data).eq("id", id).then(({ error }) => { if (error) console.error("updateEvaluation:", error) })
+  }, [])
+
+  const deleteEvaluation = useCallback((id: string) => {
+    setState(s => ({ ...s, evaluations: s.evaluations.filter(e => e.id !== id) }))
+    supabase.from("evaluations").delete().eq("id", id).then(({ error }) => { if (error) console.error("deleteEvaluation:", error) })
+  }, [])
+
   const getPlayer = useCallback((id: string) => state.players.find(p => p.id === id), [state.players])
 
   const getPlayerActivities = useCallback(
@@ -566,6 +581,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         deletePlayer,
         addActivity,
         addEvaluation,
+        updateEvaluation,
+        deleteEvaluation,
         addLiveSession,
         updateTeamSettings,
         addTraining,

@@ -7,8 +7,9 @@ import AppShell from "@/components/layout/AppShell"
 import ScoreRing from "@/components/ui/ScoreRing"
 import Badge from "@/components/ui/Badge"
 import Button from "@/components/ui/Button"
+import Input from "@/components/ui/Input"
 import NotificationToggle from "@/components/ui/NotificationToggle"
-import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight } from "lucide-react"
+import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2 } from "lucide-react"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
 import type { Evaluation } from "@/lib/types"
 import {
@@ -126,9 +127,15 @@ function EvaluationComparison({ evaluations }: { evaluations: Evaluation[] }) {
   )
 }
 
+const EMPTY_EVAL_FORM = {
+  date: new Date().toISOString().split("T")[0],
+  speed_score: "70", strength_score: "70", technique_score: "70",
+  resistance_score: "70", power_score: "70", agility_score: "70",
+}
+
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
-  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, currentUser } = useApp()
+  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, currentUser, addEvaluation, updateEvaluation, deleteEvaluation } = useApp()
   const isCoach = currentUser?.role === "coach"
 
   const player = getPlayer(id)
@@ -138,6 +145,52 @@ export default function PlayerProfilePage() {
   const health = getPlayerHealth(id)
   const sessions = getPlayerSessions(id)
   const upcomingTrainings = player ? getUpcomingTrainings(player.category).slice(0, 3) : []
+
+  const [showEvalForm, setShowEvalForm] = useState(false)
+  const [editingEvalId, setEditingEvalId] = useState<string | null>(null)
+  const [evalForm, setEvalForm] = useState(EMPTY_EVAL_FORM)
+  const [savingEval, setSavingEval] = useState(false)
+
+  const setEvalField = (k: keyof typeof evalForm, v: string) => setEvalForm(f => ({ ...f, [k]: v }))
+
+  function openNewEval() {
+    setEditingEvalId(null)
+    setEvalForm(EMPTY_EVAL_FORM)
+    setShowEvalForm(true)
+  }
+
+  function openEditEval(e: Evaluation) {
+    setEditingEvalId(e.id)
+    setEvalForm({
+      date: e.date,
+      speed_score: String(e.speed_score), strength_score: String(e.strength_score), technique_score: String(e.technique_score),
+      resistance_score: String(e.resistance_score), power_score: String(e.power_score), agility_score: String(e.agility_score),
+    })
+    setShowEvalForm(true)
+  }
+
+  async function handleEvalSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setSavingEval(true)
+    const scores = {
+      speed_score: Number(evalForm.speed_score), strength_score: Number(evalForm.strength_score),
+      technique_score: Number(evalForm.technique_score), resistance_score: Number(evalForm.resistance_score),
+      power_score: Number(evalForm.power_score), agility_score: Number(evalForm.agility_score),
+    }
+    const general_score = Math.round(Object.values(scores).reduce((a, b) => a + b, 0) / Object.values(scores).length)
+    if (editingEvalId) {
+      updateEvaluation(editingEvalId, { ...scores, general_score, date: evalForm.date })
+    } else {
+      addEvaluation({ player_id: id, ...scores, general_score, date: evalForm.date })
+    }
+    setShowEvalForm(false)
+    setSavingEval(false)
+  }
+
+  function handleDeleteEval(e: Evaluation) {
+    if (!confirm(`¿Eliminar la evaluación del ${formatDate(e.date)}? Esta acción no se puede deshacer.`)) return
+    deleteEvaluation(e.id)
+  }
 
   if (!player) {
     return (
@@ -243,11 +296,23 @@ export default function PlayerProfilePage() {
             {/* Left column */}
             <div className="xl:col-span-2 space-y-6">
               {/* Attribute scores */}
-              {latestEval && (
+              {latestEval ? (
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Atributos Físicos y Técnicos</h2>
-                    <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(latestEval.date)}</span>
+                  <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
+                    <div>
+                      <h2 className="text-sm font-bold text-slate-900 dark:text-white">Atributos Físicos y Técnicos</h2>
+                      <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(latestEval.date)}</span>
+                    </div>
+                    {isCoach && (
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline" onClick={() => openEditEval(latestEval)}>
+                          <Edit size={13} /> Editar
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={openNewEval}>
+                          <Plus size={13} /> Nueva evaluación
+                        </Button>
+                      </div>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {attrs.map(([k, label]) => {
@@ -270,7 +335,15 @@ export default function PlayerProfilePage() {
                     })}
                   </div>
                 </div>
-              )}
+              ) : isCoach ? (
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 text-center">
+                  <Target size={28} className="mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Este jugador todavía no tiene evaluaciones de atributos.</p>
+                  <Button size="sm" onClick={openNewEval}>
+                    <Plus size={13} /> Agregar primera evaluación
+                  </Button>
+                </div>
+              ) : null}
 
               {/* Progress line chart */}
               {progressData.length > 1 && (
@@ -501,6 +574,55 @@ export default function PlayerProfilePage() {
             </div>
           </div>
         </div>
+
+        {showEvalForm && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg animate-scale-in">
+              <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+                  {editingEvalId ? "Editar Evaluación" : "Nueva Evaluación"}
+                </h2>
+                <button onClick={() => setShowEvalForm(false)} className="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
+                  <X size={16} />
+                </button>
+              </div>
+              <form onSubmit={handleEvalSubmit} className="p-5 space-y-4">
+                <Input label="Fecha *" type="date" value={evalForm.date} onChange={e => setEvalField("date", e.target.value)} required />
+                <div className="grid grid-cols-2 gap-3">
+                  {Object.entries(ATTR_LABELS).map(([k, label]) => (
+                    <Input
+                      key={k}
+                      label={`${label} (0-100)`}
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={evalForm[k as keyof typeof evalForm]}
+                      onChange={e => setEvalField(k as keyof typeof evalForm, e.target.value)}
+                      required
+                    />
+                  ))}
+                </div>
+                <div className="flex items-center gap-3 justify-end pt-2">
+                  {editingEvalId && (
+                    <Button
+                      type="button"
+                      variant="danger"
+                      className="mr-auto"
+                      onClick={() => {
+                        const ev = evaluations.find(e => e.id === editingEvalId)
+                        if (ev) { handleDeleteEval(ev); setShowEvalForm(false) }
+                      }}
+                    >
+                      <Trash2 size={14} /> Eliminar
+                    </Button>
+                  )}
+                  <Button variant="secondary" type="button" onClick={() => setShowEvalForm(false)}>Cancelar</Button>
+                  <Button type="submit" loading={savingEval}>Guardar</Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   )
