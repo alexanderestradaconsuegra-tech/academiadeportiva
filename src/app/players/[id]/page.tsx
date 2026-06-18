@@ -98,7 +98,7 @@ export default function PlayerProfilePage() {
             </Link>
           </div>
 
-          <div className="flex items-end gap-5 relative z-10">
+          <div className="flex items-end gap-5 relative z-40">
             <div className="w-20 h-20 md:w-24 md:h-24 xl:w-28 xl:h-28 rounded-2xl border-2 border-white/30 shadow-2xl overflow-hidden shrink-0 bg-white/10">
               <img src={player.photo_url} alt={player.name} className="w-full h-full object-cover" />
             </div>
