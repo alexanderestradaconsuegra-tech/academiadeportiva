@@ -2,35 +2,73 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useApp } from "@/context/AppContext"
-import { Trophy, Eye, EyeOff, Lock, Mail, AlertCircle } from "lucide-react"
+import { Trophy, Eye, EyeOff, Lock, Mail, AlertCircle, User } from "lucide-react"
 
 export default function LoginPage() {
-  const { login, isAuthenticated, teamSettings } = useApp()
+  const { login, isAuthenticated, authReady, teamSettings } = useApp()
   const teamName = teamSettings?.name || "FutbolMetrics"
   const router = useRouter()
-  const [email, setEmail] = useState("entrenador@futbolmetrics.com")
-  const [password, setPassword] = useState("coach2024")
+
+  const [checkingSetup, setCheckingSetup] = useState(true)
+  const [needsSetup, setNeedsSetup] = useState(false)
+
+  const [fullName, setFullName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
   useEffect(() => {
-    if (isAuthenticated) router.replace("/dashboard")
-  }, [isAuthenticated, router])
+    if (authReady && isAuthenticated) router.replace("/dashboard")
+  }, [authReady, isAuthenticated, router])
+
+  useEffect(() => {
+    fetch("/api/admin/bootstrap-coach")
+      .then(r => r.json())
+      .then(d => setNeedsSetup(!!d.needsSetup))
+      .catch(() => setNeedsSetup(false))
+      .finally(() => setCheckingSetup(false))
+  }, [])
+
+  async function handleSetup(e: React.FormEvent) {
+    e.preventDefault()
+    setError("")
+    setLoading(true)
+    const res = await fetch("/api/admin/bootstrap-coach", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, full_name: fullName }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      setError(data.error || "No se pudo crear la cuenta.")
+      setLoading(false)
+      return
+    }
+    const loginError = await login(email, password)
+    if (loginError) {
+      setError(loginError)
+      setLoading(false)
+      return
+    }
+    router.push("/dashboard")
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError("")
     setLoading(true)
-    await new Promise(r => setTimeout(r, 800))
-    const ok = login(email, password)
-    if (ok) {
+    const loginError = await login(email, password)
+    if (!loginError) {
       router.push("/dashboard")
     } else {
-      setError("Credenciales incorrectas. Intenta de nuevo.")
+      setError(loginError)
       setLoading(false)
     }
   }
+
+  if (checkingSetup) return null
 
   return (
     <div className="min-h-screen flex">
@@ -113,69 +151,122 @@ export default function LoginPage() {
           </div>
 
           <div className="bg-white rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100">
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Bienvenido de vuelta</h2>
-              <p className="text-slate-500 text-sm mt-1">Accede a tu panel de entrenador</p>
-            </div>
-
-            {/* Hint */}
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 mb-6 flex items-start gap-3">
-              <AlertCircle className="w-4 h-4 text-[#0B5CFF] shrink-0 mt-0.5" />
-              <div className="text-xs text-slate-600">
-                <strong className="text-[#0B5CFF]">Demo:</strong> Los campos ya están precargados. Solo presiona Ingresar.
-              </div>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Email */}
-              <div>
-                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wide block mb-1.5">Correo electrónico</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                    className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                  />
+            {needsSetup ? (
+              <>
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Crear cuenta de entrenador</h2>
+                  <p className="text-slate-500 text-sm mt-1">Esta es la primera vez que se usa el sistema. Crea el acceso principal.</p>
                 </div>
-              </div>
 
-              {/* Password */}
-              <div>
-                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wide block mb-1.5">Contraseña</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} required
-                    className="w-full h-11 pl-10 pr-11 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
-                  />
-                  <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                    {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                <form onSubmit={handleSetup} className="space-y-5">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 uppercase tracking-wide block mb-1.5">Nombre completo</label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="text" value={fullName} onChange={e => setFullName(e.target.value)} required
+                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 uppercase tracking-wide block mb-1.5">Correo electrónico</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="email" value={email} onChange={e => setEmail(e.target.value)} required
+                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 uppercase tracking-wide block mb-1.5">Contraseña</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} required minLength={6}
+                        className="w-full h-11 pl-10 pr-11 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                      />
+                      <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 rounded-xl px-3 py-2.5">
+                      <AlertCircle size={14} />
+                      {error}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit" disabled={loading}
+                    className="w-full h-11 bg-[#0B5CFF] text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-200 disabled:opacity-60 flex items-center justify-center gap-2"
+                  >
+                    {loading ? "Creando cuenta..." : "Crear cuenta y entrar"}
                   </button>
+                </form>
+              </>
+            ) : (
+              <>
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Bienvenido de vuelta</h2>
+                  <p className="text-slate-500 text-sm mt-1">Accede a tu panel</p>
                 </div>
-              </div>
 
-              {error && (
-                <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 rounded-xl px-3 py-2.5">
-                  <AlertCircle size={14} />
-                  {error}
-                </div>
-              )}
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 uppercase tracking-wide block mb-1.5">Correo electrónico</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type="email" value={email} onChange={e => setEmail(e.target.value)} required
+                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
 
-              <button
-                type="submit" disabled={loading}
-                className="w-full h-11 bg-[#0B5CFF] text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-200 disabled:opacity-60 flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Ingresando...
-                  </>
-                ) : "Ingresar al panel"}
-              </button>
-            </form>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 uppercase tracking-wide block mb-1.5">Contraseña</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} required
+                        className="w-full h-11 pl-10 pr-11 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                      />
+                      <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 rounded-xl px-3 py-2.5">
+                      <AlertCircle size={14} />
+                      {error}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit" disabled={loading}
+                    className="w-full h-11 bg-[#0B5CFF] text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-200 disabled:opacity-60 flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Ingresando...
+                      </>
+                    ) : "Ingresar al panel"}
+                  </button>
+                </form>
+              </>
+            )}
           </div>
 
           <p className="text-center text-xs text-slate-400 mt-6">

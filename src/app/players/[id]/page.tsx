@@ -34,7 +34,8 @@ const ATTR_COLORS: Record<string, string> = {
 
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
-  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions } = useApp()
+  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, currentUser } = useApp()
+  const isCoach = currentUser?.role === "coach"
 
   const player = getPlayer(id)
   const activities = getPlayerActivities(id)
@@ -91,11 +92,13 @@ export default function PlayerProfilePage() {
             <div className="flex-1">
               <p className="text-blue-200/70 text-xs font-medium">Perfil del Jugador</p>
             </div>
-            <Link href={`/players/${id}/edit`}>
-              <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                <Edit size={14} /> Editar
-              </Button>
-            </Link>
+            {isCoach && (
+              <Link href={`/players/${id}/edit`}>
+                <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                  <Edit size={14} /> Editar
+                </Button>
+              </Link>
+            )}
           </div>
 
           <div className="flex items-end gap-5 relative z-40">
@@ -341,26 +344,28 @@ export default function PlayerProfilePage() {
               )}
 
               {/* Quick actions */}
-              <div className="space-y-2">
-                <Link href="/activities" className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
-                  <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-[#0B5CFF] transition-colors">
-                    <Dumbbell size={16} className="text-[#0B5CFF] group-hover:text-white transition-colors" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">Registrar actividad</p>
-                    <p className="text-xs text-slate-400">Agregar nuevo entrenamiento</p>
-                  </div>
-                </Link>
-                <Link href={`/reports?player=${id}`} className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
-                  <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-[#0B5CFF] transition-colors">
-                    <Target size={16} className="text-[#0B5CFF] group-hover:text-white transition-colors" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">Ver reporte</p>
-                    <p className="text-xs text-slate-400">Informe completo del jugador</p>
-                  </div>
-                </Link>
-              </div>
+              {isCoach && (
+                <div className="space-y-2">
+                  <Link href="/activities" className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-[#0B5CFF] transition-colors">
+                      <Dumbbell size={16} className="text-[#0B5CFF] group-hover:text-white transition-colors" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">Registrar actividad</p>
+                      <p className="text-xs text-slate-400">Agregar nuevo entrenamiento</p>
+                    </div>
+                  </Link>
+                  <Link href={`/reports?player=${id}`} className="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
+                    <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-[#0B5CFF] transition-colors">
+                      <Target size={16} className="text-[#0B5CFF] group-hover:text-white transition-colors" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">Ver reporte</p>
+                      <p className="text-xs text-slate-400">Informe completo del jugador</p>
+                    </div>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>

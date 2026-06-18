@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
 
@@ -12,11 +12,12 @@ interface AppState {
   liveSessions: LiveSession[]
   teamSettings: TeamSettings | null
   isAuthenticated: boolean
-  currentUser: { name: string; role: string } | null
+  authReady: boolean
+  currentUser: Profile | null
 }
 
 interface AppContextType extends AppState {
-  login: (email: string, password: string) => boolean
+  login: (email: string, password: string) => Promise<string | null>
   logout: () => void
   addPlayer: (player: Omit<Player, "id" | "created_at">) => Player
   updatePlayer: (id: string, data: Partial<Player>) => void
@@ -135,6 +136,15 @@ function mapTeamSettings(row: Tables<"team_settings">): TeamSettings {
   }
 }
 
+function mapProfile(row: Tables<"profiles">): Profile {
+  return {
+    id: row.id,
+    role: row.role as UserRole,
+    player_id: row.player_id,
+    full_name: row.full_name || "",
+  }
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AppState>({
     players: [],
@@ -144,46 +154,97 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     liveSessions: [],
     teamSettings: null,
     isAuthenticated: false,
+    authReady: false,
     currentUser: null,
   })
 
-  useEffect(() => {
-    async function loadAll() {
-      const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, teamRes] = await Promise.all([
-        supabase.from("players").select("*"),
-        supabase.from("activities").select("*"),
-        supabase.from("evaluations").select("*"),
-        supabase.from("health_profiles").select("*"),
-        supabase.from("live_sessions").select("*"),
-        supabase.from("team_settings").select("*").limit(1).maybeSingle(),
-      ])
-      setState(s => ({
-        ...s,
-        players: (playersRes.data ?? []).map(mapPlayer),
-        activities: (activitiesRes.data ?? []).map(mapActivity),
-        evaluations: (evaluationsRes.data ?? []).map(mapEvaluation),
-        healthProfiles: (healthRes.data ?? []).map(mapHealthProfile),
-        liveSessions: (sessionsRes.data ?? []).map(mapLiveSession),
-        teamSettings: teamRes.data ? mapTeamSettings(teamRes.data) : null,
-      }))
-    }
-    loadAll()
+  const loadTeamSettings = useCallback(async () => {
+    const { data } = await supabase.from("team_settings").select("*").limit(1).maybeSingle()
+    setState(s => ({ ...s, teamSettings: data ? mapTeamSettings(data) : null }))
   }, [])
 
-  const login = useCallback((email: string, password: string): boolean => {
-    if (email === "entrenador@futbolmetrics.com" && password === "coach2024") {
-      setState(s => ({
-        ...s,
-        isAuthenticated: true,
-        currentUser: { name: "Entrenador Principal", role: "Coach" },
-      }))
-      return true
-    }
-    return false
+  const loadPlayerData = useCallback(async () => {
+    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes] = await Promise.all([
+      supabase.from("players").select("*"),
+      supabase.from("activities").select("*"),
+      supabase.from("evaluations").select("*"),
+      supabase.from("health_profiles").select("*"),
+      supabase.from("live_sessions").select("*"),
+    ])
+    setState(s => ({
+      ...s,
+      players: (playersRes.data ?? []).map(mapPlayer),
+      activities: (activitiesRes.data ?? []).map(mapActivity),
+      evaluations: (evaluationsRes.data ?? []).map(mapEvaluation),
+      healthProfiles: (healthRes.data ?? []).map(mapHealthProfile),
+      liveSessions: (sessionsRes.data ?? []).map(mapLiveSession),
+    }))
   }, [])
+
+  const loadProfileFor = useCallback(async (userId: string) => {
+    const { data } = await supabase.from("profiles").select("*").eq("id", userId).single()
+    return data ? mapProfile(data) : null
+  }, [])
+
+  useEffect(() => {
+    loadTeamSettings()
+
+    async function restoreSession() {
+      const { data } = await supabase.auth.getSession()
+      const userId = data.session?.user.id
+      if (userId) {
+        const profile = await loadProfileFor(userId)
+        if (profile) {
+          setState(s => ({ ...s, isAuthenticated: true, currentUser: profile }))
+          await loadPlayerData()
+        }
+      }
+      setState(s => ({ ...s, authReady: true }))
+    }
+    restoreSession()
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        setState(s => ({
+          ...s,
+          isAuthenticated: false,
+          currentUser: null,
+          players: [],
+          activities: [],
+          evaluations: [],
+          healthProfiles: [],
+          liveSessions: [],
+        }))
+      }
+    })
+    return () => sub.subscription.unsubscribe()
+  }, [loadTeamSettings, loadPlayerData, loadProfileFor])
+
+  const login = useCallback(async (email: string, password: string): Promise<string | null> => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error || !data.user) return "Credenciales incorrectas. Intenta de nuevo."
+    const profile = await loadProfileFor(data.user.id)
+    if (!profile) {
+      await supabase.auth.signOut()
+      return "Tu cuenta no tiene un acceso asignado. Contacta al entrenador."
+    }
+    setState(s => ({ ...s, isAuthenticated: true, currentUser: profile }))
+    await loadPlayerData()
+    return null
+  }, [loadProfileFor, loadPlayerData])
 
   const logout = useCallback(() => {
-    setState(s => ({ ...s, isAuthenticated: false, currentUser: null }))
+    supabase.auth.signOut()
+    setState(s => ({
+      ...s,
+      isAuthenticated: false,
+      currentUser: null,
+      players: [],
+      activities: [],
+      evaluations: [],
+      healthProfiles: [],
+      liveSessions: [],
+    }))
   }, [])
 
   const addPlayer = useCallback((data: Omit<Player, "id" | "created_at">): Player => {

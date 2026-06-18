@@ -1,7 +1,7 @@
 "use client"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Trophy, Settings } from "lucide-react"
+import { Trophy, Settings, LogOut } from "lucide-react"
 import { useApp } from "@/context/AppContext"
 
 const TITLES: Record<string, string> = {
@@ -16,7 +16,8 @@ const TITLES: Record<string, string> = {
 
 export default function MobileHeader() {
   const pathname = usePathname()
-  const { currentUser, teamSettings } = useApp()
+  const { currentUser, teamSettings, logout } = useApp()
+  const isPlayer = currentUser?.role === "player"
   const title = Object.entries(TITLES).find(([k]) => pathname.startsWith(k))?.[1] ?? (teamSettings?.name || "FutbolMetrics")
   const isHealth = pathname.startsWith("/health")
 
@@ -36,11 +37,17 @@ export default function MobileHeader() {
         )}
       </div>
       <div className="flex items-center gap-2">
-        <Link href="/settings" className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
-          <Settings size={16} />
-        </Link>
+        {isPlayer ? (
+          <button onClick={logout} className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors" title="Cerrar sesión">
+            <LogOut size={16} />
+          </button>
+        ) : (
+          <Link href="/settings" className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
+            <Settings size={16} />
+          </Link>
+        )}
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0B5CFF] to-[#071B4D] flex items-center justify-center text-white text-xs font-bold">
-          {currentUser?.name.charAt(0) ?? "E"}
+          {currentUser?.full_name.charAt(0) ?? "E"}
         </div>
       </div>
     </header>

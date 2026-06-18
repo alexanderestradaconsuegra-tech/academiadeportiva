@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          id: string
+          role: string
+          player_id: string | null
+          full_name: string | null
+          created_at: string
+        }
+        Insert: {
+          id: string
+          role: string
+          player_id?: string | null
+          full_name?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          role?: string
+          player_id?: string | null
+          full_name?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activities: {
         Row: {
           category: Database["public"]["Enums"]["activity_category"]

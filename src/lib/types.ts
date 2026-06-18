@@ -89,6 +89,15 @@ export interface PlayerWithStats extends Player {
   progress_trend?: number
 }
 
+export type UserRole = "coach" | "player"
+
+export interface Profile {
+  id: string
+  role: UserRole
+  player_id: string | null
+  full_name: string
+}
+
 export interface TeamSettings {
   id: string
   name: string

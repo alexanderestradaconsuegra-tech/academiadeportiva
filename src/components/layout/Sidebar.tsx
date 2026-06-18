@@ -71,11 +71,11 @@ export default function Sidebar() {
       <div className="px-3 py-4 border-t border-slate-100">
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-50">
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0B5CFF] to-[#071B4D] flex items-center justify-center text-white text-xs font-bold shrink-0">
-            {currentUser?.name.charAt(0) ?? "E"}
+            {currentUser?.full_name.charAt(0) ?? "E"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-slate-800 truncate">{currentUser?.name ?? "Entrenador"}</p>
-            <p className="text-[10px] text-slate-400">{currentUser?.role ?? "Coach"}</p>
+            <p className="text-xs font-semibold text-slate-800 truncate">{currentUser?.full_name || "Entrenador"}</p>
+            <p className="text-[10px] text-slate-400">Coach</p>
           </div>
           <button
             onClick={logout}

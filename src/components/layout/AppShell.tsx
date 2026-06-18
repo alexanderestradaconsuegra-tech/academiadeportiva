@@ -7,25 +7,34 @@ import BottomNav from "./BottomNav"
 import MobileHeader from "./MobileHeader"
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useApp()
+  const { isAuthenticated, authReady, currentUser } = useApp()
   const router = useRouter()
   const pathname = usePathname()
 
-  useEffect(() => {
-    if (!isAuthenticated && pathname !== "/") {
-      router.replace("/")
-    }
-  }, [isAuthenticated, pathname, router])
+  const isPlayer = currentUser?.role === "player"
+  const ownPlayerPath = currentUser?.player_id ? `/players/${currentUser.player_id}` : null
 
-  if (!isAuthenticated) return null
+  useEffect(() => {
+    if (!authReady) return
+    if (!isAuthenticated) {
+      if (pathname !== "/") router.replace("/")
+      return
+    }
+    if (isPlayer && ownPlayerPath && pathname !== ownPlayerPath) {
+      router.replace(ownPlayerPath)
+    }
+  }, [authReady, isAuthenticated, isPlayer, ownPlayerPath, pathname, router])
+
+  if (!authReady || !isAuthenticated) return null
+  if (isPlayer && ownPlayerPath && pathname !== ownPlayerPath) return null
 
   return (
     <div className="flex min-h-screen bg-[#F5F7FB]">
       {/* Desktop sidebar — hidden on mobile */}
-      <Sidebar />
+      {!isPlayer && <Sidebar />}
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-h-screen md:ml-64">
+      <div className={isPlayer ? "flex-1 flex flex-col min-h-screen" : "flex-1 flex flex-col min-h-screen md:ml-64"}>
         {/* Mobile top header */}
         <MobileHeader />
 
@@ -35,7 +44,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Mobile bottom nav */}
-      <BottomNav />
+      {!isPlayer && <BottomNav />}
     </div>
   )
 }
