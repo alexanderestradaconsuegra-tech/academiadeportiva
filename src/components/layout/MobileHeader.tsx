@@ -9,6 +9,7 @@ const TITLES: Record<string, string> = {
   "/players":    "Jugadores",
   "/health":     "Salud en Vivo",
   "/activities": "Actividades",
+  "/calendar":   "Calendario",
   "/charts":     "Gráficos",
   "/reports":    "Reportes",
   "/settings":   "Configuración",

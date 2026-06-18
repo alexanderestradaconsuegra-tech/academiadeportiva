@@ -312,6 +312,39 @@ export type Database = {
         }
         Relationships: []
       }
+      trainings: {
+        Row: {
+          category: Database["public"]["Enums"]["category"] | null
+          created_at: string
+          date: string
+          id: string
+          location: string | null
+          notes: string | null
+          time: string | null
+          title: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["category"] | null
+          created_at?: string
+          date: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          time?: string | null
+          title: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["category"] | null
+          created_at?: string
+          date?: string
+          id?: string
+          location?: string | null
+          notes?: string | null
+          time?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       team_settings: {
         Row: {
           city: string | null

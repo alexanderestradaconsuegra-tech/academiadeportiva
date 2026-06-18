@@ -108,6 +108,17 @@ export interface TeamSettings {
   updated_at: string
 }
 
+export interface Training {
+  id: string
+  title: string
+  date: string
+  time: string
+  category: Category | null
+  location: string
+  notes: string
+  created_at: string
+}
+
 // ── Health / Biometrics ────────────────────────────────────────────────────
 
 export type HRZone = "reposo" | "calentamiento" | "aeróbica" | "anaeróbica" | "máxima"

@@ -6,7 +6,7 @@ import AppShell from "@/components/layout/AppShell"
 import ScoreRing from "@/components/ui/ScoreRing"
 import Badge from "@/components/ui/Badge"
 import Button from "@/components/ui/Button"
-import { ArrowLeft, Edit, Dumbbell, Calendar, Ruler, Weight, Target, Star, TrendingUp } from "lucide-react"
+import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp } from "lucide-react"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
@@ -34,7 +34,7 @@ const ATTR_COLORS: Record<string, string> = {
 
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
-  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, currentUser } = useApp()
+  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, currentUser } = useApp()
   const isCoach = currentUser?.role === "coach"
 
   const player = getPlayer(id)
@@ -43,6 +43,7 @@ export default function PlayerProfilePage() {
   const latestEval = getLatestEvaluation(id)
   const health = getPlayerHealth(id)
   const sessions = getPlayerSessions(id)
+  const upcomingTrainings = player ? getUpcomingTrainings(player.category).slice(0, 3) : []
 
   if (!player) {
     return (
@@ -267,6 +268,38 @@ export default function PlayerProfilePage() {
                   <p className="text-sm text-slate-700 font-medium">{player.club}</p>
                 </div>
               </div>
+
+              {/* Upcoming trainings */}
+              {upcomingTrainings.length > 0 && (
+                <div className="bg-white rounded-2xl p-5 border border-slate-100">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CalendarDays size={15} className="text-[#0B5CFF]" />
+                    <h2 className="text-sm font-bold text-slate-900">Próximos Entrenamientos</h2>
+                  </div>
+                  <div className="space-y-2">
+                    {upcomingTrainings.map(t => (
+                      <div key={t.id} className="p-3 rounded-xl bg-slate-50 border border-slate-100">
+                        <p className="text-sm font-semibold text-slate-900">{t.title}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className="text-xs text-slate-400">{formatDate(t.date)}</span>
+                          {t.time && (
+                            <>
+                              <span className="text-slate-200">·</span>
+                              <span className="text-xs text-slate-400 flex items-center gap-1"><Clock size={11} /> {t.time}</span>
+                            </>
+                          )}
+                          {t.location && (
+                            <>
+                              <span className="text-slate-200">·</span>
+                              <span className="text-xs text-slate-400 flex items-center gap-1"><MapPin size={11} /> {t.location}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Best mark */}
               {bestActivity && (

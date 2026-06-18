@@ -4,13 +4,14 @@ import { usePathname } from "next/navigation"
 import { useApp } from "@/context/AppContext"
 import { cn } from "@/lib/utils"
 import {
-  LayoutDashboard, Users, Dumbbell, BarChart3, FileText, LogOut, Trophy, ChevronRight, Heart, Settings
+  LayoutDashboard, Users, Dumbbell, BarChart3, FileText, LogOut, Trophy, ChevronRight, Heart, Settings, CalendarDays
 } from "lucide-react"
 
 const NAV = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/players", icon: Users, label: "Jugadores" },
   { href: "/activities", icon: Dumbbell, label: "Actividades" },
+  { href: "/calendar", icon: CalendarDays, label: "Calendario" },
   { href: "/health", icon: Heart, label: "Salud en Vivo", badge: "LIVE" },
   { href: "/charts", icon: BarChart3, label: "Gráficos" },
   { href: "/reports", icon: FileText, label: "Reportes" },

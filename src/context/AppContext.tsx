@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
 
@@ -11,6 +11,7 @@ interface AppState {
   healthProfiles: HealthProfile[]
   liveSessions: LiveSession[]
   teamSettings: TeamSettings | null
+  trainings: Training[]
   isAuthenticated: boolean
   authReady: boolean
   currentUser: Profile | null
@@ -26,12 +27,16 @@ interface AppContextType extends AppState {
   addEvaluation: (evaluation: Omit<Evaluation, "id">) => Evaluation
   addLiveSession: (session: Omit<LiveSession, "id">) => LiveSession
   updateTeamSettings: (data: Partial<Omit<TeamSettings, "id" | "updated_at">>) => void
+  addTraining: (training: Omit<Training, "id" | "created_at">) => Training
+  updateTraining: (id: string, data: Partial<Training>) => void
+  deleteTraining: (id: string) => void
   getPlayer: (id: string) => Player | undefined
   getPlayerActivities: (playerId: string) => Activity[]
   getPlayerEvaluations: (playerId: string) => Evaluation[]
   getLatestEvaluation: (playerId: string) => Evaluation | undefined
   getPlayerHealth: (playerId: string) => HealthProfile | undefined
   getPlayerSessions: (playerId: string) => LiveSession[]
+  getUpcomingTrainings: (category?: Category | null) => Training[]
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -136,6 +141,19 @@ function mapTeamSettings(row: Tables<"team_settings">): TeamSettings {
   }
 }
 
+function mapTraining(row: Tables<"trainings">): Training {
+  return {
+    id: row.id,
+    title: row.title,
+    date: row.date,
+    time: row.time ?? "",
+    category: row.category,
+    location: row.location ?? "",
+    notes: row.notes ?? "",
+    created_at: row.created_at,
+  }
+}
+
 function mapProfile(row: Tables<"profiles">): Profile {
   return {
     id: row.id,
@@ -153,6 +171,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     healthProfiles: [],
     liveSessions: [],
     teamSettings: null,
+    trainings: [],
     isAuthenticated: false,
     authReady: false,
     currentUser: null,
@@ -164,12 +183,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const loadPlayerData = useCallback(async () => {
-    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes] = await Promise.all([
+    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes] = await Promise.all([
       supabase.from("players").select("*"),
       supabase.from("activities").select("*"),
       supabase.from("evaluations").select("*"),
       supabase.from("health_profiles").select("*"),
       supabase.from("live_sessions").select("*"),
+      supabase.from("trainings").select("*"),
     ])
     setState(s => ({
       ...s,
@@ -178,6 +198,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       evaluations: (evaluationsRes.data ?? []).map(mapEvaluation),
       healthProfiles: (healthRes.data ?? []).map(mapHealthProfile),
       liveSessions: (sessionsRes.data ?? []).map(mapLiveSession),
+      trainings: (trainingsRes.data ?? []).map(mapTraining),
     }))
   }, [])
 
@@ -214,6 +235,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           evaluations: [],
           healthProfiles: [],
           liveSessions: [],
+          trainings: [],
         }))
       }
     })
@@ -393,6 +415,50 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     supabase.from("team_settings").update(update).eq("id", id).then(({ error }) => { if (error) console.error("updateTeamSettings:", error) })
   }, [state.teamSettings])
 
+  const addTraining = useCallback((data: Omit<Training, "id" | "created_at">): Training => {
+    const training: Training = {
+      ...data,
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+    }
+    setState(s => ({ ...s, trainings: [...s.trainings, training] }))
+    supabase.from("trainings").insert({
+      id: training.id,
+      title: training.title,
+      date: training.date,
+      time: training.time || null,
+      category: training.category,
+      location: training.location || null,
+      notes: training.notes || null,
+      created_at: training.created_at,
+    }).then(({ error }) => { if (error) console.error("addTraining:", error) })
+    return training
+  }, [])
+
+  const updateTraining = useCallback((id: string, data: Partial<Training>) => {
+    setState(s => ({
+      ...s,
+      trainings: s.trainings.map(t => t.id === id ? { ...t, ...data } : t),
+    }))
+    const update: TablesUpdate<"trainings"> = { ...data }
+    if ("time" in update) update.time = update.time || null
+    if ("location" in update) update.location = update.location || null
+    if ("notes" in update) update.notes = update.notes || null
+    supabase.from("trainings").update(update).eq("id", id).then(({ error }) => { if (error) console.error("updateTraining:", error) })
+  }, [])
+
+  const deleteTraining = useCallback((id: string) => {
+    setState(s => ({ ...s, trainings: s.trainings.filter(t => t.id !== id) }))
+    supabase.from("trainings").delete().eq("id", id).then(({ error }) => { if (error) console.error("deleteTraining:", error) })
+  }, [])
+
+  const getUpcomingTrainings = useCallback((category?: Category | null) => {
+    const today = new Date().toISOString().split("T")[0]
+    return state.trainings
+      .filter(t => t.date >= today && (!category || !t.category || t.category === category))
+      .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
+  }, [state.trainings])
+
   return (
     <AppContext.Provider
       value={{
@@ -406,12 +472,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addEvaluation,
         addLiveSession,
         updateTeamSettings,
+        addTraining,
+        updateTraining,
+        deleteTraining,
         getPlayer,
         getPlayerActivities,
         getPlayerEvaluations,
         getLatestEvaluation,
         getPlayerHealth,
         getPlayerSessions,
+        getUpcomingTrainings,
       }}
     >
       {children}
