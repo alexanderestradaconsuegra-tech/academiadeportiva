@@ -106,6 +106,12 @@ export interface TeamSettings {
   founded_year: number | null
   description: string
   updated_at: string
+  calib_p0_lat: number | null
+  calib_p0_lng: number | null
+  calib_p1_lat: number | null
+  calib_p1_lng: number | null
+  calib_p2_lat: number | null
+  calib_p2_lng: number | null
 }
 
 export interface Training {

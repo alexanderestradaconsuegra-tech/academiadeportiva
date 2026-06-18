@@ -42,6 +42,7 @@ interface AppContextType extends AppState {
   getUpcomingTrainings: (category?: Category | null) => Training[]
   toggleDarkMode: () => void
   addPositionSample: (sample: Omit<PositionSample, "id" | "created_at">) => void
+  addPositionSamples: (samples: Omit<PositionSample, "id" | "created_at">[]) => void
   deletePositionSession: (playerId: string, sessionLabel: string) => void
   getPlayerPositionSamples: (playerId: string) => PositionSample[]
 }
@@ -145,6 +146,12 @@ function mapTeamSettings(row: Tables<"team_settings">): TeamSettings {
     founded_year: row.founded_year,
     description: row.description ?? "",
     updated_at: row.updated_at,
+    calib_p0_lat: row.calib_p0_lat,
+    calib_p0_lng: row.calib_p0_lng,
+    calib_p1_lat: row.calib_p1_lat,
+    calib_p1_lng: row.calib_p1_lng,
+    calib_p2_lat: row.calib_p2_lat,
+    calib_p2_lng: row.calib_p2_lng,
   }
 }
 
@@ -510,6 +517,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }).then(({ error }) => { if (error) console.error("addPositionSample:", error) })
   }, [])
 
+  const addPositionSamples = useCallback((items: Omit<PositionSample, "id" | "created_at">[]) => {
+    if (items.length === 0) return
+    const now = new Date().toISOString()
+    const samples: PositionSample[] = items.map(data => ({ ...data, id: crypto.randomUUID(), created_at: now }))
+    setState(s => ({ ...s, positionSamples: [...s.positionSamples, ...samples] }))
+    supabase.from("position_samples").insert(
+      samples.map(sample => ({
+        id: sample.id,
+        player_id: sample.player_id,
+        session_label: sample.session_label,
+        x: sample.x,
+        y: sample.y,
+        created_at: sample.created_at,
+      }))
+    ).then(({ error }) => { if (error) console.error("addPositionSamples:", error) })
+  }, [])
+
   const deletePositionSession = useCallback((playerId: string, sessionLabel: string) => {
     setState(s => ({
       ...s,
@@ -556,6 +580,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         getUpcomingTrainings,
         toggleDarkMode,
         addPositionSample,
+        addPositionSamples,
         deletePositionSession,
         getPlayerPositionSamples,
       }}

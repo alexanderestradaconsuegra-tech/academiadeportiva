@@ -6,14 +6,22 @@ import Button from "@/components/ui/Button"
 import Select from "@/components/ui/Select"
 import Input from "@/components/ui/Input"
 import { useApp } from "@/context/AppContext"
-import { Circle, Trash2, Radar, Info } from "lucide-react"
+import { Circle, Trash2, Radar, Info, MapPin, Upload, CheckCircle2, RotateCcw } from "lucide-react"
 import { cn, formatDate } from "@/lib/utils"
+import { buildTransform, parseTrackFile, type GeoPoint } from "@/lib/gps"
 
 const W = 105
 const H = 68
 const COLS = 21
 const ROWS = 14
-const SAMPLE_INTERVAL_MS = 120
+const GPS_SAMPLE_INTERVAL_MS = 1500
+const MAX_IMPORT_POINTS = 1500
+
+const CALIB_STEPS: { key: "calib_p0" | "calib_p1" | "calib_p2"; label: string; hint: string }[] = [
+  { key: "calib_p0", label: "Esquina 1 de 3", hint: "Párate en la esquina de TU arco, lado izquierdo." },
+  { key: "calib_p1", label: "Esquina 2 de 3", hint: "Ahora ve a la esquina de TU arco, lado derecho." },
+  { key: "calib_p2", label: "Esquina 3 de 3", hint: "Por último, ve a la esquina del arco RIVAL, lado izquierdo." },
+]
 
 function heatColor(t: number) {
   const stops: [number, [number, number, number]][] = [
@@ -32,14 +40,40 @@ function heatColor(t: number) {
 }
 
 export default function HeatmapPage() {
-  const { players, getPlayerPositionSamples, addPositionSample, deletePositionSession } = useApp()
-  const svgRef = useRef<SVGSVGElement>(null)
+  const { players, teamSettings, getPlayerPositionSamples, addPositionSample, addPositionSamples, deletePositionSession, updateTeamSettings } = useApp()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const lastSampleRef = useRef(0)
+  const watchIdRef = useRef<number | null>(null)
 
   const [playerId, setPlayerId] = useState(players[0]?.id ?? "")
   const [sessionLabel, setSessionLabel] = useState("")
   const [viewSession, setViewSession] = useState<string | null>(null)
   const [recording, setRecording] = useState(false)
+  const [gpsError, setGpsError] = useState("")
+  const [importing, setImporting] = useState(false)
+  const [importError, setImportError] = useState("")
+  const [importedCount, setImportedCount] = useState<number | null>(null)
+
+  const [calibrating, setCalibrating] = useState(false)
+  const [calibStep, setCalibStep] = useState(0)
+  const [calibPoints, setCalibPoints] = useState<GeoPoint[]>([])
+  const [calibBusy, setCalibBusy] = useState(false)
+  const [calibError, setCalibError] = useState("")
+
+  const calibrated = !!(
+    teamSettings?.calib_p0_lat != null && teamSettings?.calib_p0_lng != null &&
+    teamSettings?.calib_p1_lat != null && teamSettings?.calib_p1_lng != null &&
+    teamSettings?.calib_p2_lat != null && teamSettings?.calib_p2_lng != null
+  )
+
+  const transform = useMemo(() => {
+    if (!calibrated || !teamSettings) return null
+    return buildTransform({
+      p0: { lat: teamSettings.calib_p0_lat!, lng: teamSettings.calib_p0_lng! },
+      p1: { lat: teamSettings.calib_p1_lat!, lng: teamSettings.calib_p1_lng! },
+      p2: { lat: teamSettings.calib_p2_lat!, lng: teamSettings.calib_p2_lng! },
+    }, W, H)
+  }, [calibrated, teamSettings])
 
   const allSamples = playerId ? getPlayerPositionSamples(playerId) : []
 
@@ -91,43 +125,126 @@ export default function HeatmapPage() {
     }
   }, [activeSamples])
 
-  function toPoint(clientX: number, clientY: number) {
-    const rect = svgRef.current!.getBoundingClientRect()
-    const x = Math.max(0, Math.min(W, ((clientX - rect.left) / rect.width) * W))
-    const y = Math.max(0, Math.min(H, ((clientY - rect.top) / rect.height) * H))
-    return { x, y }
+  function startCalibration() {
+    setCalibError("")
+    setCalibPoints([])
+    setCalibStep(0)
+    setCalibrating(true)
   }
 
-  function recordPoint(clientX: number, clientY: number) {
-    const now = Date.now()
-    if (now - lastSampleRef.current < SAMPLE_INTERVAL_MS) return
-    lastSampleRef.current = now
-    const p = toPoint(clientX, clientY)
-    addPositionSample({ player_id: playerId, session_label: sessionLabel, x: p.x, y: p.y })
+  function cancelCalibration() {
+    setCalibrating(false)
+    setCalibBusy(false)
+    setCalibError("")
   }
 
-  function startRecording() {
-    if (!playerId || !sessionLabel.trim()) return
+  function markCalibCorner() {
+    if (!("geolocation" in navigator)) {
+      setCalibError("Este navegador no tiene GPS disponible.")
+      return
+    }
+    setCalibBusy(true)
+    setCalibError("")
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        setCalibBusy(false)
+        const point: GeoPoint = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        const next = [...calibPoints, point]
+        setCalibPoints(next)
+        if (next.length === CALIB_STEPS.length) {
+          updateTeamSettings({
+            calib_p0_lat: next[0].lat, calib_p0_lng: next[0].lng,
+            calib_p1_lat: next[1].lat, calib_p1_lng: next[1].lng,
+            calib_p2_lat: next[2].lat, calib_p2_lng: next[2].lng,
+          })
+          setCalibrating(false)
+        } else {
+          setCalibStep(s => s + 1)
+        }
+      },
+      err => {
+        setCalibBusy(false)
+        setCalibError("No se pudo obtener tu ubicación GPS: " + err.message)
+      },
+      { enableHighAccuracy: true, timeout: 15000 }
+    )
+  }
+
+  function startGpsRecording() {
+    if (!playerId || !sessionLabel.trim() || !transform) return
+    if (!("geolocation" in navigator)) {
+      setGpsError("Este navegador no tiene GPS disponible.")
+      return
+    }
+    setGpsError("")
     setViewSession(null)
+    lastSampleRef.current = 0
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      pos => {
+        const now = Date.now()
+        if (now - lastSampleRef.current < GPS_SAMPLE_INTERVAL_MS) return
+        lastSampleRef.current = now
+        const point = transform.toPitch({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+        if (!point) return
+        addPositionSample({ player_id: playerId, session_label: sessionLabel, x: point.x, y: point.y })
+      },
+      err => {
+        setGpsError("Error de GPS: " + err.message)
+        stopGpsRecording()
+      },
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 }
+    )
     setRecording(true)
   }
 
-  function stopRecording() {
+  function stopGpsRecording() {
+    if (watchIdRef.current != null) {
+      navigator.geolocation.clearWatch(watchIdRef.current)
+      watchIdRef.current = null
+    }
     setRecording(false)
   }
 
-  function handlePointerDown(e: React.PointerEvent) {
-    if (!recording) return
-    recordPoint(e.clientX, e.clientY)
-  }
-
-  function handlePointerMove(e: React.PointerEvent) {
-    if (!recording || e.buttons !== 1) return
-    recordPoint(e.clientX, e.clientY)
+  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    if (!playerId || !sessionLabel.trim()) {
+      setImportError("Elige un jugador y escribe el nombre de la sesión antes de importar.")
+      return
+    }
+    if (!transform) {
+      setImportError("Primero calibra la cancha con GPS.")
+      return
+    }
+    setImportError("")
+    setImportedCount(null)
+    setImporting(true)
+    try {
+      const text = await file.text()
+      const points = parseTrackFile(file.name, text)
+      if (points.length === 0) {
+        setImportError("No se encontraron puntos GPS en ese archivo.")
+        setImporting(false)
+        return
+      }
+      const step = Math.max(1, Math.ceil(points.length / MAX_IMPORT_POINTS))
+      const samples = []
+      for (let i = 0; i < points.length; i += step) {
+        const p = transform.toPitch(points[i])
+        if (p) samples.push({ player_id: playerId, session_label: sessionLabel, x: p.x, y: p.y })
+      }
+      addPositionSamples(samples)
+      setImportedCount(samples.length)
+      setViewSession(sessionLabel)
+    } catch {
+      setImportError("No se pudo leer ese archivo.")
+    }
+    setImporting(false)
   }
 
   function loadSession(label: string) {
-    setRecording(false)
+    stopGpsRecording()
     setViewSession(label)
     setSessionLabel(label)
   }
@@ -143,23 +260,57 @@ export default function HeatmapPage() {
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
-        <PageHeader title="Mapa de Calor" subtitle="Zonas de la cancha donde el jugador estuvo presente" />
+        <PageHeader title="Mapa de Calor" subtitle="Zonas de la cancha donde el jugador estuvo presente, con GPS real" />
 
         <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-2xl p-4 mb-6 flex items-start gap-3">
           <Info size={16} className="text-[#0B5CFF] mt-0.5 shrink-0" />
           <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-            Esta función todavía no usa un GPS real. Mientras tanto, puedes <strong>marcar manualmente</strong> dónde
-            estuvo el jugador durante un partido o entrenamiento: activa &quot;Grabar&quot; y arrastra el dedo o el mouse
-            sobre la cancha para ir marcando su recorrido. Cuando tengas un dispositivo GPS, estos mismos puntos se
-            podrán generar automáticamente.
+            Esta función usa GPS real: un reloj inteligente, el celular del jugador o una pechera/chaleco GPS deportivo.
+            Si no tienen ningún dispositivo con GPS, esta función no se puede usar todavía. Primero calibra tu cancha
+            una sola vez (marcando 3 esquinas), y luego puedes <strong>grabar en vivo</strong> (abriendo esta página desde
+            el dispositivo con GPS durante el entrenamiento) o <strong>importar el archivo</strong> (GPX o CSV) que el
+            reloj o la pechera exportan después de la sesión.
           </p>
+        </div>
+
+        {/* Calibración */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 mb-6">
+          {!calibrating ? (
+            <div className="flex items-center gap-3 flex-wrap justify-between">
+              <div className="flex items-center gap-2">
+                {calibrated ? (
+                  <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                ) : (
+                  <MapPin size={16} className="text-amber-500 shrink-0" />
+                )}
+                <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                  {calibrated ? "Cancha calibrada con GPS" : "Tu cancha aún no está calibrada"}
+                </p>
+              </div>
+              <Button size="sm" variant={calibrated ? "outline" : "primary"} onClick={startCalibration}>
+                {calibrated ? <><RotateCcw size={13} /> Recalibrar</> : <><MapPin size={13} /> Calibrar cancha con GPS</>}
+              </Button>
+            </div>
+          ) : (
+            <div>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">{CALIB_STEPS[calibStep].label}</p>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-4">{CALIB_STEPS[calibStep].hint}</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button size="sm" onClick={markCalibCorner} loading={calibBusy}>
+                  <MapPin size={13} /> Marcar esta esquina
+                </Button>
+                <Button size="sm" variant="secondary" onClick={cancelCalibration} disabled={calibBusy}>Cancelar</Button>
+              </div>
+              {calibError && <p className="text-xs text-red-600 mt-2">{calibError}</p>}
+            </div>
+          )}
         </div>
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 mb-6">
           <div className="flex items-center gap-2 mb-4 flex-wrap">
             <Select
               value={playerId}
-              onChange={e => { setPlayerId(e.target.value); setViewSession(null); setRecording(false); setSessionLabel("") }}
+              onChange={e => { setPlayerId(e.target.value); setViewSession(null); setSessionLabel(""); setImportedCount(null) }}
               options={players.map(p => ({ value: p.id, label: p.name }))}
               placeholder="Selecciona un jugador"
               className="w-56"
@@ -172,35 +323,40 @@ export default function HeatmapPage() {
               className="h-10 w-56"
             />
             {recording ? (
-              <Button variant="danger" onClick={stopRecording}>
+              <Button variant="danger" onClick={stopGpsRecording}>
                 <Circle size={14} fill="currentColor" /> Detener grabación
               </Button>
             ) : (
-              <Button onClick={startRecording} disabled={!playerId || !sessionLabel.trim()}>
-                <Radar size={14} /> Grabar
+              <Button onClick={startGpsRecording} disabled={!playerId || !sessionLabel.trim() || !calibrated}>
+                <Radar size={14} /> Grabar GPS en vivo
               </Button>
             )}
+            <input ref={fileInputRef} type="file" accept=".gpx,.csv" className="hidden" onChange={handleImportFile} />
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={!playerId || !sessionLabel.trim() || !calibrated || importing}
+              loading={importing}
+            >
+              <Upload size={14} /> Importar archivo (GPX/CSV)
+            </Button>
           </div>
+
+          {!calibrated && (
+            <p className="text-xs text-amber-600 mb-3">Calibra la cancha con GPS arriba antes de grabar o importar.</p>
+          )}
+          {gpsError && <p className="text-xs text-red-600 mb-3">{gpsError}</p>}
+          {importError && <p className="text-xs text-red-600 mb-3">{importError}</p>}
+          {importedCount != null && <p className="text-xs text-emerald-600 mb-3">Se importaron {importedCount} puntos GPS.</p>}
 
           <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
             {recording
-              ? "Mantén presionado y arrastra sobre la cancha para marcar las posiciones del jugador."
-              : "Elige un jugador, escribe el nombre de la sesión (ej: el partido de hoy) y presiona Grabar para empezar a marcar."}
+              ? "Grabando posición GPS en vivo. Llévate este dispositivo durante el entrenamiento o partido."
+              : "Elige un jugador y escribe el nombre de la sesión (ej: el partido de hoy) para grabar en vivo o importar un archivo del dispositivo GPS."}
           </p>
 
-          <div
-            className="relative w-full aspect-[105/68] rounded-xl overflow-hidden bg-gradient-to-b from-emerald-600 to-emerald-700 select-none touch-none"
-            style={{ cursor: recording ? "crosshair" : "default" }}
-          >
-            <svg
-              ref={svgRef}
-              viewBox={`0 0 ${W} ${H}`}
-              preserveAspectRatio="none"
-              className="w-full h-full block"
-              style={{ touchAction: "none" }}
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-            >
+          <div className="relative w-full aspect-[105/68] rounded-xl overflow-hidden bg-gradient-to-b from-emerald-600 to-emerald-700 select-none">
+            <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-full block">
               <g stroke="#ffffff" strokeOpacity={0.55} strokeWidth={0.4} fill="none">
                 <rect x={1} y={1} width={W - 2} height={H - 2} />
                 <line x1={W / 2} y1={1} x2={W / 2} y2={H - 1} />

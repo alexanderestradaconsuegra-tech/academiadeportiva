@@ -43,7 +43,7 @@ export default function PlayerCard({ player, evaluation }: PlayerCardProps) {
 
       <div className="px-3 md:px-5 pb-4 md:pb-5">
         {/* Avatar */}
-        <div className="-mt-4 mb-3 flex items-end justify-between">
+        <div className="-mt-4 mb-3 flex items-end justify-between relative z-10">
           <div className="w-16 h-16 rounded-2xl border-4 border-white shadow-md bg-slate-100 dark:bg-slate-800 overflow-hidden ring-2 ring-slate-100">
             <img
               src={player.photo_url || avatarUrl(player.name, player.id)}
