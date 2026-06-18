@@ -294,6 +294,7 @@ export type Database = {
         | "Técnica"
         | "Resistencia"
         | "Potencia"
+        | "Pliometría"
         | "Agilidad"
       activity_unit: "segundos" | "kg" | "repeticiones" | "metros" | "puntos"
       category:

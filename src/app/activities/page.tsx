@@ -12,7 +12,7 @@ import { Plus, X, Dumbbell } from "lucide-react"
 import { cn, formatDate, getCategoryColor, getIntensityColor } from "@/lib/utils"
 import type { ActivityCategory, ActivityUnit, Intensity } from "@/lib/types"
 
-const CATEGORIES: ActivityCategory[] = ["Velocidad","Fuerza","Técnica","Resistencia","Potencia","Agilidad"]
+const CATEGORIES: ActivityCategory[] = ["Velocidad","Fuerza","Técnica","Resistencia","Potencia","Pliometría","Agilidad"]
 const UNITS: ActivityUnit[] = ["segundos","kg","repeticiones","metros","puntos"]
 const INTENSITIES: Intensity[] = ["Baja","Media","Alta"]
 
@@ -25,15 +25,16 @@ const EXERCISES: Record<ActivityCategory, string[]> = {
   ],
   Técnica: ["Conducción slalom","Pases de precisión","Control de balón","Regate 1v1","Atajadas al arco"],
   Resistencia: ["Cooper Test","Carrera continua 5km","Fartlek","Yo-Yo test","Resistencia aeróbica"],
-  Potencia: [
-    "Salto vertical","Salto horizontal","Lanzamiento balón medicinal","CMJ","Drop jump",
-    "Box jump","Depth jump","Bounding","Salto a una pierna","Salto con contramovimiento lateral",
+  Potencia: ["Lanzamiento balón medicinal","Salida explosiva 10m","Aceleración explosiva"],
+  Pliometría: [
+    "CMJ","Drop jump","Box jump","Depth jump","Bounding",
+    "Salto vertical","Salto horizontal","Salto a una pierna","Salto con contramovimiento lateral",
   ],
   Agilidad: ["Escalera de agilidad","Slalom con balón","T-test","Hexagonal","Illinois agility"],
 }
 
-const catBadgeMap: Record<string, "amber" | "red" | "blue" | "green" | "orange" | "purple"> = {
-  Velocidad: "amber", Fuerza: "red", Técnica: "blue", Resistencia: "green", Potencia: "orange", Agilidad: "purple"
+const catBadgeMap: Record<string, "amber" | "red" | "blue" | "green" | "orange" | "purple" | "pink"> = {
+  Velocidad: "amber", Fuerza: "red", Técnica: "blue", Resistencia: "green", Potencia: "orange", Pliometría: "pink", Agilidad: "purple"
 }
 
 export default function ActivitiesPage() {

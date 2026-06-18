@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 interface BadgeProps {
   children: React.ReactNode
   className?: string
-  variant?: "default" | "blue" | "green" | "amber" | "red" | "purple" | "orange"
+  variant?: "default" | "blue" | "green" | "amber" | "red" | "purple" | "orange" | "pink"
 }
 
 const variants = {
@@ -14,6 +14,7 @@ const variants = {
   red: "bg-red-50 text-red-700",
   purple: "bg-purple-50 text-purple-700",
   orange: "bg-orange-50 text-orange-700",
+  pink: "bg-pink-50 text-pink-700",
 }
 
 export default function Badge({ children, className, variant = "default" }: BadgeProps) {

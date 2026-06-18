@@ -35,6 +35,7 @@ export function getCategoryColor(category: string): string {
     Técnica: "text-blue-400 bg-blue-400/10",
     Resistencia: "text-emerald-400 bg-emerald-400/10",
     Potencia: "text-orange-400 bg-orange-400/10",
+    Pliometría: "text-pink-400 bg-pink-400/10",
     Agilidad: "text-purple-400 bg-purple-400/10",
   }
   return colors[category] || "text-slate-400 bg-slate-400/10"

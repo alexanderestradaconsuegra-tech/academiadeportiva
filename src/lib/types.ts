@@ -28,6 +28,7 @@ export type ActivityCategory =
   | "Técnica"
   | "Resistencia"
   | "Potencia"
+  | "Pliometría"
   | "Agilidad"
 
 export type ActivityUnit =

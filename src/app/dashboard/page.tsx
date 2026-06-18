@@ -177,7 +177,7 @@ export default function DashboardPage() {
                 return (
                   <div key={a.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors">
                     <div className={cn("w-2 h-2 rounded-full shrink-0", getCategoryColor(a.category).split(" ")[0].replace("text-", "bg-"))}>
-                      <div className={cn("w-2 h-2 rounded-full", a.category === "Velocidad" ? "bg-yellow-400" : a.category === "Técnica" ? "bg-blue-400" : a.category === "Fuerza" ? "bg-red-400" : a.category === "Resistencia" ? "bg-emerald-400" : a.category === "Potencia" ? "bg-orange-400" : "bg-purple-400")} />
+                      <div className={cn("w-2 h-2 rounded-full", a.category === "Velocidad" ? "bg-yellow-400" : a.category === "Técnica" ? "bg-blue-400" : a.category === "Fuerza" ? "bg-red-400" : a.category === "Resistencia" ? "bg-emerald-400" : a.category === "Potencia" ? "bg-orange-400" : a.category === "Pliometría" ? "bg-pink-400" : "bg-purple-400")} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-slate-900 truncate">{a.exercise}</p>
