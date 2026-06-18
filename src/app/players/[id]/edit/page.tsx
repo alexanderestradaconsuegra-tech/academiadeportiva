@@ -9,6 +9,7 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Select from "@/components/ui/Select"
 import Textarea from "@/components/ui/Textarea"
+import PhotoUpload from "@/components/ui/PhotoUpload"
 import { ArrowLeft, Trash2 } from "lucide-react"
 import type { DominantFoot, Position, Category } from "@/lib/types"
 
@@ -87,7 +88,10 @@ export default function EditPlayerPage() {
               <div className="w-28 h-28 rounded-2xl overflow-hidden border-2 border-slate-200 mx-auto mb-4">
                 <img src={form.photo_url || player.photo_url} alt={player.name} className="w-full h-full object-cover" />
               </div>
-              <Input label="URL de foto" placeholder="https://..." value={form.photo_url} onChange={e => set("photo_url", e.target.value)} className="w-full text-xs" />
+              <div className="space-y-3">
+                <PhotoUpload folder="players" onUploaded={url => set("photo_url", url)} />
+                <Input label="URL de foto" placeholder="https://..." value={form.photo_url} onChange={e => set("photo_url", e.target.value)} className="w-full text-xs" />
+              </div>
             </div>
 
             <div className="lg:col-span-2 space-y-5">

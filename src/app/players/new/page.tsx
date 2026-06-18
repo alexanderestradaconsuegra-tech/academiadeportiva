@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Select from "@/components/ui/Select"
 import Textarea from "@/components/ui/Textarea"
+import PhotoUpload from "@/components/ui/PhotoUpload"
 import { ArrowLeft, UserCircle } from "lucide-react"
 import Link from "next/link"
 import type { DominantFoot, Position, Category } from "@/lib/types"
@@ -75,8 +76,9 @@ export default function NewPlayerPage() {
                 )}
               </div>
               <p className="text-xs text-slate-500 text-center leading-relaxed">
-                Se genera automáticamente un avatar.<br />Puedes pegar una URL de foto.
+                Se genera automáticamente un avatar si no subes una foto.
               </p>
+              <PhotoUpload folder="players" onUploaded={url => set("photo_url", url)} />
               <Input
                 label="URL de foto"
                 placeholder="https://..."

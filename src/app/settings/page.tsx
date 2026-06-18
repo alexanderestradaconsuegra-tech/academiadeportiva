@@ -7,6 +7,7 @@ import PageHeader from "@/components/ui/PageHeader"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
+import PhotoUpload from "@/components/ui/PhotoUpload"
 import { Trophy, Check, KeyRound, UserCheck } from "lucide-react"
 
 function AccessManager() {
@@ -156,8 +157,9 @@ export default function SettingsPage() {
                 )}
               </div>
               <p className="text-xs text-slate-500 text-center leading-relaxed">
-                Pega la URL de una imagen para usarla como logo del equipo.
+                Sube una imagen o pega la URL de una imagen para usarla como logo del equipo.
               </p>
+              <PhotoUpload folder="team" onUploaded={url => set("logo_url", url)} />
               <Input
                 label="URL del logo"
                 placeholder="https://..."
