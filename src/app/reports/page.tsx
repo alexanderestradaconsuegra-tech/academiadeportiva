@@ -1,11 +1,11 @@
 "use client"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/ui/PageHeader"
 import Button from "@/components/ui/Button"
 import ScoreRing from "@/components/ui/ScoreRing"
-import { Printer, Download, FileText, TrendingUp, TrendingDown, Target, ChevronDown } from "lucide-react"
+import { Printer, Download, TrendingUp, TrendingDown, Target, ChevronDown } from "lucide-react"
 import { cn, formatDate, getScoreColor, getCategoryColor } from "@/lib/utils"
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
@@ -24,10 +24,27 @@ const ATTRS = [
 export default function ReportsPage() {
   const { players, getLatestEvaluation, getPlayerActivities } = useApp()
   const [selectedId, setSelectedId] = useState(players[0]?.id ?? "")
+  const [downloading, setDownloading] = useState(false)
+  const reportRef = useRef<HTMLDivElement>(null)
 
   const player = players.find(p => p.id === selectedId)
   const evaluation = player ? getLatestEvaluation(player.id) : undefined
   const activities = player ? getPlayerActivities(player.id) : []
+
+  async function handleDownloadPdf() {
+    if (!reportRef.current || !player) return
+    setDownloading(true)
+    const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+      import("html2canvas"),
+      import("jspdf"),
+    ])
+    const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true, backgroundColor: "#ffffff" })
+    const imgData = canvas.toDataURL("image/png")
+    const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [canvas.width, canvas.height] })
+    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height)
+    pdf.save(`reporte-${player.name.replace(/\s+/g, "_").toLowerCase()}.pdf`)
+    setDownloading(false)
+  }
 
   if (!player) return <AppShell><div className="p-8 text-slate-400">Selecciona un jugador para ver el reporte.</div></AppShell>
 
@@ -48,7 +65,7 @@ export default function ReportsPage() {
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
         <PageHeader title="Reporte del Jugador" subtitle="Vista detallada de rendimiento y evolución">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 no-print">
             <div className="relative">
               <select
                 value={selectedId} onChange={e => setSelectedId(e.target.value)}
@@ -61,11 +78,14 @@ export default function ReportsPage() {
             <Button variant="outline" size="sm" onClick={() => window.print()}>
               <Printer size={14} /> Imprimir
             </Button>
+            <Button size="sm" onClick={handleDownloadPdf} loading={downloading}>
+              <Download size={14} /> Descargar PDF
+            </Button>
           </div>
         </PageHeader>
 
         {/* Report card */}
-        <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden mb-6 print:border-none">
+        <div ref={reportRef} className="bg-white rounded-2xl border border-slate-100 overflow-hidden mb-6 print:border-none">
           {/* Header */}
           <div className="bg-gradient-to-r from-[#071B4D] to-[#0B5CFF] px-4 py-6 md:px-8 md:py-8 relative overflow-hidden">
             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 30%, white 1px, transparent 1px)", backgroundSize: "35px 35px" }} />

@@ -22,7 +22,7 @@ export default function MobileHeader() {
   const isHealth = pathname.startsWith("/health")
 
   return (
-    <header className="md:hidden sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-slate-100 px-4 h-14 flex items-center justify-between safe-area-top">
+    <header className="no-print md:hidden sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-slate-100 px-4 h-14 flex items-center justify-between safe-area-top">
       <div className="flex items-center gap-2.5">
         <div className={`w-7 h-7 rounded-xl flex items-center justify-center overflow-hidden shrink-0 ${isHealth ? "bg-gradient-to-br from-red-500 to-pink-500" : "bg-[#0B5CFF]"}`}>
           {teamSettings?.logo_url && !isHealth ? (

@@ -119,3 +119,8 @@ body {
 @supports (backdrop-filter: blur(12px)) {
   .backdrop-blur-xl { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
 }
+
+/* Print: only show the report card, hide app chrome */
+@media print {
+  .no-print { display: none !important; }
+}
