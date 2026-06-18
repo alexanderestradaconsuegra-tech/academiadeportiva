@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
@@ -14,6 +14,8 @@ interface AppState {
   teamSettings: TeamSettings | null
   trainings: Training[]
   positionSamples: PositionSample[]
+  matches: Match[]
+  matchStats: MatchPlayerStat[]
   isAuthenticated: boolean
   authReady: boolean
   currentUser: Profile | null
@@ -35,6 +37,14 @@ interface AppContextType extends AppState {
   addTraining: (training: Omit<Training, "id" | "created_at">) => Training
   updateTraining: (id: string, data: Partial<Training>) => void
   deleteTraining: (id: string) => void
+  addMatch: (match: Omit<Match, "id" | "created_at">) => Match
+  updateMatch: (id: string, data: Partial<Omit<Match, "id" | "created_at">>) => void
+  deleteMatch: (id: string) => void
+  addMatchStat: (stat: Omit<MatchPlayerStat, "id" | "created_at">) => MatchPlayerStat
+  updateMatchStat: (id: string, data: Partial<Omit<MatchPlayerStat, "id" | "created_at" | "match_id" | "player_id">>) => void
+  deleteMatchStat: (id: string) => void
+  getMatchStats: (matchId: string) => MatchPlayerStat[]
+  getPlayerMatches: (playerId: string) => { match: Match; stat: MatchPlayerStat }[]
   getPlayer: (id: string) => Player | undefined
   getPlayerActivities: (playerId: string) => Activity[]
   getPlayerEvaluations: (playerId: string) => Evaluation[]
@@ -181,6 +191,42 @@ function mapPositionSample(row: Tables<"position_samples">): PositionSample {
   }
 }
 
+function mapMatch(row: Tables<"matches">): Match {
+  return {
+    id: row.id,
+    opponent: row.opponent,
+    competition: row.competition ?? "",
+    date: row.date,
+    time: row.time ?? "",
+    location: row.location ?? "",
+    is_home: row.is_home,
+    category: row.category,
+    our_score: row.our_score,
+    opponent_score: row.opponent_score,
+    video_url: row.video_url ?? "",
+    notes: row.notes ?? "",
+    created_at: row.created_at,
+  }
+}
+
+function mapMatchStat(row: Tables<"match_player_stats">): MatchPlayerStat {
+  return {
+    id: row.id,
+    match_id: row.match_id,
+    player_id: row.player_id,
+    minutes_played: row.minutes_played,
+    goals: row.goals,
+    assists: row.assists,
+    yellow_cards: row.yellow_cards,
+    red_cards: row.red_cards,
+    rating: row.rating,
+    position_played: row.position_played ?? "",
+    highlight_url: row.highlight_url ?? "",
+    notes: row.notes ?? "",
+    created_at: row.created_at,
+  }
+}
+
 function mapProfile(row: Tables<"profiles">): Profile {
   return {
     id: row.id,
@@ -200,6 +246,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     teamSettings: null,
     trainings: [],
     positionSamples: [],
+    matches: [],
+    matchStats: [],
     isAuthenticated: false,
     authReady: false,
     currentUser: null,
@@ -232,7 +280,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const loadPlayerData = useCallback(async () => {
-    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes, positionSamplesRes] = await Promise.all([
+    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes, positionSamplesRes, matchesRes, matchStatsRes] = await Promise.all([
       supabase.from("players").select("*"),
       supabase.from("activities").select("*"),
       supabase.from("evaluations").select("*"),
@@ -240,6 +288,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from("live_sessions").select("*"),
       supabase.from("trainings").select("*"),
       supabase.from("position_samples").select("*"),
+      supabase.from("matches").select("*"),
+      supabase.from("match_player_stats").select("*"),
     ])
     setState(s => ({
       ...s,
@@ -250,6 +300,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       liveSessions: (sessionsRes.data ?? []).map(mapLiveSession),
       trainings: (trainingsRes.data ?? []).map(mapTraining),
       positionSamples: (positionSamplesRes.data ?? []).map(mapPositionSample),
+      matches: (matchesRes.data ?? []).map(mapMatch),
+      matchStats: (matchStatsRes.data ?? []).map(mapMatchStat),
     }))
   }, [])
 
@@ -288,6 +340,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           liveSessions: [],
           trainings: [],
           positionSamples: [],
+          matches: [],
+          matchStats: [],
         }))
       }
     })
@@ -519,6 +573,109 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     supabase.from("trainings").delete().eq("id", id).then(({ error }) => { if (error) console.error("deleteTraining:", error) })
   }, [])
 
+  const addMatch = useCallback((data: Omit<Match, "id" | "created_at">): Match => {
+    const match: Match = {
+      ...data,
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+    }
+    setState(s => ({ ...s, matches: [...s.matches, match] }))
+    supabase.from("matches").insert({
+      id: match.id,
+      opponent: match.opponent,
+      competition: match.competition || null,
+      date: match.date,
+      time: match.time || null,
+      location: match.location || null,
+      is_home: match.is_home,
+      category: match.category,
+      our_score: match.our_score,
+      opponent_score: match.opponent_score,
+      video_url: match.video_url || null,
+      notes: match.notes || null,
+      created_at: match.created_at,
+    }).then(({ error }) => { if (error) console.error("addMatch:", error) })
+    return match
+  }, [])
+
+  const updateMatch = useCallback((id: string, data: Partial<Omit<Match, "id" | "created_at">>) => {
+    setState(s => ({
+      ...s,
+      matches: s.matches.map(m => m.id === id ? { ...m, ...data } : m),
+    }))
+    const update: TablesUpdate<"matches"> = { ...data }
+    if ("competition" in update) update.competition = update.competition || null
+    if ("time" in update) update.time = update.time || null
+    if ("location" in update) update.location = update.location || null
+    if ("video_url" in update) update.video_url = update.video_url || null
+    if ("notes" in update) update.notes = update.notes || null
+    supabase.from("matches").update(update).eq("id", id).then(({ error }) => { if (error) console.error("updateMatch:", error) })
+  }, [])
+
+  const deleteMatch = useCallback((id: string) => {
+    setState(s => ({
+      ...s,
+      matches: s.matches.filter(m => m.id !== id),
+      matchStats: s.matchStats.filter(ms => ms.match_id !== id),
+    }))
+    supabase.from("matches").delete().eq("id", id).then(({ error }) => { if (error) console.error("deleteMatch:", error) })
+  }, [])
+
+  const addMatchStat = useCallback((data: Omit<MatchPlayerStat, "id" | "created_at">): MatchPlayerStat => {
+    const stat: MatchPlayerStat = {
+      ...data,
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
+    }
+    setState(s => ({ ...s, matchStats: [...s.matchStats, stat] }))
+    supabase.from("match_player_stats").insert({
+      id: stat.id,
+      match_id: stat.match_id,
+      player_id: stat.player_id,
+      minutes_played: stat.minutes_played,
+      goals: stat.goals,
+      assists: stat.assists,
+      yellow_cards: stat.yellow_cards,
+      red_cards: stat.red_cards,
+      rating: stat.rating,
+      position_played: stat.position_played || null,
+      highlight_url: stat.highlight_url || null,
+      notes: stat.notes || null,
+      created_at: stat.created_at,
+    }).then(({ error }) => { if (error) console.error("addMatchStat:", error) })
+    return stat
+  }, [])
+
+  const updateMatchStat = useCallback((id: string, data: Partial<Omit<MatchPlayerStat, "id" | "created_at" | "match_id" | "player_id">>) => {
+    setState(s => ({
+      ...s,
+      matchStats: s.matchStats.map(ms => ms.id === id ? { ...ms, ...data } : ms),
+    }))
+    const update: TablesUpdate<"match_player_stats"> = { ...data }
+    if ("position_played" in update) update.position_played = update.position_played || null
+    if ("highlight_url" in update) update.highlight_url = update.highlight_url || null
+    if ("notes" in update) update.notes = update.notes || null
+    supabase.from("match_player_stats").update(update).eq("id", id).then(({ error }) => { if (error) console.error("updateMatchStat:", error) })
+  }, [])
+
+  const deleteMatchStat = useCallback((id: string) => {
+    setState(s => ({ ...s, matchStats: s.matchStats.filter(ms => ms.id !== id) }))
+    supabase.from("match_player_stats").delete().eq("id", id).then(({ error }) => { if (error) console.error("deleteMatchStat:", error) })
+  }, [])
+
+  const getMatchStats = useCallback(
+    (matchId: string) => state.matchStats.filter(ms => ms.match_id === matchId),
+    [state.matchStats]
+  )
+
+  const getPlayerMatches = useCallback((playerId: string) => {
+    return state.matchStats
+      .filter(ms => ms.player_id === playerId)
+      .map(stat => ({ match: state.matches.find(m => m.id === stat.match_id), stat }))
+      .filter((x): x is { match: Match; stat: MatchPlayerStat } => !!x.match)
+      .sort((a, b) => new Date(b.match.date).getTime() - new Date(a.match.date).getTime())
+  }, [state.matchStats, state.matches])
+
   const addPositionSample = useCallback((data: Omit<PositionSample, "id" | "created_at">) => {
     const sample: PositionSample = { ...data, id: crypto.randomUUID(), created_at: new Date().toISOString() }
     setState(s => ({ ...s, positionSamples: [...s.positionSamples, sample] }))
@@ -588,6 +745,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addTraining,
         updateTraining,
         deleteTraining,
+        addMatch,
+        updateMatch,
+        deleteMatch,
+        addMatchStat,
+        updateMatchStat,
+        deleteMatchStat,
+        getMatchStats,
+        getPlayerMatches,
         getPlayer,
         getPlayerActivities,
         getPlayerEvaluations,

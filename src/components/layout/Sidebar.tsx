@@ -12,6 +12,7 @@ const NAV = [
   { href: "/players", icon: Users, label: "Jugadores" },
   { href: "/activities", icon: Dumbbell, label: "Actividades" },
   { href: "/calendar", icon: CalendarDays, label: "Calendario" },
+  { href: "/matches", icon: Trophy, label: "Partidos" },
   { href: "/health", icon: Heart, label: "Salud en Vivo", badge: "LIVE" },
   { href: "/tactics", icon: PenTool, label: "Tablero Táctico" },
   { href: "/heatmap", icon: Radar, label: "Mapa de Calor" },

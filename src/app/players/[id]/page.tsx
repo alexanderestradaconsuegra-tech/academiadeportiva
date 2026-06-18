@@ -9,7 +9,7 @@ import Badge from "@/components/ui/Badge"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import NotificationToggle from "@/components/ui/NotificationToggle"
-import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2 } from "lucide-react"
+import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints } from "lucide-react"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
 import type { Evaluation } from "@/lib/types"
 import {
@@ -135,7 +135,7 @@ const EMPTY_EVAL_FORM = {
 
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
-  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, currentUser, addEvaluation, updateEvaluation, deleteEvaluation } = useApp()
+  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, currentUser, addEvaluation, updateEvaluation, deleteEvaluation } = useApp()
   const isCoach = currentUser?.role === "coach"
 
   const player = getPlayer(id)
@@ -145,6 +145,7 @@ export default function PlayerProfilePage() {
   const health = getPlayerHealth(id)
   const sessions = getPlayerSessions(id)
   const upcomingTrainings = player ? getUpcomingTrainings(player.category).slice(0, 3) : []
+  const playerMatches = getPlayerMatches(id)
 
   const [showEvalForm, setShowEvalForm] = useState(false)
   const [editingEvalId, setEditingEvalId] = useState<string | null>(null)
@@ -397,6 +398,39 @@ export default function PlayerProfilePage() {
                           <p className="text-xs text-slate-400 dark:text-slate-500">{a.unit}</p>
                         </div>
                       </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Matches */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">Historial de Partidos</h2>
+                  <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">{playerMatches.length} partidos</span>
+                </div>
+                {playerMatches.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400 dark:text-slate-500">
+                    <Trophy size={28} className="mx-auto mb-2 opacity-30" />
+                    <p className="text-sm">Sin partidos registrados</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {playerMatches.map(({ match, stat }) => (
+                      <Link key={stat.id} href={`/matches/${match.id}`} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+                        <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF] flex items-center justify-center shrink-0">
+                          <Trophy size={14} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{match.is_home ? "vs" : "@"} {match.opponent}</p>
+                          <p className="text-xs text-slate-400 dark:text-slate-500">{formatDate(match.date)} · {stat.minutes_played}&apos;</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {stat.goals > 0 && <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600"><Goal size={12} /> {stat.goals}</span>}
+                          {stat.assists > 0 && <span className="flex items-center gap-1 text-xs font-semibold text-blue-500"><Footprints size={12} /> {stat.assists}</span>}
+                          {stat.rating !== null && <span className="flex items-center gap-1 text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md"><Star size={10} className="fill-amber-400 text-amber-400" /> {stat.rating}</span>}
+                        </div>
+                      </Link>
                     ))}
                   </div>
                 )}

@@ -10,6 +10,7 @@ const TITLES: Record<string, string> = {
   "/health":     "Salud en Vivo",
   "/activities": "Actividades",
   "/calendar":   "Calendario",
+  "/matches":    "Partidos",
   "/tactics":    "Tablero Táctico",
   "/heatmap":    "Mapa de Calor",
   "/charts":     "Gráficos",

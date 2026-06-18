@@ -125,6 +125,40 @@ export interface Training {
   created_at: string
 }
 
+// ── Partidos ───────────────────────────────────────────────────────────────
+
+export interface Match {
+  id: string
+  opponent: string
+  competition: string
+  date: string
+  time: string
+  location: string
+  is_home: boolean
+  category: Category | null
+  our_score: number | null
+  opponent_score: number | null
+  video_url: string // link al video/replay de la cámara 360 (Veo, Pixellot, etc.)
+  notes: string
+  created_at: string
+}
+
+export interface MatchPlayerStat {
+  id: string
+  match_id: string
+  player_id: string
+  minutes_played: number
+  goals: number
+  assists: number
+  yellow_cards: number
+  red_cards: number
+  rating: number | null
+  position_played: string
+  highlight_url: string // link al clip individual generado por la cámara 360
+  notes: string
+  created_at: string
+}
+
 // ── Health / Biometrics ────────────────────────────────────────────────────
 
 export type HRZone = "reposo" | "calentamiento" | "aeróbica" | "anaeróbica" | "máxima"

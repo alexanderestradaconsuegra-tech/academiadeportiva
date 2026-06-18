@@ -229,6 +229,117 @@ export type Database = {
           },
         ]
       }
+      match_player_stats: {
+        Row: {
+          assists: number
+          created_at: string
+          goals: number
+          highlight_url: string | null
+          id: string
+          match_id: string
+          minutes_played: number
+          notes: string | null
+          player_id: string
+          position_played: string | null
+          rating: number | null
+          red_cards: number
+          yellow_cards: number
+        }
+        Insert: {
+          assists?: number
+          created_at?: string
+          goals?: number
+          highlight_url?: string | null
+          id?: string
+          match_id: string
+          minutes_played?: number
+          notes?: string | null
+          player_id: string
+          position_played?: string | null
+          rating?: number | null
+          red_cards?: number
+          yellow_cards?: number
+        }
+        Update: {
+          assists?: number
+          created_at?: string
+          goals?: number
+          highlight_url?: string | null
+          id?: string
+          match_id?: string
+          minutes_played?: number
+          notes?: string | null
+          player_id?: string
+          position_played?: string | null
+          rating?: number | null
+          red_cards?: number
+          yellow_cards?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_player_stats_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_player_stats_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matches: {
+        Row: {
+          category: Database["public"]["Enums"]["category"] | null
+          competition: string | null
+          created_at: string
+          date: string
+          id: string
+          is_home: boolean
+          location: string | null
+          notes: string | null
+          opponent: string
+          opponent_score: number | null
+          our_score: number | null
+          time: string | null
+          video_url: string | null
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["category"] | null
+          competition?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          is_home?: boolean
+          location?: string | null
+          notes?: string | null
+          opponent: string
+          opponent_score?: number | null
+          our_score?: number | null
+          time?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["category"] | null
+          competition?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          is_home?: boolean
+          location?: string | null
+          notes?: string | null
+          opponent?: string
+          opponent_score?: number | null
+          our_score?: number | null
+          time?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           age: number
