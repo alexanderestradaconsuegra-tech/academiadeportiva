@@ -12,6 +12,9 @@ import Badge from "@/components/ui/Badge"
 import { Plus, X, CalendarDays, MapPin, Clock, Pencil, Trash2 } from "lucide-react"
 import { cn, formatDate } from "@/lib/utils"
 import type { Category, Training } from "@/lib/types"
+import { useT } from "@/lib/i18n/useT"
+import { calendar } from "@/lib/i18n/dictionaries/calendar"
+import { useEnumT } from "@/lib/i18n/enums"
 
 const CATEGORIES: Category[] = ["Sub-10", "Sub-12", "Sub-14", "Sub-16", "Sub-18", "Juvenil", "Senior"]
 
@@ -20,7 +23,7 @@ const emptyForm = {
   category: "" as Category | "", location: "", notes: "",
 }
 
-async function notifyNewTraining(data: { title: string; date: string; time: string; category: Category | null }) {
+async function notifyNewTraining(data: { title: string; date: string; time: string; category: Category | null }, notificationTitle: string) {
   try {
     const { data: sessionData } = await supabase.auth.getSession()
     const token = sessionData.session?.access_token
@@ -29,7 +32,7 @@ async function notifyNewTraining(data: { title: string; date: string; time: stri
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({
-        title: "Nuevo entrenamiento",
+        title: notificationTitle,
         body: `${data.title} · ${formatDate(data.date)}${data.time ? " " + data.time : ""}`,
         category: data.category || "all",
       }),
@@ -45,6 +48,8 @@ export default function CalendarPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(emptyForm)
+  const t = useT(calendar)
+  const e = useEnumT()
 
   const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))
 
@@ -83,7 +88,7 @@ export default function CalendarPage() {
       updateTraining(editingId, data)
     } else {
       addTraining(data)
-      notifyNewTraining(data)
+      notifyNewTraining(data, t("newTrainingNotificationTitle"))
     }
     setShowForm(false)
     setForm(emptyForm)
@@ -91,15 +96,15 @@ export default function CalendarPage() {
   }
 
   function handleDelete(id: string) {
-    if (confirm("¿Eliminar este entrenamiento?")) deleteTraining(id)
+    if (confirm(t("confirmDeleteTraining"))) deleteTraining(id)
   }
 
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
-        <PageHeader title="Calendario" subtitle={`${trainings.length} entrenamientos programados`}>
+        <PageHeader title={t("pageTitle")} subtitle={`${trainings.length} ${t("trainingsScheduled")}`}>
           <Button onClick={openCreate}>
-            <Plus size={16} /> Nuevo Entrenamiento
+            <Plus size={16} /> {t("newTraining")}
           </Button>
         </PageHeader>
 
@@ -107,7 +112,7 @@ export default function CalendarPage() {
           <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg animate-scale-in">
               <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">{editingId ? "Editar Entrenamiento" : "Nuevo Entrenamiento"}</h2>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">{editingId ? t("editTraining") : t("newTraining")}</h2>
                 <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
                   <X size={16} />
                 </button>
@@ -115,20 +120,20 @@ export default function CalendarPage() {
               <form onSubmit={handleSubmit} className="p-5 space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2">
-                    <Input label="Título *" placeholder="Ej: Entrenamiento técnico" value={form.title} onChange={e => set("title", e.target.value)} required />
+                    <Input label={t("titleLabel")} placeholder={t("titlePlaceholder")} value={form.title} onChange={e => set("title", e.target.value)} required />
                   </div>
-                  <Input label="Fecha *" type="date" value={form.date} onChange={e => set("date", e.target.value)} required />
-                  <Input label="Hora" type="time" value={form.time} onChange={e => set("time", e.target.value)} />
-                  <Select label="Categoría" value={form.category} onChange={e => set("category", e.target.value)}
-                    placeholder="Todas las categorías" options={CATEGORIES.map(c => ({ value: c, label: c }))} />
-                  <Input label="Lugar" placeholder="Ej: Cancha 1" value={form.location} onChange={e => set("location", e.target.value)} />
+                  <Input label={t("dateLabel")} type="date" value={form.date} onChange={e => set("date", e.target.value)} required />
+                  <Input label={t("timeLabel")} type="time" value={form.time} onChange={e => set("time", e.target.value)} />
+                  <Select label={t("categoryLabel")} value={form.category} onChange={ev => set("category", ev.target.value)}
+                    placeholder={t("allCategories")} options={CATEGORIES.map(c => ({ value: c, label: e.category(c) }))} />
+                  <Input label={t("locationLabel")} placeholder={t("locationPlaceholder")} value={form.location} onChange={e => set("location", e.target.value)} />
                   <div className="col-span-2">
-                    <Textarea label="Notas" placeholder="Detalles adicionales..." value={form.notes} onChange={e => set("notes", e.target.value)} rows={2} />
+                    <Textarea label={t("notesLabel")} placeholder={t("notesPlaceholder")} value={form.notes} onChange={e => set("notes", e.target.value)} rows={2} />
                   </div>
                 </div>
                 <div className="flex gap-3 justify-end pt-1">
-                  <Button variant="secondary" type="button" onClick={() => setShowForm(false)}>Cancelar</Button>
-                  <Button type="submit" loading={saving}>Guardar</Button>
+                  <Button variant="secondary" type="button" onClick={() => setShowForm(false)}>{t("cancel")}</Button>
+                  <Button type="submit" loading={saving}>{t("save")}</Button>
                 </div>
               </form>
             </div>
@@ -137,17 +142,17 @@ export default function CalendarPage() {
 
         <div className="space-y-8">
           <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Próximos</h2>
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">{t("upcoming")}</h2>
             {upcoming.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
                 <CalendarDays size={36} className="mb-3 opacity-30" />
-                <p className="font-semibold text-sm">No hay entrenamientos programados</p>
+                <p className="font-semibold text-sm">{t("noTrainingsScheduled")}</p>
               </div>
             ) : (
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                 <div className="divide-y divide-slate-50 dark:divide-slate-800">
-                  {upcoming.map(t => (
-                    <TrainingRow key={t.id} t={t} onEdit={() => openEdit(t)} onDelete={() => handleDelete(t.id)} />
+                  {upcoming.map(tr => (
+                    <TrainingRow key={tr.id} t={tr} onEdit={() => openEdit(tr)} onDelete={() => handleDelete(tr.id)} />
                   ))}
                 </div>
               </div>
@@ -156,11 +161,11 @@ export default function CalendarPage() {
 
           {past.length > 0 && (
             <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Pasados</h2>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">{t("past")}</h2>
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden opacity-70">
                 <div className="divide-y divide-slate-50 dark:divide-slate-800">
-                  {past.map(t => (
-                    <TrainingRow key={t.id} t={t} onEdit={() => openEdit(t)} onDelete={() => handleDelete(t.id)} />
+                  {past.map(tr => (
+                    <TrainingRow key={tr.id} t={tr} onEdit={() => openEdit(tr)} onDelete={() => handleDelete(tr.id)} />
                   ))}
                 </div>
               </div>
@@ -172,37 +177,39 @@ export default function CalendarPage() {
   )
 }
 
-function TrainingRow({ t, onEdit, onDelete }: { t: Training; onEdit: () => void; onDelete: () => void }) {
+function TrainingRow({ t: training, onEdit, onDelete }: { t: Training; onEdit: () => void; onDelete: () => void }) {
+  const t = useT(calendar)
+  const e = useEnumT()
   return (
     <div className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
       <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF] flex items-center justify-center shrink-0">
         <CalendarDays size={18} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-slate-900 dark:text-white">{t.title}</p>
+        <p className="text-sm font-semibold text-slate-900 dark:text-white">{training.title}</p>
         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-          <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(t.date)}</span>
-          {t.time && (
+          <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(training.date)}</span>
+          {training.time && (
             <>
               <span className="text-slate-200">·</span>
-              <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1"><Clock size={11} /> {t.time}</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1"><Clock size={11} /> {training.time}</span>
             </>
           )}
-          {t.location && (
+          {training.location && (
             <>
               <span className="text-slate-200">·</span>
-              <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1"><MapPin size={11} /> {t.location}</span>
+              <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1"><MapPin size={11} /> {training.location}</span>
             </>
           )}
-          {t.notes && <><span className="text-slate-200">·</span><span className="text-xs text-slate-400 dark:text-slate-500 truncate max-w-32">{t.notes}</span></>}
+          {training.notes && <><span className="text-slate-200">·</span><span className="text-xs text-slate-400 dark:text-slate-500 truncate max-w-32">{training.notes}</span></>}
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        {t.category && <Badge variant="blue">{t.category}</Badge>}
-        <button onClick={onEdit} className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors")} title="Editar">
+        {training.category && <Badge variant="blue">{e.category(training.category)}</Badge>}
+        <button onClick={onEdit} className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors")} title={t("edit")}>
           <Pencil size={14} />
         </button>
-        <button onClick={onDelete} className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors")} title="Eliminar">
+        <button onClick={onDelete} className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors")} title={t("deleteAction")}>
           <Trash2 size={14} />
         </button>
       </div>

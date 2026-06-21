@@ -7,6 +7,8 @@ import Input from "@/components/ui/Input"
 import Select from "@/components/ui/Select"
 import { MousePointer2, PenTool, Plus, Undo2, Eraser, Save, Trash2, FolderOpen, Users, CircleDot, LayoutGrid } from "lucide-react"
 import { formatDate } from "@/lib/utils"
+import { useT } from "@/lib/i18n/useT"
+import { tactics } from "@/lib/i18n/dictionaries/tactics"
 
 interface Marker { id: string; team: "home" | "away" | "ball"; x: number; y: number; label: string }
 interface Line { id: string; points: { x: number; y: number }[]; type: "run" | "pass" }
@@ -45,6 +47,7 @@ const FORMATIONS: Record<string, { x: number; y: number }[]> = {
 }
 
 export default function TacticsPage() {
+  const t = useT(tactics)
   const svgRef = useRef<SVGSVGElement>(null)
   const [mode, setMode] = useState<"move" | "draw">("move")
   const [lineType, setLineType] = useState<"run" | "pass">("run")
@@ -110,7 +113,7 @@ export default function TacticsPage() {
 
   function clearBoard() {
     if (markers.length === 0 && lines.length === 0) return
-    if (!confirm("¿Borrar toda la jugada actual del tablero?")) return
+    if (!confirm(t("confirmClearBoard"))) return
     setMarkers([])
     setLines([])
   }
@@ -169,56 +172,56 @@ export default function TacticsPage() {
   }
 
   function deletePlay(id: string) {
-    if (!confirm("¿Eliminar esta jugada guardada?")) return
+    if (!confirm(t("confirmDeletePlay"))) return
     persistPlays(plays.filter(p => p.id !== id))
   }
 
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
-        <PageHeader title="Tablero Táctico" subtitle="Diseña jugadas, formaciones y movimientos del equipo" />
+        <PageHeader title={t("pageTitle")} subtitle={t("pageSubtitle")} />
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 mb-6">
           {/* Toolbar */}
           <div className="flex items-center gap-2 mb-4 flex-wrap">
             <Button size="sm" variant={mode === "move" ? "primary" : "outline"} onClick={() => setMode("move")}>
-              <MousePointer2 size={14} /> Mover
+              <MousePointer2 size={14} /> {t("move")}
             </Button>
             <Button size="sm" variant={mode === "draw" ? "primary" : "outline"} onClick={() => setMode("draw")}>
-              <PenTool size={14} /> Dibujar
+              <PenTool size={14} /> {t("draw")}
             </Button>
             <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
             <Button size="sm" variant="outline" onClick={() => addMarker("home")}>
-              <Plus size={14} /> Jugador
+              <Plus size={14} /> {t("player")}
             </Button>
             <Button size="sm" variant="outline" onClick={() => addMarker("away")}>
-              <Plus size={14} /> Rival
+              <Plus size={14} /> {t("opponent")}
             </Button>
             <Button size="sm" variant="outline" onClick={addBall} disabled={markers.some(m => m.team === "ball")}>
-              <CircleDot size={14} /> Balón
+              <CircleDot size={14} /> {t("ball")}
             </Button>
             <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
             {mode === "draw" && (
               <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
                 <Button size="sm" variant={lineType === "run" ? "primary" : "ghost"} onClick={() => setLineType("run")}>
-                  Movimiento
+                  {t("movement")}
                 </Button>
                 <Button size="sm" variant={lineType === "pass" ? "primary" : "ghost"} onClick={() => setLineType("pass")}>
-                  Pase
+                  {t("pass")}
                 </Button>
               </div>
             )}
             <Button size="sm" variant="ghost" onClick={undoLine} disabled={lines.length === 0}>
-              <Undo2 size={14} /> Deshacer línea
+              <Undo2 size={14} /> {t("undoLine")}
             </Button>
             <Button size="sm" variant="ghost" onClick={clearBoard}>
-              <Eraser size={14} /> Borrar todo
+              <Eraser size={14} /> {t("clearAll")}
             </Button>
             <div className="flex items-center gap-2">
               <LayoutGrid size={14} className="text-slate-400 dark:text-slate-500" />
               <Select
                 options={Object.keys(FORMATIONS).map(f => ({ value: f, label: f }))}
-                placeholder="Formación"
+                placeholder={t("formationPlaceholder")}
                 onChange={e => e.target.value && applyFormation(e.target.value)}
                 value=""
                 className="h-8 text-xs w-32"
@@ -228,27 +231,27 @@ export default function TacticsPage() {
             {showSaveInput ? (
               <div className="flex items-center gap-2">
                 <Input
-                  placeholder="Nombre de la jugada"
+                  placeholder={t("playNamePlaceholder")}
                   value={playName}
                   onChange={e => setPlayName(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && savePlay()}
                   className="h-8 text-xs w-44"
                   autoFocus
                 />
-                <Button size="sm" onClick={savePlay} disabled={!playName.trim()}>Guardar</Button>
-                <Button size="sm" variant="ghost" onClick={() => { setShowSaveInput(false); setPlayName("") }}>Cancelar</Button>
+                <Button size="sm" onClick={savePlay} disabled={!playName.trim()}>{t("save")}</Button>
+                <Button size="sm" variant="ghost" onClick={() => { setShowSaveInput(false); setPlayName("") }}>{t("cancel")}</Button>
               </div>
             ) : (
               <Button size="sm" onClick={() => setShowSaveInput(true)}>
-                <Save size={14} /> Guardar jugada
+                <Save size={14} /> {t("savePlay")}
               </Button>
             )}
           </div>
 
           <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
             {mode === "move"
-              ? "Arrastra los jugadores o el balón para ubicarlos en la cancha. Doble clic sobre un jugador, el balón o una línea para quitarlo."
-              : "Haz clic y arrastra sobre la cancha para dibujar una flecha de movimiento o de pase."}
+              ? t("helperMove")
+              : t("helperDraw")}
           </p>
 
           {/* Field */}

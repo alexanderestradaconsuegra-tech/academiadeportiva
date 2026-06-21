@@ -12,6 +12,9 @@ import Badge from "@/components/ui/Badge"
 import { Plus, X, Trophy, MapPin, Clock, Pencil, Trash2, Video, ChevronRight } from "lucide-react"
 import { cn, formatDate } from "@/lib/utils"
 import type { Category, Match } from "@/lib/types"
+import { useT } from "@/lib/i18n/useT"
+import { matches as matchesDict } from "@/lib/i18n/dictionaries/matches"
+import { useEnumT } from "@/lib/i18n/enums"
 
 const CATEGORIES: Category[] = ["Sub-10", "Sub-12", "Sub-14", "Sub-16", "Sub-18", "Juvenil", "Senior"]
 
@@ -24,6 +27,8 @@ const emptyForm = {
 export default function MatchesPage() {
   const { matches, addMatch, updateMatch, deleteMatch, currentUser } = useApp()
   const isCoach = currentUser?.role === "coach"
+  const t = useT(matchesDict)
+  const enumT = useEnumT()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -81,16 +86,16 @@ export default function MatchesPage() {
   }
 
   function handleDelete(id: string) {
-    if (confirm("¿Eliminar este partido? También se borrarán las estadísticas de los jugadores en ese partido.")) deleteMatch(id)
+    if (confirm(t("confirmDeleteMatch"))) deleteMatch(id)
   }
 
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
-        <PageHeader title="Partidos" subtitle={`${matches.length} partidos registrados`}>
+        <PageHeader title={t("title")} subtitle={`${matches.length} ${t("matchesRegisteredCount")}`}>
           {isCoach && (
             <Button onClick={openCreate}>
-              <Plus size={16} /> Nuevo Partido
+              <Plus size={16} /> {t("newMatch")}
             </Button>
           )}
         </PageHeader>
@@ -99,7 +104,7 @@ export default function MatchesPage() {
           <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-scale-in">
               <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">{editingId ? "Editar Partido" : "Nuevo Partido"}</h2>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">{editingId ? t("editMatch") : t("newMatch")}</h2>
                 <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
                   <X size={16} />
                 </button>
@@ -107,28 +112,28 @@ export default function MatchesPage() {
               <form onSubmit={handleSubmit} className="p-5 space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2">
-                    <Input label="Rival *" placeholder="Ej: Club Atlético San José" value={form.opponent} onChange={e => set("opponent", e.target.value)} required />
+                    <Input label={t("opponentLabel")} placeholder={t("opponentPlaceholder")} value={form.opponent} onChange={e => set("opponent", e.target.value)} required />
                   </div>
-                  <Input label="Fecha *" type="date" value={form.date} onChange={e => set("date", e.target.value)} required />
-                  <Input label="Hora" type="time" value={form.time} onChange={e => set("time", e.target.value)} />
-                  <Select label="Local / Visitante" value={form.is_home} onChange={e => set("is_home", e.target.value)}
-                    options={[{ value: "true", label: "Local" }, { value: "false", label: "Visitante" }]} />
-                  <Select label="Categoría" value={form.category} onChange={e => set("category", e.target.value)}
-                    placeholder="Todas las categorías" options={CATEGORIES.map(c => ({ value: c, label: c }))} />
-                  <Input label="Competición" placeholder="Ej: Liga local, Amistoso" value={form.competition} onChange={e => set("competition", e.target.value)} />
-                  <Input label="Lugar" placeholder="Ej: Estadio Municipal" value={form.location} onChange={e => set("location", e.target.value)} />
-                  <Input label="Nuestros goles" type="number" min={0} placeholder="0" value={form.our_score} onChange={e => set("our_score", e.target.value)} />
-                  <Input label="Goles rival" type="number" min={0} placeholder="0" value={form.opponent_score} onChange={e => set("opponent_score", e.target.value)} />
+                  <Input label={t("dateLabel")} type="date" value={form.date} onChange={e => set("date", e.target.value)} required />
+                  <Input label={t("timeLabel")} type="time" value={form.time} onChange={e => set("time", e.target.value)} />
+                  <Select label={t("homeAwayLabel")} value={form.is_home} onChange={e => set("is_home", e.target.value)}
+                    options={[{ value: "true", label: t("home") }, { value: "false", label: t("away") }]} />
+                  <Select label={t("categoryLabel")} value={form.category} onChange={e => set("category", e.target.value)}
+                    placeholder={t("allCategories")} options={CATEGORIES.map(c => ({ value: c, label: enumT.category(c) }))} />
+                  <Input label={t("competitionLabel")} placeholder={t("competitionPlaceholder")} value={form.competition} onChange={e => set("competition", e.target.value)} />
+                  <Input label={t("locationLabel")} placeholder={t("locationPlaceholder")} value={form.location} onChange={e => set("location", e.target.value)} />
+                  <Input label={t("ourGoalsLabel")} type="number" min={0} placeholder="0" value={form.our_score} onChange={e => set("our_score", e.target.value)} />
+                  <Input label={t("opponentGoalsLabel")} type="number" min={0} placeholder="0" value={form.opponent_score} onChange={e => set("opponent_score", e.target.value)} />
                   <div className="col-span-2">
-                    <Input label="Video del partido (cámara 360)" placeholder="Link de Veo, Pixellot, etc." value={form.video_url} onChange={e => set("video_url", e.target.value)} hint="Si tu escuela tiene cámara deportiva 360, pega aquí el link del partido completo" />
+                    <Input label={t("matchVideoLabel")} placeholder={t("matchVideoPlaceholder")} value={form.video_url} onChange={e => set("video_url", e.target.value)} hint={t("matchVideoHint")} />
                   </div>
                   <div className="col-span-2">
-                    <Textarea label="Notas" placeholder="Observaciones del partido..." value={form.notes} onChange={e => set("notes", e.target.value)} rows={2} />
+                    <Textarea label={t("notesLabel")} placeholder={t("matchNotesPlaceholder")} value={form.notes} onChange={e => set("notes", e.target.value)} rows={2} />
                   </div>
                 </div>
                 <div className="flex gap-3 justify-end pt-1">
-                  <Button variant="secondary" type="button" onClick={() => setShowForm(false)}>Cancelar</Button>
-                  <Button type="submit" loading={saving}>Guardar</Button>
+                  <Button variant="secondary" type="button" onClick={() => setShowForm(false)}>{t("cancel")}</Button>
+                  <Button type="submit" loading={saving}>{t("save")}</Button>
                 </div>
               </form>
             </div>
@@ -137,11 +142,11 @@ export default function MatchesPage() {
 
         <div className="space-y-8">
           <div>
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Próximos</h2>
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">{t("upcoming")}</h2>
             {upcoming.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
                 <Trophy size={36} className="mb-3 opacity-30" />
-                <p className="font-semibold text-sm">No hay partidos programados</p>
+                <p className="font-semibold text-sm">{t("noMatchesScheduled")}</p>
               </div>
             ) : (
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
@@ -156,7 +161,7 @@ export default function MatchesPage() {
 
           {past.length > 0 && (
             <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">Jugados</h2>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">{t("played")}</h2>
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                 <div className="divide-y divide-slate-50 dark:divide-slate-800">
                   {past.map(m => (
@@ -173,6 +178,8 @@ export default function MatchesPage() {
 }
 
 function MatchRow({ m, isCoach, onEdit, onDelete }: { m: Match; isCoach: boolean; onEdit: () => void; onDelete: () => void }) {
+  const t = useT(matchesDict)
+  const enumT = useEnumT()
   const played = m.our_score !== null && m.opponent_score !== null
   const result = played
     ? m.our_score! > m.opponent_score! ? "win" : m.our_score! < m.opponent_score! ? "loss" : "draw"
@@ -210,13 +217,13 @@ function MatchRow({ m, isCoach, onEdit, onDelete }: { m: Match; isCoach: boolean
           {m.video_url && (
             <>
               <span className="text-slate-200">·</span>
-              <span className="text-xs text-blue-500 flex items-center gap-1"><Video size={11} /> Video 360</span>
+              <span className="text-xs text-blue-500 flex items-center gap-1"><Video size={11} /> {t("video360")}</span>
             </>
           )}
         </div>
       </Link>
       <div className="flex items-center gap-2 shrink-0">
-        {m.category && <Badge variant="blue">{m.category}</Badge>}
+        {m.category && <Badge variant="blue">{enumT.category(m.category)}</Badge>}
         {played && (
           <span className={cn(
             "text-sm font-black px-2.5 py-1 rounded-lg",
@@ -229,10 +236,10 @@ function MatchRow({ m, isCoach, onEdit, onDelete }: { m: Match; isCoach: boolean
         )}
         {isCoach && (
           <>
-            <button onClick={onEdit} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" title="Editar">
+            <button onClick={onEdit} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" title={t("edit")}>
               <Pencil size={14} />
             </button>
-            <button onClick={onDelete} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors" title="Eliminar">
+            <button onClick={onDelete} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors" title={t("delete")}>
               <Trash2 size={14} />
             </button>
           </>

@@ -12,6 +12,9 @@ import Badge from "@/components/ui/Badge"
 import { Plus, X, Dumbbell, Film } from "lucide-react"
 import { cn, formatDate, getCategoryColor, getIntensityColor } from "@/lib/utils"
 import type { ActivityCategory, ActivityUnit, Intensity } from "@/lib/types"
+import { useT } from "@/lib/i18n/useT"
+import { activities as activitiesDict } from "@/lib/i18n/dictionaries/activities"
+import { useEnumT } from "@/lib/i18n/enums"
 
 const CATEGORIES: ActivityCategory[] = ["Velocidad","Fuerza","Técnica","Resistencia","Potencia","Pliometría","Agilidad"]
 const UNITS: ActivityUnit[] = ["segundos","kg","repeticiones","metros","puntos"]
@@ -23,6 +26,8 @@ const catBadgeMap: Record<string, "amber" | "red" | "blue" | "green" | "orange" 
 
 export default function ActivitiesPage() {
   const { players, activities, exercises, addActivity } = useApp()
+  const t = useT(activitiesDict)
+  const enumT = useEnumT()
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [filterPlayer, setFilterPlayer] = useState("all")
@@ -73,14 +78,14 @@ export default function ActivitiesPage() {
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
-        <PageHeader title="Actividades" subtitle={`${activities.length} registros de entrenamiento`}>
+        <PageHeader title={t("title")} subtitle={`${activities.length} ${t("trainingRecordsCount")}`}>
           <Link href="/activities/exercises">
             <Button variant="outline">
-              <Film size={15} /> Videos de Ejercicios
+              <Film size={15} /> {t("exerciseVideos")}
             </Button>
           </Link>
           <Button onClick={() => setShowForm(true)}>
-            <Plus size={16} /> Registrar Actividad
+            <Plus size={16} /> {t("registerActivity")}
           </Button>
         </PageHeader>
 
@@ -89,7 +94,7 @@ export default function ActivitiesPage() {
           <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg animate-scale-in">
               <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Registrar Actividad</h2>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("registerActivity")}</h2>
                 <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
                   <X size={16} />
                 </button>
@@ -97,34 +102,34 @@ export default function ActivitiesPage() {
               <form onSubmit={handleSubmit} className="p-5 space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="col-span-2">
-                    <Select label="Jugador *" value={form.player_id} onChange={e => set("player_id", e.target.value)} required
-                      placeholder="Seleccionar jugador..."
+                    <Select label={t("playerLabel")} value={form.player_id} onChange={e => set("player_id", e.target.value)} required
+                      placeholder={t("selectPlayerPlaceholder")}
                       options={players.map(p => ({ value: p.id, label: p.name }))} />
                   </div>
-                  <Input label="Fecha *" type="date" value={form.date} onChange={e => set("date", e.target.value)} required />
-                  <Select label="Intensidad *" value={form.intensity} onChange={e => set("intensity", e.target.value)} required
-                    placeholder="Seleccionar..." options={INTENSITIES.map(i => ({ value: i, label: i }))} />
-                  <Select label="Categoría *" value={form.category} onChange={e => { set("category", e.target.value); set("exercise", "") }} required
-                    placeholder="Seleccionar..." options={CATEGORIES.map(c => ({ value: c, label: c }))} />
+                  <Input label={t("dateLabel")} type="date" value={form.date} onChange={e => set("date", e.target.value)} required />
+                  <Select label={t("intensityLabel")} value={form.intensity} onChange={e => set("intensity", e.target.value)} required
+                    placeholder={t("selectPlaceholder")} options={INTENSITIES.map(i => ({ value: i, label: enumT.intensity(i) }))} />
+                  <Select label={t("categoryLabel")} value={form.category} onChange={e => { set("category", e.target.value); set("exercise", "") }} required
+                    placeholder={t("selectPlaceholder")} options={CATEGORIES.map(c => ({ value: c, label: enumT.activityCategory(c) }))} />
                   <div>
-                    <Select label="Ejercicio *" value={form.exercise} onChange={e => set("exercise", e.target.value)} required
-                      placeholder="Seleccionar..." options={categoryExercises.map(ex => ({ value: ex.name, label: ex.name }))} />
+                    <Select label={t("exerciseLabel")} value={form.exercise} onChange={e => set("exercise", e.target.value)} required
+                      placeholder={t("selectPlaceholder")} options={categoryExercises.map(ex => ({ value: ex.name, label: ex.name }))} />
                     {selectedExercise?.video_url && (
                       <a href={selectedExercise.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-500 hover:underline mt-1.5">
-                        <Film size={11} /> Ver video de referencia
+                        <Film size={11} /> {t("viewReferenceVideo")}
                       </a>
                     )}
                   </div>
-                  <Input label="Resultado *" type="number" step="0.01" placeholder="0" value={form.value} onChange={e => set("value", e.target.value)} required />
-                  <Select label="Unidad *" value={form.unit} onChange={e => set("unit", e.target.value)} required
-                    placeholder="Seleccionar..." options={UNITS.map(u => ({ value: u, label: u }))} />
+                  <Input label={t("resultLabel")} type="number" step="0.01" placeholder="0" value={form.value} onChange={e => set("value", e.target.value)} required />
+                  <Select label={t("unitLabel")} value={form.unit} onChange={e => set("unit", e.target.value)} required
+                    placeholder={t("selectPlaceholder")} options={UNITS.map(u => ({ value: u, label: enumT.activityUnit(u) }))} />
                   <div className="col-span-2">
-                    <Textarea label="Observaciones" placeholder="Notas adicionales..." value={form.notes} onChange={e => set("notes", e.target.value)} rows={2} />
+                    <Textarea label={t("observationsLabel")} placeholder={t("additionalNotesPlaceholder")} value={form.notes} onChange={e => set("notes", e.target.value)} rows={2} />
                   </div>
                 </div>
                 <div className="flex gap-3 justify-end pt-1">
-                  <Button variant="secondary" type="button" onClick={() => setShowForm(false)}>Cancelar</Button>
-                  <Button type="submit" loading={saving}>Guardar</Button>
+                  <Button variant="secondary" type="button" onClick={() => setShowForm(false)}>{t("cancel")}</Button>
+                  <Button type="submit" loading={saving}>{t("save")}</Button>
                 </div>
               </form>
             </div>
@@ -135,22 +140,22 @@ export default function ActivitiesPage() {
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 mb-6 flex flex-wrap gap-3">
           <select value={filterPlayer} onChange={e => setFilterPlayer(e.target.value)}
             className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
-            <option value="all">Todos los jugadores</option>
+            <option value="all">{t("allPlayers")}</option>
             {players.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           <select value={filterCat} onChange={e => setFilterCat(e.target.value)}
             className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
-            <option value="all">Todas las categorías</option>
-            {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            <option value="all">{t("allCategories")}</option>
+            {CATEGORIES.map(c => <option key={c} value={c}>{enumT.activityCategory(c)}</option>)}
           </select>
-          <span className="text-xs text-slate-400 dark:text-slate-500 font-medium ml-auto self-center">{filtered.length} resultado{filtered.length !== 1 ? "s" : ""}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 font-medium ml-auto self-center">{filtered.length} {filtered.length !== 1 ? t("resultsCountPlural") : t("resultsCount")}</span>
         </div>
 
         {/* List */}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-400 dark:text-slate-500">
             <Dumbbell size={40} className="mb-3 opacity-30" />
-            <p className="font-semibold">No hay actividades registradas</p>
+            <p className="font-semibold">{t("noActivitiesRegistered")}</p>
           </div>
         ) : (
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
@@ -173,7 +178,7 @@ export default function ActivitiesPage() {
                           <>
                             <span className="text-slate-200">·</span>
                             <a href={videoUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 flex items-center gap-1 hover:underline">
-                              <Film size={11} /> Video
+                              <Film size={11} /> {t("video")}
                             </a>
                           </>
                         )}
@@ -181,11 +186,11 @@ export default function ActivitiesPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      <Badge variant={catBadgeMap[a.category] ?? "default"}>{a.category}</Badge>
-                      <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-md", getIntensityColor(a.intensity))}>{a.intensity}</span>
+                      <Badge variant={catBadgeMap[a.category] ?? "default"}>{enumT.activityCategory(a.category)}</Badge>
+                      <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-md", getIntensityColor(a.intensity))}>{enumT.intensity(a.intensity)}</span>
                       <div className="text-right min-w-16">
                         <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{a.value}</p>
-                        <p className="text-xs text-slate-400 dark:text-slate-500">{a.unit}</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">{enumT.activityUnit(a.unit)}</p>
                       </div>
                     </div>
                   </div>

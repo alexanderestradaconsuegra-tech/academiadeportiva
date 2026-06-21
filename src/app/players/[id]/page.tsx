@@ -17,8 +17,12 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area, Legend
 } from "recharts"
 import { Heart, Zap, Wind, Activity as ActivityIcon } from "lucide-react"
+import { useT } from "@/lib/i18n/useT"
+import { players as playersDict } from "@/lib/i18n/dictionaries/players"
+import { useEnumT } from "@/lib/i18n/enums"
+import type { ActivityCategory } from "@/lib/types"
 
-const ATTR_LABELS: Record<string, string> = {
+const ATTR_KEYS: Record<string, ActivityCategory> = {
   speed_score: "Velocidad",
   strength_score: "Fuerza",
   technique_score: "Técnica",
@@ -37,22 +41,24 @@ const ATTR_COLORS: Record<string, string> = {
 }
 
 function EvaluationComparison({ evaluations }: { evaluations: Evaluation[] }) {
+  const t = useT(playersDict)
+  const e = useEnumT()
   const sorted = [...evaluations].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
   const [beforeId, setBeforeId] = useState(sorted[0].id)
   const [afterId, setAfterId] = useState(sorted[sorted.length - 1].id)
-  const before = sorted.find(e => e.id === beforeId) ?? sorted[0]
-  const after = sorted.find(e => e.id === afterId) ?? sorted[sorted.length - 1]
+  const before = sorted.find(ev => ev.id === beforeId) ?? sorted[0]
+  const after = sorted.find(ev => ev.id === afterId) ?? sorted[sorted.length - 1]
 
-  const radarData = Object.entries(ATTR_LABELS).map(([k, label]) => ({
-    subject: label.substring(0, 3),
-    Antes: before[k as keyof Evaluation] as number,
-    Después: after[k as keyof Evaluation] as number,
+  const radarData = Object.entries(ATTR_KEYS).map(([k, attrKey]) => ({
+    subject: e.activityCategory(attrKey).substring(0, 3),
+    before: before[k as keyof Evaluation] as number,
+    after: after[k as keyof Evaluation] as number,
   }))
 
-  const rows = Object.entries(ATTR_LABELS).map(([k, label]) => {
+  const rows = Object.entries(ATTR_KEYS).map(([k, attrKey]) => {
     const b = before[k as keyof Evaluation] as number
     const a = after[k as keyof Evaluation] as number
-    return { key: k, label, before: b, after: a, delta: a - b }
+    return { key: k, label: e.activityCategory(attrKey), before: b, after: a, delta: a - b }
   })
 
   const generalDelta = after.general_score - before.general_score
@@ -62,16 +68,16 @@ function EvaluationComparison({ evaluations }: { evaluations: Evaluation[] }) {
     <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
       <div className="flex items-center justify-between mb-5 gap-4 flex-wrap">
         <div>
-          <h2 className="text-sm font-bold text-slate-900 dark:text-white">Comparativa Antes / Después</h2>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Evolución entre dos evaluaciones</p>
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("beforeAfterComparison")}</h2>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t("evolutionBetweenEvals")}</p>
         </div>
         <div className="flex items-center gap-2">
-          <select value={beforeId} onChange={e => setBeforeId(e.target.value)} className={selectClass}>
-            {sorted.map(e => <option key={e.id} value={e.id}>{formatDate(e.date)}</option>)}
+          <select value={beforeId} onChange={ev => setBeforeId(ev.target.value)} className={selectClass}>
+            {sorted.map(ev => <option key={ev.id} value={ev.id}>{formatDate(ev.date)}</option>)}
           </select>
           <ArrowRight size={13} className="text-slate-400 dark:text-slate-500 shrink-0" />
-          <select value={afterId} onChange={e => setAfterId(e.target.value)} className={selectClass}>
-            {sorted.map(e => <option key={e.id} value={e.id}>{formatDate(e.date)}</option>)}
+          <select value={afterId} onChange={ev => setAfterId(ev.target.value)} className={selectClass}>
+            {sorted.map(ev => <option key={ev.id} value={ev.id}>{formatDate(ev.date)}</option>)}
           </select>
         </div>
       </div>
@@ -90,7 +96,7 @@ function EvaluationComparison({ evaluations }: { evaluations: Evaluation[] }) {
             {generalDelta > 0 ? <ArrowUp size={13} /> : generalDelta < 0 ? <ArrowDown size={13} /> : null}
             {generalDelta > 0 ? "+" : ""}{generalDelta} pts
           </span>
-          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">Score general</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">{t("generalScore")}</p>
         </div>
       </div>
 
@@ -98,8 +104,8 @@ function EvaluationComparison({ evaluations }: { evaluations: Evaluation[] }) {
         <RadarChart data={radarData}>
           <PolarGrid stroke="#E2E8F0" />
           <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "#64748B" }} />
-          <Radar name="Antes" dataKey="Antes" stroke="#94A3B8" fill="#94A3B8" fillOpacity={0.12} strokeWidth={2} dot={{ r: 3, fill: "#94A3B8", strokeWidth: 0 }} />
-          <Radar name="Después" dataKey="Después" stroke="#0B5CFF" fill="#0B5CFF" fillOpacity={0.15} strokeWidth={2} dot={{ r: 3, fill: "#0B5CFF", strokeWidth: 0 }} />
+          <Radar name={t("beforeLabel")} dataKey="before" stroke="#94A3B8" fill="#94A3B8" fillOpacity={0.12} strokeWidth={2} dot={{ r: 3, fill: "#94A3B8", strokeWidth: 0 }} />
+          <Radar name={t("afterLabel")} dataKey="after" stroke="#0B5CFF" fill="#0B5CFF" fillOpacity={0.15} strokeWidth={2} dot={{ r: 3, fill: "#0B5CFF", strokeWidth: 0 }} />
           <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
         </RadarChart>
       </ResponsiveContainer>
@@ -137,6 +143,8 @@ export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
   const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, currentUser, addEvaluation, updateEvaluation, deleteEvaluation } = useApp()
   const isCoach = currentUser?.role === "coach"
+  const t = useT(playersDict)
+  const e = useEnumT()
 
   const player = getPlayer(id)
   const activities = getPlayerActivities(id)
@@ -160,18 +168,18 @@ export default function PlayerProfilePage() {
     setShowEvalForm(true)
   }
 
-  function openEditEval(e: Evaluation) {
-    setEditingEvalId(e.id)
+  function openEditEval(ev: Evaluation) {
+    setEditingEvalId(ev.id)
     setEvalForm({
-      date: e.date,
-      speed_score: String(e.speed_score), strength_score: String(e.strength_score), technique_score: String(e.technique_score),
-      resistance_score: String(e.resistance_score), power_score: String(e.power_score), agility_score: String(e.agility_score),
+      date: ev.date,
+      speed_score: String(ev.speed_score), strength_score: String(ev.strength_score), technique_score: String(ev.technique_score),
+      resistance_score: String(ev.resistance_score), power_score: String(ev.power_score), agility_score: String(ev.agility_score),
     })
     setShowEvalForm(true)
   }
 
-  async function handleEvalSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleEvalSubmit(ev: React.FormEvent) {
+    ev.preventDefault()
     setSavingEval(true)
     const scores = {
       speed_score: Number(evalForm.speed_score), strength_score: Number(evalForm.strength_score),
@@ -188,9 +196,9 @@ export default function PlayerProfilePage() {
     setSavingEval(false)
   }
 
-  function handleDeleteEval(e: Evaluation) {
-    if (!confirm(`¿Eliminar la evaluación del ${formatDate(e.date)}? Esta acción no se puede deshacer.`)) return
-    deleteEvaluation(e.id)
+  function handleDeleteEval(ev: Evaluation) {
+    if (!confirm(t("confirmDeleteEvaluation").replace("{date}", formatDate(ev.date)))) return
+    deleteEvaluation(ev.id)
   }
 
   if (!player) {
@@ -198,28 +206,28 @@ export default function PlayerProfilePage() {
       <AppShell>
         <div className="flex items-center justify-center h-96 text-slate-400 dark:text-slate-500">
           <div className="text-center">
-            <p className="text-2xl font-bold mb-2">Jugador no encontrado</p>
-            <Link href="/players" className="text-[#0B5CFF] text-sm">← Volver a jugadores</Link>
+            <p className="text-2xl font-bold mb-2">{t("playerNotFound")}</p>
+            <Link href="/players" className="text-[#0B5CFF] text-sm">{t("backToPlayers")}</Link>
           </div>
         </div>
       </AppShell>
     )
   }
 
-  const radarData = latestEval ? Object.entries(ATTR_LABELS).map(([k, label]) => ({
-    subject: label.substring(0, 3),
+  const radarData = latestEval ? Object.entries(ATTR_KEYS).map(([k, attrKey]) => ({
+    subject: e.activityCategory(attrKey).substring(0, 3),
     value: latestEval[k as keyof typeof latestEval] as number,
     fullMark: 100,
   })) : []
 
-  const progressData = [...evaluations].reverse().map(e => ({
-    date: formatDate(e.date),
-    score: e.general_score,
-    velocidad: e.speed_score,
-    tecnica: e.technique_score,
+  const progressData = [...evaluations].reverse().map(ev => ({
+    date: formatDate(ev.date),
+    score: ev.general_score,
+    velocidad: ev.speed_score,
+    tecnica: ev.technique_score,
   }))
 
-  const attrs = latestEval ? Object.entries(ATTR_LABELS) : []
+  const attrs = latestEval ? Object.entries(ATTR_KEYS).map(([k, attrKey]) => [k, e.activityCategory(attrKey)] as const) : []
 
   const bestActivity = activities.reduce<typeof activities[0] | null>((best, a) => {
     if (!best) return a
@@ -239,12 +247,12 @@ export default function PlayerProfilePage() {
               <ArrowLeft size={16} />
             </Link>
             <div className="flex-1">
-              <p className="text-blue-200/70 text-xs font-medium">Perfil del Jugador</p>
+              <p className="text-blue-200/70 text-xs font-medium">{t("playerProfile")}</p>
             </div>
             {isCoach && (
               <Link href={`/players/${id}/edit`}>
                 <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-                  <Edit size={14} /> Editar
+                  <Edit size={14} /> {t("edit")}
                 </Button>
               </Link>
             )}
@@ -257,11 +265,11 @@ export default function PlayerProfilePage() {
             <div className="flex-1 pb-1">
               <h1 className="text-lg md:text-2xl xl:text-3xl font-black text-white tracking-tight leading-tight">{player.name}</h1>
               <div className="flex items-center gap-2 mt-2 flex-wrap">
-                <span className="bg-white/15 text-white text-xs font-semibold px-2.5 py-1 rounded-lg">{player.position}</span>
+                <span className="bg-white/15 text-white text-xs font-semibold px-2.5 py-1 rounded-lg">{e.position(player.position)}</span>
                 <span className="text-blue-200/70 text-sm">·</span>
-                <span className="text-blue-100 text-sm">{player.age} años</span>
+                <span className="text-blue-100 text-sm">{player.age} {t("yearsOld")}</span>
                 <span className="text-blue-200/70 text-sm">·</span>
-                <span className="text-blue-100 text-sm">{player.category}</span>
+                <span className="text-blue-100 text-sm">{e.category(player.category)}</span>
               </div>
             </div>
             {latestEval && (
@@ -276,10 +284,10 @@ export default function PlayerProfilePage() {
           {/* Bio cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3 mb-4 md:mb-6 px-4 md:px-6 xl:px-8 -mt-12 md:-mt-14 relative z-10">
             {[
-              { icon: Ruler, label: "Altura", value: `${player.height} cm` },
-              { icon: Weight, label: "Peso", value: `${player.weight} kg` },
-              { icon: Calendar, label: "Nacimiento", value: player.birth_date ? formatDate(player.birth_date) : "—" },
-              { icon: Star, label: "Pierna hábil", value: player.dominant_foot },
+              { icon: Ruler, label: t("height"), value: `${player.height} cm` },
+              { icon: Weight, label: t("weight"), value: `${player.weight} kg` },
+              { icon: Calendar, label: t("birth"), value: player.birth_date ? formatDate(player.birth_date) : "—" },
+              { icon: Star, label: t("dominantLeg"), value: e.dominantFoot(player.dominant_foot) },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
@@ -301,16 +309,16 @@ export default function PlayerProfilePage() {
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
                     <div>
-                      <h2 className="text-sm font-bold text-slate-900 dark:text-white">Atributos Físicos y Técnicos</h2>
+                      <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("physicalTechnicalAttributes")}</h2>
                       <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(latestEval.date)}</span>
                     </div>
                     {isCoach && (
                       <div className="flex items-center gap-2">
                         <Button size="sm" variant="outline" onClick={() => openEditEval(latestEval)}>
-                          <Edit size={13} /> Editar
+                          <Edit size={13} /> {t("edit")}
                         </Button>
                         <Button size="sm" variant="outline" onClick={openNewEval}>
-                          <Plus size={13} /> Nueva evaluación
+                          <Plus size={13} /> {t("newEvaluation")}
                         </Button>
                       </div>
                     )}
@@ -339,9 +347,9 @@ export default function PlayerProfilePage() {
               ) : isCoach ? (
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 text-center">
                   <Target size={28} className="mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Este jugador todavía no tiene evaluaciones de atributos.</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">{t("noAttributeEvaluationsYet")}</p>
                   <Button size="sm" onClick={openNewEval}>
-                    <Plus size={13} /> Agregar primera evaluación
+                    <Plus size={13} /> {t("addFirstEvaluation")}
                   </Button>
                 </div>
               ) : null}
@@ -349,7 +357,7 @@ export default function PlayerProfilePage() {
               {/* Progress line chart */}
               {progressData.length > 1 && (
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Evolución del Score</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("scoreEvolution")}</h2>
                   <ResponsiveContainer width="100%" height={180}>
                     <AreaChart data={progressData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                       <defs>
@@ -362,7 +370,7 @@ export default function PlayerProfilePage() {
                       <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
                       <YAxis domain={[60, 100]} tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
                       <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12 }} formatter={(v: number) => [`${v} pts`]} />
-                      <Area type="monotone" dataKey="score" stroke="#0B5CFF" strokeWidth={2.5} fill="url(#pg)" dot={{ fill: "#0B5CFF", r: 4, strokeWidth: 0 }} name="Score general" />
+                      <Area type="monotone" dataKey="score" stroke="#0B5CFF" strokeWidth={2.5} fill="url(#pg)" dot={{ fill: "#0B5CFF", r: 4, strokeWidth: 0 }} name={t("generalScore")} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -374,28 +382,28 @@ export default function PlayerProfilePage() {
               {/* Activities */}
               <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">Historial de Entrenamientos</h2>
-                  <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">{activities.length} registros</span>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("trainingHistory")}</h2>
+                  <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">{activities.length} {t("records")}</span>
                 </div>
                 {activities.length === 0 ? (
                   <div className="text-center py-8 text-slate-400 dark:text-slate-500">
                     <Dumbbell size={28} className="mx-auto mb-2 opacity-30" />
-                    <p className="text-sm">Sin actividades registradas</p>
+                    <p className="text-sm">{t("noActivitiesRegistered")}</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {activities.map(a => (
                       <div key={a.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
                         <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0", getCategoryColor(a.category))}>
-                          {a.category.substring(0, 1)}
+                          {e.activityCategory(a.category).substring(0, 1)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-slate-900 dark:text-white">{a.exercise}</p>
-                          <p className="text-xs text-slate-400 dark:text-slate-500">{formatDate(a.date)} · <span className={cn("font-medium", getIntensityColor(a.intensity).split(" ")[0])}>{a.intensity}</span></p>
+                          <p className="text-xs text-slate-400 dark:text-slate-500">{formatDate(a.date)} · <span className={cn("font-medium", getIntensityColor(a.intensity).split(" ")[0])}>{e.intensity(a.intensity)}</span></p>
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{a.value}</p>
-                          <p className="text-xs text-slate-400 dark:text-slate-500">{a.unit}</p>
+                          <p className="text-xs text-slate-400 dark:text-slate-500">{e.activityUnit(a.unit)}</p>
                         </div>
                       </div>
                     ))}
@@ -406,13 +414,13 @@ export default function PlayerProfilePage() {
               {/* Matches */}
               <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">Historial de Partidos</h2>
-                  <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">{playerMatches.length} partidos</span>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("matchHistory")}</h2>
+                  <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">{playerMatches.length} {t("matches")}</span>
                 </div>
                 {playerMatches.length === 0 ? (
                   <div className="text-center py-8 text-slate-400 dark:text-slate-500">
                     <Trophy size={28} className="mx-auto mb-2 opacity-30" />
-                    <p className="text-sm">Sin partidos registrados</p>
+                    <p className="text-sm">{t("noMatchesRegistered")}</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -444,7 +452,7 @@ export default function PlayerProfilePage() {
               {/* Radar chart */}
               {radarData.length > 0 && (
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Radar de Atributos</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("attributeRadar")}</h2>
                   <ResponsiveContainer width="100%" height={220}>
                     <RadarChart data={radarData}>
                       <PolarGrid stroke="#E2E8F0" />
@@ -459,18 +467,18 @@ export default function PlayerProfilePage() {
               <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 space-y-4">
                 {player.objective && (
                   <div>
-                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">Objetivo deportivo</p>
+                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">{t("sportingObjective")}</p>
                     <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{player.objective}</p>
                   </div>
                 )}
                 {player.notes && (
                   <div>
-                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">Observaciones</p>
+                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">{t("observations")}</p>
                     <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{player.notes}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">Club</p>
+                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">{t("club")}</p>
                   <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">{player.club}</p>
                 </div>
               </div>
@@ -480,24 +488,24 @@ export default function PlayerProfilePage() {
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2 mb-3">
                     <CalendarDays size={15} className="text-[#0B5CFF]" />
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Próximos Entrenamientos</h2>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("upcomingTrainings")}</h2>
                   </div>
                   <div className="space-y-2">
-                    {upcomingTrainings.map(t => (
-                      <div key={t.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{t.title}</p>
+                    {upcomingTrainings.map(tr => (
+                      <div key={tr.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{tr.title}</p>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(t.date)}</span>
-                          {t.time && (
+                          <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(tr.date)}</span>
+                          {tr.time && (
                             <>
                               <span className="text-slate-200">·</span>
-                              <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1"><Clock size={11} /> {t.time}</span>
+                              <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1"><Clock size={11} /> {tr.time}</span>
                             </>
                           )}
-                          {t.location && (
+                          {tr.location && (
                             <>
                               <span className="text-slate-200">·</span>
-                              <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1"><MapPin size={11} /> {t.location}</span>
+                              <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1"><MapPin size={11} /> {tr.location}</span>
                             </>
                           )}
                         </div>
@@ -512,9 +520,9 @@ export default function PlayerProfilePage() {
                 <div className="bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] rounded-2xl p-5 text-white">
                   <div className="flex items-center gap-2 mb-3">
                     <TrendingUp size={16} className="text-blue-200" />
-                    <span className="text-xs font-semibold text-blue-200 uppercase tracking-wide">Mejor Marca Personal</span>
+                    <span className="text-xs font-semibold text-blue-200 uppercase tracking-wide">{t("bestPersonalMark")}</span>
                   </div>
-                  <p className="text-2xl font-black">{bestActivity.value} <span className="text-base font-normal text-blue-200">{bestActivity.unit}</span></p>
+                  <p className="text-2xl font-black">{bestActivity.value} <span className="text-base font-normal text-blue-200">{e.activityUnit(bestActivity.unit)}</span></p>
                   <p className="text-sm text-blue-100 mt-1">{bestActivity.exercise}</p>
                   <p className="text-xs text-blue-200/60 mt-0.5">{formatDate(bestActivity.date)}</p>
                 </div>
@@ -525,16 +533,16 @@ export default function PlayerProfilePage() {
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2 mb-4">
                     <Heart size={15} className="text-red-500" fill="#EF4444" />
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Salud Biométrica</h2>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("biometricHealth")}</h2>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { label: "FC Reposo", value: `${health.resting_hr} bpm`, icon: "❤️", color: "text-red-500" },
-                      { label: "FC Máxima", value: `${health.max_hr} bpm`, icon: "⚡", color: "text-orange-500" },
+                      { label: t("restingHr"), value: `${health.resting_hr} bpm`, icon: "❤️", color: "text-red-500" },
+                      { label: t("maxHr"), value: `${health.max_hr} bpm`, icon: "⚡", color: "text-orange-500" },
                       { label: "HRV", value: `${health.hrv} ms`, icon: "📊", color: "text-purple-500" },
-                      { label: "VO₂ Máx", value: `${health.vo2max}`, icon: "💨", color: "text-blue-500" },
-                      { label: "Rec. Index", value: `${health.recovery_index}%`, icon: "🔋", color: health.recovery_index >= 80 ? "text-emerald-500" : "text-amber-500" },
-                      { label: "% Grasa", value: `${health.body_fat_pct}%`, icon: "⚖️", color: "text-slate-600 dark:text-slate-400" },
+                      { label: t("vo2max"), value: `${health.vo2max}`, icon: "💨", color: "text-blue-500" },
+                      { label: t("recoveryIndex"), value: `${health.recovery_index}%`, icon: "🔋", color: health.recovery_index >= 80 ? "text-emerald-500" : "text-amber-500" },
+                      { label: t("bodyFatPct"), value: `${health.body_fat_pct}%`, icon: "⚖️", color: "text-slate-600 dark:text-slate-400" },
                     ].map(m => (
                       <div key={m.label} className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-1.5 mb-1">
@@ -547,7 +555,7 @@ export default function PlayerProfilePage() {
                   </div>
                   <div className="mt-3 p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-500 dark:text-slate-400">Presión arterial</span>
+                      <span className="text-slate-500 dark:text-slate-400">{t("bloodPressure")}</span>
                       <span className="font-bold text-slate-800 dark:text-slate-100">{health.blood_pressure_sys}/{health.blood_pressure_dia} mmHg</span>
                     </div>
                   </div>
@@ -559,7 +567,7 @@ export default function PlayerProfilePage() {
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2 mb-3">
                     <ActivityIcon size={15} className="text-[#0B5CFF]" />
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Últimas Sesiones en Vivo</h2>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("latestLiveSessions")}</h2>
                   </div>
                   {sessions.slice(0, 2).map(s => (
                     <div key={s.id} className="flex items-center gap-3 py-2.5 border-b border-slate-50 dark:border-slate-800 last:border-0">
@@ -577,7 +585,7 @@ export default function PlayerProfilePage() {
                     </div>
                   ))}
                   <Link href="/health" className="mt-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#0B5CFF] hover:underline">
-                    Ver monitor en vivo →
+                    {t("viewLiveMonitor")}
                   </Link>
                 </div>
               )}
@@ -590,8 +598,8 @@ export default function PlayerProfilePage() {
                       <Dumbbell size={16} className="text-[#0B5CFF] group-hover:text-white transition-colors" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">Registrar actividad</p>
-                      <p className="text-xs text-slate-400 dark:text-slate-500">Agregar nuevo entrenamiento</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{t("logActivity")}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{t("addNewTraining")}</p>
                     </div>
                   </Link>
                   <Link href={`/reports?player=${id}`} className="flex items-center gap-3 p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
@@ -599,8 +607,8 @@ export default function PlayerProfilePage() {
                       <Target size={16} className="text-[#0B5CFF] group-hover:text-white transition-colors" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">Ver reporte</p>
-                      <p className="text-xs text-slate-400 dark:text-slate-500">Informe completo del jugador</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{t("viewReport")}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{t("fullPlayerReport")}</p>
                     </div>
                   </Link>
                 </div>
@@ -614,19 +622,19 @@ export default function PlayerProfilePage() {
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg animate-scale-in">
               <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
                 <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-                  {editingEvalId ? "Editar Evaluación" : "Nueva Evaluación"}
+                  {editingEvalId ? t("editEvaluation") : t("newEvaluationTitle")}
                 </h2>
                 <button onClick={() => setShowEvalForm(false)} className="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
                   <X size={16} />
                 </button>
               </div>
               <form onSubmit={handleEvalSubmit} className="p-5 space-y-4">
-                <Input label="Fecha *" type="date" value={evalForm.date} onChange={e => setEvalField("date", e.target.value)} required />
+                <Input label={t("dateLabel")} type="date" value={evalForm.date} onChange={e => setEvalField("date", e.target.value)} required />
                 <div className="grid grid-cols-2 gap-3">
-                  {Object.entries(ATTR_LABELS).map(([k, label]) => (
+                  {Object.entries(ATTR_KEYS).map(([k, attrKey]) => (
                     <Input
                       key={k}
-                      label={`${label} (0-100)`}
+                      label={`${e.activityCategory(attrKey)} (0-100)`}
                       type="number"
                       min={0}
                       max={100}

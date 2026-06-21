@@ -23,6 +23,7 @@ const LANGUAGES: { code: Language; label: string }[] = [
 const CATEGORIES: Category[] = ["Sub-10", "Sub-12", "Sub-14", "Sub-16", "Sub-18", "Juvenil", "Senior"]
 
 function NotificationBroadcast() {
+  const t = useT(settings)
   const [title, setTitle] = useState("")
   const [body, setBody] = useState("")
   const [category, setCategory] = useState<string>("all")
@@ -44,7 +45,7 @@ function NotificationBroadcast() {
     const data = await res.json()
     setSending(false)
     if (!res.ok) {
-      setError(data.error || "No se pudo enviar la notificación.")
+      setError(data.error || t("notificationSendError"))
       return
     }
     setResult(data)
@@ -54,31 +55,31 @@ function NotificationBroadcast() {
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
-      <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Enviar notificación push</h3>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Envía un aviso a los jugadores que tengan las notificaciones activadas en su dispositivo.</p>
+      <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{t("sendPushNotificationTitle")}</h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{t("sendPushNotificationSubtitle")}</p>
       <div className="space-y-3">
-        <Input label="Título" placeholder="Entrenamiento cancelado" value={title} onChange={e => setTitle(e.target.value)} />
-        <Textarea label="Mensaje" placeholder="Escribe el mensaje..." value={body} onChange={e => setBody(e.target.value)} rows={3} />
+        <Input label={t("notificationTitleLabel")} placeholder={t("notificationTitlePlaceholder")} value={title} onChange={e => setTitle(e.target.value)} />
+        <Textarea label={t("notificationMessageLabel")} placeholder={t("notificationMessagePlaceholder")} value={body} onChange={e => setBody(e.target.value)} rows={3} />
         <div>
-          <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5 block">Enviar a</label>
+          <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5 block">{t("sendToLabel")}</label>
           <select
             value={category}
             onChange={e => setCategory(e.target.value)}
             className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 outline-none focus:border-[#0B5CFF] w-full sm:w-auto"
           >
-            <option value="all">Todos los jugadores</option>
+            <option value="all">{t("allPlayersOption")}</option>
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         {error && <p className="text-xs text-red-600">{error}</p>}
         {result && (
           <p className="text-xs text-emerald-600">
-            Enviado a {result.sent} dispositivo{result.sent === 1 ? "" : "s"}{result.failed > 0 ? ` · ${result.failed} fallidos` : ""}.
+            {t("notificationSentSingular")} {result.sent} {result.sent === 1 ? t("notificationDevice") : t("notificationDevicePlural")}{result.failed > 0 ? ` · ${result.failed} ${t("notificationFailedSuffix")}` : ""}.
           </p>
         )}
         <div className="flex justify-end">
           <Button size="sm" type="button" loading={sending} disabled={!title.trim() || !body.trim()} onClick={handleSend}>
-            <Send size={13} /> Enviar
+            <Send size={13} /> {t("send")}
           </Button>
         </div>
       </div>
@@ -87,6 +88,7 @@ function NotificationBroadcast() {
 }
 
 function AccessManager() {
+  const t = useT(settings)
   const { players } = useApp()
   const [withAccess, setWithAccess] = useState<Set<string>>(new Set())
   const [loadingList, setLoadingList] = useState(true)
@@ -117,7 +119,7 @@ function AccessManager() {
     const data = await res.json()
     setCreating(false)
     if (!res.ok) {
-      setError(data.error || "No se pudo crear el acceso.")
+      setError(data.error || t("accessCreateError"))
       return
     }
     setWithAccess(s => new Set(s).add(playerId))
@@ -127,13 +129,13 @@ function AccessManager() {
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
-      <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Accesos de jugadores / padres</h3>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Crea un correo y contraseña para que un jugador o su acudiente vea su propio perfil.</p>
+      <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{t("accessManagerTitle")}</h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{t("accessManagerSubtitle")}</p>
 
       {loadingList ? (
-        <p className="text-xs text-slate-400 dark:text-slate-500">Cargando...</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500">{t("loading")}</p>
       ) : players.length === 0 ? (
-        <p className="text-xs text-slate-400 dark:text-slate-500">No hay jugadores registrados todavía.</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500">{t("noPlayersYet")}</p>
       ) : (
         <div className="space-y-2">
           {players.map(p => {
@@ -150,24 +152,24 @@ function AccessManager() {
                   </div>
                   {has ? (
                     <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg">
-                      <UserCheck size={12} /> Con acceso
+                      <UserCheck size={12} /> {t("withAccess")}
                     </span>
                   ) : (
                     <Button variant="outline" size="sm" type="button" onClick={() => { setOpenFor(openFor === p.id ? null : p.id); setError(""); setForm({ email: "", password: "" }) }}>
-                      <KeyRound size={13} /> Crear acceso
+                      <KeyRound size={13} /> {t("createAccess")}
                     </Button>
                   )}
                 </div>
                 {openFor === p.id && !has && (
                   <div className="p-3 pt-0 space-y-3 border-t border-slate-100 dark:border-slate-800 mt-1">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
-                      <Input label="Correo" type="email" placeholder="jugador@correo.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-                      <Input label="Contraseña" type="text" placeholder="mínimo 6 caracteres" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
+                      <Input label={t("emailLabel")} type="email" placeholder={t("emailPlaceholder")} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+                      <Input label={t("passwordLabel")} type="text" placeholder={t("passwordPlaceholder")} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
                     </div>
                     {error && <p className="text-xs text-red-600">{error}</p>}
                     <div className="flex justify-end">
                       <Button size="sm" type="button" loading={creating} disabled={!form.email || form.password.length < 6} onClick={() => handleCreate(p.id)}>
-                        Crear acceso
+                        {t("createAccess")}
                       </Button>
                     </div>
                   </div>

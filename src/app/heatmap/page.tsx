@@ -9,6 +9,8 @@ import { useApp } from "@/context/AppContext"
 import { Circle, Trash2, Radar, Info, MapPin, Upload, CheckCircle2, RotateCcw } from "lucide-react"
 import { cn, formatDate } from "@/lib/utils"
 import { buildTransform, parseTrackFile, type GeoPoint } from "@/lib/gps"
+import { useT } from "@/lib/i18n/useT"
+import { heatmap as heatmapDict } from "@/lib/i18n/dictionaries/heatmap"
 
 const W = 105
 const H = 68
@@ -17,10 +19,10 @@ const ROWS = 14
 const GPS_SAMPLE_INTERVAL_MS = 1500
 const MAX_IMPORT_POINTS = 1500
 
-const CALIB_STEPS: { key: "calib_p0" | "calib_p1" | "calib_p2"; label: string; hint: string }[] = [
-  { key: "calib_p0", label: "Esquina 1 de 3", hint: "Párate en la esquina de TU arco, lado izquierdo." },
-  { key: "calib_p1", label: "Esquina 2 de 3", hint: "Ahora ve a la esquina de TU arco, lado derecho." },
-  { key: "calib_p2", label: "Esquina 3 de 3", hint: "Por último, ve a la esquina del arco RIVAL, lado izquierdo." },
+const CALIB_STEPS: { key: "calib_p0" | "calib_p1" | "calib_p2"; labelKey: "calibStep1Label" | "calibStep2Label" | "calibStep3Label"; hintKey: "calibStep1Hint" | "calibStep2Hint" | "calibStep3Hint" }[] = [
+  { key: "calib_p0", labelKey: "calibStep1Label", hintKey: "calibStep1Hint" },
+  { key: "calib_p1", labelKey: "calibStep2Label", hintKey: "calibStep2Hint" },
+  { key: "calib_p2", labelKey: "calibStep3Label", hintKey: "calibStep3Hint" },
 ]
 
 function heatColor(t: number) {
@@ -40,6 +42,7 @@ function heatColor(t: number) {
 }
 
 export default function HeatmapPage() {
+  const t = useT(heatmapDict)
   const { players, teamSettings, getPlayerPositionSamples, addPositionSample, addPositionSamples, deletePositionSession, updateTeamSettings } = useApp()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const lastSampleRef = useRef(0)
@@ -140,7 +143,7 @@ export default function HeatmapPage() {
 
   function markCalibCorner() {
     if (!("geolocation" in navigator)) {
-      setCalibError("Este navegador no tiene GPS disponible.")
+      setCalibError(t("geolocationNotAvailable"))
       return
     }
     setCalibBusy(true)
@@ -164,7 +167,7 @@ export default function HeatmapPage() {
       },
       err => {
         setCalibBusy(false)
-        setCalibError("No se pudo obtener tu ubicación GPS: " + err.message)
+        setCalibError(t("couldNotGetGpsLocation") + err.message)
       },
       { enableHighAccuracy: true, timeout: 15000 }
     )
@@ -173,7 +176,7 @@ export default function HeatmapPage() {
   function startGpsRecording() {
     if (!playerId || !sessionLabel.trim() || !transform) return
     if (!("geolocation" in navigator)) {
-      setGpsError("Este navegador no tiene GPS disponible.")
+      setGpsError(t("geolocationNotAvailable"))
       return
     }
     setGpsError("")
@@ -189,7 +192,7 @@ export default function HeatmapPage() {
         addPositionSample({ player_id: playerId, session_label: sessionLabel, x: point.x, y: point.y })
       },
       err => {
-        setGpsError("Error de GPS: " + err.message)
+        setGpsError(t("gpsErrorPrefix") + err.message)
         stopGpsRecording()
       },
       { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 }
@@ -210,11 +213,11 @@ export default function HeatmapPage() {
     e.target.value = ""
     if (!file) return
     if (!playerId || !sessionLabel.trim()) {
-      setImportError("Elige un jugador y escribe el nombre de la sesión antes de importar.")
+      setImportError(t("choosePlayerAndNameFirst"))
       return
     }
     if (!transform) {
-      setImportError("Primero calibra la cancha con GPS.")
+      setImportError(t("calibrateFirst"))
       return
     }
     setImportError("")
@@ -224,7 +227,7 @@ export default function HeatmapPage() {
       const text = await file.text()
       const points = parseTrackFile(file.name, text)
       if (points.length === 0) {
-        setImportError("No se encontraron puntos GPS en ese archivo.")
+        setImportError(t("noGpsPointsFound"))
         setImporting(false)
         return
       }
@@ -238,7 +241,7 @@ export default function HeatmapPage() {
       setImportedCount(samples.length)
       setViewSession(sessionLabel)
     } catch {
-      setImportError("No se pudo leer ese archivo.")
+      setImportError(t("couldNotReadFile"))
     }
     setImporting(false)
   }
@@ -250,7 +253,7 @@ export default function HeatmapPage() {
   }
 
   function handleDelete(label: string) {
-    if (!confirm(`¿Eliminar la sesión "${label}"? Se borrarán todos sus puntos.`)) return
+    if (!confirm(`${t("confirmDeleteSessionBefore")} "${label}"${t("confirmDeleteSessionAfter")}`)) return
     deletePositionSession(playerId, label)
     if (viewSession === label) setViewSession(null)
   }
@@ -260,16 +263,12 @@ export default function HeatmapPage() {
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
-        <PageHeader title="Mapa de Calor" subtitle="Zonas de la cancha donde el jugador estuvo presente, con GPS real" />
+        <PageHeader title={t("pageTitle")} subtitle={t("pageSubtitle")} />
 
         <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-2xl p-4 mb-6 flex items-start gap-3">
           <Info size={16} className="text-[#0B5CFF] mt-0.5 shrink-0" />
           <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-            Esta función usa GPS real: un reloj inteligente, el celular del jugador o una pechera/chaleco GPS deportivo.
-            Si no tienen ningún dispositivo con GPS, esta función no se puede usar todavía. Primero calibra tu cancha
-            una sola vez (marcando 3 esquinas), y luego puedes <strong>grabar en vivo</strong> (abriendo esta página desde
-            el dispositivo con GPS durante el entrenamiento) o <strong>importar el archivo</strong> (GPX o CSV) que el
-            reloj o la pechera exportan después de la sesión.
+            {t("infoBanner")}
           </p>
         </div>
 
@@ -284,22 +283,22 @@ export default function HeatmapPage() {
                   <MapPin size={16} className="text-amber-500 shrink-0" />
                 )}
                 <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-                  {calibrated ? "Cancha calibrada con GPS" : "Tu cancha aún no está calibrada"}
+                  {calibrated ? t("courtCalibratedGps") : t("courtNotCalibrated")}
                 </p>
               </div>
               <Button size="sm" variant={calibrated ? "outline" : "primary"} onClick={startCalibration}>
-                {calibrated ? <><RotateCcw size={13} /> Recalibrar</> : <><MapPin size={13} /> Calibrar cancha con GPS</>}
+                {calibrated ? <><RotateCcw size={13} /> {t("recalibrate")}</> : <><MapPin size={13} /> {t("calibrateCourtGps")}</>}
               </Button>
             </div>
           ) : (
             <div>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">{CALIB_STEPS[calibStep].label}</p>
-              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-4">{CALIB_STEPS[calibStep].hint}</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mb-1">{t(CALIB_STEPS[calibStep].labelKey)}</p>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-4">{t(CALIB_STEPS[calibStep].hintKey)}</p>
               <div className="flex items-center gap-2 flex-wrap">
                 <Button size="sm" onClick={markCalibCorner} loading={calibBusy}>
-                  <MapPin size={13} /> Marcar esta esquina
+                  <MapPin size={13} /> {t("markThisCorner")}
                 </Button>
-                <Button size="sm" variant="secondary" onClick={cancelCalibration} disabled={calibBusy}>Cancelar</Button>
+                <Button size="sm" variant="secondary" onClick={cancelCalibration} disabled={calibBusy}>{t("cancel")}</Button>
               </div>
               {calibError && <p className="text-xs text-red-600 mt-2">{calibError}</p>}
             </div>
@@ -312,11 +311,11 @@ export default function HeatmapPage() {
               value={playerId}
               onChange={e => { setPlayerId(e.target.value); setViewSession(null); setSessionLabel(""); setImportedCount(null) }}
               options={players.map(p => ({ value: p.id, label: p.name }))}
-              placeholder="Selecciona un jugador"
+              placeholder={t("selectPlayerPlaceholder")}
               className="w-56"
             />
             <Input
-              placeholder="Nombre de la sesión (ej: vs Rival FC)"
+              placeholder={t("sessionNamePlaceholder")}
               value={sessionLabel}
               onChange={e => { setSessionLabel(e.target.value); setViewSession(null) }}
               disabled={recording}
@@ -324,11 +323,11 @@ export default function HeatmapPage() {
             />
             {recording ? (
               <Button variant="danger" onClick={stopGpsRecording}>
-                <Circle size={14} fill="currentColor" /> Detener grabación
+                <Circle size={14} fill="currentColor" /> {t("stopRecording")}
               </Button>
             ) : (
               <Button onClick={startGpsRecording} disabled={!playerId || !sessionLabel.trim() || !calibrated}>
-                <Radar size={14} /> Grabar GPS en vivo
+                <Radar size={14} /> {t("recordGpsLive")}
               </Button>
             )}
             <input ref={fileInputRef} type="file" accept=".gpx,.csv" className="hidden" onChange={handleImportFile} />
@@ -338,21 +337,21 @@ export default function HeatmapPage() {
               disabled={!playerId || !sessionLabel.trim() || !calibrated || importing}
               loading={importing}
             >
-              <Upload size={14} /> Importar archivo (GPX/CSV)
+              <Upload size={14} /> {t("importFileGpxCsv")}
             </Button>
           </div>
 
           {!calibrated && (
-            <p className="text-xs text-amber-600 mb-3">Calibra la cancha con GPS arriba antes de grabar o importar.</p>
+            <p className="text-xs text-amber-600 mb-3">{t("calibrateBeforeHint")}</p>
           )}
           {gpsError && <p className="text-xs text-red-600 mb-3">{gpsError}</p>}
           {importError && <p className="text-xs text-red-600 mb-3">{importError}</p>}
-          {importedCount != null && <p className="text-xs text-emerald-600 mb-3">Se importaron {importedCount} puntos GPS.</p>}
+          {importedCount != null && <p className="text-xs text-emerald-600 mb-3">{t("importedPointsBefore")} {importedCount} {t("importedPointsAfter")}</p>}
 
           <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
             {recording
-              ? "Grabando posición GPS en vivo. Llévate este dispositivo durante el entrenamiento o partido."
-              : "Elige un jugador y escribe el nombre de la sesión (ej: el partido de hoy) para grabar en vivo o importar un archivo del dispositivo GPS."}
+              ? t("recordingLiveHint")
+              : t("chooseSessionHint")}
           </p>
 
           <div className="relative w-full aspect-[105/68] rounded-xl overflow-hidden bg-gradient-to-b from-emerald-600 to-emerald-700 select-none">
@@ -394,15 +393,15 @@ export default function HeatmapPage() {
             <div className="grid grid-cols-3 gap-3 mt-4">
               <div className="text-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                 <p className="text-lg font-black text-slate-800 dark:text-slate-100">{zoneStats.own}%</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wide">Tercio propio</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wide">{t("thirdOwn")}</p>
               </div>
               <div className="text-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                 <p className="text-lg font-black text-slate-800 dark:text-slate-100">{zoneStats.mid}%</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wide">Mediocampo</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wide">{t("midfield")}</p>
               </div>
               <div className="text-center p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                 <p className="text-lg font-black text-slate-800 dark:text-slate-100">{zoneStats.rival}%</p>
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wide">Tercio rival</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-wide">{t("thirdRival")}</p>
               </div>
             </div>
           )}
@@ -410,12 +409,12 @@ export default function HeatmapPage() {
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
           <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">
-            Sesiones guardadas {player ? `· ${player.name}` : ""}
+            {t("savedSessions")} {player ? `· ${player.name}` : ""}
           </h3>
           {sessions.length === 0 ? (
             <div className="text-center py-8 text-slate-400 dark:text-slate-500">
               <Radar size={28} className="mx-auto mb-2 opacity-30" />
-              <p className="text-sm">Este jugador todavía no tiene sesiones de mapa de calor.</p>
+              <p className="text-sm">{t("noHeatmapSessionsYet")}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -431,9 +430,9 @@ export default function HeatmapPage() {
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{s.label}</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">{formatDate(s.firstDate)} · {s.count} puntos</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">{formatDate(s.firstDate)} · {s.count} {t("points")}</p>
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => loadSession(s.label)}>Ver</Button>
+                  <Button size="sm" variant="outline" onClick={() => loadSession(s.label)}>{t("view")}</Button>
                   <button onClick={() => handleDelete(s.label)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors">
                     <Trash2 size={14} />
                   </button>

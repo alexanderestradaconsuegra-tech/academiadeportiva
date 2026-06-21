@@ -7,12 +7,17 @@ import PageHeader from "@/components/ui/PageHeader"
 import Button from "@/components/ui/Button"
 import { ArrowLeft, Film, Plus, Trash2 } from "lucide-react"
 import type { ActivityCategory } from "@/lib/types"
+import { useT } from "@/lib/i18n/useT"
+import { activities as activitiesDict } from "@/lib/i18n/dictionaries/activities"
+import { useEnumT } from "@/lib/i18n/enums"
 
 const CATEGORIES: ActivityCategory[] = ["Velocidad","Fuerza","Técnica","Resistencia","Potencia","Pliometría","Agilidad"]
 
 export default function ExerciseLibraryPage() {
   const { currentUser, exercises, addExercise, updateExercise, deleteExercise } = useApp()
   const isCoach = currentUser?.role === "coach"
+  const t = useT(activitiesDict)
+  const enumT = useEnumT()
   const [newName, setNewName] = useState<Record<string, string>>({})
 
   function handleAdd(category: ActivityCategory) {
@@ -26,9 +31,9 @@ export default function ExerciseLibraryPage() {
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
         <Link href="/activities" className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-[#0B5CFF] mb-4">
-          <ArrowLeft size={15} /> Volver a Actividades
+          <ArrowLeft size={15} /> {t("backToActivities")}
         </Link>
-        <PageHeader title="Videos de Ejercicios" subtitle="Pega el link de YouTube que muestra la técnica correcta de cada ejercicio" />
+        <PageHeader title={t("exerciseVideos")} subtitle={t("exerciseVideosSubtitle")} />
 
         <div className="space-y-6">
           {CATEGORIES.map(category => {
@@ -36,7 +41,7 @@ export default function ExerciseLibraryPage() {
             return (
               <div key={category} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                 <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800">
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">{category}</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white">{enumT.activityCategory(category)}</h2>
                 </div>
                 <div className="divide-y divide-slate-50 dark:divide-slate-800">
                   {items.map(ex => (
@@ -47,19 +52,19 @@ export default function ExerciseLibraryPage() {
                         <>
                           <input
                             type="url"
-                            placeholder="Pega el link de YouTube..."
+                            placeholder={t("pasteYoutubeLink")}
                             defaultValue={ex.video_url}
                             onBlur={e => { if (e.target.value.trim() !== ex.video_url) updateExercise(ex.id, { video_url: e.target.value.trim() }) }}
                             className="flex-1 h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none"
                           />
-                          <button onClick={() => deleteExercise(ex.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0" title="Eliminar ejercicio">
+                          <button onClick={() => deleteExercise(ex.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0" title={t("deleteExercise")}>
                             <Trash2 size={14} />
                           </button>
                         </>
                       ) : ex.video_url ? (
-                        <a href={ex.video_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline">Ver video</a>
+                        <a href={ex.video_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-500 hover:underline">{t("viewVideo")}</a>
                       ) : (
-                        <span className="text-sm text-slate-400 dark:text-slate-500">Sin video todavía</span>
+                        <span className="text-sm text-slate-400 dark:text-slate-500">{t("noVideoYet")}</span>
                       )}
                     </div>
                   ))}
@@ -67,14 +72,14 @@ export default function ExerciseLibraryPage() {
                 {isCoach && (
                   <div className="flex items-center gap-2 px-5 py-3 bg-slate-50 dark:bg-slate-800/40">
                     <input
-                      placeholder="Nuevo ejercicio..."
+                      placeholder={t("newExercisePlaceholder")}
                       value={newName[category] ?? ""}
                       onChange={e => setNewName(n => ({ ...n, [category]: e.target.value }))}
                       onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(category) } }}
                       className="flex-1 h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none"
                     />
                     <Button size="sm" variant="secondary" onClick={() => handleAdd(category)}>
-                      <Plus size={13} /> Agregar
+                      <Plus size={13} /> {t("add")}
                     </Button>
                   </div>
                 )}

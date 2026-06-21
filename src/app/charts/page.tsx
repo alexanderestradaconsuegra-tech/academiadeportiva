@@ -10,21 +10,24 @@ import {
   ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, Cell,
   LineChart, Line
 } from "recharts"
+import { useT } from "@/lib/i18n/useT"
+import { charts } from "@/lib/i18n/dictionaries/charts"
 
 const COLORS = ["#0B5CFF","#10B981","#F59E0B","#EF4444","#8B5CF6","#F97316"]
 
 export default function ChartsPage() {
   const { players, evaluations, getLatestEvaluation } = useApp()
+  const t = useT(charts)
   const [compareA, setCompareA] = useState(players[0]?.id ?? "")
   const [compareB, setCompareB] = useState(players[1]?.id ?? "")
 
   const ATTRS = [
-    { key: "speed_score", label: "Velocidad" },
-    { key: "strength_score", label: "Fuerza" },
-    { key: "technique_score", label: "Técnica" },
-    { key: "resistance_score", label: "Resistencia" },
-    { key: "power_score", label: "Potencia" },
-    { key: "agility_score", label: "Agilidad" },
+    { key: "speed_score", label: t("attrSpeed") },
+    { key: "strength_score", label: t("attrStrength") },
+    { key: "technique_score", label: t("attrTechnique") },
+    { key: "resistance_score", label: t("attrResistance") },
+    { key: "power_score", label: t("attrPower") },
+    { key: "agility_score", label: t("attrAgility") },
   ]
 
   const evalA = getLatestEvaluation(compareA)
@@ -48,11 +51,11 @@ export default function ChartsPage() {
   }))
 
   const monthlyData = [
-    { month: "Jul", ...Object.fromEntries(players.slice(0,3).map(p => [p.name.split(" ")[0], Math.floor(65 + Math.random() * 20)])) },
-    { month: "Ago", ...Object.fromEntries(players.slice(0,3).map(p => [p.name.split(" ")[0], Math.floor(67 + Math.random() * 20)])) },
-    { month: "Sep", ...Object.fromEntries(players.slice(0,3).map(p => [p.name.split(" ")[0], Math.floor(70 + Math.random() * 20)])) },
-    { month: "Oct", ...Object.fromEntries(players.slice(0,3).map(p => [p.name.split(" ")[0], Math.floor(73 + Math.random() * 20)])) },
-    { month: "Nov", ...Object.fromEntries(players.slice(0,3).map((p, i) => [p.name.split(" ")[0], [84, 80, 83][i]])) },
+    { month: t("monthJul"), ...Object.fromEntries(players.slice(0,3).map(p => [p.name.split(" ")[0], Math.floor(65 + Math.random() * 20)])) },
+    { month: t("monthAug"), ...Object.fromEntries(players.slice(0,3).map(p => [p.name.split(" ")[0], Math.floor(67 + Math.random() * 20)])) },
+    { month: t("monthSep"), ...Object.fromEntries(players.slice(0,3).map(p => [p.name.split(" ")[0], Math.floor(70 + Math.random() * 20)])) },
+    { month: t("monthOct"), ...Object.fromEntries(players.slice(0,3).map(p => [p.name.split(" ")[0], Math.floor(73 + Math.random() * 20)])) },
+    { month: t("monthNov"), ...Object.fromEntries(players.slice(0,3).map((p, i) => [p.name.split(" ")[0], [84, 80, 83][i]])) },
   ]
 
   const top3 = players.slice(0, 3)
@@ -60,15 +63,15 @@ export default function ChartsPage() {
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
-        <PageHeader title="Gráficos y Análisis" subtitle="Visualiza el rendimiento y progreso del equipo" />
+        <PageHeader title={t("pageTitle")} subtitle={t("pageSubtitle")} />
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
           {/* Progress line */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Progreso del Equipo</h2>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Score promedio mensual</p>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("teamProgress")}</h2>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t("monthlyAverageScore")}</p>
               </div>
               <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg">+12 pts ↑</span>
             </div>
@@ -83,7 +86,7 @@ export default function ChartsPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
                 <YAxis domain={[65, 95]} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12 }} formatter={(v: number) => [`${v} pts`, "Score"]} />
+                <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12 }} formatter={(v: number) => [`${v} ${t("points")}`, t("score")]} />
                 <Area type="monotone" dataKey="score" stroke="#0B5CFF" strokeWidth={2.5} fill="url(#cg)" dot={{ r: 4, fill: "#0B5CFF", strokeWidth: 0 }} activeDot={{ r: 6 }} />
               </AreaChart>
             </ResponsiveContainer>
@@ -92,15 +95,15 @@ export default function ChartsPage() {
           {/* Category bar */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
             <div className="mb-4">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Score por Categoría</h2>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Promedio del equipo completo</p>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("scoreByCategory")}</h2>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t("fullTeamAverage")}</p>
             </div>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={CATEGORY_SCORES} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
                 <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12 }} formatter={(v: number) => [`${v} pts`]} />
+                <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12 }} formatter={(v: number) => [`${v} ${t("points")}`]} />
                 <Bar dataKey="score" radius={[6, 6, 0, 0]} barSize={32}>
                   {CATEGORY_SCORES.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                 </Bar>
@@ -111,8 +114,8 @@ export default function ChartsPage() {
           {/* Evolution multi-line */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
             <div className="mb-4">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Evolución Mensual por Jugador</h2>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Top 3 jugadores</p>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("monthlyEvolutionByPlayer")}</h2>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t("top3Players")}</p>
             </div>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={monthlyData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
@@ -132,15 +135,15 @@ export default function ChartsPage() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
             <div className="flex items-start justify-between mb-4 gap-4 flex-wrap">
               <div>
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Comparación entre Jugadores</h2>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Atributos cara a cara</p>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("comparisonBetweenPlayers")}</h2>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t("headToHeadAttributes")}</p>
               </div>
               <div className="flex items-center gap-2">
                 <select value={compareA} onChange={e => setCompareA(e.target.value)}
                   className="h-8 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
                   {players.map(p => <option key={p.id} value={p.id}>{p.name.split(" ")[0]}</option>)}
                 </select>
-                <span className="text-xs text-slate-400 dark:text-slate-500 font-bold">vs</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500 font-bold">{t("vs")}</span>
                 <select value={compareB} onChange={e => setCompareB(e.target.value)}
                   className="h-8 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
                   {players.map(p => <option key={p.id} value={p.id}>{p.name.split(" ")[0]}</option>)}
@@ -163,8 +166,8 @@ export default function ChartsPage() {
 
         {/* Radar comparison */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
-          <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-1">Radar de Atributos — Comparación</h2>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-5">{playerA?.name.split(" ")[0]} vs {playerB?.name.split(" ")[0]}</p>
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{t("radarComparisonTitle")}</h2>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mb-5">{playerA?.name.split(" ")[0]} {t("vs")} {playerB?.name.split(" ")[0]}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {[
               { name: playerA?.name ?? "A", data: radarA, color: "#0B5CFF" },

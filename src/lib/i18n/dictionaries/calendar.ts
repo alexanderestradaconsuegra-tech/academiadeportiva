@@ -1,0 +1,31 @@
+import type { Translations } from "@/lib/i18n/useT"
+
+export const calendar = {
+  pageTitle: { es: "Calendario", en: "Calendar", pt: "Calendário" },
+  trainingsScheduled: { es: "entrenamientos programados", en: "trainings scheduled", pt: "treinos agendados" },
+  newTraining: { es: "Nuevo Entrenamiento", en: "New Training", pt: "Novo Treino" },
+  editTraining: { es: "Editar Entrenamiento", en: "Edit Training", pt: "Editar Treino" },
+
+  titleLabel: { es: "Título *", en: "Title *", pt: "Título *" },
+  titlePlaceholder: { es: "Ej: Entrenamiento técnico", en: "E.g.: Technical training", pt: "Ex: Treino técnico" },
+  dateLabel: { es: "Fecha *", en: "Date *", pt: "Data *" },
+  timeLabel: { es: "Hora", en: "Time", pt: "Hora" },
+  categoryLabel: { es: "Categoría", en: "Category", pt: "Categoria" },
+  allCategories: { es: "Todas las categorías", en: "All categories", pt: "Todas as categorias" },
+  locationLabel: { es: "Lugar", en: "Location", pt: "Local" },
+  locationPlaceholder: { es: "Ej: Cancha 1", en: "E.g.: Field 1", pt: "Ex: Campo 1" },
+  notesLabel: { es: "Notas", en: "Notes", pt: "Notas" },
+  notesPlaceholder: { es: "Detalles adicionales...", en: "Additional details...", pt: "Detalhes adicionais..." },
+  cancel: { es: "Cancelar", en: "Cancel", pt: "Cancelar" },
+  save: { es: "Guardar", en: "Save", pt: "Salvar" },
+
+  upcoming: { es: "Próximos", en: "Upcoming", pt: "Próximos" },
+  past: { es: "Pasados", en: "Past", pt: "Anteriores" },
+  noTrainingsScheduled: { es: "No hay entrenamientos programados", en: "No trainings scheduled", pt: "Nenhum treino agendado" },
+
+  edit: { es: "Editar", en: "Edit", pt: "Editar" },
+  deleteAction: { es: "Eliminar", en: "Delete", pt: "Excluir" },
+  confirmDeleteTraining: { es: "¿Eliminar este entrenamiento?", en: "Delete this training?", pt: "Excluir este treino?" },
+
+  newTrainingNotificationTitle: { es: "Nuevo entrenamiento", en: "New training", pt: "Novo treino" },
+} satisfies Translations
