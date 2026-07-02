@@ -6,7 +6,7 @@ import AppShell from "@/components/layout/AppShell"
 import PlayerCard from "@/components/PlayerCard"
 import PageHeader from "@/components/ui/PageHeader"
 import Button from "@/components/ui/Button"
-import { Plus, Search, SlidersHorizontal, Users } from "lucide-react"
+import { Plus, Search, SlidersHorizontal, Users, ArrowLeftRight } from "lucide-react"
 import type { Category, Position } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
 import { players as playersDict } from "@/lib/i18n/dictionaries/players"
@@ -34,6 +34,11 @@ export default function PlayersPage() {
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
         <PageHeader title={t("playersTitle")} subtitle={`${players.length} ${t("playersSubtitle")}`}>
+          <Link href="/players/compare">
+            <Button size="md" variant="outline">
+              <ArrowLeftRight size={16} /> {t("comparePlayers")}
+            </Button>
+          </Link>
           <Link href="/players/new">
             <Button size="md">
               <Plus size={16} /> {t("newPlayer")}
