@@ -5,7 +5,7 @@ import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
 import StatCard from "@/components/ui/StatCard"
 import { Users, TrendingUp, AlertTriangle, Activity, ChevronRight, Star } from "lucide-react"
-import { PROGRESS_DATA, CATEGORY_SCORES } from "@/lib/mock-data"
+import type { ActivityCategory, Evaluation } from "@/lib/types"
 import { cn, formatDate, getCategoryColor } from "@/lib/utils"
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -30,6 +30,43 @@ export default function DashboardPage() {
     }, players[0])
     return { avgScore, lowPerf, bestPlayer }
   }, [players, getLatestEvaluation])
+
+  const progressData = useMemo(() => {
+    if (!evaluations.length) return []
+    const byMonth = new Map<string, number[]>()
+    evaluations.forEach(ev => {
+      const [year, month] = ev.date.split("-")
+      const key = `${year}-${month}`
+      if (!byMonth.has(key)) byMonth.set(key, [])
+      byMonth.get(key)!.push(ev.general_score)
+    })
+    const sortedKeys = Array.from(byMonth.keys()).sort().slice(-6)
+    const locale = language === "en" ? "en-US" : language === "pt" ? "pt-BR" : "es-CO"
+    return sortedKeys.map(key => {
+      const scores = byMonth.get(key)!
+      const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+      const label = new Date(`${key}-01`).toLocaleString(locale, { month: "short" })
+      return { month: label.charAt(0).toUpperCase() + label.slice(1), score: avg }
+    })
+  }, [evaluations, language])
+
+  const categoryScores = useMemo(() => {
+    const latestEvals = players.map(p => getLatestEvaluation(p.id)).filter((ev): ev is Evaluation => !!ev)
+    if (!latestEvals.length) return []
+    const avg = (scores: number[]) => Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+    return [
+      { key: "Velocidad" as ActivityCategory, score: avg(latestEvals.map(ev => ev.speed_score)),      fill: "#F59E0B" },
+      { key: "Fuerza" as ActivityCategory,    score: avg(latestEvals.map(ev => ev.strength_score)),   fill: "#EF4444" },
+      { key: "Técnica" as ActivityCategory,   score: avg(latestEvals.map(ev => ev.technique_score)),  fill: "#3B82F6" },
+      { key: "Resistencia" as ActivityCategory, score: avg(latestEvals.map(ev => ev.resistance_score)), fill: "#10B981" },
+      { key: "Potencia" as ActivityCategory,  score: avg(latestEvals.map(ev => ev.power_score)),      fill: "#F97316" },
+      { key: "Agilidad" as ActivityCategory,  score: avg(latestEvals.map(ev => ev.agility_score)),    fill: "#8B5CF6" },
+    ]
+  }, [players, getLatestEvaluation])
+
+  const progressTrend = progressData.length >= 2
+    ? progressData[progressData.length - 1].score - progressData[0].score
+    : null
 
   const recentActivities = activities.slice(0, 6)
   const topPlayers = [...players]
@@ -91,10 +128,14 @@ export default function DashboardPage() {
                 <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("teamProgress")}</h2>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t("averageScoreLast6Months")}</p>
               </div>
-              <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg">↑ +12 pts</span>
+              {progressTrend !== null && (
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${progressTrend >= 0 ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10" : "text-red-500 bg-red-50 dark:bg-red-500/10"}`}>
+                  {progressTrend >= 0 ? "↑" : "↓"} {progressTrend >= 0 ? "+" : ""}{progressTrend} pts
+                </span>
+              )}
             </div>
             <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={PROGRESS_DATA} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+              <AreaChart data={progressData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#0B5CFF" stopOpacity={0.15} />
@@ -118,7 +159,7 @@ export default function DashboardPage() {
             <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{t("byCategory")}</h2>
             <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">{t("teamAverageScore")}</p>
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={CATEGORY_SCORES} layout="vertical" margin={{ top: 0, right: 8, left: -8, bottom: 0 }}>
+              <BarChart data={categoryScores.map(c => ({ ...c, name: e.activityCategory(c.key) }))} layout="vertical" margin={{ top: 0, right: 8, left: -8, bottom: 0 }}>
                 <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "#64748B" }} axisLine={false} tickLine={false} width={70} />
                 <Tooltip
@@ -126,7 +167,7 @@ export default function DashboardPage() {
                   formatter={(v: number) => [`${v} ${t("points")}`, t("score")]}
                 />
                 <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={16}>
-                  {CATEGORY_SCORES.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                  {categoryScores.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
