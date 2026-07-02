@@ -9,9 +9,10 @@ import Badge from "@/components/ui/Badge"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import NotificationToggle from "@/components/ui/NotificationToggle"
-import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download } from "lucide-react"
+import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical } from "lucide-react"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
-import type { Evaluation } from "@/lib/types"
+import type { Evaluation, PhysicalTest } from "@/lib/types"
+import { useMemo } from "react"
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area, Legend
@@ -38,6 +39,24 @@ const ATTR_COLORS: Record<string, string> = {
   resistance_score: "#10B981",
   power_score: "#F97316",
   agility_score: "#8B5CF6",
+}
+
+const TEST_CONFIGS = [
+  { key: "sprint_10m", labelKey: "sprint10m" as const, unit: "s", lowerIsBetter: true },
+  { key: "sprint_40m", labelKey: "sprint40m" as const, unit: "s", lowerIsBetter: true },
+  { key: "vertical_jump", labelKey: "verticalJump" as const, unit: "cm", lowerIsBetter: false },
+  { key: "broad_jump", labelKey: "broadJump" as const, unit: "cm", lowerIsBetter: false },
+  { key: "agility_5_10_5", labelKey: "agility51005" as const, unit: "s", lowerIsBetter: true },
+  { key: "yo_yo_test", labelKey: "yoyoTest" as const, unit: "lvl", lowerIsBetter: false },
+  { key: "pushups", labelKey: "pushups" as const, unit: "reps", lowerIsBetter: false },
+  { key: "pullups", labelKey: "pullups" as const, unit: "reps", lowerIsBetter: false },
+]
+
+const EMPTY_TEST_FORM = {
+  test_type: "sprint_40m",
+  date: "",
+  value: "",
+  notes: "",
 }
 
 function EvaluationComparison({ evaluations }: { evaluations: Evaluation[] }) {
@@ -141,7 +160,7 @@ const EMPTY_EVAL_FORM = {
 
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
-  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, currentUser, addEvaluation, updateEvaluation, deleteEvaluation } = useApp()
+  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, currentUser, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest } = useApp()
   const isCoach = currentUser?.role === "coach"
   const t = useT(playersDict)
   const e = useEnumT()
@@ -155,6 +174,7 @@ export default function PlayerProfilePage() {
   const upcomingTrainings = player ? getUpcomingTrainings(player.category).slice(0, 3) : []
   const playerMatches = getPlayerMatches(id)
   const playerAttendance = getPlayerAttendance(id)
+  const physicalTests = getPlayerPhysicalTests(id)
   const attendanceStats = {
     total: playerAttendance.length,
     present: playerAttendance.filter(a => a.status === "present").length,
@@ -168,6 +188,37 @@ export default function PlayerProfilePage() {
   const [editingEvalId, setEditingEvalId] = useState<string | null>(null)
   const [evalForm, setEvalForm] = useState(EMPTY_EVAL_FORM)
   const [savingEval, setSavingEval] = useState(false)
+
+  const [showTestForm, setShowTestForm] = useState(false)
+  const [testForm, setTestForm] = useState({ ...EMPTY_TEST_FORM, date: new Date().toISOString().split("T")[0] })
+
+  const bestPerType = useMemo(() => {
+    const map = new Map<string, PhysicalTest>()
+    physicalTests.forEach(pt => {
+      const cfg = TEST_CONFIGS.find(c => c.key === pt.test_type)
+      if (!cfg) return
+      const existing = map.get(pt.test_type)
+      if (!existing) { map.set(pt.test_type, pt); return }
+      const isBetter = cfg.lowerIsBetter ? pt.value < existing.value : pt.value > existing.value
+      if (isBetter) map.set(pt.test_type, pt)
+    })
+    return map
+  }, [physicalTests])
+
+  function handleTestSubmit(ev: React.FormEvent) {
+    ev.preventDefault()
+    const cfg = TEST_CONFIGS.find(c => c.key === testForm.test_type)!
+    addPhysicalTest({
+      player_id: id,
+      test_type: testForm.test_type,
+      value: Number(testForm.value),
+      unit: cfg.unit,
+      date: testForm.date,
+      notes: testForm.notes || null,
+    })
+    setShowTestForm(false)
+    setTestForm({ ...EMPTY_TEST_FORM, date: new Date().toISOString().split("T")[0] })
+  }
 
   const setEvalField = (k: keyof typeof evalForm, v: string) => setEvalForm(f => ({ ...f, [k]: v }))
 
@@ -459,6 +510,70 @@ export default function PlayerProfilePage() {
                   </div>
                 )}
               </div>
+
+              {/* Physical Tests */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <FlaskConical size={15} className="text-[#0B5CFF]" />
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("physicalTests")}</h2>
+                  </div>
+                  {isCoach && (
+                    <Button size="sm" variant="outline" onClick={() => setShowTestForm(true)}>
+                      <Plus size={13} /> {t("logPhysicalTest")}
+                    </Button>
+                  )}
+                </div>
+
+                {physicalTests.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400 dark:text-slate-500">
+                    <FlaskConical size={28} className="mx-auto mb-2 opacity-30" />
+                    <p className="text-sm">{t("noPhysicalTests")}</p>
+                  </div>
+                ) : (
+                  <>
+                    {bestPerType.size > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                        {TEST_CONFIGS.filter(cfg => bestPerType.has(cfg.key)).map(cfg => {
+                          const best = bestPerType.get(cfg.key)!
+                          return (
+                            <div key={cfg.key} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                              <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide truncate">{t(cfg.labelKey)}</p>
+                              <p className="text-lg font-black text-[#0B5CFF] mt-0.5">
+                                {best.value} <span className="text-xs font-normal text-slate-400 dark:text-slate-500">{cfg.unit}</span>
+                              </p>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                    <div className="space-y-1">
+                      {physicalTests.slice(0, 8).map(pt => {
+                        const cfg = TEST_CONFIGS.find(c => c.key === pt.test_type)
+                        return (
+                          <div key={pt.id} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors group">
+                            <div className="flex-1 min-w-0">
+                              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{cfg ? t(cfg.labelKey) : pt.test_type}</span>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-2">{formatDate(pt.date)}</span>
+                            </div>
+                            <span className="text-sm font-bold text-slate-800 dark:text-slate-100 shrink-0">
+                              {pt.value} <span className="text-xs font-normal text-slate-400 dark:text-slate-500">{cfg?.unit ?? pt.unit}</span>
+                            </span>
+                            {isCoach && (
+                              <button
+                                onClick={() => { if (confirm(t("confirmDeleteTest"))) deletePhysicalTest(pt.id) }}
+                                className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all shrink-0"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
             {/* Right column */}
@@ -700,6 +815,52 @@ export default function PlayerProfilePage() {
                   )}
                   <Button variant="secondary" type="button" onClick={() => setShowEvalForm(false)}>Cancelar</Button>
                   <Button type="submit" loading={savingEval}>Guardar</Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showTestForm && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md animate-scale-in">
+              <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("newPhysicalTest")}</h2>
+                <button onClick={() => setShowTestForm(false)} className="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
+                  <X size={16} />
+                </button>
+              </div>
+              <form onSubmit={handleTestSubmit} className="p-5 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">{t("testTypeLabel")}</label>
+                  <select
+                    value={testForm.test_type}
+                    onChange={ev => setTestForm(f => ({ ...f, test_type: ev.target.value }))}
+                    className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-[#0B5CFF] outline-none"
+                    required
+                  >
+                    {TEST_CONFIGS.map(cfg => (
+                      <option key={cfg.key} value={cfg.key}>{t(cfg.labelKey)} ({cfg.unit})</option>
+                    ))}
+                  </select>
+                </div>
+                <Input label={t("dateLabel")} type="date" value={testForm.date} onChange={ev => setTestForm(f => ({ ...f, date: ev.target.value }))} required />
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                    {t("testValueLabel")} ({TEST_CONFIGS.find(c => c.key === testForm.test_type)?.unit})
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min={0}
+                    value={testForm.value}
+                    onChange={ev => setTestForm(f => ({ ...f, value: ev.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="flex items-center gap-3 justify-end pt-2">
+                  <Button variant="secondary" type="button" onClick={() => setShowTestForm(false)}>{t("cancel")}</Button>
+                  <Button type="submit">{t("save")}</Button>
                 </div>
               </form>
             </div>

@@ -56,6 +56,47 @@ export type Database = {
           },
         ]
       }
+      physical_tests: {
+        Row: {
+          id: string
+          player_id: string
+          test_type: string
+          value: number
+          unit: string
+          date: string
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          player_id: string
+          test_type: string
+          value: number
+          unit: string
+          date: string
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          player_id?: string
+          test_type?: string
+          value?: number
+          unit?: string
+          date?: string
+          notes?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "physical_tests_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activities: {
         Row: {
           category: Database["public"]["Enums"]["activity_category"]

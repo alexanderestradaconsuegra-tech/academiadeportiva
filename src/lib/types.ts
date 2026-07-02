@@ -110,6 +110,17 @@ export interface Attendance {
   created_at: string
 }
 
+export interface PhysicalTest {
+  id: string
+  player_id: string
+  test_type: string
+  value: number
+  unit: string
+  date: string
+  notes: string | null
+  created_at: string
+}
+
 export type UserRole = "coach" | "player"
 
 export interface Profile {

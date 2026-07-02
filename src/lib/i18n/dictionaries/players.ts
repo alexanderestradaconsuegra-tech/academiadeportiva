@@ -127,4 +127,21 @@ export const players = {
   observationsLabel: { es: "Observaciones", en: "Observations", pt: "Observações" },
   saveChanges: { es: "Guardar Cambios", en: "Save Changes", pt: "Salvar Alterações" },
   confirmDeletePlayer: { es: "¿Eliminar a {name}? Esta acción no se puede deshacer.", en: "Delete {name}? This action cannot be undone.", pt: "Excluir {name}? Esta ação não pode ser desfeita." },
+
+  // Physical tests
+  physicalTests: { es: "Tests Físicos", en: "Physical Tests", pt: "Testes Físicos" },
+  logPhysicalTest: { es: "Registrar test", en: "Log test", pt: "Registrar teste" },
+  newPhysicalTest: { es: "Nuevo Test Físico", en: "New Physical Test", pt: "Novo Teste Físico" },
+  testTypeLabel: { es: "Tipo de test", en: "Test type", pt: "Tipo de teste" },
+  testValueLabel: { es: "Resultado", en: "Result", pt: "Resultado" },
+  noPhysicalTests: { es: "Sin tests físicos registrados", en: "No physical tests recorded", pt: "Nenhum teste físico registrado" },
+  confirmDeleteTest: { es: "¿Eliminar este registro? Esta acción no se puede deshacer.", en: "Delete this record? This action cannot be undone.", pt: "Excluir este registro? Esta ação não pode ser desfeita." },
+  sprint10m: { es: "Sprint 10m", en: "Sprint 10m", pt: "Sprint 10m" },
+  sprint40m: { es: "Sprint 40m", en: "Sprint 40m", pt: "Sprint 40m" },
+  verticalJump: { es: "Salto vertical", en: "Vertical jump", pt: "Salto vertical" },
+  broadJump: { es: "Salto largo", en: "Broad jump", pt: "Salto longo" },
+  agility51005: { es: "Agilidad 5-10-5", en: "5-10-5 Agility", pt: "Agilidade 5-10-5" },
+  yoyoTest: { es: "Test Yo-Yo", en: "Yo-Yo Test", pt: "Teste Yo-Yo" },
+  pushups: { es: "Flexiones", en: "Push-ups", pt: "Flexões" },
+  pullups: { es: "Dominadas", en: "Pull-ups", pt: "Dominadas" },
 } satisfies Translations
