@@ -14,6 +14,12 @@ export const players = {
   adjustFiltersOrAdd: { es: "Ajusta los filtros o agrega un nuevo jugador", en: "Adjust the filters or add a new player", pt: "Ajuste os filtros ou adicione um novo jogador" },
   comparePlayers: { es: "Comparar", en: "Compare", pt: "Comparar" },
   downloadPdf: { es: "Descargar PDF", en: "Download PDF", pt: "Baixar PDF" },
+  attendanceRate: { es: "Tasa de asistencia", en: "Attendance rate", pt: "Taxa de presença" },
+  attendanceSessions: { es: "sesiones registradas", en: "sessions recorded", pt: "sessões registradas" },
+  presentLabel: { es: "Presente", en: "Present", pt: "Presente" },
+  lateLabel: { es: "Tarde", en: "Late", pt: "Atrasado" },
+  excusedLabel: { es: "Justificado", en: "Excused", pt: "Justificado" },
+  absentLabel: { es: "Ausente", en: "Absent", pt: "Ausente" },
 
   // players/compare/page.tsx
   compareTitle: { es: "Comparar Jugadores", en: "Compare Players", pt: "Comparar Jogadores" },

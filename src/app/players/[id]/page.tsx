@@ -141,7 +141,7 @@ const EMPTY_EVAL_FORM = {
 
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
-  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, currentUser, addEvaluation, updateEvaluation, deleteEvaluation } = useApp()
+  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, currentUser, addEvaluation, updateEvaluation, deleteEvaluation } = useApp()
   const isCoach = currentUser?.role === "coach"
   const t = useT(playersDict)
   const e = useEnumT()
@@ -154,6 +154,15 @@ export default function PlayerProfilePage() {
   const sessions = getPlayerSessions(id)
   const upcomingTrainings = player ? getUpcomingTrainings(player.category).slice(0, 3) : []
   const playerMatches = getPlayerMatches(id)
+  const playerAttendance = getPlayerAttendance(id)
+  const attendanceStats = {
+    total: playerAttendance.length,
+    present: playerAttendance.filter(a => a.status === "present").length,
+    late: playerAttendance.filter(a => a.status === "late").length,
+    excused: playerAttendance.filter(a => a.status === "excused").length,
+    absent: playerAttendance.filter(a => a.status === "absent").length,
+    rate: playerAttendance.length ? Math.round((playerAttendance.filter(a => a.status === "present" || a.status === "late").length / playerAttendance.length) * 100) : null,
+  }
 
   const [showEvalForm, setShowEvalForm] = useState(false)
   const [editingEvalId, setEditingEvalId] = useState<string | null>(null)
@@ -519,6 +528,30 @@ export default function PlayerProfilePage() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Attendance stats */}
+              {attendanceStats.total > 0 && (
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("attendanceRate")}</h2>
+                    <span className={cn("text-lg font-black", attendanceStats.rate! >= 80 ? "text-emerald-500" : attendanceStats.rate! >= 60 ? "text-amber-500" : "text-red-500")}>
+                      {attendanceStats.rate}%
+                    </span>
+                  </div>
+                  <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-3">
+                    <div className="h-2 bg-emerald-500 rounded-full transition-all" style={{ width: `${attendanceStats.rate}%` }} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([["presentLabel","present","text-emerald-600","bg-emerald-50 dark:bg-emerald-500/10"],["lateLabel","late","text-amber-600","bg-amber-50 dark:bg-amber-500/10"],["excusedLabel","excused","text-blue-600","bg-blue-50 dark:bg-blue-500/10"],["absentLabel","absent","text-red-600","bg-red-50 dark:bg-red-500/10"]] as const).map(([labelKey, statKey, textCls, bgCls]) => (
+                      <div key={statKey} className={cn("rounded-xl p-2.5 text-center", bgCls)}>
+                        <p className={cn("text-base font-black", textCls)}>{attendanceStats[statKey]}</p>
+                        <p className={cn("text-[10px] font-semibold", textCls)}>{t(labelKey)}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center mt-2">{attendanceStats.total} {t("attendanceSessions")}</p>
                 </div>
               )}
 

@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance: {
+        Row: {
+          id: string
+          training_id: string
+          player_id: string
+          status: "present" | "absent" | "late" | "excused"
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          training_id: string
+          player_id: string
+          status: "present" | "absent" | "late" | "excused"
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          training_id?: string
+          player_id?: string
+          status?: "present" | "absent" | "late" | "excused"
+          notes?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_training_id_fkey"
+            columns: ["training_id"]
+            isOneToOne: false
+            referencedRelation: "trainings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activities: {
         Row: {
           category: Database["public"]["Enums"]["activity_category"]

@@ -99,6 +99,17 @@ export interface PlayerWithStats extends Player {
   progress_trend?: number
 }
 
+export type AttendanceStatus = "present" | "absent" | "late" | "excused"
+
+export interface Attendance {
+  id: string
+  training_id: string
+  player_id: string
+  status: AttendanceStatus
+  notes: string | null
+  created_at: string
+}
+
 export type UserRole = "coach" | "player"
 
 export interface Profile {

@@ -28,4 +28,18 @@ export const calendar = {
   confirmDeleteTraining: { es: "¿Eliminar este entrenamiento?", en: "Delete this training?", pt: "Excluir este treino?" },
 
   newTrainingNotificationTitle: { es: "Nuevo entrenamiento", en: "New training", pt: "Novo treino" },
+
+  // Attendance
+  attendance: { es: "Asistencia", en: "Attendance", pt: "Presença" },
+  markAttendance: { es: "Marcar asistencia", en: "Mark attendance", pt: "Marcar presença" },
+  attendanceSaved: { es: "Asistencia guardada", en: "Attendance saved", pt: "Presença salva" },
+  present: { es: "Presente", en: "Present", pt: "Presente" },
+  absent: { es: "Ausente", en: "Absent", pt: "Ausente" },
+  late: { es: "Tarde", en: "Late", pt: "Atrasado" },
+  excused: { es: "Justificado", en: "Excused", pt: "Justificado" },
+  noPlayersInCategory: { es: "Sin jugadores en esta categoría", en: "No players in this category", pt: "Sem jogadores nesta categoria" },
+  attendanceRate: { es: "Asistencia", en: "Attendance", pt: "Presença" },
+  presentCount: { es: "presentes", en: "present", pt: "presentes" },
+  of: { es: "de", en: "of", pt: "de" },
+  closeAttendance: { es: "Cerrar", en: "Close", pt: "Fechar" },
 } satisfies Translations

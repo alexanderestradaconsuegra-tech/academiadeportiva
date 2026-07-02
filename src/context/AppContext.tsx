@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
@@ -17,6 +17,7 @@ interface AppState {
   matches: Match[]
   matchStats: MatchPlayerStat[]
   exercises: Exercise[]
+  attendance: Attendance[]
   isAuthenticated: boolean
   authReady: boolean
   currentUser: Profile | null
@@ -62,6 +63,9 @@ interface AppContextType extends AppState {
   addPositionSamples: (samples: Omit<PositionSample, "id" | "created_at">[]) => void
   deletePositionSession: (playerId: string, sessionLabel: string) => void
   getPlayerPositionSamples: (playerId: string) => PositionSample[]
+  upsertAttendance: (trainingId: string, playerId: string, status: AttendanceStatus) => void
+  getTrainingAttendance: (trainingId: string) => Attendance[]
+  getPlayerAttendance: (playerId: string) => Attendance[]
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -199,6 +203,17 @@ function mapTraining(row: Tables<"trainings">): Training {
   }
 }
 
+function mapAttendance(row: Tables<"attendance">): Attendance {
+  return {
+    id: row.id,
+    training_id: row.training_id,
+    player_id: row.player_id,
+    status: row.status as AttendanceStatus,
+    notes: row.notes ?? null,
+    created_at: row.created_at,
+  }
+}
+
 function mapPositionSample(row: Tables<"position_samples">): PositionSample {
   return {
     id: row.id,
@@ -278,6 +293,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     matches: [],
     matchStats: [],
     exercises: [],
+    attendance: [],
     isAuthenticated: false,
     authReady: false,
     currentUser: null,
@@ -310,7 +326,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const loadPlayerData = useCallback(async () => {
-    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes, positionSamplesRes, matchesRes, matchStatsRes, exercisesRes] = await Promise.all([
+    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes, positionSamplesRes, matchesRes, matchStatsRes, exercisesRes, attendanceRes] = await Promise.all([
       supabase.from("players").select("*"),
       supabase.from("activities").select("*"),
       supabase.from("evaluations").select("*"),
@@ -321,6 +337,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from("matches").select("*"),
       supabase.from("match_player_stats").select("*"),
       supabase.from("exercises").select("*"),
+      supabase.from("attendance").select("*"),
     ])
     setState(s => ({
       ...s,
@@ -334,6 +351,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       matches: (matchesRes.data ?? []).map(mapMatch),
       matchStats: (matchStatsRes.data ?? []).map(mapMatchStat),
       exercises: (exercisesRes.data ?? []).map(mapExercise),
+      attendance: (attendanceRes.data ?? []).map(mapAttendance),
     }))
   }, [])
 
@@ -786,6 +804,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [state.positionSamples]
   )
 
+  const upsertAttendance = useCallback((trainingId: string, playerId: string, status: AttendanceStatus) => {
+    setState(s => {
+      const existing = s.attendance.find(a => a.training_id === trainingId && a.player_id === playerId)
+      if (existing) {
+        return { ...s, attendance: s.attendance.map(a => a.training_id === trainingId && a.player_id === playerId ? { ...a, status } : a) }
+      }
+      const record: Attendance = { id: crypto.randomUUID(), training_id: trainingId, player_id: playerId, status, notes: null, created_at: new Date().toISOString() }
+      return { ...s, attendance: [...s.attendance, record] }
+    })
+    supabase.from("attendance").upsert({ training_id: trainingId, player_id: playerId, status }, { onConflict: "training_id,player_id" })
+      .then(({ error }) => { if (error) console.error("upsertAttendance:", error) })
+  }, [])
+
+  const getTrainingAttendance = useCallback(
+    (trainingId: string) => state.attendance.filter(a => a.training_id === trainingId),
+    [state.attendance]
+  )
+
+  const getPlayerAttendance = useCallback(
+    (playerId: string) => state.attendance.filter(a => a.player_id === playerId),
+    [state.attendance]
+  )
+
   const getUpcomingTrainings = useCallback((category?: Category | null) => {
     const today = new Date().toISOString().split("T")[0]
     return state.trainings
@@ -835,6 +876,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addPositionSamples,
         deletePositionSession,
         getPlayerPositionSamples,
+        upsertAttendance,
+        getTrainingAttendance,
+        getPlayerAttendance,
       }}
     >
       {children}
