@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useApp } from "@/context/AppContext"
+import { supabase } from "@/lib/supabase"
 import { Trophy, Eye, EyeOff, Lock, Mail, AlertCircle, User, Building2 } from "lucide-react"
 import { useT } from "@/lib/i18n/useT"
 import { login as loginDict } from "@/lib/i18n/dictionaries/login"
@@ -50,17 +51,17 @@ export default function LoginPage() {
     e.preventDefault()
     setError("")
     setLoading(true)
-    const res = await fetch("/api/admin/bootstrap-coach", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, full_name: fullName, academy_name: academyName, language }),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      setError(data.error || t("genericError"))
+    // Use Supabase's built-in signUp — no admin endpoint needed
+    const { error: signUpError } = await supabase.auth.signUp({ email, password })
+    if (signUpError) {
+      // Generic message — never expose internal Supabase errors to UI
+      setError("No se pudo crear la cuenta. Verifica los datos e intenta de nuevo.")
       setLoading(false)
       return
     }
+    // After signUp the user is authenticated; createAcademy will be called from /onboarding
+    // Store pending setup data so onboarding page can pre-fill it
+    sessionStorage.setItem("pendingAcademy", JSON.stringify({ academyName, fullName, language }))
     const loginError = await login(email, password)
     if (loginError) {
       setError(loginError)

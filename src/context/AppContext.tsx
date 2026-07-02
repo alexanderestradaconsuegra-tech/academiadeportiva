@@ -86,6 +86,9 @@ interface AppContextType extends AppState {
 
 const AppContext = createContext<AppContextType | null>(null)
 
+const isDev = process.env.NODE_ENV === "development"
+const dbg = (...args: unknown[]) => { if (isDev) console.error(...args) }
+
 const AUTH_ERRORS: Record<"invalidCredentials" | "noAccess", Record<Language, string>> = {
   invalidCredentials: {
     es: "Credenciales incorrectas. Intenta de nuevo.",
@@ -552,7 +555,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         notes: player.notes || null,
         created_at: player.created_at,
         academy_id: s.teamSettings?.id ?? null,
-      }).then(({ error }) => { if (error) console.error("addPlayer:", error) })
+      }).then(({ error }) => { if (error) dbg("addPlayer:", error) })
       return { ...s, players: [...s.players, player] }
     })
     return player
@@ -568,7 +571,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if ("club" in update) update.club = update.club || null
     if ("objective" in update) update.objective = update.objective || null
     if ("notes" in update) update.notes = update.notes || null
-    supabase.from("players").update(update).eq("id", id).then(({ error }) => { if (error) console.error("updatePlayer:", error) })
+    supabase.from("players").update(update).eq("id", id).then(({ error }) => { if (error) dbg("updatePlayer:", error) })
   }, [])
 
   const deletePlayer = useCallback((id: string) => {
@@ -581,7 +584,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       liveSessions: s.liveSessions.filter(ls => ls.player_id !== id),
       positionSamples: s.positionSamples.filter(p => p.player_id !== id),
     }))
-    supabase.from("players").delete().eq("id", id).then(({ error }) => { if (error) console.error("deletePlayer:", error) })
+    supabase.from("players").delete().eq("id", id).then(({ error }) => { if (error) dbg("deletePlayer:", error) })
   }, [])
 
   const addActivity = useCallback((data: Omit<Activity, "id" | "created_at">): Activity => {
@@ -602,14 +605,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       intensity: activity.intensity,
       notes: activity.notes || null,
       created_at: activity.created_at,
-    }).then(({ error }) => { if (error) console.error("addActivity:", error) })
+    }).then(({ error }) => { if (error) dbg("addActivity:", error) })
     return activity
   }, [])
 
   const addEvaluation = useCallback((data: Omit<Evaluation, "id">): Evaluation => {
     const evaluation: Evaluation = { ...data, id: crypto.randomUUID() }
     setState(s => ({ ...s, evaluations: [...s.evaluations, evaluation] }))
-    supabase.from("evaluations").insert(evaluation).then(({ error }) => { if (error) console.error("addEvaluation:", error) })
+    supabase.from("evaluations").insert(evaluation).then(({ error }) => { if (error) dbg("addEvaluation:", error) })
     return evaluation
   }, [])
 
@@ -618,12 +621,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ...s,
       evaluations: s.evaluations.map(e => e.id === id ? { ...e, ...data } : e),
     }))
-    supabase.from("evaluations").update(data).eq("id", id).then(({ error }) => { if (error) console.error("updateEvaluation:", error) })
+    supabase.from("evaluations").update(data).eq("id", id).then(({ error }) => { if (error) dbg("updateEvaluation:", error) })
   }, [])
 
   const deleteEvaluation = useCallback((id: string) => {
     setState(s => ({ ...s, evaluations: s.evaluations.filter(e => e.id !== id) }))
-    supabase.from("evaluations").delete().eq("id", id).then(({ error }) => { if (error) console.error("deleteEvaluation:", error) })
+    supabase.from("evaluations").delete().eq("id", id).then(({ error }) => { if (error) dbg("deleteEvaluation:", error) })
   }, [])
 
   const getPlayer = useCallback((id: string) => state.players.find(p => p.id === id), [state.players])
@@ -664,7 +667,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       duration_s: session.duration_s,
       calories_est: session.calories_est,
       notes: session.notes || null,
-    }).then(({ error }) => { if (error) console.error("addLiveSession:", error) })
+    }).then(({ error }) => { if (error) dbg("addLiveSession:", error) })
     return session
   }, [])
 
@@ -689,7 +692,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if ("logo_url" in update) update.logo_url = update.logo_url || null
     if ("city" in update) update.city = update.city || null
     if ("description" in update) update.description = update.description || null
-    supabase.from("team_settings").update(update).eq("id", id).then(({ error }) => { if (error) console.error("updateTeamSettings:", error) })
+    supabase.from("team_settings").update(update).eq("id", id).then(({ error }) => { if (error) dbg("updateTeamSettings:", error) })
   }, [state.teamSettings])
 
   const addTraining = useCallback((data: Omit<Training, "id" | "created_at">): Training => {
@@ -709,7 +712,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         notes: training.notes || null,
         created_at: training.created_at,
         academy_id: s.teamSettings?.id ?? null,
-      }).then(({ error }) => { if (error) console.error("addTraining:", error) })
+      }).then(({ error }) => { if (error) dbg("addTraining:", error) })
       return { ...s, trainings: [...s.trainings, training] }
     })
     return training
@@ -724,12 +727,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if ("time" in update) update.time = update.time || null
     if ("location" in update) update.location = update.location || null
     if ("notes" in update) update.notes = update.notes || null
-    supabase.from("trainings").update(update).eq("id", id).then(({ error }) => { if (error) console.error("updateTraining:", error) })
+    supabase.from("trainings").update(update).eq("id", id).then(({ error }) => { if (error) dbg("updateTraining:", error) })
   }, [])
 
   const deleteTraining = useCallback((id: string) => {
     setState(s => ({ ...s, trainings: s.trainings.filter(t => t.id !== id) }))
-    supabase.from("trainings").delete().eq("id", id).then(({ error }) => { if (error) console.error("deleteTraining:", error) })
+    supabase.from("trainings").delete().eq("id", id).then(({ error }) => { if (error) dbg("deleteTraining:", error) })
   }, [])
 
   const addMatch = useCallback((data: Omit<Match, "id" | "created_at">): Match => {
@@ -754,7 +757,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         notes: match.notes || null,
         created_at: match.created_at,
         academy_id: s.teamSettings?.id ?? null,
-      }).then(({ error }) => { if (error) console.error("addMatch:", error) })
+      }).then(({ error }) => { if (error) dbg("addMatch:", error) })
       return { ...s, matches: [...s.matches, match] }
     })
     return match
@@ -771,7 +774,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if ("location" in update) update.location = update.location || null
     if ("video_url" in update) update.video_url = update.video_url || null
     if ("notes" in update) update.notes = update.notes || null
-    supabase.from("matches").update(update).eq("id", id).then(({ error }) => { if (error) console.error("updateMatch:", error) })
+    supabase.from("matches").update(update).eq("id", id).then(({ error }) => { if (error) dbg("updateMatch:", error) })
   }, [])
 
   const deleteMatch = useCallback((id: string) => {
@@ -780,7 +783,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       matches: s.matches.filter(m => m.id !== id),
       matchStats: s.matchStats.filter(ms => ms.match_id !== id),
     }))
-    supabase.from("matches").delete().eq("id", id).then(({ error }) => { if (error) console.error("deleteMatch:", error) })
+    supabase.from("matches").delete().eq("id", id).then(({ error }) => { if (error) dbg("deleteMatch:", error) })
   }, [])
 
   const addMatchStat = useCallback((data: Omit<MatchPlayerStat, "id" | "created_at">): MatchPlayerStat => {
@@ -804,7 +807,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       highlight_url: stat.highlight_url || null,
       notes: stat.notes || null,
       created_at: stat.created_at,
-    }).then(({ error }) => { if (error) console.error("addMatchStat:", error) })
+    }).then(({ error }) => { if (error) dbg("addMatchStat:", error) })
     return stat
   }, [])
 
@@ -817,12 +820,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if ("position_played" in update) update.position_played = update.position_played || null
     if ("highlight_url" in update) update.highlight_url = update.highlight_url || null
     if ("notes" in update) update.notes = update.notes || null
-    supabase.from("match_player_stats").update(update).eq("id", id).then(({ error }) => { if (error) console.error("updateMatchStat:", error) })
+    supabase.from("match_player_stats").update(update).eq("id", id).then(({ error }) => { if (error) dbg("updateMatchStat:", error) })
   }, [])
 
   const deleteMatchStat = useCallback((id: string) => {
     setState(s => ({ ...s, matchStats: s.matchStats.filter(ms => ms.id !== id) }))
-    supabase.from("match_player_stats").delete().eq("id", id).then(({ error }) => { if (error) console.error("deleteMatchStat:", error) })
+    supabase.from("match_player_stats").delete().eq("id", id).then(({ error }) => { if (error) dbg("deleteMatchStat:", error) })
   }, [])
 
   const getMatchStats = useCallback(
@@ -852,7 +855,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         video_url: exercise.video_url || null,
         created_at: exercise.created_at,
         academy_id: s.teamSettings?.id ?? null,
-      }).then(({ error }) => { if (error) console.error("addExercise:", error) })
+      }).then(({ error }) => { if (error) dbg("addExercise:", error) })
       return { ...s, exercises: [...s.exercises, exercise] }
     })
     return exercise
@@ -865,12 +868,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }))
     const update: TablesUpdate<"exercises"> = { ...data }
     if ("video_url" in update) update.video_url = update.video_url || null
-    supabase.from("exercises").update(update).eq("id", id).then(({ error }) => { if (error) console.error("updateExercise:", error) })
+    supabase.from("exercises").update(update).eq("id", id).then(({ error }) => { if (error) dbg("updateExercise:", error) })
   }, [])
 
   const deleteExercise = useCallback((id: string) => {
     setState(s => ({ ...s, exercises: s.exercises.filter(e => e.id !== id) }))
-    supabase.from("exercises").delete().eq("id", id).then(({ error }) => { if (error) console.error("deleteExercise:", error) })
+    supabase.from("exercises").delete().eq("id", id).then(({ error }) => { if (error) dbg("deleteExercise:", error) })
   }, [])
 
   const addPositionSample = useCallback((data: Omit<PositionSample, "id" | "created_at">) => {
@@ -883,7 +886,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       x: sample.x,
       y: sample.y,
       created_at: sample.created_at,
-    }).then(({ error }) => { if (error) console.error("addPositionSample:", error) })
+    }).then(({ error }) => { if (error) dbg("addPositionSample:", error) })
   }, [])
 
   const addPositionSamples = useCallback((items: Omit<PositionSample, "id" | "created_at">[]) => {
@@ -900,7 +903,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         y: sample.y,
         created_at: sample.created_at,
       }))
-    ).then(({ error }) => { if (error) console.error("addPositionSamples:", error) })
+    ).then(({ error }) => { if (error) dbg("addPositionSamples:", error) })
   }, [])
 
   const deletePositionSession = useCallback((playerId: string, sessionLabel: string) => {
@@ -909,7 +912,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       positionSamples: s.positionSamples.filter(p => !(p.player_id === playerId && p.session_label === sessionLabel)),
     }))
     supabase.from("position_samples").delete().eq("player_id", playerId).eq("session_label", sessionLabel)
-      .then(({ error }) => { if (error) console.error("deletePositionSession:", error) })
+      .then(({ error }) => { if (error) dbg("deletePositionSession:", error) })
   }, [])
 
   const getPlayerPositionSamples = useCallback(
@@ -927,7 +930,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return { ...s, attendance: [...s.attendance, record] }
     })
     supabase.from("attendance").upsert({ training_id: trainingId, player_id: playerId, status }, { onConflict: "training_id,player_id" })
-      .then(({ error }) => { if (error) console.error("upsertAttendance:", error) })
+      .then(({ error }) => { if (error) dbg("upsertAttendance:", error) })
   }, [])
 
   const getTrainingAttendance = useCallback(
@@ -956,13 +959,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       date: test.date,
       notes: test.notes || null,
       created_at: test.created_at,
-    }).then(({ error }) => { if (error) console.error("addPhysicalTest:", error) })
+    }).then(({ error }) => { if (error) dbg("addPhysicalTest:", error) })
     return test
   }, [])
 
   const deletePhysicalTest = useCallback((id: string) => {
     setState(s => ({ ...s, physicalTests: s.physicalTests.filter(t => t.id !== id) }))
-    supabase.from("physical_tests").delete().eq("id", id).then(({ error }) => { if (error) console.error("deletePhysicalTest:", error) })
+    supabase.from("physical_tests").delete().eq("id", id).then(({ error }) => { if (error) dbg("deletePhysicalTest:", error) })
   }, [])
 
   const getPlayerPhysicalTests = useCallback(
@@ -984,18 +987,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       is_recovered: injury.is_recovered,
       notes: injury.notes || null,
       created_at: injury.created_at,
-    }).then(({ error }) => { if (error) console.error("addInjury:", error) })
+    }).then(({ error }) => { if (error) dbg("addInjury:", error) })
     return injury
   }, [])
 
   const updateInjury = useCallback((id: string, data: Partial<Omit<Injury, "id" | "created_at" | "player_id">>) => {
     setState(s => ({ ...s, injuries: s.injuries.map(i => i.id === id ? { ...i, ...data } : i) }))
-    supabase.from("injuries").update({ ...data }).eq("id", id).then(({ error }) => { if (error) console.error("updateInjury:", error) })
+    supabase.from("injuries").update({ ...data }).eq("id", id).then(({ error }) => { if (error) dbg("updateInjury:", error) })
   }, [])
 
   const deleteInjury = useCallback((id: string) => {
     setState(s => ({ ...s, injuries: s.injuries.filter(i => i.id !== id) }))
-    supabase.from("injuries").delete().eq("id", id).then(({ error }) => { if (error) console.error("deleteInjury:", error) })
+    supabase.from("injuries").delete().eq("id", id).then(({ error }) => { if (error) dbg("deleteInjury:", error) })
   }, [])
 
   const getPlayerInjuries = useCallback(
@@ -1016,18 +1019,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       status: payment.status,
       notes: payment.notes || null,
       created_at: payment.created_at,
-    }).then(({ error }) => { if (error) console.error("addPayment:", error) })
+    }).then(({ error }) => { if (error) dbg("addPayment:", error) })
     return payment
   }, [])
 
   const updatePayment = useCallback((id: string, data: Partial<Omit<Payment, "id" | "created_at" | "player_id">>) => {
     setState(s => ({ ...s, payments: s.payments.map(p => p.id === id ? { ...p, ...data } : p) }))
-    supabase.from("payments").update({ ...data }).eq("id", id).then(({ error }) => { if (error) console.error("updatePayment:", error) })
+    supabase.from("payments").update({ ...data }).eq("id", id).then(({ error }) => { if (error) dbg("updatePayment:", error) })
   }, [])
 
   const deletePayment = useCallback((id: string) => {
     setState(s => ({ ...s, payments: s.payments.filter(p => p.id !== id) }))
-    supabase.from("payments").delete().eq("id", id).then(({ error }) => { if (error) console.error("deletePayment:", error) })
+    supabase.from("payments").delete().eq("id", id).then(({ error }) => { if (error) dbg("deletePayment:", error) })
   }, [])
 
   const getPlayerPayments = useCallback(

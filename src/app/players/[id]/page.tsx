@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
@@ -191,8 +191,15 @@ const EMPTY_EVAL_FORM = {
 
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
+  const router = useRouter()
   const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, currentUser, language, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, updatePayment } = useApp()
   const isCoach = currentUser?.role === "coach"
+
+  // Players can only view their own profile
+  if (currentUser?.role === "player" && currentUser.player_id && currentUser.player_id !== id) {
+    router.replace(`/players/${currentUser.player_id}`)
+    return null
+  }
   const t = useT(playersDict)
   const e = useEnumT()
 

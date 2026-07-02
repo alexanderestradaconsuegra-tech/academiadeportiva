@@ -8,7 +8,8 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
   const t = useT(misc)
 
   useEffect(() => {
-    console.error(error)
+    // Only expose full error details in development; in production use a server-side tracker
+    if (process.env.NODE_ENV === "development") console.error(error)
   }, [error])
 
   return (

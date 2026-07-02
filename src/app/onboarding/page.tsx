@@ -1,8 +1,8 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useApp } from "@/context/AppContext"
-import { Trophy, Building2, User, Globe, AlertCircle } from "lucide-react"
+import { Trophy, Building2, User, AlertCircle } from "lucide-react"
 import type { Language } from "@/lib/types"
 
 const LANG_OPTIONS: { value: Language; label: string; flag: string }[] = [
@@ -17,6 +17,20 @@ export default function OnboardingPage() {
   const [academyName, setAcademyName] = useState("")
   const [coachName, setCoachName] = useState("")
   const [language, setLanguage] = useState<Language>("es")
+
+  // Pre-fill from the register form if user came through that flow
+  useEffect(() => {
+    try {
+      const pending = sessionStorage.getItem("pendingAcademy")
+      if (pending) {
+        const { academyName: a, fullName: f, language: l } = JSON.parse(pending)
+        if (a) setAcademyName(a)
+        if (f) setCoachName(f)
+        if (l) setLanguage(l)
+        sessionStorage.removeItem("pendingAcademy")
+      }
+    } catch { /* ignore */ }
+  }, [])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 

@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
     email, password, email_confirm: true,
   })
   if (userError || !userData.user) {
-    return NextResponse.json({ error: userError?.message ?? "No se pudo crear el usuario." }, { status: 500 })
+    console.error("[create-account] createUser error:", userError?.message)
+    return NextResponse.json({ error: "No se pudo crear el acceso." }, { status: 500 })
   }
 
   const { error: profileError } = await admin.from("profiles").insert({
@@ -38,7 +39,8 @@ export async function POST(req: NextRequest) {
     academy_id: callerProfile.academy_id,
   })
   if (profileError) {
-    return NextResponse.json({ error: profileError.message }, { status: 500 })
+    console.error("[create-account] createProfile error:", profileError.message)
+    return NextResponse.json({ error: "No se pudo configurar el perfil." }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })
