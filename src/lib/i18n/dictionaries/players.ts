@@ -65,6 +65,9 @@ export const players = {
   cancel: { es: "Cancelar", en: "Cancel", pt: "Cancelar" },
   save: { es: "Guardar", en: "Save", pt: "Salvar" },
   confirmDeleteEvaluation: { es: "¿Eliminar la evaluación del {date}? Esta acción no se puede deshacer.", en: "Delete the evaluation from {date}? This action cannot be undone.", pt: "Excluir a avaliação de {date}? Esta ação não pode ser desfeita." },
+  velLabel: { es: "Vel", en: "Spd", pt: "Vel" },
+  tecLabel: { es: "Téc", en: "Tec", pt: "Téc" },
+  resLabel: { es: "Res", en: "End", pt: "Res" },
 
   // players/new/page.tsx
   newPlayerTitle: { es: "Nuevo Jugador", en: "New Player", pt: "Novo Jogador" },

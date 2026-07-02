@@ -1,11 +1,14 @@
 "use client"
 import Link from "next/link"
 import Image from "next/image"
-import type { Player, Evaluation } from "@/lib/types"
+import type { Player, Evaluation, DominantFoot } from "@/lib/types"
 import { cn, getScoreColor, getPositionShort, avatarUrl } from "@/lib/utils"
 import Badge from "./ui/Badge"
 import ScoreRing from "./ui/ScoreRing"
 import { ChevronRight } from "lucide-react"
+import { useT } from "@/lib/i18n/useT"
+import { players as playersDict } from "@/lib/i18n/dictionaries/players"
+import { useEnumT } from "@/lib/i18n/enums"
 
 const positionColorMap: Record<string, string> = {
   "Portero": "blue",
@@ -27,6 +30,8 @@ interface PlayerCardProps {
 }
 
 export default function PlayerCard({ player, evaluation }: PlayerCardProps) {
+  const t = useT(playersDict)
+  const e = useEnumT()
   const score = evaluation?.general_score ?? 0
   const posColor = (positionColorMap[player.position] ?? "default") as "blue" | "red" | "orange" | "green" | "amber" | "purple" | "default"
 
@@ -59,9 +64,9 @@ export default function PlayerCard({ player, evaluation }: PlayerCardProps) {
           <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-white leading-tight">{player.name}</h3>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <Badge variant={posColor}>{getPositionShort(player.position)}</Badge>
-            <span className="text-xs text-slate-400 dark:text-slate-500">{player.age} años</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">{player.age} {t("yearsOld")}</span>
             <span className="text-xs text-slate-300 dark:text-slate-600">•</span>
-            <span className="text-xs text-slate-400 dark:text-slate-500">{player.dominant_foot}</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">{e.dominantFoot(player.dominant_foot as DominantFoot)}</span>
           </div>
         </div>
 
@@ -69,9 +74,9 @@ export default function PlayerCard({ player, evaluation }: PlayerCardProps) {
         {evaluation && (
           <div className="grid grid-cols-3 gap-2 mb-4 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl">
             {[
-              { label: "Vel", value: evaluation.speed_score },
-              { label: "Téc", value: evaluation.technique_score },
-              { label: "Res", value: evaluation.resistance_score },
+              { label: t("velLabel"), value: evaluation.speed_score },
+              { label: t("tecLabel"), value: evaluation.technique_score },
+              { label: t("resLabel"), value: evaluation.resistance_score },
             ].map(s => (
               <div key={s.label} className="text-center">
                 <p className={cn("text-sm font-bold", getScoreColor(s.value))}>{s.value}</p>
