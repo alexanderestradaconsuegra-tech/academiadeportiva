@@ -289,6 +289,7 @@ export type Database = {
           id: string
           name: string
           video_url: string | null
+          academy_id: string | null
         }
         Insert: {
           category: Database["public"]["Enums"]["activity_category"]
@@ -296,6 +297,7 @@ export type Database = {
           id?: string
           name: string
           video_url?: string | null
+          academy_id?: string | null
         }
         Update: {
           category?: Database["public"]["Enums"]["activity_category"]
@@ -303,6 +305,7 @@ export type Database = {
           id?: string
           name?: string
           video_url?: string | null
+          academy_id?: string | null
         }
         Relationships: []
       }
@@ -505,6 +508,7 @@ export type Database = {
           our_score: number | null
           time: string | null
           video_url: string | null
+          academy_id: string | null
         }
         Insert: {
           category?: Database["public"]["Enums"]["category"] | null
@@ -520,6 +524,7 @@ export type Database = {
           our_score?: number | null
           time?: string | null
           video_url?: string | null
+          academy_id?: string | null
         }
         Update: {
           category?: Database["public"]["Enums"]["category"] | null
@@ -535,6 +540,7 @@ export type Database = {
           our_score?: number | null
           time?: string | null
           video_url?: string | null
+          academy_id?: string | null
         }
         Relationships: []
       }
@@ -554,6 +560,7 @@ export type Database = {
           photo_url: string | null
           position: Database["public"]["Enums"]["position"]
           weight: number
+          academy_id: string | null
         }
         Insert: {
           age: number
@@ -570,6 +577,7 @@ export type Database = {
           photo_url?: string | null
           position: Database["public"]["Enums"]["position"]
           weight: number
+          academy_id?: string | null
         }
         Update: {
           age?: number
@@ -586,6 +594,7 @@ export type Database = {
           photo_url?: string | null
           position?: Database["public"]["Enums"]["position"]
           weight?: number
+          academy_id?: string | null
         }
         Relationships: []
       }
@@ -631,6 +640,7 @@ export type Database = {
           id: string
           player_id: string | null
           role: string
+          academy_id: string | null
         }
         Insert: {
           created_at?: string
@@ -638,6 +648,7 @@ export type Database = {
           id: string
           player_id?: string | null
           role: string
+          academy_id?: string | null
         }
         Update: {
           created_at?: string
@@ -645,6 +656,7 @@ export type Database = {
           id?: string
           player_id?: string | null
           role?: string
+          academy_id?: string | null
         }
         Relationships: [
           {
@@ -752,6 +764,7 @@ export type Database = {
           notes: string | null
           time: string | null
           title: string
+          academy_id: string | null
         }
         Insert: {
           category?: Database["public"]["Enums"]["category"] | null
@@ -762,6 +775,7 @@ export type Database = {
           notes?: string | null
           time?: string | null
           title: string
+          academy_id?: string | null
         }
         Update: {
           category?: Database["public"]["Enums"]["category"] | null
@@ -772,6 +786,7 @@ export type Database = {
           notes?: string | null
           time?: string | null
           title?: string
+          academy_id?: string | null
         }
         Relationships: []
       }
@@ -782,6 +797,7 @@ export type Database = {
     Functions: {
       current_player_id: { Args: never; Returns: string }
       current_role: { Args: never; Returns: string }
+      get_my_academy_id: { Args: Record<PropertyKey, never>; Returns: string }
     }
     Enums: {
       activity_category:

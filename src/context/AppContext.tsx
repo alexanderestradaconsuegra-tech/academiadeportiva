@@ -22,6 +22,7 @@ interface AppState {
   injuries: Injury[]
   payments: Payment[]
   isAuthenticated: boolean
+  isOnboarding: boolean
   authReady: boolean
   currentUser: Profile | null
   darkMode: boolean
@@ -30,6 +31,7 @@ interface AppState {
 interface AppContextType extends AppState {
   language: Language
   login: (email: string, password: string) => Promise<string | null>
+  createAcademy: (academyName: string, lang: Language, coachName: string) => Promise<string | null>
   logout: () => void
   addPlayer: (player: Omit<Player, "id" | "created_at">) => Player
   updatePlayer: (id: string, data: Partial<Player>) => void
@@ -333,6 +335,7 @@ function mapProfile(row: Tables<"profiles">): Profile {
     role: row.role as UserRole,
     player_id: row.player_id,
     full_name: row.full_name || "",
+    academy_id: row.academy_id ?? null,
   }
 }
 
@@ -354,6 +357,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     injuries: [],
     payments: [],
     isAuthenticated: false,
+    isOnboarding: false,
     authReady: false,
     currentUser: null,
     darkMode: false,
@@ -426,8 +430,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    loadTeamSettings()
-
     async function restoreSession() {
       const { data } = await supabase.auth.getSession()
       const userId = data.session?.user.id
@@ -435,7 +437,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const profile = await loadProfileFor(userId)
         if (profile) {
           setState(s => ({ ...s, isAuthenticated: true, currentUser: profile }))
-          await loadPlayerData()
+          await Promise.all([loadTeamSettings(), loadPlayerData()])
+        } else {
+          setState(s => ({ ...s, isAuthenticated: true, isOnboarding: true }))
         }
       }
       setState(s => ({ ...s, authReady: true }))
@@ -447,7 +451,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setState(s => ({
           ...s,
           isAuthenticated: false,
+          isOnboarding: false,
           currentUser: null,
+          teamSettings: null,
           players: [],
           activities: [],
           evaluations: [],
@@ -458,6 +464,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           matches: [],
           matchStats: [],
           exercises: [],
+          attendance: [],
+          physicalTests: [],
+          injuries: [],
+          payments: [],
         }))
       }
     })
@@ -470,13 +480,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (error || !data.user) return AUTH_ERRORS.invalidCredentials[lang]
     const profile = await loadProfileFor(data.user.id)
     if (!profile) {
-      await supabase.auth.signOut()
-      return AUTH_ERRORS.noAccess[lang]
+      setState(s => ({ ...s, isAuthenticated: true, isOnboarding: true }))
+      return null
     }
     setState(s => ({ ...s, isAuthenticated: true, currentUser: profile }))
+    await Promise.all([loadTeamSettings(), loadPlayerData()])
+    return null
+  }, [loadProfileFor, loadTeamSettings, loadPlayerData, state.teamSettings?.language])
+
+  const createAcademy = useCallback(async (academyName: string, lang: Language, coachName: string): Promise<string | null> => {
+    const { data: sessionData } = await supabase.auth.getSession()
+    const userId = sessionData.session?.user.id
+    if (!userId) return "No autenticado"
+
+    const { data: academy, error: academyErr } = await supabase
+      .from("team_settings")
+      .insert({ name: academyName, language: lang, updated_at: new Date().toISOString() })
+      .select()
+      .single()
+    if (academyErr || !academy) return academyErr?.message ?? "Error al crear la academia"
+
+    const { data: profileRow, error: profileErr } = await supabase
+      .from("profiles")
+      .insert({ id: userId, role: "coach", full_name: coachName, academy_id: academy.id })
+      .select()
+      .single()
+    if (profileErr || !profileRow) return profileErr?.message ?? "Error al crear el perfil"
+
+    const profile = mapProfile(profileRow)
+    const settings = mapTeamSettings(academy)
+    setState(s => ({ ...s, isOnboarding: false, currentUser: profile, teamSettings: settings }))
     await loadPlayerData()
     return null
-  }, [loadProfileFor, loadPlayerData, state.teamSettings?.language])
+  }, [loadPlayerData])
 
   const logout = useCallback(() => {
     supabase.auth.signOut()
@@ -499,23 +535,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       id: crypto.randomUUID(),
       created_at: new Date().toISOString(),
     }
-    setState(s => ({ ...s, players: [...s.players, player] }))
-    supabase.from("players").insert({
-      id: player.id,
-      name: player.name,
-      photo_url: player.photo_url || null,
-      age: player.age,
-      birth_date: player.birth_date,
-      position: player.position,
-      dominant_foot: player.dominant_foot,
-      height: player.height,
-      weight: player.weight,
-      club: player.club || null,
-      category: player.category,
-      objective: player.objective || null,
-      notes: player.notes || null,
-      created_at: player.created_at,
-    }).then(({ error }) => { if (error) console.error("addPlayer:", error) })
+    setState(s => {
+      supabase.from("players").insert({
+        id: player.id,
+        name: player.name,
+        photo_url: player.photo_url || null,
+        age: player.age,
+        birth_date: player.birth_date,
+        position: player.position,
+        dominant_foot: player.dominant_foot,
+        height: player.height,
+        weight: player.weight,
+        club: player.club || null,
+        category: player.category,
+        objective: player.objective || null,
+        notes: player.notes || null,
+        created_at: player.created_at,
+        academy_id: s.teamSettings?.id ?? null,
+      }).then(({ error }) => { if (error) console.error("addPlayer:", error) })
+      return { ...s, players: [...s.players, player] }
+    })
     return player
   }, [])
 
@@ -659,17 +698,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       id: crypto.randomUUID(),
       created_at: new Date().toISOString(),
     }
-    setState(s => ({ ...s, trainings: [...s.trainings, training] }))
-    supabase.from("trainings").insert({
-      id: training.id,
-      title: training.title,
-      date: training.date,
-      time: training.time || null,
-      category: training.category,
-      location: training.location || null,
-      notes: training.notes || null,
-      created_at: training.created_at,
-    }).then(({ error }) => { if (error) console.error("addTraining:", error) })
+    setState(s => {
+      supabase.from("trainings").insert({
+        id: training.id,
+        title: training.title,
+        date: training.date,
+        time: training.time || null,
+        category: training.category,
+        location: training.location || null,
+        notes: training.notes || null,
+        created_at: training.created_at,
+        academy_id: s.teamSettings?.id ?? null,
+      }).then(({ error }) => { if (error) console.error("addTraining:", error) })
+      return { ...s, trainings: [...s.trainings, training] }
+    })
     return training
   }, [])
 
@@ -696,22 +738,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       id: crypto.randomUUID(),
       created_at: new Date().toISOString(),
     }
-    setState(s => ({ ...s, matches: [...s.matches, match] }))
-    supabase.from("matches").insert({
-      id: match.id,
-      opponent: match.opponent,
-      competition: match.competition || null,
-      date: match.date,
-      time: match.time || null,
-      location: match.location || null,
-      is_home: match.is_home,
-      category: match.category,
-      our_score: match.our_score,
-      opponent_score: match.opponent_score,
-      video_url: match.video_url || null,
-      notes: match.notes || null,
-      created_at: match.created_at,
-    }).then(({ error }) => { if (error) console.error("addMatch:", error) })
+    setState(s => {
+      supabase.from("matches").insert({
+        id: match.id,
+        opponent: match.opponent,
+        competition: match.competition || null,
+        date: match.date,
+        time: match.time || null,
+        location: match.location || null,
+        is_home: match.is_home,
+        category: match.category,
+        our_score: match.our_score,
+        opponent_score: match.opponent_score,
+        video_url: match.video_url || null,
+        notes: match.notes || null,
+        created_at: match.created_at,
+        academy_id: s.teamSettings?.id ?? null,
+      }).then(({ error }) => { if (error) console.error("addMatch:", error) })
+      return { ...s, matches: [...s.matches, match] }
+    })
     return match
   }, [])
 
@@ -799,14 +844,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       id: crypto.randomUUID(),
       created_at: new Date().toISOString(),
     }
-    setState(s => ({ ...s, exercises: [...s.exercises, exercise] }))
-    supabase.from("exercises").insert({
-      id: exercise.id,
-      category: exercise.category,
-      name: exercise.name,
-      video_url: exercise.video_url || null,
-      created_at: exercise.created_at,
-    }).then(({ error }) => { if (error) console.error("addExercise:", error) })
+    setState(s => {
+      supabase.from("exercises").insert({
+        id: exercise.id,
+        category: exercise.category,
+        name: exercise.name,
+        video_url: exercise.video_url || null,
+        created_at: exercise.created_at,
+        academy_id: s.teamSettings?.id ?? null,
+      }).then(({ error }) => { if (error) console.error("addExercise:", error) })
+      return { ...s, exercises: [...s.exercises, exercise] }
+    })
     return exercise
   }, [])
 
@@ -1000,6 +1048,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ...state,
         language: state.teamSettings?.language ?? "es",
         login,
+        createAcademy,
         logout,
         addPlayer,
         updatePlayer,

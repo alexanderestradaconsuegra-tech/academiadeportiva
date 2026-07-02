@@ -162,6 +162,7 @@ export interface Profile {
   role: UserRole
   player_id: string | null
   full_name: string
+  academy_id: string | null
 }
 
 export interface TeamSettings {

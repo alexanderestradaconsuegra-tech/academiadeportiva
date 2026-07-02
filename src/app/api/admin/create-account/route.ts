@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { data: callerProfile, error: callerProfileError } = await admin
-    .from("profiles").select("role").eq("id", callerData.user.id).single()
+    .from("profiles").select("role, academy_id").eq("id", callerData.user.id).single()
   if (callerProfileError || callerProfile?.role !== "coach") {
     return NextResponse.json({ error: "Solo el entrenador puede crear accesos." }, { status: 403 })
   }
@@ -31,7 +31,11 @@ export async function POST(req: NextRequest) {
   }
 
   const { error: profileError } = await admin.from("profiles").insert({
-    id: userData.user.id, role: "player", player_id, full_name: full_name || null,
+    id: userData.user.id,
+    role: "player",
+    player_id,
+    full_name: full_name || null,
+    academy_id: callerProfile.academy_id,
   })
   if (profileError) {
     return NextResponse.json({ error: profileError.message }, { status: 500 })

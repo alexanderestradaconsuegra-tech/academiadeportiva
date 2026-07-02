@@ -7,7 +7,7 @@ import BottomNav from "./BottomNav"
 import MobileHeader from "./MobileHeader"
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, authReady, currentUser } = useApp()
+  const { isAuthenticated, isOnboarding, authReady, currentUser } = useApp()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -20,12 +20,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       if (pathname !== "/") router.replace("/")
       return
     }
+    if (isOnboarding) {
+      if (pathname !== "/onboarding") router.replace("/onboarding")
+      return
+    }
     if (isPlayer && ownPlayerPath && pathname !== ownPlayerPath) {
       router.replace(ownPlayerPath)
     }
-  }, [authReady, isAuthenticated, isPlayer, ownPlayerPath, pathname, router])
+  }, [authReady, isAuthenticated, isOnboarding, isPlayer, ownPlayerPath, pathname, router])
 
   if (!authReady || !isAuthenticated) return null
+  if (isOnboarding) return null
   if (isPlayer && ownPlayerPath && pathname !== ownPlayerPath) return null
 
   return (
