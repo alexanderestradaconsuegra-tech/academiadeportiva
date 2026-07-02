@@ -99,6 +99,25 @@ export interface PlayerWithStats extends Player {
   progress_trend?: number
 }
 
+export type PaymentStatus = "pending" | "paid" | "overdue"
+
+export interface Payment {
+  id: string
+  player_id: string
+  concept: string
+  amount: number
+  due_date: string
+  paid_date: string | null
+  status: "pending" | "paid"
+  notes: string | null
+  created_at: string
+}
+
+export function effectivePaymentStatus(payment: Payment, today: string): PaymentStatus {
+  if (payment.status === "paid") return "paid"
+  return payment.due_date < today ? "overdue" : "pending"
+}
+
 export type InjurySeverity = "minor" | "moderate" | "severe"
 
 export interface Injury {

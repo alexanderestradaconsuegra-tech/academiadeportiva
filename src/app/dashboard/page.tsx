@@ -4,8 +4,10 @@ import Link from "next/link"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
 import StatCard from "@/components/ui/StatCard"
-import { Users, TrendingUp, AlertTriangle, Activity, ChevronRight, Star } from "lucide-react"
+import { Users, TrendingUp, AlertTriangle, Activity, ChevronRight, Star, CreditCard } from "lucide-react"
 import type { ActivityCategory, Evaluation } from "@/lib/types"
+import { effectivePaymentStatus } from "@/lib/types"
+import { payments as paymentsDict } from "@/lib/i18n/dictionaries/payments"
 import { cn, formatDate, getCategoryColor } from "@/lib/utils"
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -16,8 +18,9 @@ import { dashboard } from "@/lib/i18n/dictionaries/dashboard"
 import { useEnumT } from "@/lib/i18n/enums"
 
 export default function DashboardPage() {
-  const { players, activities, evaluations, getLatestEvaluation, language } = useApp()
+  const { players, activities, evaluations, payments, getLatestEvaluation, language } = useApp()
   const t = useT(dashboard)
+  const tp = useT(paymentsDict)
   const e = useEnumT()
 
   const stats = useMemo(() => {
@@ -67,6 +70,16 @@ export default function DashboardPage() {
   const progressTrend = progressData.length >= 2
     ? progressData[progressData.length - 1].score - progressData[0].score
     : null
+
+  const paymentAlerts = useMemo(() => {
+    const today = new Date().toISOString().split("T")[0]
+    const overdue = payments.filter(p => effectivePaymentStatus(p, today) === "overdue")
+    const overduePlayerIds = new Set(overdue.map(p => p.player_id))
+    return {
+      playerCount: overduePlayerIds.size,
+      total: overdue.reduce((s, p) => s + p.amount, 0),
+    }
+  }, [payments])
 
   const recentActivities = activities.slice(0, 6)
   const topPlayers = [...players]
@@ -119,6 +132,20 @@ export default function DashboardPage() {
             color={stats.lowPerf.length > 0 ? "amber" : "green"}
           />
         </div>
+
+        {/* Payment alert */}
+        {paymentAlerts.playerCount > 0 && (
+          <Link href="/payments?status=overdue" className="flex items-center gap-4 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl px-5 py-4 mb-5 hover:bg-amber-100 dark:hover:bg-amber-500/15 transition-colors group">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center shrink-0">
+              <CreditCard size={18} className="text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-amber-800 dark:text-amber-300">{tp("paymentAlert")}</p>
+              <p className="text-xs text-amber-600 dark:text-amber-400">{paymentAlerts.playerCount} {tp("studentsOverdue")} · <strong>${paymentAlerts.total.toLocaleString()}</strong></p>
+            </div>
+            <ChevronRight size={16} className="text-amber-500 group-hover:translate-x-0.5 transition-transform shrink-0" />
+          </Link>
+        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-5">
           {/* Progress chart */}

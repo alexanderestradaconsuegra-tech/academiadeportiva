@@ -7,7 +7,7 @@ import { useT } from "@/lib/i18n/useT"
 import { nav } from "@/lib/i18n/dictionaries/nav"
 import { common } from "@/lib/i18n/dictionaries/common"
 import {
-  LayoutDashboard, Users, Dumbbell, BarChart3, FileText, LogOut, Trophy, ChevronRight, Heart, Settings, CalendarDays, Sun, Moon, PenTool, Radar
+  LayoutDashboard, Users, Dumbbell, BarChart3, FileText, LogOut, Trophy, ChevronRight, Heart, Settings, CalendarDays, Sun, Moon, PenTool, Radar, CreditCard
 } from "lucide-react"
 
 export default function Sidebar() {
@@ -25,6 +25,7 @@ export default function Sidebar() {
     { href: "/health", icon: Heart, label: t("health"), badge: "LIVE" },
     { href: "/tactics", icon: PenTool, label: t("tactics") },
     { href: "/heatmap", icon: Radar, label: t("heatmap") },
+    { href: "/payments", icon: CreditCard, label: t("paymentsNav") },
     { href: "/charts", icon: BarChart3, label: t("charts") },
     { href: "/reports", icon: FileText, label: t("reports") },
     { href: "/settings", icon: Settings, label: t("settings") },

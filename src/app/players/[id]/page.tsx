@@ -9,7 +9,7 @@ import Badge from "@/components/ui/Badge"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import NotificationToggle from "@/components/ui/NotificationToggle"
-import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck } from "lucide-react"
+import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck, CreditCard } from "lucide-react"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
 import type { Evaluation, PhysicalTest, InjurySeverity } from "@/lib/types"
 import { useMemo } from "react"
@@ -20,6 +20,7 @@ import {
 import { Heart, Zap, Wind, Activity as ActivityIcon } from "lucide-react"
 import { useT } from "@/lib/i18n/useT"
 import { players as playersDict } from "@/lib/i18n/dictionaries/players"
+import { payments as paymentsDict } from "@/lib/i18n/dictionaries/payments"
 import { useEnumT } from "@/lib/i18n/enums"
 import type { ActivityCategory } from "@/lib/types"
 
@@ -190,7 +191,7 @@ const EMPTY_EVAL_FORM = {
 
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
-  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, currentUser, language, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury } = useApp()
+  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, currentUser, language, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, updatePayment } = useApp()
   const isCoach = currentUser?.role === "coach"
   const t = useT(playersDict)
   const e = useEnumT()
@@ -208,6 +209,11 @@ export default function PlayerProfilePage() {
   const playerInjuries = getPlayerInjuries(id)
   const activeInjury = playerInjuries.find(i => !i.is_recovered) ?? null
   const lang = language as Lang
+  const tp = useT(paymentsDict)
+  const playerPayments = getPlayerPayments(id)
+  const todayStr = new Date().toISOString().split("T")[0]
+  const overduePayments = playerPayments.filter(p => p.status === "pending" && p.due_date < todayStr)
+  const overdueTotal = overduePayments.reduce((sum, p) => sum + p.amount, 0)
   const attendanceStats = {
     total: playerAttendance.length,
     present: playerAttendance.filter(a => a.status === "present").length,
@@ -771,6 +777,48 @@ export default function PlayerProfilePage() {
 
                 {playerInjuries.length === 0 && <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center mt-2">{t("noInjuryHistory")}</p>}
               </div>
+
+              {/* Payment status */}
+              {isCoach && (
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <CreditCard size={15} className={overduePayments.length > 0 ? "text-amber-500" : "text-emerald-500"} />
+                      <h2 className="text-sm font-bold text-slate-900 dark:text-white">{tp("paymentStatus")}</h2>
+                    </div>
+                    <Link href={`/payments?player=${id}`} className="text-[10px] text-[#0B5CFF] font-semibold hover:underline">{tp("viewPayments")}</Link>
+                  </div>
+                  {overduePayments.length === 0 ? (
+                    <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20">
+                      <ShieldCheck size={16} className="text-emerald-500 shrink-0" />
+                      <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{tp("upToDate")}</span>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 p-3.5 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-amber-700 dark:text-amber-300">{overduePayments.length} {tp("owesMonths")}</span>
+                        <span className="text-sm font-black text-amber-600">${overdueTotal.toLocaleString()}</span>
+                      </div>
+                      <div className="space-y-1">
+                        {overduePayments.slice(0, 3).map(p => (
+                          <div key={p.id} className="flex items-center justify-between text-[11px]">
+                            <span className="text-slate-500 dark:text-slate-400">{formatDate(p.due_date)}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-slate-700 dark:text-slate-300">${p.amount.toLocaleString()}</span>
+                              <button
+                                onClick={() => updatePayment(p.id, { status: "paid", paid_date: todayStr })}
+                                className="text-[10px] font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-500/20 px-2 py-0.5 rounded-md hover:bg-emerald-200 transition-colors"
+                              >
+                                ✓
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Attendance stats */}
               {attendanceStats.total > 0 && (

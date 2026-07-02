@@ -56,6 +56,50 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          id: string
+          player_id: string
+          concept: string
+          amount: number
+          due_date: string
+          paid_date: string | null
+          status: "pending" | "paid"
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          player_id: string
+          concept: string
+          amount: number
+          due_date: string
+          paid_date?: string | null
+          status?: "pending" | "paid"
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          player_id?: string
+          concept?: string
+          amount?: number
+          due_date?: string
+          paid_date?: string | null
+          status?: "pending" | "paid"
+          notes?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       injuries: {
         Row: {
           id: string

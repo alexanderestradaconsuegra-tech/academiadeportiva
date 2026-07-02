@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, PhysicalTest, Injury, InjurySeverity } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, PhysicalTest, Injury, InjurySeverity, Payment } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
@@ -20,6 +20,7 @@ interface AppState {
   attendance: Attendance[]
   physicalTests: PhysicalTest[]
   injuries: Injury[]
+  payments: Payment[]
   isAuthenticated: boolean
   authReady: boolean
   currentUser: Profile | null
@@ -75,6 +76,10 @@ interface AppContextType extends AppState {
   updateInjury: (id: string, data: Partial<Omit<Injury, "id" | "created_at" | "player_id">>) => void
   deleteInjury: (id: string) => void
   getPlayerInjuries: (playerId: string) => Injury[]
+  addPayment: (data: Omit<Payment, "id" | "created_at">) => Payment
+  updatePayment: (id: string, data: Partial<Omit<Payment, "id" | "created_at" | "player_id">>) => void
+  deletePayment: (id: string) => void
+  getPlayerPayments: (playerId: string) => Payment[]
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -236,6 +241,20 @@ function mapPhysicalTest(row: Tables<"physical_tests">): PhysicalTest {
   }
 }
 
+function mapPayment(row: Tables<"payments">): Payment {
+  return {
+    id: row.id,
+    player_id: row.player_id,
+    concept: row.concept,
+    amount: Number(row.amount),
+    due_date: row.due_date,
+    paid_date: row.paid_date ?? null,
+    status: row.status as "pending" | "paid",
+    notes: row.notes ?? null,
+    created_at: row.created_at,
+  }
+}
+
 function mapInjury(row: Tables<"injuries">): Injury {
   return {
     id: row.id,
@@ -333,6 +352,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     attendance: [],
     physicalTests: [],
     injuries: [],
+    payments: [],
     isAuthenticated: false,
     authReady: false,
     currentUser: null,
@@ -365,7 +385,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const loadPlayerData = useCallback(async () => {
-    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes, positionSamplesRes, matchesRes, matchStatsRes, exercisesRes, attendanceRes, physicalTestsRes, injuriesRes] = await Promise.all([
+    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes, positionSamplesRes, matchesRes, matchStatsRes, exercisesRes, attendanceRes, physicalTestsRes, injuriesRes, paymentsRes] = await Promise.all([
       supabase.from("players").select("*"),
       supabase.from("activities").select("*"),
       supabase.from("evaluations").select("*"),
@@ -379,6 +399,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from("attendance").select("*"),
       supabase.from("physical_tests").select("*"),
       supabase.from("injuries").select("*"),
+      supabase.from("payments").select("*"),
     ])
     setState(s => ({
       ...s,
@@ -395,6 +416,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       attendance: (attendanceRes.data ?? []).map(mapAttendance),
       physicalTests: (physicalTestsRes.data ?? []).map(mapPhysicalTest),
       injuries: (injuriesRes.data ?? []).map(mapInjury),
+      payments: (paymentsRes.data ?? []).map(mapPayment),
     }))
   }, [])
 
@@ -933,6 +955,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [state.injuries]
   )
 
+  const addPayment = useCallback((data: Omit<Payment, "id" | "created_at">): Payment => {
+    const payment: Payment = { ...data, id: crypto.randomUUID(), created_at: new Date().toISOString() }
+    setState(s => ({ ...s, payments: [...s.payments, payment] }))
+    supabase.from("payments").insert({
+      id: payment.id,
+      player_id: payment.player_id,
+      concept: payment.concept,
+      amount: payment.amount,
+      due_date: payment.due_date,
+      paid_date: payment.paid_date ?? null,
+      status: payment.status,
+      notes: payment.notes || null,
+      created_at: payment.created_at,
+    }).then(({ error }) => { if (error) console.error("addPayment:", error) })
+    return payment
+  }, [])
+
+  const updatePayment = useCallback((id: string, data: Partial<Omit<Payment, "id" | "created_at" | "player_id">>) => {
+    setState(s => ({ ...s, payments: s.payments.map(p => p.id === id ? { ...p, ...data } : p) }))
+    supabase.from("payments").update({ ...data }).eq("id", id).then(({ error }) => { if (error) console.error("updatePayment:", error) })
+  }, [])
+
+  const deletePayment = useCallback((id: string) => {
+    setState(s => ({ ...s, payments: s.payments.filter(p => p.id !== id) }))
+    supabase.from("payments").delete().eq("id", id).then(({ error }) => { if (error) console.error("deletePayment:", error) })
+  }, [])
+
+  const getPlayerPayments = useCallback(
+    (playerId: string) => state.payments.filter(p => p.player_id === playerId).sort((a, b) => b.due_date.localeCompare(a.due_date)),
+    [state.payments]
+  )
+
   const getUpcomingTrainings = useCallback((category?: Category | null) => {
     const today = new Date().toISOString().split("T")[0]
     return state.trainings
@@ -992,6 +1046,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         updateInjury,
         deleteInjury,
         getPlayerInjuries,
+        addPayment,
+        updatePayment,
+        deletePayment,
+        getPlayerPayments,
       }}
     >
       {children}
