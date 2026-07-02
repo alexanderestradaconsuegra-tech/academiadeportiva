@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, PhysicalTest } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, PhysicalTest, Injury, InjurySeverity } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
@@ -19,6 +19,7 @@ interface AppState {
   exercises: Exercise[]
   attendance: Attendance[]
   physicalTests: PhysicalTest[]
+  injuries: Injury[]
   isAuthenticated: boolean
   authReady: boolean
   currentUser: Profile | null
@@ -70,6 +71,10 @@ interface AppContextType extends AppState {
   addPhysicalTest: (data: Omit<PhysicalTest, "id" | "created_at">) => PhysicalTest
   deletePhysicalTest: (id: string) => void
   getPlayerPhysicalTests: (playerId: string) => PhysicalTest[]
+  addInjury: (data: Omit<Injury, "id" | "created_at">) => Injury
+  updateInjury: (id: string, data: Partial<Omit<Injury, "id" | "created_at" | "player_id">>) => void
+  deleteInjury: (id: string) => void
+  getPlayerInjuries: (playerId: string) => Injury[]
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -231,6 +236,21 @@ function mapPhysicalTest(row: Tables<"physical_tests">): PhysicalTest {
   }
 }
 
+function mapInjury(row: Tables<"injuries">): Injury {
+  return {
+    id: row.id,
+    player_id: row.player_id,
+    body_part: row.body_part,
+    injury_type: row.injury_type,
+    severity: row.severity as InjurySeverity,
+    date_start: row.date_start,
+    date_return: row.date_return ?? null,
+    is_recovered: row.is_recovered,
+    notes: row.notes ?? null,
+    created_at: row.created_at,
+  }
+}
+
 function mapPositionSample(row: Tables<"position_samples">): PositionSample {
   return {
     id: row.id,
@@ -312,6 +332,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     exercises: [],
     attendance: [],
     physicalTests: [],
+    injuries: [],
     isAuthenticated: false,
     authReady: false,
     currentUser: null,
@@ -344,7 +365,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const loadPlayerData = useCallback(async () => {
-    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes, positionSamplesRes, matchesRes, matchStatsRes, exercisesRes, attendanceRes, physicalTestsRes] = await Promise.all([
+    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes, positionSamplesRes, matchesRes, matchStatsRes, exercisesRes, attendanceRes, physicalTestsRes, injuriesRes] = await Promise.all([
       supabase.from("players").select("*"),
       supabase.from("activities").select("*"),
       supabase.from("evaluations").select("*"),
@@ -357,6 +378,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from("exercises").select("*"),
       supabase.from("attendance").select("*"),
       supabase.from("physical_tests").select("*"),
+      supabase.from("injuries").select("*"),
     ])
     setState(s => ({
       ...s,
@@ -372,6 +394,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       exercises: (exercisesRes.data ?? []).map(mapExercise),
       attendance: (attendanceRes.data ?? []).map(mapAttendance),
       physicalTests: (physicalTestsRes.data ?? []).map(mapPhysicalTest),
+      injuries: (injuriesRes.data ?? []).map(mapInjury),
     }))
   }, [])
 
@@ -877,6 +900,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [state.physicalTests]
   )
 
+  const addInjury = useCallback((data: Omit<Injury, "id" | "created_at">): Injury => {
+    const injury: Injury = { ...data, id: crypto.randomUUID(), created_at: new Date().toISOString() }
+    setState(s => ({ ...s, injuries: [...s.injuries, injury] }))
+    supabase.from("injuries").insert({
+      id: injury.id,
+      player_id: injury.player_id,
+      body_part: injury.body_part,
+      injury_type: injury.injury_type,
+      severity: injury.severity,
+      date_start: injury.date_start,
+      date_return: injury.date_return ?? null,
+      is_recovered: injury.is_recovered,
+      notes: injury.notes || null,
+      created_at: injury.created_at,
+    }).then(({ error }) => { if (error) console.error("addInjury:", error) })
+    return injury
+  }, [])
+
+  const updateInjury = useCallback((id: string, data: Partial<Omit<Injury, "id" | "created_at" | "player_id">>) => {
+    setState(s => ({ ...s, injuries: s.injuries.map(i => i.id === id ? { ...i, ...data } : i) }))
+    supabase.from("injuries").update({ ...data }).eq("id", id).then(({ error }) => { if (error) console.error("updateInjury:", error) })
+  }, [])
+
+  const deleteInjury = useCallback((id: string) => {
+    setState(s => ({ ...s, injuries: s.injuries.filter(i => i.id !== id) }))
+    supabase.from("injuries").delete().eq("id", id).then(({ error }) => { if (error) console.error("deleteInjury:", error) })
+  }, [])
+
+  const getPlayerInjuries = useCallback(
+    (playerId: string) => state.injuries.filter(i => i.player_id === playerId).sort((a, b) => b.date_start.localeCompare(a.date_start)),
+    [state.injuries]
+  )
+
   const getUpcomingTrainings = useCallback((category?: Category | null) => {
     const today = new Date().toISOString().split("T")[0]
     return state.trainings
@@ -932,6 +988,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addPhysicalTest,
         deletePhysicalTest,
         getPlayerPhysicalTests,
+        addInjury,
+        updateInjury,
+        deleteInjury,
+        getPlayerInjuries,
       }}
     >
       {children}

@@ -5,7 +5,7 @@ import type { Player, Evaluation, DominantFoot } from "@/lib/types"
 import { cn, getScoreColor, getPositionShort, avatarUrl } from "@/lib/utils"
 import Badge from "./ui/Badge"
 import ScoreRing from "./ui/ScoreRing"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, AlertCircle } from "lucide-react"
 import { useT } from "@/lib/i18n/useT"
 import { players as playersDict } from "@/lib/i18n/dictionaries/players"
 import { useEnumT } from "@/lib/i18n/enums"
@@ -27,9 +27,10 @@ const positionColorMap: Record<string, string> = {
 interface PlayerCardProps {
   player: Player
   evaluation?: Evaluation
+  isInjured?: boolean
 }
 
-export default function PlayerCard({ player, evaluation }: PlayerCardProps) {
+export default function PlayerCard({ player, evaluation, isInjured }: PlayerCardProps) {
   const t = useT(playersDict)
   const e = useEnumT()
   const score = evaluation?.general_score ?? 0
@@ -40,8 +41,12 @@ export default function PlayerCard({ player, evaluation }: PlayerCardProps) {
       {/* Header gradient */}
       <div className="h-20 bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] relative">
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='white' fill-opacity='0.3'%3E%3Ccircle cx='20' cy='20' r='1'/%3E%3C/g%3E%3C/svg%3E\")" }} />
-        {/* Category badge */}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 flex items-center gap-1.5">
+          {isInjured && (
+            <span className="flex items-center gap-1 bg-red-500/90 backdrop-blur text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+              <AlertCircle size={9} /> {t("injured")}
+            </span>
+          )}
           <span className="bg-white/20 backdrop-blur text-white text-[10px] font-semibold px-2 py-0.5 rounded-md">{player.category}</span>
         </div>
       </div>

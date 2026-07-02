@@ -128,6 +128,26 @@ export const players = {
   saveChanges: { es: "Guardar Cambios", en: "Save Changes", pt: "Salvar Alterações" },
   confirmDeletePlayer: { es: "¿Eliminar a {name}? Esta acción no se puede deshacer.", en: "Delete {name}? This action cannot be undone.", pt: "Excluir {name}? Esta ação não pode ser desfeita." },
 
+  // Injury tracking
+  injuryStatus: { es: "Estado físico", en: "Physical status", pt: "Estado físico" },
+  addInjury: { es: "Registrar lesión", en: "Log injury", pt: "Registrar lesão" },
+  newInjury: { es: "Nueva Lesión", en: "New Injury", pt: "Nova Lesão" },
+  injured: { es: "Lesionado", en: "Injured", pt: "Lesionado" },
+  playerFit: { es: "Apto", en: "Fit", pt: "Apto" },
+  markRecovered: { es: "Marcar recuperado", en: "Mark as recovered", pt: "Marcar recuperado" },
+  bodyPartLabel: { es: "Zona lesionada", en: "Injured area", pt: "Área lesionada" },
+  injuryTypeLabel: { es: "Tipo de lesión", en: "Injury type", pt: "Tipo de lesão" },
+  severityLabel: { es: "Gravedad", en: "Severity", pt: "Gravidade" },
+  dateStartLabel: { es: "Fecha de inicio", en: "Start date", pt: "Data de início" },
+  dateReturnLabel: { es: "Regreso estimado", en: "Est. return date", pt: "Retorno estimado" },
+  minorSeverity: { es: "Leve", en: "Minor", pt: "Leve" },
+  moderateSeverity: { es: "Moderada", en: "Moderate", pt: "Moderada" },
+  severeSeverity: { es: "Grave", en: "Severe", pt: "Grave" },
+  noInjuryHistory: { es: "Sin historial de lesiones", en: "No injury history", pt: "Sem histórico de lesões" },
+  confirmDeleteInjury: { es: "¿Eliminar este registro de lesión?", en: "Delete this injury record?", pt: "Excluir este registro de lesão?" },
+  estimatedReturn: { es: "Regreso est.", en: "Est. return", pt: "Retorno est." },
+  since: { es: "desde", en: "since", pt: "desde" },
+
   // Physical tests
   physicalTests: { es: "Tests Físicos", en: "Physical Tests", pt: "Testes Físicos" },
   logPhysicalTest: { es: "Registrar test", en: "Log test", pt: "Registrar teste" },

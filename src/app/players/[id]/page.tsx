@@ -9,9 +9,9 @@ import Badge from "@/components/ui/Badge"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import NotificationToggle from "@/components/ui/NotificationToggle"
-import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical } from "lucide-react"
+import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck } from "lucide-react"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
-import type { Evaluation, PhysicalTest } from "@/lib/types"
+import type { Evaluation, PhysicalTest, InjurySeverity } from "@/lib/types"
 import { useMemo } from "react"
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
@@ -58,6 +58,36 @@ const EMPTY_TEST_FORM = {
   value: "",
   notes: "",
 }
+
+type Lang = "es" | "en" | "pt"
+const BODY_PARTS: { key: string; label: Record<Lang, string> }[] = [
+  { key: "knee",      label: { es: "Rodilla",          en: "Knee",       pt: "Joelho" } },
+  { key: "ankle",     label: { es: "Tobillo",          en: "Ankle",      pt: "Tornozelo" } },
+  { key: "hamstring", label: { es: "Isquiotibial",     en: "Hamstring",  pt: "Isquiotibial" } },
+  { key: "calf",      label: { es: "Gemelo",           en: "Calf",       pt: "Panturrilha" } },
+  { key: "thigh",     label: { es: "Muslo",            en: "Thigh",      pt: "Coxa" } },
+  { key: "shoulder",  label: { es: "Hombro",           en: "Shoulder",   pt: "Ombro" } },
+  { key: "back",      label: { es: "Espalda/Lumbar",   en: "Back",       pt: "Costas" } },
+  { key: "groin",     label: { es: "Ingle/Aductor",    en: "Groin",      pt: "Virilha" } },
+  { key: "foot",      label: { es: "Pie",              en: "Foot",       pt: "Pé" } },
+  { key: "other",     label: { es: "Otra zona",        en: "Other area", pt: "Outra área" } },
+]
+const INJURY_TYPES: { key: string; label: Record<Lang, string> }[] = [
+  { key: "muscle_strain",  label: { es: "Distensión muscular",   en: "Muscle strain",   pt: "Distensão muscular" } },
+  { key: "sprain",         label: { es: "Esguince",              en: "Sprain",          pt: "Entorse" } },
+  { key: "fracture",       label: { es: "Fractura",              en: "Fracture",        pt: "Fratura" } },
+  { key: "contusion",      label: { es: "Contusión",             en: "Contusion",       pt: "Contusão" } },
+  { key: "tendinitis",     label: { es: "Tendinitis",            en: "Tendinitis",      pt: "Tendinite" } },
+  { key: "torn_ligament",  label: { es: "Rotura de ligamento",   en: "Ligament tear",   pt: "Ruptura de ligamento" } },
+  { key: "muscle_tear",    label: { es: "Rotura muscular",       en: "Muscle tear",     pt: "Ruptura muscular" } },
+  { key: "other",          label: { es: "Otro",                  en: "Other",           pt: "Outro" } },
+]
+const SEVERITY_CFG: { value: InjurySeverity; color: string; bg: string }[] = [
+  { value: "minor",    color: "text-amber-600",  bg: "bg-amber-50 dark:bg-amber-500/10" },
+  { value: "moderate", color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10" },
+  { value: "severe",   color: "text-red-600",    bg: "bg-red-50 dark:bg-red-500/10" },
+]
+const EMPTY_INJURY_FORM = { body_part: "knee", injury_type: "sprain", severity: "minor" as InjurySeverity, date_start: "", date_return: "", notes: "" }
 
 function EvaluationComparison({ evaluations }: { evaluations: Evaluation[] }) {
   const t = useT(playersDict)
@@ -160,7 +190,7 @@ const EMPTY_EVAL_FORM = {
 
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
-  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, currentUser, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest } = useApp()
+  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, currentUser, language, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury } = useApp()
   const isCoach = currentUser?.role === "coach"
   const t = useT(playersDict)
   const e = useEnumT()
@@ -175,6 +205,9 @@ export default function PlayerProfilePage() {
   const playerMatches = getPlayerMatches(id)
   const playerAttendance = getPlayerAttendance(id)
   const physicalTests = getPlayerPhysicalTests(id)
+  const playerInjuries = getPlayerInjuries(id)
+  const activeInjury = playerInjuries.find(i => !i.is_recovered) ?? null
+  const lang = language as Lang
   const attendanceStats = {
     total: playerAttendance.length,
     present: playerAttendance.filter(a => a.status === "present").length,
@@ -191,6 +224,24 @@ export default function PlayerProfilePage() {
 
   const [showTestForm, setShowTestForm] = useState(false)
   const [testForm, setTestForm] = useState({ ...EMPTY_TEST_FORM, date: new Date().toISOString().split("T")[0] })
+  const [showInjuryForm, setShowInjuryForm] = useState(false)
+  const [injuryForm, setInjuryForm] = useState({ ...EMPTY_INJURY_FORM, date_start: new Date().toISOString().split("T")[0] })
+
+  function handleInjurySubmit(ev: React.FormEvent) {
+    ev.preventDefault()
+    addInjury({
+      player_id: id,
+      body_part: injuryForm.body_part,
+      injury_type: injuryForm.injury_type,
+      severity: injuryForm.severity,
+      date_start: injuryForm.date_start,
+      date_return: injuryForm.date_return || null,
+      is_recovered: false,
+      notes: injuryForm.notes || null,
+    })
+    setShowInjuryForm(false)
+    setInjuryForm({ ...EMPTY_INJURY_FORM, date_start: new Date().toISOString().split("T")[0] })
+  }
 
   const bestPerType = useMemo(() => {
     const map = new Map<string, PhysicalTest>()
@@ -646,6 +697,81 @@ export default function PlayerProfilePage() {
                 </div>
               )}
 
+              {/* Injury status */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    {activeInjury ? <ShieldAlert size={15} className="text-red-500" /> : <ShieldCheck size={15} className="text-emerald-500" />}
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("injuryStatus")}</h2>
+                  </div>
+                  {isCoach && (
+                    <Button size="sm" variant="outline" onClick={() => setShowInjuryForm(true)}>
+                      <Plus size={12} /> {t("addInjury")}
+                    </Button>
+                  )}
+                </div>
+
+                {activeInjury ? (() => {
+                  const sev = SEVERITY_CFG.find(s => s.value === activeInjury.severity)!
+                  const bodyLabel = BODY_PARTS.find(b => b.key === activeInjury.body_part)?.label[lang] ?? activeInjury.body_part
+                  const typeLabel = INJURY_TYPES.find(ty => ty.key === activeInjury.injury_type)?.label[lang] ?? activeInjury.injury_type
+                  return (
+                    <div className="rounded-xl border border-red-100 dark:border-red-500/20 bg-red-50 dark:bg-red-500/5 p-3.5 space-y-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={cn("text-xs font-bold px-2 py-0.5 rounded-lg", sev.color, sev.bg)}>
+                          {t(activeInjury.severity === "minor" ? "minorSeverity" : activeInjury.severity === "moderate" ? "moderateSeverity" : "severeSeverity")}
+                        </span>
+                        <span className="text-xs font-semibold text-red-700 dark:text-red-300">{bodyLabel}</span>
+                        <span className="text-xs text-red-500 dark:text-red-400">·</span>
+                        <span className="text-xs text-red-600 dark:text-red-300">{typeLabel}</span>
+                      </div>
+                      <p className="text-[11px] text-red-500 dark:text-red-400">{t("since")} {formatDate(activeInjury.date_start)}</p>
+                      {activeInjury.date_return && (
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("estimatedReturn")}: <strong className="text-slate-700 dark:text-slate-200">{formatDate(activeInjury.date_return)}</strong></p>
+                      )}
+                      {activeInjury.notes && <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">{activeInjury.notes}</p>}
+                      {isCoach && (
+                        <div className="flex gap-2 pt-1">
+                          <Button size="sm" variant="outline" className="flex-1 text-emerald-600 border-emerald-200 hover:bg-emerald-50" onClick={() => updateInjury(activeInjury.id, { is_recovered: true })}>
+                            <ShieldCheck size={12} /> {t("markRecovered")}
+                          </Button>
+                          <button onClick={() => { if (confirm(t("confirmDeleteInjury"))) deleteInjury(activeInjury.id) }} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 border border-slate-200 dark:border-slate-700 transition-colors">
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })() : (
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20">
+                    <ShieldCheck size={16} className="text-emerald-500 shrink-0" />
+                    <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{t("playerFit")}</span>
+                  </div>
+                )}
+
+                {playerInjuries.filter(i => i.is_recovered).length > 0 && (
+                  <div className="mt-3 space-y-1">
+                    {playerInjuries.filter(i => i.is_recovered).slice(0, 3).map(inj => {
+                      const bodyLabel = BODY_PARTS.find(b => b.key === inj.body_part)?.label[lang] ?? inj.body_part
+                      return (
+                        <div key={inj.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg group">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">{formatDate(inj.date_start)}</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 flex-1">{bodyLabel}</span>
+                          <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">✓</span>
+                          {isCoach && (
+                            <button onClick={() => { if (confirm(t("confirmDeleteInjury"))) deleteInjury(inj.id) }} className="opacity-0 group-hover:opacity-100 w-5 h-5 rounded flex items-center justify-center text-slate-300 hover:text-red-500 transition-all">
+                              <Trash2 size={10} />
+                            </button>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {playerInjuries.length === 0 && <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center mt-2">{t("noInjuryHistory")}</p>}
+              </div>
+
               {/* Attendance stats */}
               {attendanceStats.total > 0 && (
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
@@ -815,6 +941,64 @@ export default function PlayerProfilePage() {
                   )}
                   <Button variant="secondary" type="button" onClick={() => setShowEvalForm(false)}>Cancelar</Button>
                   <Button type="submit" loading={savingEval}>Guardar</Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showInjuryForm && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md animate-scale-in">
+              <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("newInjury")}</h2>
+                <button onClick={() => setShowInjuryForm(false)} className="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
+                  <X size={16} />
+                </button>
+              </div>
+              <form onSubmit={handleInjurySubmit} className="p-5 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">{t("bodyPartLabel")}</label>
+                  <select
+                    value={injuryForm.body_part}
+                    onChange={ev => setInjuryForm(f => ({ ...f, body_part: ev.target.value }))}
+                    className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-[#0B5CFF] outline-none"
+                    required
+                  >
+                    {BODY_PARTS.map(b => <option key={b.key} value={b.key}>{b.label[lang]}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">{t("injuryTypeLabel")}</label>
+                  <select
+                    value={injuryForm.injury_type}
+                    onChange={ev => setInjuryForm(f => ({ ...f, injury_type: ev.target.value }))}
+                    className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-[#0B5CFF] outline-none"
+                    required
+                  >
+                    {INJURY_TYPES.map(ty => <option key={ty.key} value={ty.key}>{ty.label[lang]}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">{t("severityLabel")}</label>
+                  <div className="flex gap-2">
+                    {SEVERITY_CFG.map(s => (
+                      <button
+                        key={s.value}
+                        type="button"
+                        onClick={() => setInjuryForm(f => ({ ...f, severity: s.value }))}
+                        className={cn("flex-1 h-9 rounded-xl text-xs font-semibold border transition-all", injuryForm.severity === s.value ? `${s.color} ${s.bg} border-current` : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300")}
+                      >
+                        {t(s.value === "minor" ? "minorSeverity" : s.value === "moderate" ? "moderateSeverity" : "severeSeverity")}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <Input label={t("dateStartLabel")} type="date" value={injuryForm.date_start} onChange={ev => setInjuryForm(f => ({ ...f, date_start: ev.target.value }))} required />
+                <Input label={t("dateReturnLabel")} type="date" value={injuryForm.date_return} onChange={ev => setInjuryForm(f => ({ ...f, date_return: ev.target.value }))} />
+                <div className="flex gap-3 justify-end pt-2">
+                  <Button variant="secondary" type="button" onClick={() => setShowInjuryForm(false)}>{t("cancel")}</Button>
+                  <Button type="submit">{t("save")}</Button>
                 </div>
               </form>
             </div>

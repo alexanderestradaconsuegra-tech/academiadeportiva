@@ -99,6 +99,21 @@ export interface PlayerWithStats extends Player {
   progress_trend?: number
 }
 
+export type InjurySeverity = "minor" | "moderate" | "severe"
+
+export interface Injury {
+  id: string
+  player_id: string
+  body_part: string
+  injury_type: string
+  severity: InjurySeverity
+  date_start: string
+  date_return: string | null
+  is_recovered: boolean
+  notes: string | null
+  created_at: string
+}
+
 export type AttendanceStatus = "present" | "absent" | "late" | "excused"
 
 export interface Attendance {

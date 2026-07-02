@@ -16,7 +16,8 @@ const CATEGORIES: Category[] = ["Sub-10","Sub-12","Sub-14","Sub-16","Sub-18","Ju
 const POSITIONS: Position[] = ["Portero","Defensa Central","Lateral Derecho","Lateral Izquierdo","Mediocampista Defensivo","Mediocampista Central","Mediocampista Ofensivo","Extremo Derecho","Extremo Izquierdo","Delantero Centro","Segundo Delantero"]
 
 export default function PlayersPage() {
-  const { players, getLatestEvaluation } = useApp()
+  const { players, injuries, getLatestEvaluation } = useApp()
+  const injuredIds = new Set(injuries.filter(i => !i.is_recovered).map(i => i.player_id))
   const t = useT(playersDict)
   const e = useEnumT()
   const [search, setSearch] = useState("")
@@ -90,6 +91,7 @@ export default function PlayersPage() {
                 key={player.id}
                 player={player}
                 evaluation={getLatestEvaluation(player.id)}
+                isInjured={injuredIds.has(player.id)}
               />
             ))}
           </div>

@@ -56,6 +56,53 @@ export type Database = {
           },
         ]
       }
+      injuries: {
+        Row: {
+          id: string
+          player_id: string
+          body_part: string
+          injury_type: string
+          severity: "minor" | "moderate" | "severe"
+          date_start: string
+          date_return: string | null
+          is_recovered: boolean
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          player_id: string
+          body_part: string
+          injury_type: string
+          severity: "minor" | "moderate" | "severe"
+          date_start: string
+          date_return?: string | null
+          is_recovered?: boolean
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          player_id?: string
+          body_part?: string
+          injury_type?: string
+          severity?: "minor" | "moderate" | "severe"
+          date_start?: string
+          date_return?: string | null
+          is_recovered?: boolean
+          notes?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injuries_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       physical_tests: {
         Row: {
           id: string
