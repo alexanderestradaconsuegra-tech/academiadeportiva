@@ -34,7 +34,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {!isPlayer && <Sidebar />}
 
       {/* Main content */}
-      <div className={isPlayer ? "flex-1 flex flex-col min-h-screen" : "flex-1 flex flex-col min-h-screen md:ml-64"}>
+      <div className={isPlayer ? "flex-1 flex flex-col min-h-screen" : "flex-1 flex flex-col min-h-screen md:ml-64 print:ml-0"}>
         {/* Mobile top header */}
         <MobileHeader />
 

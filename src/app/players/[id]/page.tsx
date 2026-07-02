@@ -9,7 +9,7 @@ import Badge from "@/components/ui/Badge"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import NotificationToggle from "@/components/ui/NotificationToggle"
-import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints } from "lucide-react"
+import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download } from "lucide-react"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
 import type { Evaluation } from "@/lib/types"
 import {
@@ -249,9 +249,16 @@ export default function PlayerProfilePage() {
             <div className="flex-1">
               <p className="text-blue-200/70 text-xs font-medium">{t("playerProfile")}</p>
             </div>
+            <button
+              onClick={() => window.print()}
+              className="no-print w-9 h-9 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+              title={t("downloadPdf")}
+            >
+              <Download size={15} />
+            </button>
             {isCoach && (
               <Link href={`/players/${id}/edit`}>
-                <Button variant="outline" size="sm" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                <Button variant="outline" size="sm" className="no-print bg-white/10 border-white/20 text-white hover:bg-white/20">
                   <Edit size={14} /> {t("edit")}
                 </Button>
               </Link>

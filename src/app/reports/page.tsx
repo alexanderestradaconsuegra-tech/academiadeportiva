@@ -1,11 +1,12 @@
 "use client"
-import { useState, useRef } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/ui/PageHeader"
 import Button from "@/components/ui/Button"
 import ScoreRing from "@/components/ui/ScoreRing"
-import { Printer, Download, TrendingUp, TrendingDown, Target, ChevronDown } from "lucide-react"
+import { Download, TrendingUp, TrendingDown, Target, ChevronDown } from "lucide-react"
 import { cn, formatDate, getScoreColor, getCategoryColor } from "@/lib/utils"
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
@@ -19,6 +20,7 @@ export default function ReportsPage() {
   const { players, getLatestEvaluation, getPlayerActivities } = useApp()
   const t = useT(reports)
   const e = useEnumT()
+  const searchParams = useSearchParams()
 
   const ATTRS = [
     { key: "speed_score", label: t("attrSpeed"), fill: "#F59E0B" },
@@ -28,28 +30,19 @@ export default function ReportsPage() {
     { key: "power_score", label: t("attrPower"), fill: "#F97316" },
     { key: "agility_score", label: t("attrAgility"), fill: "#8B5CF6" },
   ]
-  const [selectedId, setSelectedId] = useState(players[0]?.id ?? "")
-  const [downloading, setDownloading] = useState(false)
-  const reportRef = useRef<HTMLDivElement>(null)
+  const [selectedId, setSelectedId] = useState(() => {
+    const fromUrl = searchParams.get("player")
+    return fromUrl ?? players[0]?.id ?? ""
+  })
+
+  useEffect(() => {
+    const fromUrl = searchParams.get("player")
+    if (fromUrl && players.some(p => p.id === fromUrl)) setSelectedId(fromUrl)
+  }, [searchParams, players])
 
   const player = players.find(p => p.id === selectedId)
   const evaluation = player ? getLatestEvaluation(player.id) : undefined
   const activities = player ? getPlayerActivities(player.id) : []
-
-  async function handleDownloadPdf() {
-    if (!reportRef.current || !player) return
-    setDownloading(true)
-    const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-      import("html2canvas"),
-      import("jspdf"),
-    ])
-    const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true, backgroundColor: "#ffffff" })
-    const imgData = canvas.toDataURL("image/png")
-    const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: [canvas.width, canvas.height] })
-    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height)
-    pdf.save(`reporte-${player.name.replace(/\s+/g, "_").toLowerCase()}.pdf`)
-    setDownloading(false)
-  }
 
   if (!player) return <AppShell><div className="p-8 text-slate-400 dark:text-slate-500">{t("selectPlayerToSeeReport")}</div></AppShell>
 
@@ -80,17 +73,14 @@ export default function ReportsPage() {
               </select>
               <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-slate-500 pointer-events-none" />
             </div>
-            <Button variant="outline" size="sm" onClick={() => window.print()}>
-              <Printer size={14} /> {t("print")}
-            </Button>
-            <Button size="sm" onClick={handleDownloadPdf} loading={downloading}>
+            <Button size="sm" onClick={() => window.print()}>
               <Download size={14} /> {t("downloadPdf")}
             </Button>
           </div>
         </PageHeader>
 
         {/* Report card */}
-        <div ref={reportRef} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden mb-6 print:border-none">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden mb-6 print:border-none">
           {/* Header */}
           <div className="bg-gradient-to-r from-[#071B4D] to-[#0B5CFF] px-4 py-6 md:px-8 md:py-8 relative overflow-hidden">
             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 30%, white 1px, transparent 1px)", backgroundSize: "35px 35px" }} />

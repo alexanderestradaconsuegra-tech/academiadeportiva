@@ -133,4 +133,20 @@ body {
 /* Print: only show the report card, hide app chrome */
 @media print {
   .no-print { display: none !important; }
+
+  /* Force backgrounds and colors to print (gradients, colored bars, etc.) */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  /* Page settings */
+  @page { size: A4 portrait; margin: 1cm; }
+
+  /* Reset page wrapper */
+  body, html { background: white !important; }
+  .flex.min-h-screen { background: white !important; min-height: auto !important; }
+
+  /* Prevent page breaks inside key sections */
+  .rounded-2xl, .rounded-xl { page-break-inside: avoid; }
+
+  /* Remove outer padding when printing */
+  .animate-fade-in { padding: 0 !important; }
 }

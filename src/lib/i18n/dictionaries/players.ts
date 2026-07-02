@@ -13,6 +13,7 @@ export const players = {
   noPlayersFound: { es: "No se encontraron jugadores", en: "No players found", pt: "Nenhum jogador encontrado" },
   adjustFiltersOrAdd: { es: "Ajusta los filtros o agrega un nuevo jugador", en: "Adjust the filters or add a new player", pt: "Ajuste os filtros ou adicione um novo jogador" },
   comparePlayers: { es: "Comparar", en: "Compare", pt: "Comparar" },
+  downloadPdf: { es: "Descargar PDF", en: "Download PDF", pt: "Baixar PDF" },
 
   // players/compare/page.tsx
   compareTitle: { es: "Comparar Jugadores", en: "Compare Players", pt: "Comparar Jogadores" },
