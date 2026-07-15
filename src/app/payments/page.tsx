@@ -1,5 +1,5 @@
 "use client"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
@@ -7,7 +7,7 @@ import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/ui/PageHeader"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
-import { Plus, X, Trash2, Check, CreditCard, AlertTriangle, Clock, ChevronRight, Search } from "lucide-react"
+import { Plus, X, Trash2, Check, CreditCard, AlertTriangle, Clock, ChevronRight, Search, Bell, RefreshCw, Settings2 } from "lucide-react"
 import { cn, formatDate, avatarUrl } from "@/lib/utils"
 import type { Payment } from "@/lib/types"
 import { effectivePaymentStatus } from "@/lib/types"
@@ -34,9 +34,10 @@ const STATUS_CFG = {
 const EMPTY_FORM = { player_id: "", concept: "monthly_fee" as Concept, amount: "", due_date: "", paid_date: "", notes: "" }
 
 export default function PaymentsPage() {
-  const { players, payments, addPayment, updatePayment, deletePayment } = useApp()
+  const { players, payments, addPayment, updatePayment, deletePayment, teamSettings, updateTeamSettings, autoGenerateMonthlyPayments, currentUser } = useApp()
   const t = useT(paymentsDict)
   const searchParams = useSearchParams()
+  const isCoach = currentUser?.role === "coach"
 
   const [statusFilter, setStatusFilter] = useState<"all" | "overdue" | "pending" | "paid">("all")
   const [playerFilter, setPlayerFilter] = useState(searchParams.get("player") ?? "all")
@@ -44,9 +45,25 @@ export default function PaymentsPage() {
   const [search, setSearch] = useState("")
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ ...EMPTY_FORM, due_date: new Date().toISOString().split("T")[0] })
+  const [generating, setGenerating] = useState(false)
+  const [notifying, setNotifying] = useState(false)
+  const [notifyResult, setNotifyResult] = useState<string | null>(null)
+  const [showFeeSettings, setShowFeeSettings] = useState(false)
+  const [feeInput, setFeeInput] = useState("")
+  const autoGenDone = useRef(false)
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], [])
   const currentMonthStart = today.slice(0, 7) + "-01"
+  const dayOfMonth = parseInt(today.slice(8, 10), 10)
+  const isFirst5Days = dayOfMonth <= 5
+
+  // Auto-generate monthly payments once on load (coach only)
+  useEffect(() => {
+    if (!isCoach || autoGenDone.current) return
+    if (!teamSettings?.monthly_fee) return
+    autoGenDone.current = true
+    autoGenerateMonthlyPayments()
+  }, [isCoach, teamSettings?.monthly_fee, autoGenerateMonthlyPayments])
 
   const enriched = useMemo(() => payments.map(p => ({
     ...p,
@@ -66,6 +83,26 @@ export default function PaymentsPage() {
       collectedAmount: collectedThisMonth.reduce((s, p) => s + p.amount, 0),
     }
   }, [enriched, currentMonthStart])
+
+  // Players missing monthly fee payment this month
+  const missingMonthlyFee = useMemo(() => {
+    if (!teamSettings?.monthly_fee) return []
+    const monthPrefix = today.slice(0, 7)
+    const paidThisMonth = new Set(
+      payments.filter(p => p.concept === "monthly_fee" && p.due_date.startsWith(monthPrefix)).map(p => p.player_id)
+    )
+    return players.filter(p => !paidThisMonth.has(p.id))
+  }, [players, payments, teamSettings?.monthly_fee, today])
+
+  // Players with pending/overdue monthly fee this month
+  const unpaidMonthlyFee = useMemo(() => {
+    const monthPrefix = today.slice(0, 7)
+    return enriched.filter(p =>
+      p.concept === "monthly_fee" &&
+      p.due_date.startsWith(monthPrefix) &&
+      p.effectiveStatus !== "paid"
+    )
+  }, [enriched, today])
 
   const filtered = useMemo(() => {
     return enriched
@@ -106,16 +143,108 @@ export default function PaymentsPage() {
     updatePayment(p.id, { status: "paid", paid_date: today })
   }
 
+  async function handleGenerate() {
+    setGenerating(true)
+    await autoGenerateMonthlyPayments()
+    setGenerating(false)
+  }
+
+  async function handleNotifyPending() {
+    setNotifying(true)
+    setNotifyResult(null)
+    try {
+      const { data: { session } } = await (await import("@/lib/supabase")).supabase.auth.getSession()
+      const token = session?.access_token
+      const res = await fetch("/api/push/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({
+          title: "Pago pendiente",
+          body: `Tienes un pago de mensualidad pendiente. Por favor regulariza tu situación.`,
+          url: "/",
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        setNotifyResult(`Error: ${json.error ?? res.statusText}`)
+      } else {
+        setNotifyResult(`Notificaciones enviadas: ${json.sent} · Fallaron: ${json.failed}`)
+      }
+    } catch (e) {
+      setNotifyResult(`Error al enviar: ${String(e)}`)
+    }
+    setNotifying(false)
+  }
+
+  function saveFeeSettings() {
+    const fee = parseFloat(feeInput)
+    if (!isNaN(fee) && fee >= 0) {
+      updateTeamSettings({ monthly_fee: fee > 0 ? fee : null })
+    }
+    setShowFeeSettings(false)
+  }
+
   const selectCls = "h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer"
 
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
         <PageHeader title={t("pageTitle")} subtitle={`${payments.length} ${t("paymentsRegistered")}`}>
-          <Button size="md" onClick={() => setShowForm(true)}>
-            <Plus size={16} /> {t("newPayment")}
-          </Button>
+          {isCoach && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setFeeInput(String(teamSettings?.monthly_fee ?? "")); setShowFeeSettings(true) }}
+                className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 transition-colors"
+              >
+                <Settings2 size={14} /> Mensualidad
+              </button>
+              <Button size="md" onClick={() => setShowForm(true)}>
+                <Plus size={16} /> {t("newPayment")}
+              </Button>
+            </div>
+          )}
         </PageHeader>
+
+        {/* Monthly fee banner */}
+        {isCoach && teamSettings?.monthly_fee && missingMonthlyFee.length > 0 && (
+          <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-2xl p-4 mb-5 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-[#0B5CFF] flex items-center justify-center shrink-0">
+              <RefreshCw size={18} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                {missingMonthlyFee.length} alumnos sin cuota este mes
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Mensualidad: ${teamSettings.monthly_fee.toLocaleString()} · Se generarán como pendientes
+              </p>
+            </div>
+            <Button size="sm" loading={generating} onClick={handleGenerate}>
+              Generar pagos
+            </Button>
+          </div>
+        )}
+
+        {/* Notify pending banner (first 5 days of month) */}
+        {isCoach && unpaidMonthlyFee.length > 0 && (
+          <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl p-4 mb-5 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center shrink-0">
+              <Bell size={18} className="text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                {unpaidMonthlyFee.length} cuotas pendientes este mes
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {isFirst5Days ? "Primeros días del mes — avisa a los alumnos" : "Notifica a alumnos con pagos pendientes"}
+              </p>
+              {notifyResult && <p className="text-xs mt-1 font-medium text-amber-700 dark:text-amber-400">{notifyResult}</p>}
+            </div>
+            <Button size="sm" variant="secondary" loading={notifying} onClick={handleNotifyPending}>
+              <Bell size={14} /> Notificar
+            </Button>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 mb-5">
@@ -227,31 +356,65 @@ export default function PaymentsPage() {
                   </span>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {p.effectiveStatus !== "paid" && (
+                  {isCoach && (
+                    <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {p.effectiveStatus !== "paid" && (
+                        <button
+                          onClick={() => markPaid(p)}
+                          className="flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                        >
+                          <Check size={12} /> {t("markPaid")}
+                        </button>
+                      )}
                       <button
-                        onClick={() => markPaid(p)}
-                        className="flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                        onClick={() => { if (confirm(t("confirmDelete"))) deletePayment(p.id) }}
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                       >
-                        <Check size={12} /> {t("markPaid")}
+                        <Trash2 size={13} />
                       </button>
-                    )}
-                    <button
-                      onClick={() => { if (confirm(t("confirmDelete"))) deletePayment(p.id) }}
-                      className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                    <Link href={`/players/${p.player_id}`} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-[#0B5CFF] hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors">
-                      <ChevronRight size={13} />
-                    </Link>
-                  </div>
+                      <Link href={`/players/${p.player_id}`} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-[#0B5CFF] hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors">
+                        <ChevronRight size={13} />
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )
             })}
           </div>
         )}
       </div>
+
+      {/* Monthly fee settings modal */}
+      {showFeeSettings && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm animate-scale-in">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Configurar mensualidad</h2>
+              <button onClick={() => setShowFeeSettings(false)} className="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Define el monto de la mensualidad. Al inicio de cada mes se generarán pagos pendientes automáticamente para todos los alumnos.
+              </p>
+              <Input
+                label="Monto mensual ($)"
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder="Ej: 50000"
+                value={feeInput}
+                onChange={e => setFeeInput(e.target.value)}
+              />
+              <div className="flex gap-3 justify-end">
+                <Button variant="secondary" type="button" onClick={() => setShowFeeSettings(false)}>Cancelar</Button>
+                <Button type="button" onClick={saveFeeSettings}>Guardar</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* New payment modal */}
       {showForm && (

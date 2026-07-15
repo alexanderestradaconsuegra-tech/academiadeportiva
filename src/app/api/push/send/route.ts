@@ -19,13 +19,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Solo el entrenador puede enviar notificaciones." }, { status: 403 })
   }
 
-  const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  // VAPID_PUBLIC_KEY is server-only (no NEXT_PUBLIC_ prefix) to avoid build-time inlining issues.
+  // Fall back to NEXT_PUBLIC_VAPID_PUBLIC_KEY for backwards compatibility.
+  const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
   const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
   const vapidSubject = process.env.VAPID_SUBJECT
-  if (!vapidPublicKey || !vapidPrivateKey || !vapidSubject) {
-    return NextResponse.json({ error: "Notificaciones push no configuradas en el servidor." }, { status: 500 })
+
+  const missing: string[] = []
+  if (!vapidPublicKey) missing.push("VAPID_PUBLIC_KEY")
+  if (!vapidPrivateKey) missing.push("VAPID_PRIVATE_KEY")
+  if (!vapidSubject) missing.push("VAPID_SUBJECT")
+  if (missing.length > 0) {
+    return NextResponse.json({ error: `Faltan variables de servidor: ${missing.join(", ")}` }, { status: 500 })
   }
-  webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey)
+  webpush.setVapidDetails(vapidSubject!, vapidPublicKey!, vapidPrivateKey!)
 
   const { title, body, url, category } = await req.json()
   if (!title || !body) {

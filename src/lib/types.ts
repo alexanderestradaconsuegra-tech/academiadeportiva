@@ -174,6 +174,7 @@ export interface TeamSettings {
   description: string
   language: Language
   updated_at: string
+  monthly_fee: number | null
   calib_p0_lat: number | null
   calib_p0_lng: number | null
   calib_p1_lat: number | null

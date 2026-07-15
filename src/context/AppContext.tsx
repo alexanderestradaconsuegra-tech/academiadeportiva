@@ -87,6 +87,7 @@ interface AppContextType extends AppState {
   saveConvocatoria: (matchId: string, formation: string, notes: string, players: ConvocatoriaPlayer[]) => Promise<string | null>
   respondConvocatoria: (convocatoriaPlayerId: string, confirmed: boolean) => Promise<string | null>
   getPlayerConvocatoria: (playerId: string) => { convocatoria: Convocatoria; match: Match } | null
+  autoGenerateMonthlyPayments: () => Promise<number>
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -205,6 +206,8 @@ function mapTeamSettings(row: Tables<"team_settings">): TeamSettings {
     description: row.description ?? "",
     language: (row.language as Language) ?? "es",
     updated_at: row.updated_at,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    monthly_fee: (row as any).monthly_fee ?? null,
     calib_p0_lat: row.calib_p0_lat,
     calib_p0_lng: row.calib_p0_lng,
     calib_p1_lat: row.calib_p1_lat,
@@ -1186,6 +1189,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
   }, [state.trainings])
 
+  const autoGenerateMonthlyPayments = useCallback(async (): Promise<number> => {
+    const monthlyFee = state.teamSettings?.monthly_fee
+    if (!monthlyFee || monthlyFee <= 0) return 0
+    const today = new Date().toISOString().split("T")[0]
+    const monthPrefix = today.slice(0, 7)
+    const firstOfMonth = monthPrefix + "-01"
+    const existingThisMonth = state.payments.filter(p =>
+      p.concept === "monthly_fee" && p.due_date.startsWith(monthPrefix)
+    )
+    const existingPlayerIds = new Set(existingThisMonth.map(p => p.player_id))
+    const missing = state.players.filter(p => !existingPlayerIds.has(p.id))
+    if (missing.length === 0) return 0
+    const now = new Date().toISOString()
+    const academyId = state.teamSettings?.id ?? null
+    const newPayments: Payment[] = missing.map(player => ({
+      id: crypto.randomUUID(),
+      player_id: player.id,
+      concept: "monthly_fee",
+      amount: monthlyFee,
+      due_date: firstOfMonth,
+      paid_date: null,
+      status: "pending" as const,
+      notes: null,
+      created_at: now,
+    }))
+    await supabase.from("payments").insert(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      newPayments.map(p => ({ ...p, academy_id: academyId }) as any)
+    ).then(({ error }) => { if (error) dbg("autoGenerateMonthlyPayments:", error) })
+    setState(s => ({ ...s, payments: [...s.payments, ...newPayments] }))
+    return newPayments.length
+  }, [state.teamSettings, state.payments, state.players])
+
   return (
     <AppContext.Provider
       value={{
@@ -1247,6 +1283,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         saveConvocatoria,
         respondConvocatoria,
         getPlayerConvocatoria,
+        autoGenerateMonthlyPayments,
       }}
     >
       {children}
