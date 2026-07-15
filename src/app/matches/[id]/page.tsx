@@ -129,6 +129,7 @@ export default function MatchDetailPage() {
   }
 
   function openScoreEdit() {
+    if (!match) return
     setScoreForm({
       our: match.our_score !== null ? String(match.our_score) : "",
       opponent: match.opponent_score !== null ? String(match.opponent_score) : "",
