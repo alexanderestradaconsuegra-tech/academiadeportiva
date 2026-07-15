@@ -8,6 +8,7 @@ const CATEGORY_TO_FIELD: Record<ActivityCategory, keyof Pick<Evaluation,
   "Técnica":     "technique_score",
   "Resistencia": "resistance_score",
   "Potencia":    "power_score",
+  "Pliometría":  "power_score",
   "Agilidad":    "agility_score",
 }
 
