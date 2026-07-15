@@ -11,7 +11,7 @@ import Textarea from "@/components/ui/Textarea"
 import Badge from "@/components/ui/Badge"
 import { Plus, X, Trophy, MapPin, Clock, Pencil, Trash2, Video, ChevronRight } from "lucide-react"
 import { cn, formatDate } from "@/lib/utils"
-import type { Category, Match } from "@/lib/types"
+import type { Category, Match, ConvocatoriaPlayer } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
 import { matches as matchesDict } from "@/lib/i18n/dictionaries/matches"
 import { useEnumT } from "@/lib/i18n/enums"
@@ -25,8 +25,9 @@ const emptyForm = {
 }
 
 export default function MatchesPage() {
-  const { matches, addMatch, updateMatch, deleteMatch, currentUser } = useApp()
+  const { matches, addMatch, updateMatch, deleteMatch, currentUser, convocatorias } = useApp()
   const isCoach = currentUser?.role === "coach"
+  const myPlayerId = currentUser?.player_id ?? null
   const t = useT(matchesDict)
   const enumT = useEnumT()
   const [showForm, setShowForm] = useState(false)
@@ -151,9 +152,11 @@ export default function MatchesPage() {
             ) : (
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                 <div className="divide-y divide-slate-50 dark:divide-slate-800">
-                  {upcoming.map(m => (
-                    <MatchRow key={m.id} m={m} isCoach={isCoach} onEdit={() => openEdit(m)} onDelete={() => handleDelete(m.id)} />
-                  ))}
+                  {upcoming.map(m => {
+                    const conv = convocatorias.find(c => c.match_id === m.id)
+                    const myEntry = myPlayerId ? conv?.players.find(p => p.player_id === myPlayerId) : null
+                    return <MatchRow key={m.id} m={m} isCoach={isCoach} onEdit={() => openEdit(m)} onDelete={() => handleDelete(m.id)} myConvEntry={myEntry} />
+                  })}
                 </div>
               </div>
             )}
@@ -165,7 +168,7 @@ export default function MatchesPage() {
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                 <div className="divide-y divide-slate-50 dark:divide-slate-800">
                   {past.map(m => (
-                    <MatchRow key={m.id} m={m} isCoach={isCoach} onEdit={() => openEdit(m)} onDelete={() => handleDelete(m.id)} />
+                    <MatchRow key={m.id} m={m} isCoach={isCoach} onEdit={() => openEdit(m)} onDelete={() => handleDelete(m.id)} myConvEntry={null} />
                   ))}
                 </div>
               </div>
@@ -177,7 +180,7 @@ export default function MatchesPage() {
   )
 }
 
-function MatchRow({ m, isCoach, onEdit, onDelete }: { m: Match; isCoach: boolean; onEdit: () => void; onDelete: () => void }) {
+function MatchRow({ m, isCoach, onEdit, onDelete, myConvEntry }: { m: Match; isCoach: boolean; onEdit: () => void; onDelete: () => void; myConvEntry?: ConvocatoriaPlayer | null }) {
   const t = useT(matchesDict)
   const enumT = useEnumT()
   const played = m.our_score !== null && m.opponent_score !== null
@@ -223,6 +226,16 @@ function MatchRow({ m, isCoach, onEdit, onDelete }: { m: Match; isCoach: boolean
         </div>
       </Link>
       <div className="flex items-center gap-2 shrink-0">
+        {myConvEntry && (
+          <span className={cn(
+            "text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0",
+            myConvEntry.confirmed === true  ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
+            myConvEntry.confirmed === false ? "bg-red-50 dark:bg-red-500/10 text-red-500" :
+                                              "bg-amber-50 dark:bg-amber-500/10 text-amber-600"
+          )}>
+            {myConvEntry.confirmed === true ? "✓ Confirmado" : myConvEntry.confirmed === false ? "✗ No voy" : "⚽ Convocado"}
+          </span>
+        )}
         {m.category && <Badge variant="blue">{enumT.category(m.category)}</Badge>}
         {played && (
           <span className={cn(
