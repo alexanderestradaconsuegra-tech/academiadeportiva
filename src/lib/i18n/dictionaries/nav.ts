@@ -1,0 +1,26 @@
+import type { Translations } from "@/lib/i18n/useT"
+
+export const nav = {
+  menu: { es: "Menú", en: "Menu", pt: "Menu" },
+  dashboard: { es: "Dashboard", en: "Dashboard", pt: "Painel" },
+  home: { es: "Inicio", en: "Home", pt: "Início" },
+  players: { es: "Jugadores", en: "Players", pt: "Jogadores" },
+  activities: { es: "Actividades", en: "Activities", pt: "Atividades" },
+  activity: { es: "Actividad", en: "Activity", pt: "Atividade" },
+  calendar: { es: "Calendario", en: "Calendar", pt: "Calendário" },
+  matches: { es: "Partidos", en: "Matches", pt: "Partidas" },
+  health: { es: "Salud en Vivo", en: "Live Health", pt: "Saúde em Tempo Real" },
+  healthShort: { es: "Salud", en: "Health", pt: "Saúde" },
+  tactics: { es: "Tablero Táctico", en: "Tactics Board", pt: "Quadro Tático" },
+  tacticsShort: { es: "Táctica", en: "Tactics", pt: "Tática" },
+  heatmap: { es: "Mapa de Calor", en: "Heatmap", pt: "Mapa de Calor" },
+  heatmapShort: { es: "Calor", en: "Heat", pt: "Calor" },
+  charts: { es: "Gráficos", en: "Charts", pt: "Gráficos" },
+  chartsShort: { es: "Análisis", en: "Analytics", pt: "Análise" },
+  reports: { es: "Reportes", en: "Reports", pt: "Relatórios" },
+  paymentsNav: { es: "Pagos", en: "Payments", pt: "Pagamentos" },
+  settings: { es: "Configuración", en: "Settings", pt: "Configurações" },
+  coach: { es: "Coach", en: "Coach", pt: "Treinador" },
+  trainer: { es: "Entrenador", en: "Trainer", pt: "Treinador" },
+  changeTheme: { es: "Cambiar tema", en: "Change theme", pt: "Mudar tema" },
+} satisfies Translations

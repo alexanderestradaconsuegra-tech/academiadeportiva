@@ -1,0 +1,28 @@
+import type { Translations } from "@/lib/i18n/useT"
+
+export const login = {
+  premiumBadge: { es: "Sistema Premium para Entrenadores", en: "Premium System for Coaches", pt: "Sistema Premium para Treinadores" },
+  heroTitle1: { es: "Lleva el rendimiento", en: "Take performance", pt: "Leve o desempenho" },
+  heroTitle2: { es: "al siguiente nivel.", en: "to the next level.", pt: "para o próximo nível." },
+  heroSubtitle: { es: "Monitorea el progreso de tus jugadores, registra actividades y visualiza la evolución con métricas de alto rendimiento.", en: "Track your players' progress, log activities, and visualize their evolution with high-performance metrics.", pt: "Monitore o progresso dos seus jogadores, registre atividades e visualize a evolução com métricas de alto desempenho." },
+  featureRealtime: { es: "Métricas en tiempo real", en: "Real-time metrics", pt: "Métricas em tempo real" },
+  featureCharts: { es: "Gráficos avanzados", en: "Advanced charts", pt: "Gráficos avançados" },
+  featureReports: { es: "Reportes detallados", en: "Detailed reports", pt: "Relatórios detalhados" },
+  featureSupabase: { es: "Supabase Ready", en: "Supabase Ready", pt: "Supabase Ready" },
+  statPlayers: { es: "Jugadores", en: "Players", pt: "Jogadores" },
+  statActivities: { es: "Actividades", en: "Activities", pt: "Atividades" },
+  statEvaluations: { es: "Evaluaciones", en: "Evaluations", pt: "Avaliações" },
+  setupTitle: { es: "Crear cuenta de entrenador", en: "Create coach account", pt: "Criar conta de treinador" },
+  setupSubtitle: { es: "Esta es la primera vez que se usa el sistema. Crea el acceso principal.", en: "This is the first time the system is used. Create the main access.", pt: "Esta é a primeira vez que o sistema é usado. Crie o acesso principal." },
+  fullName: { es: "Nombre completo", en: "Full name", pt: "Nome completo" },
+  email: { es: "Correo electrónico", en: "Email", pt: "E-mail" },
+  password: { es: "Contraseña", en: "Password", pt: "Senha" },
+  creatingAccount: { es: "Creando cuenta...", en: "Creating account...", pt: "Criando conta..." },
+  createAccountSubmit: { es: "Crear cuenta y entrar", en: "Create account and sign in", pt: "Criar conta e entrar" },
+  welcomeBack: { es: "Bienvenido de vuelta", en: "Welcome back", pt: "Bem-vindo de volta" },
+  accessPanel: { es: "Accede a tu panel", en: "Access your dashboard", pt: "Acesse seu painel" },
+  signingIn: { es: "Ingresando...", en: "Signing in...", pt: "Entrando..." },
+  signIn: { es: "Ingresar al panel", en: "Sign in to dashboard", pt: "Entrar no painel" },
+  footer: { es: "Sistema para academias de fútbol", en: "System for soccer academies", pt: "Sistema para academias de futebol" },
+  genericError: { es: "No se pudo crear la cuenta.", en: "Could not create the account.", pt: "Não foi possível criar a conta." },
+} satisfies Translations
