@@ -300,6 +300,7 @@ export interface ConvocatoriaPlayer {
   x: number  // 0-100 percent on pitch width
   y: number  // 0-100 percent on pitch height
   instruction: string
+  confirmed: boolean | null  // null = pending, true = confirmed, false = declined
   created_at: string
 }
 

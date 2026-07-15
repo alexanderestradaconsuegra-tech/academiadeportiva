@@ -85,6 +85,7 @@ interface AppContextType extends AppState {
   getPlayerPayments: (playerId: string) => Payment[]
   getConvocatoria: (matchId: string) => Convocatoria | undefined
   saveConvocatoria: (matchId: string, formation: string, notes: string, players: ConvocatoriaPlayer[]) => Promise<string | null>
+  respondConvocatoria: (convocatoriaPlayerId: string, confirmed: boolean) => Promise<string | null>
   getPlayerConvocatoria: (playerId: string) => { convocatoria: Convocatoria; match: Match } | null
 }
 
@@ -433,6 +434,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         x: p.x ?? 50,
         y: p.y ?? 50,
         instruction: p.instruction ?? "",
+        confirmed: p.confirmed ?? null,
         created_at: p.created_at,
       })),
     }))
@@ -1135,6 +1137,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         x: p.x ?? 50,
         y: p.y ?? 50,
         instruction: p.instruction ?? "",
+        confirmed: p.confirmed ?? null,
         created_at: p.created_at,
       })),
     } : { id: convId, match_id: matchId, academy_id: academyId, formation, notes, created_at: new Date().toISOString(), players }
@@ -1146,6 +1149,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }))
     return null
   }, [state.teamSettings])
+
+  const respondConvocatoria = useCallback(async (convocatoriaPlayerId: string, confirmed: boolean): Promise<string | null> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any
+    const { error } = await sb.from("convocatoria_players").update({ confirmed }).eq("id", convocatoriaPlayerId)
+    if (error) return error.message
+    setState(s => ({
+      ...s,
+      convocatorias: s.convocatorias.map(c => ({
+        ...c,
+        players: c.players.map(p => p.id === convocatoriaPlayerId ? { ...p, confirmed } : p),
+      })),
+    }))
+    return null
+  }, [])
 
   const getPlayerConvocatoria = useCallback((playerId: string): { convocatoria: Convocatoria; match: Match } | null => {
     const today = new Date().toISOString().split("T")[0]
@@ -1227,6 +1245,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         getPlayerPayments,
         getConvocatoria,
         saveConvocatoria,
+        respondConvocatoria,
         getPlayerConvocatoria,
       }}
     >
