@@ -177,7 +177,7 @@ export async function generatePlayerPDF(data: ReportData) {
     const total = data.attendances.length
     const pct = total > 0 ? Math.round((present / total) * 100) : 0
 
-    const attData = [
+    const attData: [string, string, [number, number, number], [number, number, number]][] = [
       ["Total entrenam.", `${total}`, [245, 247, 252], [60, 70, 90]],
       ["Presentes", `${present}`, [236, 253, 245], [22, 163, 74]],
       ["Ausentes", `${absent}`, [254, 242, 242], [220, 38, 38]],
