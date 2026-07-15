@@ -285,7 +285,7 @@ export default function ConvocatoriaPage() {
     setShowFormationDropdown(false)
 
     // Sort selected players by role
-    const selected = [...selectedIds]
+    const selected = Array.from(selectedIds)
       .map(pid => players.find(p => p.id === pid))
       .filter(Boolean) as Player[]
     selected.sort((a, b) => {
