@@ -11,9 +11,9 @@ import Textarea from "@/components/ui/Textarea"
 import Badge from "@/components/ui/Badge"
 import {
   ArrowLeft, Trophy, MapPin, Clock, Video, Plus, X, Pencil, Trash2,
-  Goal, Footprints, Square, Star, Film, Users, ChevronRight,
+  Goal, Footprints, Square, Star, Film, Users, ChevronRight, Check,
 } from "lucide-react"
-import { formatDate, avatarUrl } from "@/lib/utils"
+import { formatDate, avatarUrl, cn } from "@/lib/utils"
 import type { Position, MatchPlayerStat } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
 import { matches as matchesDict } from "@/lib/i18n/dictionaries/matches"
@@ -30,7 +30,7 @@ const EMPTY_STAT_FORM = {
 export default function MatchDetailPage() {
   const params = useParams()
   const id = params.id as string
-  const { matches, players, currentUser, getMatchStats, addMatchStat, updateMatchStat, deleteMatchStat, getConvocatoria } = useApp()
+  const { matches, players, currentUser, getMatchStats, addMatchStat, updateMatchStat, deleteMatchStat, getConvocatoria, updateMatch } = useApp()
   const isCoach = currentUser?.role === "coach"
   const t = useT(matchesDict)
   const enumT = useEnumT()
@@ -43,6 +43,11 @@ export default function MatchDetailPage() {
   const [editingStatId, setEditingStatId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(EMPTY_STAT_FORM)
+
+  // Score entry state
+  const [scoreForm, setScoreForm] = useState({ our: "", opponent: "" })
+  const [editingScore, setEditingScore] = useState(false)
+  const [savingScore, setSavingScore] = useState(false)
 
   const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))
 
@@ -65,6 +70,12 @@ export default function MatchDetailPage() {
   const matchId = match.id
   const playersWithoutStat = players.filter(p => !stats.some(s => s.player_id === p.id))
   const played = match.our_score !== null && match.opponent_score !== null
+
+  const result = played
+    ? match.our_score! > match.opponent_score! ? "win"
+      : match.our_score! < match.opponent_score! ? "loss"
+      : "draw"
+    : null
 
   function openAddStat() {
     setEditingStatId(null)
@@ -117,6 +128,26 @@ export default function MatchDetailPage() {
     if (confirm(t("confirmDeleteStat"))) deleteMatchStat(s.id)
   }
 
+  function openScoreEdit() {
+    setScoreForm({
+      our: match.our_score !== null ? String(match.our_score) : "",
+      opponent: match.opponent_score !== null ? String(match.opponent_score) : "",
+    })
+    setEditingScore(true)
+  }
+
+  async function handleScoreSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (scoreForm.our === "" || scoreForm.opponent === "") return
+    setSavingScore(true)
+    updateMatch(id, {
+      our_score: Number(scoreForm.our),
+      opponent_score: Number(scoreForm.opponent),
+    })
+    setSavingScore(false)
+    setEditingScore(false)
+  }
+
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
@@ -125,9 +156,9 @@ export default function MatchDetailPage() {
         </Link>
 
         {/* Match header */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 mb-6">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 mb-4">
           <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1.5">
                 {match.category && <Badge variant="blue">{enumT.category(match.category)}</Badge>}
                 {match.competition && <Badge>{match.competition}</Badge>}
@@ -142,11 +173,6 @@ export default function MatchDetailPage() {
               </div>
               {match.notes && <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">{match.notes}</p>}
             </div>
-            {played && (
-              <div className="text-3xl font-black text-slate-900 dark:text-white px-4 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60">
-                {match.our_score} - {match.opponent_score}
-              </div>
-            )}
           </div>
           {match.video_url && (
             <div className="mt-4">
@@ -159,18 +185,133 @@ export default function MatchDetailPage() {
           )}
         </div>
 
-        {/* Convocatoria — prominent card */}
+        {/* Result card (played) */}
+        {played && result && (
+          <div className={cn(
+            "rounded-2xl p-5 mb-4 border",
+            result === "win"  ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20" :
+            result === "loss" ? "bg-red-50 dark:bg-red-500/10 border-red-100 dark:border-red-500/20" :
+                                "bg-amber-50 dark:bg-amber-500/10 border-amber-100 dark:border-amber-500/20"
+          )}>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className={cn(
+                  "text-xs font-bold uppercase tracking-widest mb-1",
+                  result === "win"  ? "text-emerald-600 dark:text-emerald-400" :
+                  result === "loss" ? "text-red-500" : "text-amber-600 dark:text-amber-400"
+                )}>
+                  {result === "win" ? "¡Ganado!" : result === "loss" ? "Perdido" : "Empate"}
+                </p>
+                <p className={cn(
+                  "text-4xl font-black",
+                  result === "win"  ? "text-emerald-700 dark:text-emerald-300" :
+                  result === "loss" ? "text-red-600 dark:text-red-400" :
+                                      "text-amber-700 dark:text-amber-300"
+                )}>
+                  {match.our_score} – {match.opponent_score}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {match.is_home ? "Local" : "Visitante"} · {match.opponent}
+                </p>
+              </div>
+              {isCoach && !editingScore && (
+                <button
+                  onClick={openScoreEdit}
+                  className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-white dark:hover:bg-slate-800 transition-colors"
+                >
+                  <Pencil size={15} />
+                </button>
+              )}
+            </div>
+            {isCoach && editingScore && (
+              <form onSubmit={handleScoreSubmit} className="mt-4 flex items-center gap-3">
+                <input
+                  type="number" min={0} max={99}
+                  value={scoreForm.our}
+                  onChange={e => setScoreForm(f => ({ ...f, our: e.target.value }))}
+                  className="w-16 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-center text-lg font-black text-slate-900 dark:text-white outline-none focus:border-[#0B5CFF]"
+                  placeholder="0"
+                  required
+                />
+                <span className="text-lg font-black text-slate-400">–</span>
+                <input
+                  type="number" min={0} max={99}
+                  value={scoreForm.opponent}
+                  onChange={e => setScoreForm(f => ({ ...f, opponent: e.target.value }))}
+                  className="w-16 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-center text-lg font-black text-slate-900 dark:text-white outline-none focus:border-[#0B5CFF]"
+                  placeholder="0"
+                  required
+                />
+                <button type="submit" disabled={savingScore}
+                  className="h-10 px-4 rounded-xl bg-[#0B5CFF] text-white text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50">
+                  <Check size={14} /> Guardar
+                </button>
+                <button type="button" onClick={() => setEditingScore(false)}
+                  className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 text-sm">
+                  <X size={14} />
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* Score entry for unplayed matches (coach only) */}
+        {!played && isCoach && (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5 mb-4">
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">Registrar resultado</p>
+            <form onSubmit={handleScoreSubmit} className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <div className="text-center">
+                  <p className="text-[10px] font-semibold text-slate-400 mb-1 uppercase tracking-wide">Nosotros</p>
+                  <input
+                    type="number" min={0} max={99}
+                    value={scoreForm.our}
+                    onChange={e => setScoreForm(f => ({ ...f, our: e.target.value }))}
+                    className="w-20 h-14 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-center text-3xl font-black text-slate-900 dark:text-white outline-none focus:border-[#0B5CFF] transition-colors"
+                    placeholder="0"
+                  />
+                </div>
+                <span className="text-2xl font-black text-slate-300 dark:text-slate-600 mt-5">–</span>
+                <div className="text-center">
+                  <p className="text-[10px] font-semibold text-slate-400 mb-1 uppercase tracking-wide">{match.opponent}</p>
+                  <input
+                    type="number" min={0} max={99}
+                    value={scoreForm.opponent}
+                    onChange={e => setScoreForm(f => ({ ...f, opponent: e.target.value }))}
+                    className="w-20 h-14 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-center text-3xl font-black text-slate-900 dark:text-white outline-none focus:border-[#0B5CFF] transition-colors"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={savingScore || scoreForm.our === "" || scoreForm.opponent === ""}
+                className="h-11 px-5 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold flex items-center gap-2 disabled:opacity-40 hover:bg-blue-700 transition-colors mt-5"
+              >
+                <Check size={15} /> Confirmar resultado
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Convocatoria card */}
         {isCoach ? (
-          <Link href={`/matches/${id}/convocatoria`} className="block mb-6">
-            <div className={`rounded-2xl p-4 flex items-center gap-4 transition-all hover:opacity-90 ${convocatoria ? "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800" : "bg-[#0B5CFF]"}`}>
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${convocatoria ? "bg-blue-50 dark:bg-blue-500/10" : "bg-white/15"}`}>
+          <Link href={`/matches/${id}/convocatoria`} className="block mb-4">
+            <div className={cn(
+              "rounded-2xl p-4 flex items-center gap-4 transition-all hover:opacity-90",
+              convocatoria ? "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800" : "bg-[#0B5CFF]"
+            )}>
+              <div className={cn(
+                "w-11 h-11 rounded-xl flex items-center justify-center shrink-0",
+                convocatoria ? "bg-blue-50 dark:bg-blue-500/10" : "bg-white/15"
+              )}>
                 <Users size={20} className={convocatoria ? "text-[#0B5CFF]" : "text-white"} />
               </div>
               <div className="flex-1">
-                <p className={`text-sm font-bold ${convocatoria ? "text-slate-900 dark:text-white" : "text-white"}`}>
+                <p className={cn("text-sm font-bold", convocatoria ? "text-slate-900 dark:text-white" : "text-white")}>
                   {convocatoria ? "Convocatoria enviada" : "Convocar jugadores"}
                 </p>
-                <p className={`text-xs mt-0.5 ${convocatoria ? "text-slate-400 dark:text-slate-500" : "text-blue-100"}`}>
+                <p className={cn("text-xs mt-0.5", convocatoria ? "text-slate-400 dark:text-slate-500" : "text-blue-100")}>
                   {convocatoria
                     ? `${convocatoria.players.length} jugadores · ${convocatoria.players.filter(p => p.confirmed === true).length} confirmaron`
                     : "Selecciona quiénes juegan y notifícalos"}
@@ -180,7 +321,7 @@ export default function MatchDetailPage() {
             </div>
           </Link>
         ) : convocatoria ? (
-          <Link href={`/matches/${id}/convocatoria/view`} className="block mb-6">
+          <Link href={`/matches/${id}/convocatoria/view`} className="block mb-4">
             <div className="bg-[#0B5CFF] rounded-2xl p-4 flex items-center gap-4 hover:opacity-90 transition-all">
               <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
                 <Users size={20} className="text-white" />

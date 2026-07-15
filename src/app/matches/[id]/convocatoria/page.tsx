@@ -4,11 +4,10 @@ import { useParams } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
-import { ArrowLeft, Save, Check, Users, MessageSquare, X, Send } from "lucide-react"
-import { avatarUrl, formatDate } from "@/lib/utils"
-import type { ConvocatoriaPlayer } from "@/lib/types"
+import { ArrowLeft, Check, Users, MessageSquare, X, Send, ChevronDown } from "lucide-react"
+import { avatarUrl, formatDate, cn } from "@/lib/utils"
+import type { ConvocatoriaPlayer, Player } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
-import { cn } from "@/lib/utils"
 
 const POSITIONS: Record<string, string> = {
   "Portero": "POR", "Defensa Central": "DFC", "Lateral Derecho": "LTD",
@@ -16,6 +15,204 @@ const POSITIONS: Record<string, string> = {
   "Mediocampista Central": "MC", "Mediocampista Ofensivo": "MCO",
   "Extremo Derecho": "EXD", "Extremo Izquierdo": "EXI",
   "Delantero Centro": "DC", "Segundo Delantero": "SD",
+}
+
+type Role = "GK" | "DEF" | "MID" | "FWD"
+interface PosDef { label: string; x: number; y: number; role: Role }
+
+const FORMATIONS: Record<string, PosDef[]> = {
+  "F11 · 4-3-3": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "LD",  x: 82, y: 28, role: "DEF" }, { label: "DFC", x: 61, y: 25, role: "DEF" },
+    { label: "DFC", x: 39, y: 25, role: "DEF" }, { label: "LI",  x: 18, y: 28, role: "DEF" },
+    { label: "MC",  x: 75, y: 50, role: "MID" }, { label: "MCD", x: 50, y: 47, role: "MID" }, { label: "MC",  x: 25, y: 50, role: "MID" },
+    { label: "EXD", x: 82, y: 74, role: "FWD" }, { label: "DC",  x: 50, y: 80, role: "FWD" }, { label: "EXI", x: 18, y: 74, role: "FWD" },
+  ],
+  "F11 · 4-4-2": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "LD",  x: 82, y: 28, role: "DEF" }, { label: "DFC", x: 61, y: 25, role: "DEF" },
+    { label: "DFC", x: 39, y: 25, role: "DEF" }, { label: "LI",  x: 18, y: 28, role: "DEF" },
+    { label: "EXD", x: 82, y: 52, role: "MID" }, { label: "MC",  x: 61, y: 50, role: "MID" },
+    { label: "MC",  x: 39, y: 50, role: "MID" }, { label: "EXI", x: 18, y: 52, role: "MID" },
+    { label: "DC",  x: 62, y: 78, role: "FWD" }, { label: "DC",  x: 38, y: 78, role: "FWD" },
+  ],
+  "F11 · 4-2-3-1": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "LD",  x: 82, y: 27, role: "DEF" }, { label: "DFC", x: 61, y: 24, role: "DEF" },
+    { label: "DFC", x: 39, y: 24, role: "DEF" }, { label: "LI",  x: 18, y: 27, role: "DEF" },
+    { label: "MCD", x: 63, y: 44, role: "MID" }, { label: "MCD", x: 37, y: 44, role: "MID" },
+    { label: "EXD", x: 82, y: 62, role: "MID" }, { label: "MCO", x: 50, y: 60, role: "MID" }, { label: "EXI", x: 18, y: 62, role: "MID" },
+    { label: "DC",  x: 50, y: 80, role: "FWD" },
+  ],
+  "F11 · 3-5-2": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "DFC", x: 70, y: 24, role: "DEF" }, { label: "DFC", x: 50, y: 22, role: "DEF" }, { label: "DFC", x: 30, y: 24, role: "DEF" },
+    { label: "MD",  x: 88, y: 50, role: "MID" }, { label: "MC",  x: 68, y: 48, role: "MID" },
+    { label: "MCD", x: 50, y: 46, role: "MID" }, { label: "MC",  x: 32, y: 48, role: "MID" }, { label: "MI",  x: 12, y: 50, role: "MID" },
+    { label: "DC",  x: 63, y: 78, role: "FWD" }, { label: "DC",  x: 37, y: 78, role: "FWD" },
+  ],
+  "F11 · 3-4-3": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "DFC", x: 70, y: 24, role: "DEF" }, { label: "DFC", x: 50, y: 22, role: "DEF" }, { label: "DFC", x: 30, y: 24, role: "DEF" },
+    { label: "MD",  x: 82, y: 48, role: "MID" }, { label: "MC",  x: 61, y: 46, role: "MID" },
+    { label: "MC",  x: 39, y: 46, role: "MID" }, { label: "MI",  x: 18, y: 48, role: "MID" },
+    { label: "EXD", x: 80, y: 74, role: "FWD" }, { label: "DC",  x: 50, y: 78, role: "FWD" }, { label: "EXI", x: 20, y: 74, role: "FWD" },
+  ],
+  // Fútbol 8
+  "F8 · 3-2-2": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "DFC", x: 70, y: 28, role: "DEF" }, { label: "DFC", x: 50, y: 26, role: "DEF" }, { label: "DFC", x: 30, y: 28, role: "DEF" },
+    { label: "MC",  x: 65, y: 52, role: "MID" }, { label: "MC",  x: 35, y: 52, role: "MID" },
+    { label: "DC",  x: 65, y: 76, role: "FWD" }, { label: "DC",  x: 35, y: 76, role: "FWD" },
+  ],
+  "F8 · 2-3-2": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "DFC", x: 65, y: 28, role: "DEF" }, { label: "DFC", x: 35, y: 28, role: "DEF" },
+    { label: "MC",  x: 75, y: 50, role: "MID" }, { label: "MC",  x: 50, y: 48, role: "MID" }, { label: "MC",  x: 25, y: 50, role: "MID" },
+    { label: "DC",  x: 65, y: 76, role: "FWD" }, { label: "DC",  x: 35, y: 76, role: "FWD" },
+  ],
+  "F8 · 3-3-1": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "DFC", x: 70, y: 28, role: "DEF" }, { label: "DFC", x: 50, y: 26, role: "DEF" }, { label: "DFC", x: 30, y: 28, role: "DEF" },
+    { label: "MC",  x: 70, y: 52, role: "MID" }, { label: "MC",  x: 50, y: 50, role: "MID" }, { label: "MC",  x: 30, y: 52, role: "MID" },
+    { label: "DC",  x: 50, y: 78, role: "FWD" },
+  ],
+  "F8 · 2-2-3": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "DFC", x: 65, y: 28, role: "DEF" }, { label: "DFC", x: 35, y: 28, role: "DEF" },
+    { label: "MC",  x: 65, y: 50, role: "MID" }, { label: "MC",  x: 35, y: 50, role: "MID" },
+    { label: "EXD", x: 78, y: 74, role: "FWD" }, { label: "DC",  x: 50, y: 78, role: "FWD" }, { label: "EXI", x: 22, y: 74, role: "FWD" },
+  ],
+  // Fútbol 7
+  "F7 · 2-3-1": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "DFC", x: 65, y: 28, role: "DEF" }, { label: "DFC", x: 35, y: 28, role: "DEF" },
+    { label: "MC",  x: 75, y: 52, role: "MID" }, { label: "MC",  x: 50, y: 50, role: "MID" }, { label: "MC",  x: 25, y: 52, role: "MID" },
+    { label: "DC",  x: 50, y: 78, role: "FWD" },
+  ],
+  "F7 · 3-2-1": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "DFC", x: 70, y: 28, role: "DEF" }, { label: "DFC", x: 50, y: 26, role: "DEF" }, { label: "DFC", x: 30, y: 28, role: "DEF" },
+    { label: "MC",  x: 65, y: 52, role: "MID" }, { label: "MC",  x: 35, y: 52, role: "MID" },
+    { label: "DC",  x: 50, y: 78, role: "FWD" },
+  ],
+  "F7 · 2-2-2": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "DFC", x: 65, y: 28, role: "DEF" }, { label: "DFC", x: 35, y: 28, role: "DEF" },
+    { label: "MC",  x: 65, y: 52, role: "MID" }, { label: "MC",  x: 35, y: 52, role: "MID" },
+    { label: "DC",  x: 65, y: 76, role: "FWD" }, { label: "DC",  x: 35, y: 76, role: "FWD" },
+  ],
+  "F7 · 1-3-2": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "DFC", x: 50, y: 26, role: "DEF" },
+    { label: "MC",  x: 75, y: 48, role: "MID" }, { label: "MC",  x: 50, y: 46, role: "MID" }, { label: "MC",  x: 25, y: 48, role: "MID" },
+    { label: "DC",  x: 65, y: 76, role: "FWD" }, { label: "DC",  x: 35, y: 76, role: "FWD" },
+  ],
+  // Fútbol 5 / Futsal
+  "F5 · 1-2-1": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "DFC", x: 50, y: 30, role: "DEF" },
+    { label: "MC",  x: 68, y: 55, role: "MID" }, { label: "MC",  x: 32, y: 55, role: "MID" },
+    { label: "DC",  x: 50, y: 78, role: "FWD" },
+  ],
+  "F5 · 2-2": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "DFC", x: 65, y: 32, role: "DEF" }, { label: "DFC", x: 35, y: 32, role: "DEF" },
+    { label: "DC",  x: 65, y: 72, role: "FWD" }, { label: "DC",  x: 35, y: 72, role: "FWD" },
+  ],
+  "F5 · 2-1-1": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "DFC", x: 65, y: 30, role: "DEF" }, { label: "DFC", x: 35, y: 30, role: "DEF" },
+    { label: "MC",  x: 50, y: 54, role: "MID" },
+    { label: "DC",  x: 50, y: 78, role: "FWD" },
+  ],
+  "F5 · 1-1-2": [
+    { label: "POR", x: 50, y: 8,  role: "GK" },
+    { label: "DFC", x: 50, y: 30, role: "DEF" },
+    { label: "MC",  x: 50, y: 52, role: "MID" },
+    { label: "DC",  x: 65, y: 76, role: "FWD" }, { label: "DC",  x: 35, y: 76, role: "FWD" },
+  ],
+}
+
+const FORMAT_KEYS = ["F11", "F8", "F7", "F5"] as const
+type FormatKey = typeof FORMAT_KEYS[number]
+
+const ROLE_ORDER: Record<string, number> = { GK: 0, DEF: 1, MID: 2, FWD: 3 }
+
+function positionRole(position: string): Role {
+  if (position === "Portero") return "GK"
+  if (position.includes("Defensa") || position.includes("Lateral")) return "DEF"
+  if (position.includes("Mediocampista") || position.includes("Extremo")) return "MID"
+  return "FWD"
+}
+
+function FootballPitch({ pitchPlayers, players }: {
+  pitchPlayers: ConvocatoriaPlayer[]
+  players: Player[]
+}) {
+  return (
+    <div className="relative w-full rounded-2xl overflow-hidden" style={{ aspectRatio: "10/16" }}>
+      {/* Green background with stripes */}
+      <div className="absolute inset-0 bg-emerald-700">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute inset-y-0"
+            style={{
+              left: `${i * 12.5}%`,
+              width: "12.5%",
+              background: i % 2 === 0 ? "rgba(0,0,0,0.06)" : "transparent",
+            }}
+          />
+        ))}
+      </div>
+      {/* Field lines */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 160" preserveAspectRatio="none">
+        {/* Outer border */}
+        <rect x="3" y="4" width="94" height="152" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.2" />
+        {/* Center line */}
+        <line x1="3" y1="80" x2="97" y2="80" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
+        {/* Center circle */}
+        <circle cx="50" cy="80" r="12" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
+        <circle cx="50" cy="80" r="1" fill="rgba(255,255,255,0.5)" />
+        {/* Top penalty area */}
+        <rect x="22" y="4" width="56" height="22" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
+        <rect x="34" y="4" width="32" height="10" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
+        {/* Bottom penalty area */}
+        <rect x="22" y="134" width="56" height="22" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
+        <rect x="34" y="146" width="32" height="10" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
+        {/* Top goal */}
+        <rect x="38" y="2" width="24" height="4" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+        {/* Bottom goal */}
+        <rect x="38" y="154" width="24" height="4" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
+        {/* Penalty spots */}
+        <circle cx="50" cy="18" r="1" fill="rgba(255,255,255,0.5)" />
+        <circle cx="50" cy="142" r="1" fill="rgba(255,255,255,0.5)" />
+      </svg>
+      {/* Labels */}
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 text-[9px] font-bold text-white/50 uppercase tracking-widest z-10">Ellos</div>
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-bold text-white/50 uppercase tracking-widest z-10">Nosotros</div>
+      {/* Players */}
+      {pitchPlayers.map(pp => {
+        const player = players.find(p => p.id === pp.player_id)
+        const firstName = player?.name.split(" ")[0] ?? "?"
+        return (
+          <div
+            key={pp.id}
+            className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5 z-20"
+            style={{ left: `${pp.x}%`, top: `${pp.y}%` }}
+          >
+            <div className="w-8 h-8 rounded-full bg-[#0B5CFF] border-2 border-white shadow-lg flex items-center justify-center text-white text-[9px] font-black">
+              {pp.position_label.substring(0, 3)}
+            </div>
+            <span className="text-white text-[8px] font-bold bg-black/50 px-1.5 py-px rounded-full max-w-14 truncate leading-none">
+              {firstName}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 export default function ConvocatoriaPage() {
@@ -34,6 +231,12 @@ export default function ConvocatoriaPage() {
   const [editInstruction, setEditInstruction] = useState("")
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [activeTab, setActiveTab] = useState<"players" | "pitch">("players")
+  const [activeFormat, setActiveFormat] = useState<FormatKey>("F11")
+  const [selectedFormation, setSelectedFormation] = useState<string>("")
+  const [showFormationDropdown, setShowFormationDropdown] = useState(false)
+
+  const formationKeys = Object.keys(FORMATIONS).filter(k => k.startsWith(activeFormat))
 
   useEffect(() => {
     const existing = getConvocatoria(id)
@@ -41,6 +244,12 @@ export default function ConvocatoriaPage() {
       setSelectedIds(new Set(existing.players.map(p => p.player_id)))
       setPitchPlayers(existing.players)
       setNotes(existing.notes || "")
+      // Restore formation if saved
+      if (existing.formation && existing.formation !== "custom") {
+        setSelectedFormation(existing.formation)
+        const fmt = existing.formation.split(" · ")[0] as FormatKey
+        if (FORMAT_KEYS.includes(fmt)) setActiveFormat(fmt)
+      }
     }
   }, [id, convocatorias]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -69,6 +278,46 @@ export default function ConvocatoriaPage() {
     setSelectedIds(next)
   }
 
+  function applyFormation(formationKey: string) {
+    const posDefs = FORMATIONS[formationKey]
+    if (!posDefs) return
+    setSelectedFormation(formationKey)
+    setShowFormationDropdown(false)
+
+    // Sort selected players by role
+    const selected = [...selectedIds]
+      .map(pid => players.find(p => p.id === pid))
+      .filter(Boolean) as Player[]
+    selected.sort((a, b) => {
+      const ra = ROLE_ORDER[positionRole(a.position)] ?? 4
+      const rb = ROLE_ORDER[positionRole(b.position)] ?? 4
+      return ra - rb
+    })
+
+    // Map sorted players to formation positions (up to posDefs.length)
+    const now = new Date().toISOString()
+    const updated: ConvocatoriaPlayer[] = posDefs.slice(0, selected.length).map((pos, i) => {
+      const player = selected[i]
+      const existing = pitchPlayers.find(pp => pp.player_id === player.id)
+      return {
+        id: existing?.id ?? crypto.randomUUID(),
+        convocatoria_id: existing?.convocatoria_id ?? "",
+        player_id: player.id,
+        position_label: pos.label,
+        x: pos.x,
+        y: pos.y,
+        instruction: existing?.instruction ?? "",
+        confirmed: existing?.confirmed ?? null,
+        created_at: existing?.created_at ?? now,
+      }
+    })
+
+    // Keep players not in formation with their current positions
+    const assignedIds = new Set(updated.map(p => p.player_id))
+    const rest = pitchPlayers.filter(pp => !assignedIds.has(pp.player_id) && selectedIds.has(pp.player_id))
+    setPitchPlayers([...updated, ...rest])
+  }
+
   function openInstruction(playerId: string) {
     const pp = pitchPlayers.find(p => p.player_id === playerId)
     if (!pp) return
@@ -85,7 +334,8 @@ export default function ConvocatoriaPage() {
   async function handleSave() {
     if (!match) return
     setSaving(true)
-    const error = await saveConvocatoria(id, "custom", notes, pitchPlayers)
+    const formation = selectedFormation || "custom"
+    const error = await saveConvocatoria(id, formation, notes, pitchPlayers)
     setSaving(false)
     if (!error) {
       setSaved(true)
@@ -155,7 +405,7 @@ export default function ConvocatoriaPage() {
           </button>
         </div>
 
-        {/* Confirmation summary (if already sent) */}
+        {/* Confirmation summary */}
         {existing && existing.players.length > 0 && (
           <div className="grid grid-cols-3 gap-3 mb-5">
             <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl p-3 text-center">
@@ -173,92 +423,201 @@ export default function ConvocatoriaPage() {
           </div>
         )}
 
-        {/* Player list */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden mb-4">
-          <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
-            <div className="flex items-center gap-2">
-              <Users size={15} className="text-[#0B5CFF]" />
-              <span className="text-sm font-bold text-slate-900 dark:text-white">
-                Jugadores {match.category ? `· ${match.category}` : ""}
-              </span>
-            </div>
-            <span className="text-xs font-semibold text-[#0B5CFF] bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded-lg">
-              {selectedIds.size} convocados
-            </span>
-          </div>
+        {/* Tabs */}
+        <div className="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 mb-4">
+          <button
+            onClick={() => setActiveTab("players")}
+            className={cn(
+              "flex-1 h-8 rounded-lg text-sm font-semibold transition-colors",
+              activeTab === "players"
+                ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm"
+                : "text-slate-500 dark:text-slate-400"
+            )}
+          >
+            <Users size={14} className="inline mr-1.5" />
+            Jugadores {selectedIds.size > 0 && `(${selectedIds.size})`}
+          </button>
+          <button
+            onClick={() => setActiveTab("pitch")}
+            className={cn(
+              "flex-1 h-8 rounded-lg text-sm font-semibold transition-colors",
+              activeTab === "pitch"
+                ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm"
+                : "text-slate-500 dark:text-slate-400"
+            )}
+          >
+            Cancha / Formación
+          </button>
+        </div>
 
-          {eligiblePlayers.length === 0 ? (
-            <p className="text-center text-sm text-slate-400 py-10">No hay jugadores en esta categoría</p>
-          ) : (
-            <div className="divide-y divide-slate-50 dark:divide-slate-800">
-              {eligiblePlayers.map(player => {
-                const selected = selectedIds.has(player.id)
-                const pp = pitchPlayers.find(p => p.player_id === player.id)
-                const confirmed = pp ? existing?.players.find(ep => ep.player_id === player.id)?.confirmed ?? null : null
+        {/* Tab: Players */}
+        {activeTab === "players" && (
+          <>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden mb-4">
+              <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <Users size={15} className="text-[#0B5CFF]" />
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">
+                    Jugadores {match.category ? `· ${match.category}` : ""}
+                  </span>
+                </div>
+                <span className="text-xs font-semibold text-[#0B5CFF] bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded-lg">
+                  {selectedIds.size} convocados
+                </span>
+              </div>
 
-                return (
-                  <div key={player.id} className={cn("flex items-center gap-3 px-4 py-3 transition-colors", selected ? "bg-blue-50/50 dark:bg-blue-500/5" : "hover:bg-slate-50 dark:hover:bg-slate-800/60")}>
-                    {/* Checkbox */}
-                    <button onClick={() => togglePlayer(player.id)} className={cn("w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors", selected ? "bg-[#0B5CFF] border-[#0B5CFF]" : "border-slate-300 dark:border-slate-600")}>
-                      {selected && <Check size={11} className="text-white" strokeWidth={3} />}
-                    </button>
+              {eligiblePlayers.length === 0 ? (
+                <p className="text-center text-sm text-slate-400 py-10">No hay jugadores en esta categoría</p>
+              ) : (
+                <div className="divide-y divide-slate-50 dark:divide-slate-800">
+                  {eligiblePlayers.map(player => {
+                    const selected = selectedIds.has(player.id)
+                    const pp = pitchPlayers.find(p => p.player_id === player.id)
+                    const confirmed = pp ? existing?.players.find(ep => ep.player_id === player.id)?.confirmed ?? null : null
 
-                    {/* Avatar */}
-                    <img src={player.photo_url || avatarUrl(player.name, player.id)} alt={player.name} className="w-9 h-9 rounded-xl object-cover shrink-0 bg-slate-100" />
-
-                    {/* Name + position */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{player.name}</p>
-                      <p className="text-xs text-slate-400 dark:text-slate-500">{player.position}</p>
-                    </div>
-
-                    {/* Confirmation badge (only if selected and convocatoria was already saved) */}
-                    {selected && existing && (
-                      <span className={cn(
-                        "shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full",
-                        confirmed === true  ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
-                        confirmed === false ? "bg-red-50 dark:bg-red-500/10 text-red-500" :
-                                              "bg-slate-100 dark:bg-slate-800 text-slate-400"
-                      )}>
-                        {confirmed === true ? "✓ Confirmó" : confirmed === false ? "✗ No puede" : "Pendiente"}
-                      </span>
-                    )}
-
-                    {/* Instruction button */}
-                    {selected && (
-                      <button
-                        onClick={() => openInstruction(player.id)}
-                        className={cn(
-                          "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-                          pp?.instruction
-                            ? "bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF]"
-                            : "text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    return (
+                      <div key={player.id} className={cn("flex items-center gap-3 px-4 py-3 transition-colors", selected ? "bg-blue-50/50 dark:bg-blue-500/5" : "hover:bg-slate-50 dark:hover:bg-slate-800/60")}>
+                        <button onClick={() => togglePlayer(player.id)} className={cn("w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors", selected ? "bg-[#0B5CFF] border-[#0B5CFF]" : "border-slate-300 dark:border-slate-600")}>
+                          {selected && <Check size={11} className="text-white" strokeWidth={3} />}
+                        </button>
+                        <img src={player.photo_url || avatarUrl(player.name, player.id)} alt={player.name} className="w-9 h-9 rounded-xl object-cover shrink-0 bg-slate-100" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">{player.name}</p>
+                          <p className="text-xs text-slate-400 dark:text-slate-500">{player.position}</p>
+                        </div>
+                        {selected && existing && (
+                          <span className={cn(
+                            "shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full",
+                            confirmed === true  ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
+                            confirmed === false ? "bg-red-50 dark:bg-red-500/10 text-red-500" :
+                                                  "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                          )}>
+                            {confirmed === true ? "✓ Confirmó" : confirmed === false ? "✗ No puede" : "Pendiente"}
+                          </span>
                         )}
-                        title="Instrucción individual"
-                      >
-                        <MessageSquare size={14} />
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
+                        {selected && (
+                          <button
+                            onClick={() => openInstruction(player.id)}
+                            className={cn(
+                              "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                              pp?.instruction
+                                ? "bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF]"
+                                : "text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                            )}
+                            title="Instrucción individual"
+                          >
+                            <MessageSquare size={14} />
+                          </button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Notes */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 mb-4">
-          <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">
-            Notas generales del partido
-          </label>
-          <textarea
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            placeholder="Instrucciones tácticas, concentración, horario de llegada…"
-            rows={3}
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-[#0B5CFF] outline-none resize-none transition-colors"
-          />
-        </div>
+            {/* Notes */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4 mb-4">
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">
+                Notas generales del partido
+              </label>
+              <textarea
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Instrucciones tácticas, concentración, horario de llegada…"
+                rows={3}
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-[#0B5CFF] outline-none resize-none transition-colors"
+              />
+            </div>
+          </>
+        )}
+
+        {/* Tab: Pitch / Formation */}
+        {activeTab === "pitch" && (
+          <div className="mb-4 space-y-4">
+            {selectedIds.size === 0 ? (
+              <div className="text-center py-12 text-slate-400 dark:text-slate-500">
+                <p className="font-semibold text-sm">Selecciona jugadores primero</p>
+                <p className="text-xs mt-1">Vuelve a la pestaña Jugadores y elige el equipo</p>
+              </div>
+            ) : (
+              <>
+                {/* Format selector */}
+                <div className="flex gap-2">
+                  {FORMAT_KEYS.map(fmt => (
+                    <button
+                      key={fmt}
+                      onClick={() => { setActiveFormat(fmt); setShowFormationDropdown(false) }}
+                      className={cn(
+                        "flex-1 h-9 rounded-xl text-sm font-bold transition-colors",
+                        activeFormat === fmt
+                          ? "bg-[#0B5CFF] text-white"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                      )}
+                    >
+                      {fmt}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Formation selector */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowFormationDropdown(d => !d)}
+                    className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-between px-4 text-sm font-semibold text-slate-700 dark:text-slate-200"
+                  >
+                    <span>{selectedFormation && selectedFormation.startsWith(activeFormat) ? selectedFormation : `Elegir formación ${activeFormat}`}</span>
+                    <ChevronDown size={16} className="text-slate-400" />
+                  </button>
+                  {showFormationDropdown && (
+                    <div className="absolute left-0 right-0 top-12 z-30 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden">
+                      {formationKeys.map(key => (
+                        <button
+                          key={key}
+                          onClick={() => applyFormation(key)}
+                          className={cn(
+                            "w-full text-left px-4 py-3 text-sm font-semibold transition-colors",
+                            selectedFormation === key
+                              ? "bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF]"
+                              : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                          )}
+                        >
+                          {key}
+                          <span className="text-xs font-normal text-slate-400 ml-2">
+                            {FORMATIONS[key].length} jugadores
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Pitch */}
+                <FootballPitch pitchPlayers={pitchPlayers} players={players} />
+
+                {/* Formation legend */}
+                {selectedFormation && pitchPlayers.length > 0 && (
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+                    <div className="p-3 border-b border-slate-100 dark:border-slate-800">
+                      <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{selectedFormation}</p>
+                    </div>
+                    <div className="divide-y divide-slate-50 dark:divide-slate-800">
+                      {pitchPlayers.map(pp => {
+                        const player = players.find(p => p.id === pp.player_id)
+                        return (
+                          <div key={pp.id} className="flex items-center gap-3 px-3 py-2">
+                            <span className="w-8 text-center text-[11px] font-black text-[#0B5CFF] bg-blue-50 dark:bg-blue-500/10 rounded-lg py-0.5">{pp.position_label}</span>
+                            <span className="text-sm text-slate-700 dark:text-slate-200 font-medium">{player?.name ?? "—"}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         {/* Save button */}
         <button
