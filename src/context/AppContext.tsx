@@ -715,6 +715,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }).then(({ error }) => { if (error) dbg("addTraining:", error) })
       return { ...s, trainings: [...s.trainings, training] }
     })
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return
+      fetch("/api/push/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ title: "Nuevo entrenamiento 🏃", body: `${training.title}${training.date ? ` · ${training.date}` : ""}`, url: "/activities", category: training.category || null }),
+      }).catch(() => {})
+    })
     return training
   }, [])
 
@@ -759,6 +767,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         academy_id: s.teamSettings?.id ?? null,
       }).then(({ error }) => { if (error) dbg("addMatch:", error) })
       return { ...s, matches: [...s.matches, match] }
+    })
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) return
+      fetch("/api/push/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ title: "Nuevo partido 🏆", body: `${match.is_home ? "vs" : "en"} ${match.opponent}${match.date ? ` · ${match.date}` : ""}`, url: "/matches", category: match.category || null }),
+      }).catch(() => {})
     })
     return match
   }, [])

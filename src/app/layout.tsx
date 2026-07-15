@@ -44,7 +44,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   noStore()
   const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""
   const sbKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
-  const configScript = `window.__SC__=${JSON.stringify({ u: sbUrl, k: sbKey })};`
+  const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""
+  const configScript = `window.__SC__=${JSON.stringify({ u: sbUrl, k: sbKey, v: vapidKey })};`
 
   return (
     <html lang="es" suppressHydrationWarning>

@@ -9,6 +9,7 @@ import { common } from "@/lib/i18n/dictionaries/common"
 import {
   LayoutDashboard, Users, Dumbbell, BarChart3, FileText, LogOut, Trophy, ChevronRight, Heart, Settings, CalendarDays, Sun, Moon, PenTool, Radar, CreditCard
 } from "lucide-react"
+import PushToggle from "@/components/PushToggle"
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -76,6 +77,13 @@ export default function Sidebar() {
           )
         })}
       </nav>
+
+      {/* Push toggle — solo entrenador */}
+      {currentUser?.role === "coach" && (
+        <div className="px-4 pb-3">
+          <PushToggle />
+        </div>
+      )}
 
       {/* User */}
       <div className="px-3 py-4 border-t border-slate-100 dark:border-slate-800">

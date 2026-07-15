@@ -35,9 +35,17 @@ async function authHeader() {
   return { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
 }
 
+function getVapidKey(): string {
+  if (typeof window !== "undefined") {
+    const sc = (window as unknown as { __SC__?: { v?: string } }).__SC__
+    if (sc?.v) return sc.v
+  }
+  return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? ""
+}
+
 export async function subscribeToPush(): Promise<string | null> {
   if (!isPushSupported()) return "Tu navegador no soporta notificaciones push."
-  const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  const vapidKey = getVapidKey()
   if (!vapidKey) return "Notificaciones no configuradas en el servidor."
 
   const registration = await navigator.serviceWorker.register("/sw.js")
