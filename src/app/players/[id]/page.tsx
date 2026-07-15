@@ -194,7 +194,7 @@ const EMPTY_EVAL_FORM = {
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, currentUser, language, teamSettings, trainings, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, updatePayment } = useApp()
+  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, getPlayerConvocatoria, currentUser, language, teamSettings, trainings, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, updatePayment } = useApp()
   const isCoach = currentUser?.role === "coach"
 
   // Players can only view their own profile
@@ -231,6 +231,8 @@ export default function PlayerProfilePage() {
     absent: playerAttendance.filter(a => a.status === "absent").length,
     rate: playerAttendance.length ? Math.round((playerAttendance.filter(a => a.status === "present" || a.status === "late").length / playerAttendance.length) * 100) : null,
   }
+
+  const upcomingConvocatoria = getPlayerConvocatoria(id)
 
   const [pdfLoading, setPdfLoading] = useState(false)
 
@@ -452,6 +454,32 @@ export default function PlayerProfilePage() {
               </div>
             ))}
           </div>
+
+          {/* Convocatoria banner */}
+          {upcomingConvocatoria && (
+            <div className="px-4 md:px-6 xl:px-8 mb-4">
+              <Link
+                href={isCoach
+                  ? `/matches/${upcomingConvocatoria.match.id}/convocatoria`
+                  : `/matches/${upcomingConvocatoria.match.id}/convocatoria/view`}
+                className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-[#071B4D] to-[#0B5CFF] text-white hover:opacity-95 transition-opacity"
+              >
+                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0 text-xl">⚽</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-blue-200/80">
+                    {isCoach ? "Convocatoria publicada" : "¡Estás convocado/a!"}
+                  </p>
+                  <p className="text-sm font-bold truncate">
+                    {upcomingConvocatoria.match.is_home ? "vs" : "@"} {upcomingConvocatoria.match.opponent}
+                    {" · "}{upcomingConvocatoria.match.date}
+                  </p>
+                </div>
+                <span className="text-xs font-semibold text-blue-200 shrink-0">
+                  Ver lineup →
+                </span>
+              </Link>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 px-4 md:px-6 xl:px-8">
             {/* Left column */}

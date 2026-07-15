@@ -289,3 +289,26 @@ export interface PositionSample {
   y: number
   created_at: string
 }
+
+// ── Convocatoria (Squad Lineup) ─────────────────────────────────────────────
+
+export interface ConvocatoriaPlayer {
+  id: string
+  convocatoria_id: string
+  player_id: string
+  position_label: string
+  x: number  // 0-100 percent on pitch width
+  y: number  // 0-100 percent on pitch height
+  instruction: string
+  created_at: string
+}
+
+export interface Convocatoria {
+  id: string
+  match_id: string
+  academy_id: string | null
+  formation: string
+  notes: string
+  created_at: string
+  players: ConvocatoriaPlayer[]
+}

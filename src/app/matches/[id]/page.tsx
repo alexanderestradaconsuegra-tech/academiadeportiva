@@ -11,7 +11,7 @@ import Textarea from "@/components/ui/Textarea"
 import Badge from "@/components/ui/Badge"
 import {
   ArrowLeft, Trophy, MapPin, Clock, Video, Plus, X, Pencil, Trash2,
-  Goal, Footprints, Square, Star, Film,
+  Goal, Footprints, Square, Star, Film, Users,
 } from "lucide-react"
 import { formatDate, avatarUrl } from "@/lib/utils"
 import type { Position, MatchPlayerStat } from "@/lib/types"
@@ -30,13 +30,14 @@ const EMPTY_STAT_FORM = {
 export default function MatchDetailPage() {
   const params = useParams()
   const id = params.id as string
-  const { matches, players, currentUser, getMatchStats, addMatchStat, updateMatchStat, deleteMatchStat } = useApp()
+  const { matches, players, currentUser, getMatchStats, addMatchStat, updateMatchStat, deleteMatchStat, getConvocatoria } = useApp()
   const isCoach = currentUser?.role === "coach"
   const t = useT(matchesDict)
   const enumT = useEnumT()
 
   const match = matches.find(m => m.id === id)
   const stats = getMatchStats(id)
+  const convocatoria = getConvocatoria(id)
 
   const [showStatForm, setShowStatForm] = useState(false)
   const [editingStatId, setEditingStatId] = useState<string | null>(null)
@@ -147,13 +148,29 @@ export default function MatchDetailPage() {
               </div>
             )}
           </div>
-          {match.video_url && (
-            <a href={match.video_url} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" className="mt-4">
-                <Video size={15} /> {t("watchMatchVideo")}
-              </Button>
-            </a>
-          )}
+          <div className="flex items-center gap-2 mt-4 flex-wrap">
+            {match.video_url && (
+              <a href={match.video_url} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline">
+                  <Video size={15} /> {t("watchMatchVideo")}
+                </Button>
+              </a>
+            )}
+            {isCoach ? (
+              <Link href={`/matches/${id}/convocatoria`}>
+                <Button variant={convocatoria ? "outline" : "primary"}>
+                  <Users size={15} />
+                  {convocatoria ? "Editar convocatoria" : "Gestionar convocatoria"}
+                </Button>
+              </Link>
+            ) : convocatoria ? (
+              <Link href={`/matches/${id}/convocatoria/view`}>
+                <Button variant="outline">
+                  <Users size={15} /> Ver convocatoria
+                </Button>
+              </Link>
+            ) : null}
+          </div>
         </div>
 
         {/* Player stats */}

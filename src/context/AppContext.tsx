@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, PhysicalTest, Injury, InjurySeverity, Payment } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
@@ -21,6 +21,7 @@ interface AppState {
   physicalTests: PhysicalTest[]
   injuries: Injury[]
   payments: Payment[]
+  convocatorias: Convocatoria[]
   isAuthenticated: boolean
   isOnboarding: boolean
   authReady: boolean
@@ -82,6 +83,9 @@ interface AppContextType extends AppState {
   updatePayment: (id: string, data: Partial<Omit<Payment, "id" | "created_at" | "player_id">>) => void
   deletePayment: (id: string) => void
   getPlayerPayments: (playerId: string) => Payment[]
+  getConvocatoria: (matchId: string) => Convocatoria | undefined
+  saveConvocatoria: (matchId: string, formation: string, notes: string, players: ConvocatoriaPlayer[]) => Promise<string | null>
+  getPlayerConvocatoria: (playerId: string) => { convocatoria: Convocatoria; match: Match } | null
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -359,6 +363,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     physicalTests: [],
     injuries: [],
     payments: [],
+    convocatorias: [],
     isAuthenticated: false,
     isOnboarding: false,
     authReady: false,
@@ -408,6 +413,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from("injuries").select("*"),
       supabase.from("payments").select("*"),
     ])
+    // Fetch convocatorias with players joined
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: convData } = await (supabase as any).from("convocatorias").select("*, convocatoria_players(*)")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const convocatorias: Convocatoria[] = (convData ?? []).map((c: any) => ({
+      id: c.id,
+      match_id: c.match_id,
+      academy_id: c.academy_id ?? null,
+      formation: c.formation ?? "",
+      notes: c.notes ?? "",
+      created_at: c.created_at,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      players: (c.convocatoria_players ?? []).map((p: any): ConvocatoriaPlayer => ({
+        id: p.id,
+        convocatoria_id: p.convocatoria_id,
+        player_id: p.player_id,
+        position_label: p.position_label ?? "",
+        x: p.x ?? 50,
+        y: p.y ?? 50,
+        instruction: p.instruction ?? "",
+        created_at: p.created_at,
+      })),
+    }))
     setState(s => ({
       ...s,
       players: (playersRes.data ?? []).map(mapPlayer),
@@ -424,6 +452,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       physicalTests: (physicalTestsRes.data ?? []).map(mapPhysicalTest),
       injuries: (injuriesRes.data ?? []).map(mapInjury),
       payments: (paymentsRes.data ?? []).map(mapPayment),
+      convocatorias,
     }))
   }, [])
 
@@ -471,6 +500,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           physicalTests: [],
           injuries: [],
           payments: [],
+          convocatorias: [],
         }))
       }
     })
@@ -1054,6 +1084,83 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [state.payments]
   )
 
+  const getConvocatoria = useCallback(
+    (matchId: string) => state.convocatorias.find(c => c.match_id === matchId),
+    [state.convocatorias]
+  )
+
+  const saveConvocatoria = useCallback(async (matchId: string, formation: string, notes: string, players: ConvocatoriaPlayer[]): Promise<string | null> => {
+    const academyId = state.teamSettings?.id ?? null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any
+    const { data: convData, error: convError } = await sb
+      .from("convocatorias")
+      .upsert({ match_id: matchId, academy_id: academyId, formation, notes }, { onConflict: "match_id" })
+      .select()
+      .single()
+    if (convError || !convData) return convError?.message ?? "Error al guardar la convocatoria"
+    const convId = convData.id as string
+    // Delete existing players for this convocatoria
+    await sb.from("convocatoria_players").delete().eq("convocatoria_id", convId)
+    // Insert new players
+    if (players.length > 0) {
+      const { error: playersError } = await sb.from("convocatoria_players").insert(
+        players.map(p => ({
+          convocatoria_id: convId,
+          player_id: p.player_id,
+          position_label: p.position_label,
+          x: p.x,
+          y: p.y,
+          instruction: p.instruction || null,
+        }))
+      )
+      if (playersError) return playersError.message
+    }
+    // Re-fetch to get updated ids
+    const { data: updatedConv } = await sb.from("convocatorias").select("*, convocatoria_players(*)").eq("id", convId).single()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const newConv: Convocatoria = updatedConv ? {
+      id: updatedConv.id,
+      match_id: updatedConv.match_id,
+      academy_id: updatedConv.academy_id ?? null,
+      formation: updatedConv.formation ?? "",
+      notes: updatedConv.notes ?? "",
+      created_at: updatedConv.created_at,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      players: (updatedConv.convocatoria_players ?? []).map((p: any): ConvocatoriaPlayer => ({
+        id: p.id,
+        convocatoria_id: p.convocatoria_id,
+        player_id: p.player_id,
+        position_label: p.position_label ?? "",
+        x: p.x ?? 50,
+        y: p.y ?? 50,
+        instruction: p.instruction ?? "",
+        created_at: p.created_at,
+      })),
+    } : { id: convId, match_id: matchId, academy_id: academyId, formation, notes, created_at: new Date().toISOString(), players }
+    setState(s => ({
+      ...s,
+      convocatorias: s.convocatorias.some(c => c.match_id === matchId)
+        ? s.convocatorias.map(c => c.match_id === matchId ? newConv : c)
+        : [...s.convocatorias, newConv],
+    }))
+    return null
+  }, [state.teamSettings])
+
+  const getPlayerConvocatoria = useCallback((playerId: string): { convocatoria: Convocatoria; match: Match } | null => {
+    const today = new Date().toISOString().split("T")[0]
+    const results = state.convocatorias
+      .filter(c => c.players.some(p => p.player_id === playerId))
+      .map(c => {
+        const match = state.matches.find(m => m.id === c.match_id)
+        return match ? { convocatoria: c, match } : null
+      })
+      .filter((x): x is { convocatoria: Convocatoria; match: Match } => !!x)
+      .filter(({ match }) => match.date >= today)
+      .sort((a, b) => a.match.date.localeCompare(b.match.date))
+    return results[0] ?? null
+  }, [state.convocatorias, state.matches])
+
   const getUpcomingTrainings = useCallback((category?: Category | null) => {
     const today = new Date().toISOString().split("T")[0]
     return state.trainings
@@ -1118,6 +1225,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         updatePayment,
         deletePayment,
         getPlayerPayments,
+        getConvocatoria,
+        saveConvocatoria,
+        getPlayerConvocatoria,
       }}
     >
       {children}
