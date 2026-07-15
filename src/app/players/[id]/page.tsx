@@ -11,6 +11,7 @@ import Input from "@/components/ui/Input"
 import NotificationToggle from "@/components/ui/NotificationToggle"
 import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck, CreditCard, Loader2 } from "lucide-react"
 import { generatePlayerPDF } from "@/lib/generatePlayerPDF"
+import PlayerForm from "@/components/ui/PlayerForm"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
 import type { Evaluation, PhysicalTest, InjurySeverity } from "@/lib/types"
 import { useMemo } from "react"
@@ -526,6 +527,9 @@ export default function PlayerProfilePage() {
                   </ResponsiveContainer>
                 </div>
               )}
+
+              {/* Forma actual — auto score */}
+              <PlayerForm baseEval={latestEval ?? undefined} activities={activities} attendances={playerAttendance} />
 
               {/* Before/after comparison */}
               {evaluations.length > 1 && <EvaluationComparison evaluations={evaluations} />}
