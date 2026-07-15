@@ -11,7 +11,7 @@ import Textarea from "@/components/ui/Textarea"
 import Badge from "@/components/ui/Badge"
 import {
   ArrowLeft, Trophy, MapPin, Clock, Video, Plus, X, Pencil, Trash2,
-  Goal, Footprints, Square, Star, Film, Users,
+  Goal, Footprints, Square, Star, Film, Users, ChevronRight,
 } from "lucide-react"
 import { formatDate, avatarUrl } from "@/lib/utils"
 import type { Position, MatchPlayerStat } from "@/lib/types"
@@ -148,30 +148,51 @@ export default function MatchDetailPage() {
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-4 flex-wrap">
-            {match.video_url && (
+          {match.video_url && (
+            <div className="mt-4">
               <a href={match.video_url} target="_blank" rel="noopener noreferrer">
                 <Button variant="outline">
                   <Video size={15} /> {t("watchMatchVideo")}
                 </Button>
               </a>
-            )}
-            {isCoach ? (
-              <Link href={`/matches/${id}/convocatoria`}>
-                <Button variant={convocatoria ? "outline" : "primary"}>
-                  <Users size={15} />
-                  {convocatoria ? "Editar convocatoria" : "Gestionar convocatoria"}
-                </Button>
-              </Link>
-            ) : convocatoria ? (
-              <Link href={`/matches/${id}/convocatoria/view`}>
-                <Button variant="outline">
-                  <Users size={15} /> Ver convocatoria
-                </Button>
-              </Link>
-            ) : null}
-          </div>
+            </div>
+          )}
         </div>
+
+        {/* Convocatoria — prominent card */}
+        {isCoach ? (
+          <Link href={`/matches/${id}/convocatoria`} className="block mb-6">
+            <div className={`rounded-2xl p-4 flex items-center gap-4 transition-all hover:opacity-90 ${convocatoria ? "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800" : "bg-[#0B5CFF]"}`}>
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${convocatoria ? "bg-blue-50 dark:bg-blue-500/10" : "bg-white/15"}`}>
+                <Users size={20} className={convocatoria ? "text-[#0B5CFF]" : "text-white"} />
+              </div>
+              <div className="flex-1">
+                <p className={`text-sm font-bold ${convocatoria ? "text-slate-900 dark:text-white" : "text-white"}`}>
+                  {convocatoria ? "Convocatoria enviada" : "Convocar jugadores"}
+                </p>
+                <p className={`text-xs mt-0.5 ${convocatoria ? "text-slate-400 dark:text-slate-500" : "text-blue-100"}`}>
+                  {convocatoria
+                    ? `${convocatoria.players.length} jugadores · ${convocatoria.players.filter(p => p.confirmed === true).length} confirmaron`
+                    : "Selecciona quiénes juegan y notifícalos"}
+                </p>
+              </div>
+              <ChevronRight size={18} className={convocatoria ? "text-slate-400" : "text-white"} />
+            </div>
+          </Link>
+        ) : convocatoria ? (
+          <Link href={`/matches/${id}/convocatoria/view`} className="block mb-6">
+            <div className="bg-[#0B5CFF] rounded-2xl p-4 flex items-center gap-4 hover:opacity-90 transition-all">
+              <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                <Users size={20} className="text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-white">Ver mi convocatoria</p>
+                <p className="text-xs text-blue-100 mt-0.5">Confirma si puedes ir al partido</p>
+              </div>
+              <ChevronRight size={18} className="text-white" />
+            </div>
+          </Link>
+        ) : null}
 
         {/* Player stats */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
