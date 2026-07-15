@@ -9,7 +9,8 @@ import Badge from "@/components/ui/Badge"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import NotificationToggle from "@/components/ui/NotificationToggle"
-import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck, CreditCard } from "lucide-react"
+import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck, CreditCard, Loader2 } from "lucide-react"
+import { generatePlayerPDF } from "@/lib/generatePlayerPDF"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
 import type { Evaluation, PhysicalTest, InjurySeverity } from "@/lib/types"
 import { useMemo } from "react"
@@ -192,7 +193,7 @@ const EMPTY_EVAL_FORM = {
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, currentUser, language, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, updatePayment } = useApp()
+  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, currentUser, language, teamSettings, trainings, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, updatePayment } = useApp()
   const isCoach = currentUser?.role === "coach"
 
   // Players can only view their own profile
@@ -228,6 +229,24 @@ export default function PlayerProfilePage() {
     excused: playerAttendance.filter(a => a.status === "excused").length,
     absent: playerAttendance.filter(a => a.status === "absent").length,
     rate: playerAttendance.length ? Math.round((playerAttendance.filter(a => a.status === "present" || a.status === "late").length / playerAttendance.length) * 100) : null,
+  }
+
+  const [pdfLoading, setPdfLoading] = useState(false)
+
+  async function handleDownloadPDF() {
+    if (!player) return
+    setPdfLoading(true)
+    await generatePlayerPDF({
+      player,
+      academyName: teamSettings?.name ?? "FutbolMetrics",
+      evaluation: latestEval ?? undefined,
+      activities,
+      matchStats: playerMatches.map(pm => pm.stat),
+      matches: playerMatches.map(pm => pm.match),
+      attendances: playerAttendance,
+      trainings,
+    })
+    setPdfLoading(false)
   }
 
   const [showEvalForm, setShowEvalForm] = useState(false)
@@ -374,11 +393,12 @@ export default function PlayerProfilePage() {
               <p className="text-blue-200/70 text-xs font-medium">{t("playerProfile")}</p>
             </div>
             <button
-              onClick={() => window.print()}
-              className="no-print w-9 h-9 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center text-white hover:bg-white/25 transition-colors"
+              onClick={handleDownloadPDF}
+              disabled={pdfLoading}
+              className="no-print w-9 h-9 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center text-white hover:bg-white/25 transition-colors disabled:opacity-60"
               title={t("downloadPdf")}
             >
-              <Download size={15} />
+              {pdfLoading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
             </button>
             {isCoach && (
               <Link href={`/players/${id}/edit`}>
