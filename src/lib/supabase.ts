@@ -5,12 +5,22 @@ type SupabaseClient = ReturnType<typeof createBrowserClient<Database>>
 
 let _client: SupabaseClient | undefined
 
+function getConfig(): { url: string; key: string } {
+  if (typeof window !== "undefined") {
+    const sc = (window as unknown as { __SC__?: { u: string; k: string } }).__SC__
+    if (sc?.u && sc?.k) return { url: sc.u, key: sc.k }
+  }
+  // Local dev fallback — values are baked in by Next.js at build time when set in .env.local
+  return {
+    url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+  }
+}
+
 function getClient(): SupabaseClient {
   if (!_client) {
-    _client = createBrowserClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
+    const { url, key } = getConfig()
+    _client = createBrowserClient<Database>(url, key)
   }
   return _client
 }

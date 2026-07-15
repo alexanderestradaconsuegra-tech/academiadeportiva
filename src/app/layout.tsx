@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next"
+import { unstable_noStore as noStore } from "next/cache"
 import "./globals.css"
 import { AppProvider } from "@/context/AppContext"
 
@@ -40,10 +41,16 @@ const THEME_SCRIPT = `
 `
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  noStore()
+  const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ""
+  const sbKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
+  const configScript = `window.__SC__=${JSON.stringify({ u: sbUrl, k: sbKey })};`
+
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: configScript }} />
       </head>
       <body suppressHydrationWarning>
         <AppProvider>{children}</AppProvider>
