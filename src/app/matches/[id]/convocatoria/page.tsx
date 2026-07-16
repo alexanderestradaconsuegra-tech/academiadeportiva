@@ -281,7 +281,6 @@ export default function ConvocatoriaPage() {
     const posDefs = FORMATIONS[formationKey]
     if (!posDefs) return
     setSelectedFormation(formationKey)
-    setShowFormationDropdown(false)
 
     // Sort selected players by role
     const selected = Array.from(selectedIds)
