@@ -8,7 +8,7 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
 import PhotoUpload from "@/components/ui/PhotoUpload"
-import { Trophy, Check, KeyRound, UserCheck, Sun, Moon, Send, Languages } from "lucide-react"
+import { Trophy, Check, KeyRound, UserCheck, Sun, Moon, Send, Languages, Mail } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Category, Language } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
@@ -87,15 +87,97 @@ function NotificationBroadcast() {
   )
 }
 
+function MyAccount() {
+  const t = useT(settings)
+  const [currentEmail, setCurrentEmail] = useState("")
+  const [newEmail, setNewEmail] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [savingEmail, setSavingEmail] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
+  const [emailMsg, setEmailMsg] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [passwordMsg, setPasswordMsg] = useState<{ type: "success" | "error"; text: string } | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setCurrentEmail(data.user?.email ?? ""))
+  }, [])
+
+  async function handleEmailUpdate(e: React.FormEvent) {
+    e.preventDefault()
+    setEmailMsg(null)
+    setSavingEmail(true)
+    const { error } = await supabase.auth.updateUser({ email: newEmail })
+    setSavingEmail(false)
+    if (error) {
+      setEmailMsg({ type: "error", text: error.message })
+      return
+    }
+    setEmailMsg({ type: "success", text: t("emailUpdateConfirmSent") })
+    setNewEmail("")
+  }
+
+  async function handlePasswordUpdate(e: React.FormEvent) {
+    e.preventDefault()
+    setPasswordMsg(null)
+    if (newPassword.length < 6) {
+      setPasswordMsg({ type: "error", text: t("passwordTooShort") })
+      return
+    }
+    setSavingPassword(true)
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    setSavingPassword(false)
+    if (error) {
+      setPasswordMsg({ type: "error", text: error.message })
+      return
+    }
+    setPasswordMsg({ type: "success", text: t("passwordUpdated") })
+    setNewPassword("")
+  }
+
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 mb-6">
+      <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-1.5">
+        <Mail size={14} className="text-[#0B5CFF]" /> {t("myAccountTitle")}
+      </h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{t("myAccountSubtitle")}</p>
+
+      {currentEmail && (
+        <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
+          {t("currentEmailLabel")}: <span className="font-semibold text-slate-600 dark:text-slate-300">{currentEmail}</span>
+        </p>
+      )}
+
+      <form onSubmit={handleEmailUpdate} className="flex flex-col sm:flex-row items-start sm:items-end gap-3 mb-1">
+        <div className="flex-1 w-full">
+          <Input label={t("newEmailLabel")} type="email" placeholder={t("emailPlaceholder")} value={newEmail} onChange={e => setNewEmail(e.target.value)} />
+        </div>
+        <Button size="sm" type="submit" loading={savingEmail} disabled={!newEmail}>{t("updateEmail")}</Button>
+      </form>
+      {emailMsg && <p className={cn("text-xs mt-2 mb-3", emailMsg.type === "success" ? "text-emerald-600" : "text-red-600")}>{emailMsg.text}</p>}
+
+      <form onSubmit={handlePasswordUpdate} className="flex flex-col sm:flex-row items-start sm:items-end gap-3 mt-4">
+        <div className="flex-1 w-full">
+          <Input label={t("newPasswordLabel")} type="password" placeholder={t("passwordPlaceholder")} value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+        </div>
+        <Button size="sm" type="submit" loading={savingPassword} disabled={newPassword.length < 6}>{t("updatePassword")}</Button>
+      </form>
+      {passwordMsg && <p className={cn("text-xs mt-2", passwordMsg.type === "success" ? "text-emerald-600" : "text-red-600")}>{passwordMsg.text}</p>}
+    </div>
+  )
+}
+
 function AccessManager() {
   const t = useT(settings)
   const { players } = useApp()
   const [withAccess, setWithAccess] = useState<Set<string>>(new Set())
   const [loadingList, setLoadingList] = useState(true)
   const [openFor, setOpenFor] = useState<string | null>(null)
+  const [editingFor, setEditingFor] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [form, setForm] = useState({ email: "", password: "" })
+  const [editForm, setEditForm] = useState({ email: "", password: "" })
 
   useEffect(() => {
     supabase.from("profiles").select("player_id").not("player_id", "is", null)
@@ -127,6 +209,28 @@ function AccessManager() {
     setForm({ email: "", password: "" })
   }
 
+  async function handleUpdate(playerId: string) {
+    setError("")
+    setSaving(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const res = await fetch("/api/admin/update-account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ player_id: playerId, email: editForm.email || undefined, password: editForm.password || undefined }),
+    })
+    const data = await res.json()
+    setSaving(false)
+    if (!res.ok) {
+      setError(data.error || t("accessUpdateError"))
+      return
+    }
+    setEditingFor(null)
+    setEditForm({ email: "", password: "" })
+    setSaved(playerId)
+    setTimeout(() => setSaved(null), 2500)
+  }
+
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
       <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{t("accessManagerTitle")}</h3>
@@ -151,9 +255,19 @@ function AccessManager() {
                     <p className="text-xs text-slate-400 dark:text-slate-500">{p.position}</p>
                   </div>
                   {has ? (
-                    <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg">
-                      <UserCheck size={12} /> {t("withAccess")}
-                    </span>
+                    <>
+                      {saved === p.id && (
+                        <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold">
+                          <Check size={12} /> {t("saved")}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg">
+                        <UserCheck size={12} /> {t("withAccess")}
+                      </span>
+                      <Button variant="outline" size="sm" type="button" onClick={() => { setEditingFor(editingFor === p.id ? null : p.id); setError(""); setEditForm({ email: "", password: "" }) }}>
+                        {t("editAccess")}
+                      </Button>
+                    </>
                   ) : (
                     <Button variant="outline" size="sm" type="button" onClick={() => { setOpenFor(openFor === p.id ? null : p.id); setError(""); setForm({ email: "", password: "" }) }}>
                       <KeyRound size={13} /> {t("createAccess")}
@@ -170,6 +284,26 @@ function AccessManager() {
                     <div className="flex justify-end">
                       <Button size="sm" type="button" loading={creating} disabled={!form.email || form.password.length < 6} onClick={() => handleCreate(p.id)}>
                         {t("createAccess")}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {editingFor === p.id && has && (
+                  <div className="p-3 pt-0 space-y-3 border-t border-slate-100 dark:border-slate-800 mt-1">
+                    <p className="text-xs text-slate-400 dark:text-slate-500 pt-3">{t("editAccessHint")}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Input label={t("newEmailLabel")} type="email" placeholder={t("emailPlaceholder")} value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} />
+                      <Input label={t("newPasswordLabel")} type="text" placeholder={t("passwordPlaceholder")} value={editForm.password} onChange={e => setEditForm(f => ({ ...f, password: e.target.value }))} />
+                    </div>
+                    {error && <p className="text-xs text-red-600">{error}</p>}
+                    <div className="flex justify-end gap-2">
+                      <Button variant="secondary" size="sm" type="button" onClick={() => setEditingFor(null)}>{t("cancel")}</Button>
+                      <Button
+                        size="sm" type="button" loading={saving}
+                        disabled={!editForm.email && editForm.password.length < 6}
+                        onClick={() => handleUpdate(p.id)}
+                      >
+                        {t("saveChanges")}
                       </Button>
                     </div>
                   </div>
@@ -223,6 +357,8 @@ export default function SettingsPage() {
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in max-w-3xl">
         <PageHeader title={t("title")} subtitle={t("subtitle")} />
+
+        <MyAccount />
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 mb-6 flex items-center justify-between">
           <div>
