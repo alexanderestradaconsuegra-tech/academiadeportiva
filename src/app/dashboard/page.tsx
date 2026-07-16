@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
 import StatCard from "@/components/ui/StatCard"
-import { Users, TrendingUp, AlertTriangle, Activity, ChevronRight, Star, CreditCard } from "lucide-react"
+import { Users, TrendingUp, AlertTriangle, Activity, ChevronRight, Star, CreditCard, Trophy } from "lucide-react"
 import type { ActivityCategory, Evaluation } from "@/lib/types"
 import { effectivePaymentStatus } from "@/lib/types"
 import { payments as paymentsDict } from "@/lib/i18n/dictionaries/payments"
@@ -18,7 +18,7 @@ import { dashboard } from "@/lib/i18n/dictionaries/dashboard"
 import { useEnumT } from "@/lib/i18n/enums"
 
 export default function DashboardPage() {
-  const { players, activities, evaluations, payments, getLatestEvaluation, language } = useApp()
+  const { players, activities, evaluations, payments, matches, getLatestEvaluation, language } = useApp()
   const t = useT(dashboard)
   const tp = useT(paymentsDict)
   const e = useEnumT()
@@ -80,6 +80,22 @@ export default function DashboardPage() {
       total: overdue.reduce((s, p) => s + p.amount, 0),
     }
   }, [payments])
+
+  const matchRecord = useMemo(() => {
+    const played = matches
+      .filter(m => m.our_score !== null && m.opponent_score !== null)
+      .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
+    const wins = played.filter(m => m.our_score! > m.opponent_score!).length
+    const draws = played.filter(m => m.our_score! === m.opponent_score!).length
+    const losses = played.filter(m => m.our_score! < m.opponent_score!).length
+    const goalsFor = played.reduce((s, m) => s + m.our_score!, 0)
+    const goalsAgainst = played.reduce((s, m) => s + m.opponent_score!, 0)
+    const form = played.slice(-5).reverse().map(m => ({
+      id: m.id,
+      result: m.our_score! > m.opponent_score! ? "win" as const : m.our_score! < m.opponent_score! ? "loss" as const : "draw" as const,
+    }))
+    return { total: played.length, wins, draws, losses, goalsFor, goalsAgainst, form }
+  }, [matches])
 
   const recentActivities = activities.slice(0, 6)
   const topPlayers = [...players]
@@ -146,6 +162,63 @@ export default function DashboardPage() {
             <ChevronRight size={16} className="text-amber-500 group-hover:translate-x-0.5 transition-transform shrink-0" />
           </Link>
         )}
+
+        {/* Team match record */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 mb-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
+                <Trophy size={16} className="text-[#0B5CFF]" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("teamRecord")}</h2>
+                <p className="text-xs text-slate-400 dark:text-slate-500">{matchRecord.total} {t("playedMatches")}</p>
+              </div>
+            </div>
+            <Link href="/matches" className="text-xs text-[#0B5CFF] font-semibold hover:underline flex items-center gap-1">
+              {t("viewMatches")} <ChevronRight size={12} />
+            </Link>
+          </div>
+
+          {matchRecord.total === 0 ? (
+            <p className="text-center text-sm text-slate-400 dark:text-slate-500 py-6">{t("noMatchesPlayed")}</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl p-3 text-center">
+                  <p className="text-xl font-black text-emerald-600 dark:text-emerald-400">{matchRecord.wins}</p>
+                  <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 font-medium mt-0.5">{t("wins")}</p>
+                </div>
+                <div className="bg-amber-50 dark:bg-amber-500/10 rounded-2xl p-3 text-center">
+                  <p className="text-xl font-black text-amber-600 dark:text-amber-400">{matchRecord.draws}</p>
+                  <p className="text-xs text-amber-600/70 dark:text-amber-400/70 font-medium mt-0.5">{t("draws")}</p>
+                </div>
+                <div className="bg-red-50 dark:bg-red-500/10 rounded-2xl p-3 text-center">
+                  <p className="text-xl font-black text-red-500">{matchRecord.losses}</p>
+                  <p className="text-xs text-red-400 font-medium mt-0.5">{t("losses")}</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {t("goalsForAgainst")}: <span className="font-bold text-slate-700 dark:text-slate-200">{matchRecord.goalsFor}</span> / <span className="font-bold text-slate-700 dark:text-slate-200">{matchRecord.goalsAgainst}</span>
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400 dark:text-slate-500">{t("recentForm")}</span>
+                  <div className="flex items-center gap-1">
+                    {matchRecord.form.map(f => (
+                      <span key={f.id} className={cn(
+                        "w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black text-white",
+                        f.result === "win" ? "bg-emerald-500" : f.result === "loss" ? "bg-red-500" : "bg-amber-500"
+                      )}>
+                        {f.result === "win" ? "G" : f.result === "loss" ? "P" : "E"}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-5">
           {/* Progress chart */}

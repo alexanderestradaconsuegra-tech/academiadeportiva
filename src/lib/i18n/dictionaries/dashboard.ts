@@ -24,4 +24,13 @@ export const dashboard = {
   latestActivities: { es: "Últimas Actividades", en: "Latest Activities", pt: "Últimas Atividades" },
   points: { es: "pts", en: "pts", pt: "pts" },
   score: { es: "Score", en: "Score", pt: "Pontuação" },
+  teamRecord: { es: "Récord del Equipo", en: "Team Record", pt: "Retrospecto da Equipe" },
+  playedMatches: { es: "partidos jugados", en: "matches played", pt: "partidas jogadas" },
+  wins: { es: "Ganados", en: "Wins", pt: "Vitórias" },
+  draws: { es: "Empatados", en: "Draws", pt: "Empates" },
+  losses: { es: "Perdidos", en: "Losses", pt: "Derrotas" },
+  goalsForAgainst: { es: "Goles a favor / en contra", en: "Goals for / against", pt: "Gols marcados / sofridos" },
+  recentForm: { es: "Racha reciente", en: "Recent form", pt: "Retrospecto recente" },
+  noMatchesPlayed: { es: "Aún no hay partidos jugados", en: "No matches played yet", pt: "Ainda não há partidas jogadas" },
+  viewMatches: { es: "Ver partidos", en: "View matches", pt: "Ver partidas" },
 } satisfies Translations
