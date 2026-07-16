@@ -19,32 +19,109 @@ const W = 105
 const H = 68
 
 const FORMATIONS: Record<string, { x: number; y: number }[]> = {
-  "4-4-2": [
+  "F11 · 4-4-2": [
     { x: 10, y: 34 },
     { x: 26, y: 10 }, { x: 26, y: 26 }, { x: 26, y: 42 }, { x: 26, y: 58 },
     { x: 45, y: 8 }, { x: 45, y: 26 }, { x: 45, y: 42 }, { x: 45, y: 60 },
     { x: 60, y: 26 }, { x: 60, y: 42 },
   ],
-  "4-3-3": [
+  "F11 · 4-3-3": [
     { x: 10, y: 34 },
     { x: 26, y: 10 }, { x: 26, y: 26 }, { x: 26, y: 42 }, { x: 26, y: 58 },
     { x: 45, y: 18 }, { x: 45, y: 34 }, { x: 45, y: 50 },
     { x: 60, y: 10 }, { x: 60, y: 34 }, { x: 60, y: 58 },
   ],
-  "3-5-2": [
+  "F11 · 3-5-2": [
     { x: 10, y: 34 },
     { x: 26, y: 16 }, { x: 26, y: 34 }, { x: 26, y: 52 },
     { x: 45, y: 6 }, { x: 45, y: 22 }, { x: 45, y: 34 }, { x: 45, y: 46 }, { x: 45, y: 62 },
     { x: 60, y: 26 }, { x: 60, y: 42 },
   ],
-  "4-2-3-1": [
+  "F11 · 4-2-3-1": [
     { x: 10, y: 34 },
     { x: 26, y: 10 }, { x: 26, y: 26 }, { x: 26, y: 42 }, { x: 26, y: 58 },
     { x: 40, y: 24 }, { x: 40, y: 44 },
     { x: 52, y: 10 }, { x: 52, y: 34 }, { x: 52, y: 58 },
     { x: 64, y: 34 },
   ],
+  // Fútbol 8
+  "F8 · 3-2-2": [
+    { x: 10, y: 34 },
+    { x: 26, y: 14 }, { x: 26, y: 34 }, { x: 26, y: 54 },
+    { x: 45, y: 24 }, { x: 45, y: 44 },
+    { x: 60, y: 24 }, { x: 60, y: 44 },
+  ],
+  "F8 · 2-3-2": [
+    { x: 10, y: 34 },
+    { x: 26, y: 20 }, { x: 26, y: 48 },
+    { x: 45, y: 14 }, { x: 45, y: 34 }, { x: 45, y: 54 },
+    { x: 60, y: 24 }, { x: 60, y: 44 },
+  ],
+  "F8 · 3-3-1": [
+    { x: 10, y: 34 },
+    { x: 26, y: 14 }, { x: 26, y: 34 }, { x: 26, y: 54 },
+    { x: 45, y: 14 }, { x: 45, y: 34 }, { x: 45, y: 54 },
+    { x: 60, y: 34 },
+  ],
+  "F8 · 2-2-3": [
+    { x: 10, y: 34 },
+    { x: 26, y: 20 }, { x: 26, y: 48 },
+    { x: 45, y: 24 }, { x: 45, y: 44 },
+    { x: 60, y: 14 }, { x: 60, y: 34 }, { x: 60, y: 54 },
+  ],
+  // Fútbol 7
+  "F7 · 2-3-1": [
+    { x: 10, y: 34 },
+    { x: 26, y: 20 }, { x: 26, y: 48 },
+    { x: 45, y: 14 }, { x: 45, y: 34 }, { x: 45, y: 54 },
+    { x: 60, y: 34 },
+  ],
+  "F7 · 3-2-1": [
+    { x: 10, y: 34 },
+    { x: 26, y: 14 }, { x: 26, y: 34 }, { x: 26, y: 54 },
+    { x: 45, y: 24 }, { x: 45, y: 44 },
+    { x: 60, y: 34 },
+  ],
+  "F7 · 2-2-2": [
+    { x: 10, y: 34 },
+    { x: 26, y: 20 }, { x: 26, y: 48 },
+    { x: 45, y: 24 }, { x: 45, y: 44 },
+    { x: 60, y: 24 }, { x: 60, y: 44 },
+  ],
+  "F7 · 1-3-2": [
+    { x: 10, y: 34 },
+    { x: 26, y: 34 },
+    { x: 45, y: 14 }, { x: 45, y: 34 }, { x: 45, y: 54 },
+    { x: 60, y: 24 }, { x: 60, y: 44 },
+  ],
+  // Fútbol 5 / Futsal
+  "F5 · 1-2-1": [
+    { x: 10, y: 34 },
+    { x: 26, y: 34 },
+    { x: 45, y: 24 }, { x: 45, y: 44 },
+    { x: 60, y: 34 },
+  ],
+  "F5 · 2-2": [
+    { x: 10, y: 34 },
+    { x: 26, y: 20 }, { x: 26, y: 48 },
+    { x: 60, y: 20 }, { x: 60, y: 48 },
+  ],
+  "F5 · 2-1-1": [
+    { x: 10, y: 34 },
+    { x: 26, y: 20 }, { x: 26, y: 48 },
+    { x: 45, y: 34 },
+    { x: 60, y: 34 },
+  ],
+  "F5 · 1-1-2": [
+    { x: 10, y: 34 },
+    { x: 26, y: 34 },
+    { x: 45, y: 34 },
+    { x: 60, y: 20 }, { x: 60, y: 48 },
+  ],
 }
+
+const FORMAT_KEYS = ["F11", "F8", "F7", "F5"] as const
+type FormatKey = typeof FORMAT_KEYS[number]
 
 export default function TacticsPage() {
   const t = useT(tactics)
@@ -58,6 +135,9 @@ export default function TacticsPage() {
   const [plays, setPlays] = useState<Play[]>([])
   const [showSaveInput, setShowSaveInput] = useState(false)
   const [playName, setPlayName] = useState("")
+  const [activeFormat, setActiveFormat] = useState<FormatKey>("F11")
+
+  const formationKeys = Object.keys(FORMATIONS).filter(k => k.startsWith(activeFormat))
 
   useEffect(() => {
     try {
@@ -217,10 +297,26 @@ export default function TacticsPage() {
             <Button size="sm" variant="ghost" onClick={clearBoard}>
               <Eraser size={14} /> {t("clearAll")}
             </Button>
-            <div className="flex items-center gap-2">
-              <LayoutGrid size={14} className="text-slate-400 dark:text-slate-500" />
+            <div className="flex items-center gap-2 flex-wrap">
+              <LayoutGrid size={14} className="text-slate-400 dark:text-slate-500 shrink-0" />
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+                {FORMAT_KEYS.map(fmt => (
+                  <button
+                    key={fmt}
+                    type="button"
+                    onClick={() => setActiveFormat(fmt)}
+                    className={`h-6 px-2 rounded-lg text-[11px] font-bold transition-colors ${
+                      activeFormat === fmt
+                        ? "bg-white dark:bg-slate-900 text-[#0B5CFF] shadow-sm"
+                        : "text-slate-500 dark:text-slate-400"
+                    }`}
+                  >
+                    {fmt}
+                  </button>
+                ))}
+              </div>
               <Select
-                options={Object.keys(FORMATIONS).map(f => ({ value: f, label: f }))}
+                options={formationKeys.map(f => ({ value: f, label: f.split(" · ")[1] }))}
                 placeholder={t("formationPlaceholder")}
                 onChange={e => e.target.value && applyFormation(e.target.value)}
                 value=""
