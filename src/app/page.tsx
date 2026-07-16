@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useApp } from "@/context/AppContext"
 import { supabase } from "@/lib/supabase"
-import { Trophy, Eye, EyeOff, Lock, Mail, AlertCircle, User, Building2 } from "lucide-react"
+import { Trophy, Eye, EyeOff, Lock, Mail, AlertCircle, User, Building2, KeyRound } from "lucide-react"
 import { useT } from "@/lib/i18n/useT"
 import { login as loginDict } from "@/lib/i18n/dictionaries/login"
 import type { Language } from "@/lib/types"
@@ -24,6 +24,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [fullName, setFullName] = useState("")
   const [academyName, setAcademyName] = useState("")
+  const [activationCode, setActivationCode] = useState("")
   const [language, setLanguage] = useState<Language>("es")
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -61,7 +62,7 @@ export default function LoginPage() {
     }
     // After signUp the user is authenticated; createAcademy will be called from /onboarding
     // Store pending setup data so onboarding page can pre-fill it
-    sessionStorage.setItem("pendingAcademy", JSON.stringify({ academyName, fullName, language }))
+    sessionStorage.setItem("pendingAcademy", JSON.stringify({ academyName, fullName, language, activationCode }))
     const loginError = await login(email, password)
     if (loginError) {
       setError(loginError)
@@ -240,6 +241,14 @@ export default function LoginPage() {
                       <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                         {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">Código de activación</label>
+                    <div className="relative">
+                      <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input type="text" value={activationCode} onChange={e => setActivationCode(e.target.value)} required placeholder="Código que te compartieron"
+                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all" />
                     </div>
                   </div>
                   {error && (

@@ -798,6 +798,10 @@ export type Database = {
       current_player_id: { Args: never; Returns: string }
       current_role: { Args: never; Returns: string }
       get_my_academy_id: { Args: Record<PropertyKey, never>; Returns: string }
+      create_academy_with_code: {
+        Args: { p_code: string; p_name: string; p_language: string; p_coach_name: string }
+        Returns: string
+      }
     }
     Enums: {
       activity_category:

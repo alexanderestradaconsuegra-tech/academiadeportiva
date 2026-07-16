@@ -32,7 +32,7 @@ interface AppState {
 interface AppContextType extends AppState {
   language: Language
   login: (email: string, password: string) => Promise<string | null>
-  createAcademy: (academyName: string, lang: Language, coachName: string) => Promise<string | null>
+  createAcademy: (academyName: string, lang: Language, coachName: string, activationCode: string) => Promise<string | null>
   logout: () => void
   addPlayer: (player: Omit<Player, "id" | "created_at">) => Player
   updatePlayer: (id: string, data: Partial<Player>) => void
@@ -526,27 +526,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return null
   }, [loadProfileFor, loadTeamSettings, loadPlayerData, state.teamSettings?.language])
 
-  const createAcademy = useCallback(async (academyName: string, lang: Language, coachName: string): Promise<string | null> => {
+  const createAcademy = useCallback(async (academyName: string, lang: Language, coachName: string, activationCode: string): Promise<string | null> => {
     const { data: sessionData } = await supabase.auth.getSession()
     const userId = sessionData.session?.user.id
     if (!userId) return "No autenticado"
 
-    const { data: academy, error: academyErr } = await supabase
-      .from("team_settings")
-      .insert({ name: academyName, language: lang, updated_at: new Date().toISOString() })
-      .select()
-      .single()
-    if (academyErr || !academy) return academyErr?.message ?? "Error al crear la academia"
+    const { error: rpcError } = await supabase.rpc("create_academy_with_code", {
+      p_code: activationCode,
+      p_name: academyName,
+      p_language: lang,
+      p_coach_name: coachName,
+    })
+    if (rpcError) return rpcError.message ?? "Error al crear la academia"
 
-    const { data: profileRow, error: profileErr } = await supabase
-      .from("profiles")
-      .insert({ id: userId, role: "coach", full_name: coachName, academy_id: academy.id })
-      .select()
-      .single()
-    if (profileErr || !profileRow) return profileErr?.message ?? "Error al crear el perfil"
+    const { data: profileRow } = await supabase.from("profiles").select("*").eq("id", userId).single()
+    if (!profileRow || !profileRow.academy_id) return "Error al cargar el perfil"
+
+    const { data: settingsRow } = await supabase.from("team_settings").select("*").eq("id", profileRow.academy_id).single()
+    if (!settingsRow) return "Error al cargar la academia"
 
     const profile = mapProfile(profileRow)
-    const settings = mapTeamSettings(academy)
+    const settings = mapTeamSettings(settingsRow)
     setState(s => ({ ...s, isOnboarding: false, currentUser: profile, teamSettings: settings }))
     await loadPlayerData()
     return null
