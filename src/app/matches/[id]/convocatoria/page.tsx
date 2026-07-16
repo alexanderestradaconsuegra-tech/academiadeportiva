@@ -4,7 +4,7 @@ import { useParams } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
-import { ArrowLeft, Check, Users, MessageSquare, X, Send, ChevronDown } from "lucide-react"
+import { ArrowLeft, Check, Users, MessageSquare, X, Send } from "lucide-react"
 import { avatarUrl, formatDate, cn } from "@/lib/utils"
 import type { ConvocatoriaPlayer, Player } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
@@ -234,7 +234,6 @@ export default function ConvocatoriaPage() {
   const [activeTab, setActiveTab] = useState<"players" | "pitch">("players")
   const [activeFormat, setActiveFormat] = useState<FormatKey>("F11")
   const [selectedFormation, setSelectedFormation] = useState<string>("")
-  const [showFormationDropdown, setShowFormationDropdown] = useState(false)
 
   const formationKeys = Object.keys(FORMATIONS).filter(k => k.startsWith(activeFormat))
 
@@ -547,7 +546,7 @@ export default function ConvocatoriaPage() {
                   {FORMAT_KEYS.map(fmt => (
                     <button
                       key={fmt}
-                      onClick={() => { setActiveFormat(fmt); setShowFormationDropdown(false) }}
+                      onClick={() => setActiveFormat(fmt)}
                       className={cn(
                         "flex-1 h-9 rounded-xl text-sm font-bold transition-colors",
                         activeFormat === fmt
@@ -560,36 +559,23 @@ export default function ConvocatoriaPage() {
                   ))}
                 </div>
 
-                {/* Formation selector */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowFormationDropdown(d => !d)}
-                    className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-between px-4 text-sm font-semibold text-slate-700 dark:text-slate-200"
-                  >
-                    <span>{selectedFormation && selectedFormation.startsWith(activeFormat) ? selectedFormation : `Elegir formación ${activeFormat}`}</span>
-                    <ChevronDown size={16} className="text-slate-400" />
-                  </button>
-                  {showFormationDropdown && (
-                    <div className="absolute left-0 right-0 top-12 z-30 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden">
-                      {formationKeys.map(key => (
-                        <button
-                          key={key}
-                          onClick={() => applyFormation(key)}
-                          className={cn(
-                            "w-full text-left px-4 py-3 text-sm font-semibold transition-colors",
-                            selectedFormation === key
-                              ? "bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF]"
-                              : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                          )}
-                        >
-                          {key}
-                          <span className="text-xs font-normal text-slate-400 ml-2">
-                            {FORMATIONS[key].length} jugadores
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                {/* Formation selector — grid of pills */}
+                <div className="grid grid-cols-2 gap-2">
+                  {formationKeys.map(key => (
+                    <button
+                      key={key}
+                      onClick={() => applyFormation(key)}
+                      className={cn(
+                        "h-11 rounded-xl text-sm font-bold transition-colors border",
+                        selectedFormation === key
+                          ? "bg-[#0B5CFF] text-white border-[#0B5CFF]"
+                          : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                      )}
+                    >
+                      {key.split(" · ")[1]}
+                      <span className="block text-[10px] font-normal opacity-60">{FORMATIONS[key].length} jugadores</span>
+                    </button>
+                  ))}
                 </div>
 
                 {/* Pitch */}
