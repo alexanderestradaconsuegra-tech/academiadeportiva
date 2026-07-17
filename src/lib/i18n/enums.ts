@@ -24,13 +24,18 @@ const dominantFoot: EnumDict = {
 }
 
 const category: EnumDict = {
+  "Sub-5": { es: "Sub-5", en: "U5", pt: "Sub-5" },
+  "Sub-6": { es: "Sub-6", en: "U6", pt: "Sub-6" },
+  "Sub-7": { es: "Sub-7", en: "U7", pt: "Sub-7" },
+  "Sub-8": { es: "Sub-8", en: "U8", pt: "Sub-8" },
+  "Sub-9": { es: "Sub-9", en: "U9", pt: "Sub-9" },
   "Sub-10": { es: "Sub-10", en: "U10", pt: "Sub-10" },
+  "Sub-11": { es: "Sub-11", en: "U11", pt: "Sub-11" },
   "Sub-12": { es: "Sub-12", en: "U12", pt: "Sub-12" },
+  "Sub-13": { es: "Sub-13", en: "U13", pt: "Sub-13" },
   "Sub-14": { es: "Sub-14", en: "U14", pt: "Sub-14" },
-  "Sub-16": { es: "Sub-16", en: "U16", pt: "Sub-16" },
-  "Sub-18": { es: "Sub-18", en: "U18", pt: "Sub-18" },
-  "Juvenil": { es: "Juvenil", en: "Youth", pt: "Juvenil" },
-  "Senior": { es: "Senior", en: "Senior", pt: "Sênior" },
+  "Sub-15": { es: "Sub-15", en: "U15", pt: "Sub-15" },
+  "Otra": { es: "Otra", en: "Other", pt: "Outra" },
 }
 
 const activityCategory: EnumDict = {

@@ -16,7 +16,7 @@ import { useT } from "@/lib/i18n/useT"
 import { matches as matchesDict } from "@/lib/i18n/dictionaries/matches"
 import { useEnumT } from "@/lib/i18n/enums"
 
-const CATEGORIES: Category[] = ["Sub-10", "Sub-12", "Sub-14", "Sub-16", "Sub-18", "Juvenil", "Senior"]
+const CATEGORIES: Category[] = ["Sub-5", "Sub-6", "Sub-7", "Sub-8", "Sub-9", "Sub-10", "Sub-11", "Sub-12", "Sub-13", "Sub-14", "Sub-15", "Otra"]
 
 const emptyForm = {
   opponent: "", competition: "", date: new Date().toISOString().split("T")[0], time: "",

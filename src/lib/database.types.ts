@@ -829,13 +829,18 @@ export type Database = {
         | "Pliometría"
       activity_unit: "segundos" | "kg" | "repeticiones" | "metros" | "puntos"
       category:
+        | "Sub-5"
+        | "Sub-6"
+        | "Sub-7"
+        | "Sub-8"
+        | "Sub-9"
         | "Sub-10"
+        | "Sub-11"
         | "Sub-12"
+        | "Sub-13"
         | "Sub-14"
-        | "Sub-16"
-        | "Sub-18"
-        | "Juvenil"
-        | "Senior"
+        | "Sub-15"
+        | "Otra"
       device_type:
         | "polar_h10"
         | "wahoo_tickr"
@@ -994,13 +999,18 @@ export const Constants = {
       ],
       activity_unit: ["segundos", "kg", "repeticiones", "metros", "puntos"],
       category: [
+        "Sub-5",
+        "Sub-6",
+        "Sub-7",
+        "Sub-8",
+        "Sub-9",
         "Sub-10",
+        "Sub-11",
         "Sub-12",
+        "Sub-13",
         "Sub-14",
-        "Sub-16",
-        "Sub-18",
-        "Juvenil",
-        "Senior",
+        "Sub-15",
+        "Otra",
       ],
       device_type: [
         "polar_h10",

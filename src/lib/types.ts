@@ -16,13 +16,18 @@ export type Position =
 export type DominantFoot = "Derecha" | "Izquierda" | "Ambidiestro"
 
 export type Category =
+  | "Sub-5"
+  | "Sub-6"
+  | "Sub-7"
+  | "Sub-8"
+  | "Sub-9"
   | "Sub-10"
+  | "Sub-11"
   | "Sub-12"
+  | "Sub-13"
   | "Sub-14"
-  | "Sub-16"
-  | "Sub-18"
-  | "Juvenil"
-  | "Senior"
+  | "Sub-15"
+  | "Otra"
 
 export type ActivityCategory =
   | "Velocidad"
