@@ -43,7 +43,10 @@ async function notifyNewTraining(data: { title: string; date: string; time: stri
 }
 
 export default function CalendarPage() {
-  const { trainings, players, addTraining, updateTraining, deleteTraining, upsertAttendance, getTrainingAttendance } = useApp()
+  const { trainings, players, currentUser, addTraining, updateTraining, deleteTraining, upsertAttendance, getTrainingAttendance } = useApp()
+  const isCoach = currentUser?.role === "coach"
+  const myPlayerId = currentUser?.player_id ?? null
+  const myPlayer = players.find(p => p.id === myPlayerId)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -55,7 +58,10 @@ export default function CalendarPage() {
   const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))
 
   const today = new Date().toISOString().split("T")[0]
-  const sorted = [...trainings].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
+  const visible = isCoach
+    ? trainings
+    : trainings.filter(tr => !tr.category || tr.category === myPlayer?.category)
+  const sorted = [...visible].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
   const upcoming = sorted.filter(t => t.date >= today)
   const past = sorted.filter(t => t.date < today).reverse()
 
@@ -103,14 +109,16 @@ export default function CalendarPage() {
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
-        <PageHeader title={t("pageTitle")} subtitle={`${trainings.length} ${t("trainingsScheduled")}`}>
-          <Button onClick={openCreate}>
-            <Plus size={16} /> {t("newTraining")}
-          </Button>
+        <PageHeader title={t("pageTitle")} subtitle={`${visible.length} ${t("trainingsScheduled")}`}>
+          {isCoach && (
+            <Button onClick={openCreate}>
+              <Plus size={16} /> {t("newTraining")}
+            </Button>
+          )}
         </PageHeader>
 
         {/* Attendance modal */}
-        {attendanceTraining && (
+        {isCoach && attendanceTraining && (
           <AttendanceModal
             training={attendanceTraining}
             players={players.filter(p => !attendanceTraining.category || p.category === attendanceTraining.category)}
@@ -120,7 +128,7 @@ export default function CalendarPage() {
           />
         )}
 
-        {showForm && (
+        {isCoach && showForm && (
           <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg animate-scale-in">
               <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
@@ -164,7 +172,12 @@ export default function CalendarPage() {
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                 <div className="divide-y divide-slate-50 dark:divide-slate-800">
                   {upcoming.map(tr => (
-                    <TrainingRow key={tr.id} t={tr} isPast={false} attendance={getTrainingAttendance(tr.id)} onEdit={() => openEdit(tr)} onDelete={() => handleDelete(tr.id)} onAttendance={() => setAttendanceTraining(tr)} />
+                    <TrainingRow
+                      key={tr.id} t={tr} isPast={false} isCoach={isCoach} myPlayerId={myPlayerId}
+                      attendance={getTrainingAttendance(tr.id)}
+                      onEdit={() => openEdit(tr)} onDelete={() => handleDelete(tr.id)} onAttendance={() => setAttendanceTraining(tr)}
+                      onRsvp={status => myPlayerId && upsertAttendance(tr.id, myPlayerId, status)}
+                    />
                   ))}
                 </div>
               </div>
@@ -177,7 +190,12 @@ export default function CalendarPage() {
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                 <div className="divide-y divide-slate-50 dark:divide-slate-800">
                   {past.map(tr => (
-                    <TrainingRow key={tr.id} t={tr} isPast={true} attendance={getTrainingAttendance(tr.id)} onEdit={() => openEdit(tr)} onDelete={() => handleDelete(tr.id)} onAttendance={() => setAttendanceTraining(tr)} />
+                    <TrainingRow
+                      key={tr.id} t={tr} isPast={true} isCoach={isCoach} myPlayerId={myPlayerId}
+                      attendance={getTrainingAttendance(tr.id)}
+                      onEdit={() => openEdit(tr)} onDelete={() => handleDelete(tr.id)} onAttendance={() => setAttendanceTraining(tr)}
+                      onRsvp={status => myPlayerId && upsertAttendance(tr.id, myPlayerId, status)}
+                    />
                   ))}
                 </div>
               </div>
@@ -189,13 +207,17 @@ export default function CalendarPage() {
   )
 }
 
-function TrainingRow({ t: training, isPast, attendance, onEdit, onDelete, onAttendance }: {
-  t: Training; isPast: boolean; attendance: ReturnType<typeof useApp>["attendance"]; onEdit: () => void; onDelete: () => void; onAttendance: () => void
+function TrainingRow({ t: training, isPast, isCoach, myPlayerId, attendance, onEdit, onDelete, onAttendance, onRsvp }: {
+  t: Training; isPast: boolean; isCoach: boolean; myPlayerId: string | null
+  attendance: ReturnType<typeof useApp>["attendance"]
+  onEdit: () => void; onDelete: () => void; onAttendance: () => void
+  onRsvp: (status: AttendanceStatus) => void
 }) {
   const t = useT(calendar)
   const e = useEnumT()
   const presentCount = attendance.filter(a => a.status === "present" || a.status === "late").length
   const hasAttendance = attendance.length > 0
+  const myStatus = myPlayerId ? attendance.find(a => a.player_id === myPlayerId)?.status ?? null : null
   return (
     <div className={cn("flex items-center gap-4 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors", isPast && "opacity-75")}>
       <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF] flex items-center justify-center shrink-0">
@@ -209,7 +231,7 @@ function TrainingRow({ t: training, isPast, attendance, onEdit, onDelete, onAtte
           {training.location && <><span className="text-slate-200">·</span><span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1"><MapPin size={11} /> {training.location}</span></>}
           {training.notes && <><span className="text-slate-200">·</span><span className="text-xs text-slate-400 dark:text-slate-500 truncate max-w-32">{training.notes}</span></>}
         </div>
-        {isPast && hasAttendance && (
+        {isCoach && isPast && hasAttendance && (
           <div className="flex items-center gap-1.5 mt-1.5">
             <Check size={11} className="text-emerald-500" />
             <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">{presentCount} {t("presentCount")} · {attendance.length} {t("of")} total</span>
@@ -218,15 +240,46 @@ function TrainingRow({ t: training, isPast, attendance, onEdit, onDelete, onAtte
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {training.category && <Badge variant="blue">{e.category(training.category)}</Badge>}
-        <button onClick={onAttendance} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title={t("markAttendance")}>
-          <ClipboardList size={14} />
-        </button>
-        <button onClick={onEdit} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" title={t("edit")}>
-          <Pencil size={14} />
-        </button>
-        <button onClick={onDelete} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors" title={t("deleteAction")}>
-          <Trash2 size={14} />
-        </button>
+        {isCoach ? (
+          <>
+            <button onClick={onAttendance} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title={t("markAttendance")}>
+              <ClipboardList size={14} />
+            </button>
+            <button onClick={onEdit} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" title={t("edit")}>
+              <Pencil size={14} />
+            </button>
+            <button onClick={onDelete} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors" title={t("deleteAction")}>
+              <Trash2 size={14} />
+            </button>
+          </>
+        ) : isPast ? (
+          myStatus && (
+            <span className={cn("text-xs font-bold px-2.5 py-1 rounded-lg", STATUS_CONFIG[myStatus].bg, STATUS_CONFIG[myStatus].text)}>
+              {t(myStatus as keyof typeof t)}
+            </span>
+          )
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => onRsvp("present")}
+              className={cn(
+                "h-8 px-3 rounded-lg text-xs font-semibold transition-colors",
+                myStatus === "present" ? "bg-emerald-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-emerald-50 hover:text-emerald-600"
+              )}
+            >
+              {t("iWillAttend")}
+            </button>
+            <button
+              onClick={() => onRsvp("absent")}
+              className={cn(
+                "h-8 px-3 rounded-lg text-xs font-semibold transition-colors",
+                myStatus === "absent" ? "bg-red-500 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-red-50 hover:text-red-500"
+              )}
+            >
+              {t("iCannotAttend")}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
