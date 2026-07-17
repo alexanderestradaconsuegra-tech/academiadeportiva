@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useRef } from "react"
-import { cn } from "@/lib/utils"
+import { cn, avatarUrl } from "@/lib/utils"
 import type { ConvocatoriaPlayer, Player } from "@/lib/types"
 
 export default function ConvocatoriaPitch({ pitchPlayers, players, onMove, editable, highlightPlayerId }: {
@@ -101,11 +101,23 @@ export default function ConvocatoriaPitch({ pitchPlayers, players, onMove, edita
             }}
           >
             <div className={cn(
-              "w-8 h-8 rounded-full border-2 shadow-lg flex items-center justify-center text-white text-[9px] font-black transition-transform",
-              isMe ? "bg-amber-500 border-white ring-2 ring-amber-300 scale-110" : "bg-[#0B5CFF] border-white",
+              "relative w-9 h-9 rounded-full border-2 shadow-lg overflow-hidden bg-slate-200 transition-transform",
+              isMe ? "border-amber-400 ring-2 ring-amber-300 scale-110" : "border-white",
               draggingId === pp.id && "scale-110 shadow-2xl"
             )}>
-              {pp.position_label.substring(0, 3)}
+              <img
+                src={player?.photo_url || avatarUrl(player?.name ?? "?", pp.player_id)}
+                alt={player?.name ?? "?"}
+                className="w-full h-full object-cover pointer-events-none"
+              />
+              {pp.position_label && (
+                <span className={cn(
+                  "absolute -bottom-0.5 -right-0.5 text-[7px] font-black text-white px-1 rounded-full leading-tight border border-white",
+                  isMe ? "bg-amber-600" : "bg-[#0B5CFF]"
+                )}>
+                  {pp.position_label.substring(0, 3)}
+                </span>
+              )}
             </div>
             <span className={cn(
               "text-white text-[8px] font-bold px-1.5 py-px rounded-full max-w-14 truncate leading-none",
