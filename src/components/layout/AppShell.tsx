@@ -103,7 +103,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   if (!authReady || !isAuthenticated) return null
   if (isOnboarding) return null
-  if (isSuspended) return <SuspendedScreen isCoach={!isPlayer} />
+  if (isSuspended) return <SuspendedScreen isCoach={currentUser?.role === "coach"} />
   if (isPlayer && !isOnAllowedPlayerPath) return null
 
   return (

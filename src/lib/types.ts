@@ -160,7 +160,7 @@ export interface PhysicalTest {
   created_at: string
 }
 
-export type UserRole = "coach" | "player"
+export type UserRole = "coach" | "player" | "assistant"
 
 export interface Profile {
   id: string
@@ -168,6 +168,7 @@ export interface Profile {
   player_id: string | null
   full_name: string
   academy_id: string | null
+  category: Category | null
 }
 
 export type SubscriptionStatus = "trialing" | "active" | "past_due" | "suspended" | "canceled"

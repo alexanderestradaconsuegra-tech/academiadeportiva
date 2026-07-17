@@ -31,7 +31,8 @@ export default function MatchDetailPage() {
   const params = useParams()
   const id = params.id as string
   const { matches, players, currentUser, getMatchStats, addMatchStat, updateMatchStat, deleteMatchStat, getConvocatoria, updateMatch } = useApp()
-  const isCoach = currentUser?.role === "coach"
+  const isOwner = currentUser?.role === "coach"
+  const isAssistant = currentUser?.role === "assistant"
   const t = useT(matchesDict)
   const enumT = useEnumT()
 
@@ -67,6 +68,7 @@ export default function MatchDetailPage() {
     )
   }
 
+  const isCoach = isOwner || (isAssistant && match.category === currentUser?.category)
   const matchId = match.id
   const playersWithoutStat = players.filter(p => !stats.some(s => s.player_id === p.id))
   const played = match.our_score !== null && match.opponent_score !== null

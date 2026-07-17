@@ -195,7 +195,8 @@ export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, getPlayerConvocatoria, currentUser, language, teamSettings, trainings, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, updatePayment } = useApp()
-  const isCoach = currentUser?.role === "coach"
+  const isOwner = currentUser?.role === "coach"
+  const isAssistant = currentUser?.role === "assistant"
 
   // Players can only view their own profile
   if (currentUser?.role === "player" && currentUser.player_id && currentUser.player_id !== id) {
@@ -206,6 +207,7 @@ export default function PlayerProfilePage() {
   const e = useEnumT()
 
   const player = getPlayer(id)
+  const isCoach = isOwner || (isAssistant && player?.category === currentUser?.category)
   const activities = getPlayerActivities(id)
   const evaluations = getPlayerEvaluations(id)
   const latestEval = getLatestEvaluation(id)
@@ -694,7 +696,7 @@ export default function PlayerProfilePage() {
 
             {/* Right column */}
             <div className="space-y-6">
-              {!isCoach && <NotificationToggle />}
+              {currentUser?.role === "player" && <NotificationToggle />}
 
               {/* Radar chart */}
               {radarData.length > 0 && (
@@ -838,7 +840,7 @@ export default function PlayerProfilePage() {
               </div>
 
               {/* Payment status */}
-              {isCoach && (
+              {isOwner && (
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">

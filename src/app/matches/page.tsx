@@ -26,8 +26,11 @@ const emptyForm = {
 
 export default function MatchesPage() {
   const { matches, addMatch, updateMatch, deleteMatch, currentUser, convocatorias } = useApp()
-  const isCoach = currentUser?.role === "coach"
+  const isOwner = currentUser?.role === "coach"
+  const isAssistant = currentUser?.role === "assistant"
+  const isCoach = isOwner || isAssistant
   const myPlayerId = currentUser?.player_id ?? null
+  const canManage = (m: Match) => isOwner || (isAssistant && m.category === currentUser?.category)
   const t = useT(matchesDict)
   const enumT = useEnumT()
   const [showForm, setShowForm] = useState(false)
@@ -44,7 +47,7 @@ export default function MatchesPage() {
 
   function openCreate() {
     setEditingId(null)
-    setForm(emptyForm)
+    setForm({ ...emptyForm, category: (isAssistant ? currentUser?.category : "") ?? "" })
     setShowForm(true)
   }
 
@@ -120,7 +123,7 @@ export default function MatchesPage() {
                   <Select label={t("homeAwayLabel")} value={form.is_home} onChange={e => set("is_home", e.target.value)}
                     options={[{ value: "true", label: t("home") }, { value: "false", label: t("away") }]} />
                   <Select label={t("categoryLabel")} value={form.category} onChange={e => set("category", e.target.value)}
-                    placeholder={t("allCategories")} options={CATEGORIES.map(c => ({ value: c, label: enumT.category(c) }))} />
+                    placeholder={t("allCategories")} disabled={isAssistant} options={CATEGORIES.map(c => ({ value: c, label: enumT.category(c) }))} />
                   <Input label={t("competitionLabel")} placeholder={t("competitionPlaceholder")} value={form.competition} onChange={e => set("competition", e.target.value)} />
                   <Input label={t("locationLabel")} placeholder={t("locationPlaceholder")} value={form.location} onChange={e => set("location", e.target.value)} />
                   <Input label={t("ourGoalsLabel")} type="number" min={0} placeholder="0" value={form.our_score} onChange={e => set("our_score", e.target.value)} />
@@ -155,7 +158,7 @@ export default function MatchesPage() {
                   {upcoming.map(m => {
                     const conv = convocatorias.find(c => c.match_id === m.id)
                     const myEntry = myPlayerId ? conv?.players.find(p => p.player_id === myPlayerId) : null
-                    return <MatchRow key={m.id} m={m} isCoach={isCoach} onEdit={() => openEdit(m)} onDelete={() => handleDelete(m.id)} myConvEntry={myEntry} />
+                    return <MatchRow key={m.id} m={m} isCoach={canManage(m)} onEdit={() => openEdit(m)} onDelete={() => handleDelete(m.id)} myConvEntry={myEntry} />
                   })}
                 </div>
               </div>
@@ -168,7 +171,7 @@ export default function MatchesPage() {
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                 <div className="divide-y divide-slate-50 dark:divide-slate-800">
                   {past.map(m => (
-                    <MatchRow key={m.id} m={m} isCoach={isCoach} onEdit={() => openEdit(m)} onDelete={() => handleDelete(m.id)} myConvEntry={null} />
+                    <MatchRow key={m.id} m={m} isCoach={canManage(m)} onEdit={() => openEdit(m)} onDelete={() => handleDelete(m.id)} myConvEntry={null} />
                   ))}
                 </div>
               </div>

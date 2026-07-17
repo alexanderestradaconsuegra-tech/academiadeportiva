@@ -355,6 +355,8 @@ function mapProfile(row: Tables<"profiles">): Profile {
     player_id: row.player_id,
     full_name: row.full_name || "",
     academy_id: row.academy_id ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    category: (row as any).category ?? null,
   }
 }
 

@@ -16,7 +16,7 @@ const CATEGORIES: ActivityCategory[] = ["Velocidad","Fuerza","Técnica","Resiste
 
 export default function ExerciseLibraryPage() {
   const { currentUser, exercises, addExercise, updateExercise, deleteExercise } = useApp()
-  const isCoach = currentUser?.role === "coach"
+  const isCoach = currentUser?.role === "coach" || currentUser?.role === "assistant"
   const t = useT(activitiesDict)
   const enumT = useEnumT()
   const [newName, setNewName] = useState<Record<string, string>>({})

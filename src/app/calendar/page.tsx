@@ -44,9 +44,12 @@ async function notifyNewTraining(data: { title: string; date: string; time: stri
 
 export default function CalendarPage() {
   const { trainings, players, currentUser, addTraining, updateTraining, deleteTraining, upsertAttendance, getTrainingAttendance } = useApp()
-  const isCoach = currentUser?.role === "coach"
+  const isOwner = currentUser?.role === "coach"
+  const isAssistant = currentUser?.role === "assistant"
+  const isCoach = isOwner || isAssistant
   const myPlayerId = currentUser?.player_id ?? null
   const myPlayer = players.find(p => p.id === myPlayerId)
+  const canManage = (tr: Training) => isOwner || (isAssistant && tr.category === currentUser?.category)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -67,7 +70,7 @@ export default function CalendarPage() {
 
   function openCreate() {
     setEditingId(null)
-    setForm(emptyForm)
+    setForm({ ...emptyForm, category: (isAssistant ? currentUser?.category : "") ?? "" })
     setShowForm(true)
   }
 
@@ -145,7 +148,7 @@ export default function CalendarPage() {
                   <Input label={t("dateLabel")} type="date" value={form.date} onChange={e => set("date", e.target.value)} required />
                   <Input label={t("timeLabel")} type="time" value={form.time} onChange={e => set("time", e.target.value)} />
                   <Select label={t("categoryLabel")} value={form.category} onChange={ev => set("category", ev.target.value)}
-                    placeholder={t("allCategories")} options={CATEGORIES.map(c => ({ value: c, label: e.category(c) }))} />
+                    placeholder={t("allCategories")} disabled={isAssistant} options={CATEGORIES.map(c => ({ value: c, label: e.category(c) }))} />
                   <Input label={t("locationLabel")} placeholder={t("locationPlaceholder")} value={form.location} onChange={e => set("location", e.target.value)} />
                   <div className="col-span-2">
                     <Textarea label={t("notesLabel")} placeholder={t("notesPlaceholder")} value={form.notes} onChange={e => set("notes", e.target.value)} rows={2} />
@@ -173,7 +176,7 @@ export default function CalendarPage() {
                 <div className="divide-y divide-slate-50 dark:divide-slate-800">
                   {upcoming.map(tr => (
                     <TrainingRow
-                      key={tr.id} t={tr} isPast={false} isCoach={isCoach} myPlayerId={myPlayerId}
+                      key={tr.id} t={tr} isPast={false} isCoach={isCoach} canManage={canManage(tr)} myPlayerId={myPlayerId}
                       attendance={getTrainingAttendance(tr.id)}
                       onEdit={() => openEdit(tr)} onDelete={() => handleDelete(tr.id)} onAttendance={() => setAttendanceTraining(tr)}
                       onRsvp={status => myPlayerId && upsertAttendance(tr.id, myPlayerId, status)}
@@ -191,7 +194,7 @@ export default function CalendarPage() {
                 <div className="divide-y divide-slate-50 dark:divide-slate-800">
                   {past.map(tr => (
                     <TrainingRow
-                      key={tr.id} t={tr} isPast={true} isCoach={isCoach} myPlayerId={myPlayerId}
+                      key={tr.id} t={tr} isPast={true} isCoach={isCoach} canManage={canManage(tr)} myPlayerId={myPlayerId}
                       attendance={getTrainingAttendance(tr.id)}
                       onEdit={() => openEdit(tr)} onDelete={() => handleDelete(tr.id)} onAttendance={() => setAttendanceTraining(tr)}
                       onRsvp={status => myPlayerId && upsertAttendance(tr.id, myPlayerId, status)}
@@ -207,8 +210,8 @@ export default function CalendarPage() {
   )
 }
 
-function TrainingRow({ t: training, isPast, isCoach, myPlayerId, attendance, onEdit, onDelete, onAttendance, onRsvp }: {
-  t: Training; isPast: boolean; isCoach: boolean; myPlayerId: string | null
+function TrainingRow({ t: training, isPast, isCoach, canManage, myPlayerId, attendance, onEdit, onDelete, onAttendance, onRsvp }: {
+  t: Training; isPast: boolean; isCoach: boolean; canManage: boolean; myPlayerId: string | null
   attendance: ReturnType<typeof useApp>["attendance"]
   onEdit: () => void; onDelete: () => void; onAttendance: () => void
   onRsvp: (status: AttendanceStatus) => void
@@ -241,17 +244,19 @@ function TrainingRow({ t: training, isPast, isCoach, myPlayerId, attendance, onE
       <div className="flex items-center gap-2 shrink-0">
         {training.category && <Badge variant="blue">{e.category(training.category)}</Badge>}
         {isCoach ? (
-          <>
-            <button onClick={onAttendance} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title={t("markAttendance")}>
-              <ClipboardList size={14} />
-            </button>
-            <button onClick={onEdit} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" title={t("edit")}>
-              <Pencil size={14} />
-            </button>
-            <button onClick={onDelete} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors" title={t("deleteAction")}>
-              <Trash2 size={14} />
-            </button>
-          </>
+          canManage && (
+            <>
+              <button onClick={onAttendance} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title={t("markAttendance")}>
+                <ClipboardList size={14} />
+              </button>
+              <button onClick={onEdit} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" title={t("edit")}>
+                <Pencil size={14} />
+              </button>
+              <button onClick={onDelete} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors" title={t("deleteAction")}>
+                <Trash2 size={14} />
+              </button>
+            </>
+          )
         ) : isPast ? (
           myStatus && (
             <span className={cn("text-xs font-bold px-2.5 py-1 rounded-lg", STATUS_CONFIG[myStatus].bg, STATUS_CONFIG[myStatus].text)}>

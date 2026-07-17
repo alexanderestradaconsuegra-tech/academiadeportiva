@@ -22,15 +22,16 @@ const CATEGORIES: Category[] = ["Sub-5","Sub-6","Sub-7","Sub-8","Sub-9","Sub-10"
 const FEET: DominantFoot[] = ["Derecha","Izquierda","Ambidiestro"]
 
 export default function NewPlayerPage() {
-  const { addPlayer } = useApp()
+  const { addPlayer, currentUser } = useApp()
   const router = useRouter()
   const t = useT(playersDict)
   const e = useEnumT()
+  const isAssistant = currentUser?.role === "assistant"
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     name: "", age: "", birth_date: "", position: "" as Position | "",
     dominant_foot: "" as DominantFoot | "", height: "", weight: "",
-    club: "Academia FutbolMetrics", category: "" as Category | "",
+    club: "Academia FutbolMetrics", category: (currentUser?.category ?? "") as Category | "",
     objective: "", notes: "", photo_url: "",
   })
 
@@ -128,7 +129,7 @@ export default function NewPlayerPage() {
                   <Select
                     label={t("categoryLabel")}
                     value={form.category} onChange={ev => set("category", ev.target.value)}
-                    placeholder={t("selectPlaceholder")} required
+                    placeholder={t("selectPlaceholder")} required disabled={isAssistant}
                     options={CATEGORIES.map(c => ({ value: c, label: e.category(c) }))}
                   />
                   <Input label={t("clubLabel")} placeholder="Academia FutbolMetrics" value={form.club} onChange={ev => set("club", ev.target.value)} />

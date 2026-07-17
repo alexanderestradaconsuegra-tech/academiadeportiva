@@ -371,6 +371,160 @@ function AccessManager() {
   )
 }
 
+interface Assistant { id: string; full_name: string | null; category: Category | null; created_at: string }
+
+function AssistantManager() {
+  const t = useT(settings)
+  const [assistants, setAssistants] = useState<Assistant[] | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState<string | null>(null)
+  const [error, setError] = useState("")
+  const [form, setForm] = useState({ email: "", password: "", full_name: "", category: CATEGORIES[0] as Category })
+  const [editForm, setEditForm] = useState({ email: "", password: "" })
+
+  async function load() {
+    setLoading(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const res = await fetch("/api/admin/assistants", { headers: { Authorization: `Bearer ${token}` } })
+    const data = await res.json()
+    if (res.ok) setAssistants(data.assistants)
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  async function handleCreate() {
+    setError("")
+    setCreating(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const res = await fetch("/api/admin/create-assistant", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(form),
+    })
+    const data = await res.json()
+    setCreating(false)
+    if (!res.ok) {
+      setError(data.error || t("accessCreateError"))
+      return
+    }
+    setShowForm(false)
+    setForm({ email: "", password: "", full_name: "", category: CATEGORIES[0] })
+    load()
+  }
+
+  async function handleUpdate(profileId: string) {
+    setError("")
+    setSaving(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const res = await fetch("/api/admin/update-account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ profile_id: profileId, email: editForm.email || undefined, password: editForm.password || undefined }),
+    })
+    const data = await res.json()
+    setSaving(false)
+    if (!res.ok) {
+      setError(data.error || t("accessUpdateError"))
+      return
+    }
+    setEditingId(null)
+    setEditForm({ email: "", password: "" })
+    setSaved(profileId)
+    setTimeout(() => setSaved(null), 2500)
+  }
+
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Profesores de categoría</h3>
+        <Button size="sm" variant="outline" type="button" onClick={() => { setShowForm(s => !s); setError("") }}>
+          <KeyRound size={13} /> Nuevo profesor
+        </Button>
+      </div>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+        Cada profesor solo puede gestionar los jugadores, partidos y entrenamientos de su propia categoría. No ve pagos ni la configuración de la academia.
+      </p>
+
+      {showForm && (
+        <div className="rounded-xl border border-slate-100 dark:border-slate-800 p-4 mb-4 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input label={t("emailLabel")} type="email" placeholder={t("emailPlaceholder")} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+            <Input label={t("passwordLabel")} type="text" placeholder={t("passwordPlaceholder")} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
+            <Input label="Nombre completo" placeholder="Ej: Andrés Gómez" value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} />
+            <div>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5 block">Categoría</label>
+              <select
+                value={form.category}
+                onChange={e => setForm(f => ({ ...f, category: e.target.value as Category }))}
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-[#0B5CFF] outline-none"
+              >
+                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+          {error && <p className="text-xs text-red-600">{error}</p>}
+          <div className="flex justify-end">
+            <Button size="sm" type="button" loading={creating} disabled={!form.email || form.password.length < 6} onClick={handleCreate}>
+              Crear profesor
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <p className="text-xs text-slate-400">{t("loading")}</p>
+      ) : !assistants || assistants.length === 0 ? (
+        <p className="text-xs text-slate-400">Aún no has creado profesores de categoría.</p>
+      ) : (
+        <div className="space-y-2">
+          {assistants.map(a => (
+            <div key={a.id} className="rounded-xl border border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3 p-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{a.full_name || "—"}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">{a.category}</p>
+                </div>
+                {saved === a.id && (
+                  <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold">
+                    <Check size={12} /> {t("saved")}
+                  </span>
+                )}
+                <Button variant="outline" size="sm" type="button" onClick={() => { setEditingId(editingId === a.id ? null : a.id); setError(""); setEditForm({ email: "", password: "" }) }}>
+                  {t("editAccess")}
+                </Button>
+              </div>
+              {editingId === a.id && (
+                <div className="p-3 pt-0 space-y-3 border-t border-slate-100 dark:border-slate-800 mt-1">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 pt-3">{t("editAccessHint")}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Input label={t("newEmailLabel")} type="email" placeholder={t("emailPlaceholder")} value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} />
+                    <Input label={t("newPasswordLabel")} type="text" placeholder={t("passwordPlaceholder")} value={editForm.password} onChange={e => setEditForm(f => ({ ...f, password: e.target.value }))} />
+                  </div>
+                  {error && <p className="text-xs text-red-600">{error}</p>}
+                  <div className="flex justify-end gap-2">
+                    <Button variant="secondary" size="sm" type="button" onClick={() => setEditingId(null)}>{t("cancel")}</Button>
+                    <Button size="sm" type="button" loading={saving} disabled={!editForm.email && editForm.password.length < 6} onClick={() => handleUpdate(a.id)}>
+                      {t("saveChanges")}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function SettingsPage() {
   const { teamSettings, updateTeamSettings, currentUser, darkMode, toggleDarkMode, language } = useApp()
   const isCoach = currentUser?.role === "coach"
@@ -469,6 +623,7 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {isCoach && (
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left: Logo preview */}
@@ -522,12 +677,14 @@ export default function SettingsPage() {
             </div>
           </div>
         </form>
+        )}
 
         {isCoach && (
           <div className="mt-6 space-y-6">
             <BillingCard />
             <NotificationBroadcast />
             <AccessManager />
+            <AssistantManager />
           </div>
         )}
       </div>

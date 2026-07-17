@@ -17,6 +17,8 @@ export default function Sidebar() {
   const t = useT(nav)
   const tCommon = useT(common)
 
+  const isOwner = currentUser?.role === "coach"
+
   const NAV = [
     { href: "/dashboard", icon: LayoutDashboard, label: t("dashboard") },
     { href: "/players", icon: Users, label: t("players") },
@@ -26,7 +28,7 @@ export default function Sidebar() {
     { href: "/health", icon: Heart, label: t("health"), badge: "LIVE" },
     { href: "/tactics", icon: PenTool, label: t("tactics") },
     { href: "/heatmap", icon: Radar, label: t("heatmap") },
-    { href: "/payments", icon: CreditCard, label: t("paymentsNav") },
+    ...(isOwner ? [{ href: "/payments", icon: CreditCard, label: t("paymentsNav") }] : []),
     { href: "/charts", icon: BarChart3, label: t("charts") },
     { href: "/reports", icon: FileText, label: t("reports") },
     { href: "/settings", icon: Settings, label: t("settings") },
@@ -93,7 +95,7 @@ export default function Sidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">{currentUser?.full_name || t("trainer")}</p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500">{t("coach")}</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500">{isOwner ? t("coach") : `Profesor · ${currentUser?.category ?? ""}`}</p>
           </div>
           <button
             onClick={toggleDarkMode}

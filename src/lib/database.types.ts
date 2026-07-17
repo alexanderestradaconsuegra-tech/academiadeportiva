@@ -641,6 +641,7 @@ export type Database = {
           player_id: string | null
           role: string
           academy_id: string | null
+          category: Database["public"]["Enums"]["category"] | null
         }
         Insert: {
           created_at?: string
@@ -649,6 +650,7 @@ export type Database = {
           player_id?: string | null
           role: string
           academy_id?: string | null
+          category?: Database["public"]["Enums"]["category"] | null
         }
         Update: {
           created_at?: string
@@ -657,6 +659,7 @@ export type Database = {
           player_id?: string | null
           role?: string
           academy_id?: string | null
+          category?: Database["public"]["Enums"]["category"] | null
         }
         Relationships: [
           {
