@@ -719,6 +719,11 @@ export type Database = {
           logo_url: string | null
           name: string
           updated_at: string
+          monthly_fee: number | null
+          subscription_status: string
+          subscription_current_period_end: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
         }
         Insert: {
           calib_p0_lat?: number | null
@@ -735,6 +740,11 @@ export type Database = {
           logo_url?: string | null
           name?: string
           updated_at?: string
+          monthly_fee?: number | null
+          subscription_status?: string
+          subscription_current_period_end?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
         }
         Update: {
           calib_p0_lat?: number | null
@@ -751,6 +761,11 @@ export type Database = {
           logo_url?: string | null
           name?: string
           updated_at?: string
+          monthly_fee?: number | null
+          subscription_status?: string
+          subscription_current_period_end?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
         }
         Relationships: []
       }

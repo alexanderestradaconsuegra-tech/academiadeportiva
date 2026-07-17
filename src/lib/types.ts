@@ -165,6 +165,8 @@ export interface Profile {
   academy_id: string | null
 }
 
+export type SubscriptionStatus = "trialing" | "active" | "past_due" | "suspended" | "canceled"
+
 export interface TeamSettings {
   id: string
   name: string
@@ -181,6 +183,10 @@ export interface TeamSettings {
   calib_p1_lng: number | null
   calib_p2_lat: number | null
   calib_p2_lng: number | null
+  subscription_status: SubscriptionStatus
+  subscription_current_period_end: string | null
+  stripe_customer_id: string | null
+  stripe_subscription_id: string | null
 }
 
 export interface Training {

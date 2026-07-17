@@ -165,6 +165,60 @@ function MyAccount() {
   )
 }
 
+const BILLING_STATUS_LABEL: Record<string, { label: string; bg: string }> = {
+  trialing: { label: "En prueba", bg: "bg-blue-50 text-blue-600" },
+  active: { label: "Activa", bg: "bg-emerald-50 text-emerald-600" },
+  past_due: { label: "Pago pendiente", bg: "bg-amber-50 text-amber-600" },
+  suspended: { label: "Suspendida", bg: "bg-red-50 text-red-600" },
+  canceled: { label: "Cancelada", bg: "bg-slate-100 text-slate-500" },
+}
+
+function BillingCard() {
+  const { teamSettings } = useApp()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const status = teamSettings?.subscription_status ?? "active"
+  const cfg = BILLING_STATUS_LABEL[status] ?? BILLING_STATUS_LABEL.active
+  const hasStripe = !!teamSettings?.stripe_customer_id
+
+  async function handleClick() {
+    setError("")
+    setLoading(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const endpoint = hasStripe ? "/api/billing/portal" : "/api/billing/create-checkout-session"
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    })
+    const data = await res.json()
+    setLoading(false)
+    if (!res.ok || !data.url) {
+      setError(data.error || "No se pudo continuar.")
+      return
+    }
+    window.location.href = data.url
+  }
+
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Facturación</h3>
+        <span className={cn("text-xs font-bold px-2 py-0.5 rounded-lg", cfg.bg)}>{cfg.label}</span>
+      </div>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+        {teamSettings?.subscription_current_period_end
+          ? `Vence el ${new Date(teamSettings.subscription_current_period_end).toLocaleDateString("es-CO")}`
+          : "Tu suscripción es gestionada manualmente por el equipo de soporte."}
+      </p>
+      {error && <p className="text-xs text-red-600 mb-3">{error}</p>}
+      <Button size="sm" type="button" loading={loading} onClick={handleClick}>
+        {hasStripe ? "Gestionar suscripción" : "Suscribirse con tarjeta"}
+      </Button>
+    </div>
+  )
+}
+
 function AccessManager() {
   const t = useT(settings)
   const { players } = useApp()
@@ -471,6 +525,7 @@ export default function SettingsPage() {
 
         {isCoach && (
           <div className="mt-6 space-y-6">
+            <BillingCard />
             <NotificationBroadcast />
             <AccessManager />
           </div>

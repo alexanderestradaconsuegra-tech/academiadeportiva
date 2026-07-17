@@ -214,6 +214,14 @@ function mapTeamSettings(row: Tables<"team_settings">): TeamSettings {
     calib_p1_lng: row.calib_p1_lng,
     calib_p2_lat: row.calib_p2_lat,
     calib_p2_lng: row.calib_p2_lng,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    subscription_status: ((row as any).subscription_status ?? "active") as TeamSettings["subscription_status"],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    subscription_current_period_end: (row as any).subscription_current_period_end ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    stripe_customer_id: (row as any).stripe_customer_id ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    stripe_subscription_id: (row as any).stripe_subscription_id ?? null,
   }
 }
 

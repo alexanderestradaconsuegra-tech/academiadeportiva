@@ -270,6 +270,11 @@ export default function LoginPage() {
           <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-6">
             © 2024 FutbolMetrics · {t("footer")}
           </p>
+          <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-2">
+            <a href="/legal/privacy" className="hover:text-[#0B5CFF] hover:underline">Política de Privacidad</a>
+            {" · "}
+            <a href="/legal/terms" className="hover:text-[#0B5CFF] hover:underline">Términos de Servicio</a>
+          </p>
         </div>
       </div>
     </div>
