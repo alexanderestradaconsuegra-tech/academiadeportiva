@@ -84,6 +84,7 @@ interface AppContextType extends AppState {
   deletePayment: (id: string) => void
   getPlayerPayments: (playerId: string) => Payment[]
   getConvocatoria: (matchId: string) => Convocatoria | undefined
+  refreshConvocatoria: (matchId: string) => Promise<void>
   saveConvocatoria: (matchId: string, formation: string, notes: string, players: ConvocatoriaPlayer[]) => Promise<string | null>
   respondConvocatoria: (convocatoriaPlayerId: string, confirmed: boolean) => Promise<string | null>
   getPlayerConvocatoria: (playerId: string) => { convocatoria: Convocatoria; match: Match } | null
@@ -1163,6 +1164,43 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return null
   }, [state.teamSettings])
 
+  const refreshConvocatoria = useCallback(async (matchId: string): Promise<void> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any
+    const { data: convData } = await sb
+      .from("convocatorias")
+      .select("*, convocatoria_players(*)")
+      .eq("match_id", matchId)
+      .maybeSingle()
+    if (!convData) return
+    const refreshed: Convocatoria = {
+      id: convData.id,
+      match_id: convData.match_id,
+      academy_id: convData.academy_id ?? null,
+      formation: convData.formation ?? "",
+      notes: convData.notes ?? "",
+      created_at: convData.created_at,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      players: (convData.convocatoria_players ?? []).map((p: any): ConvocatoriaPlayer => ({
+        id: p.id,
+        convocatoria_id: p.convocatoria_id,
+        player_id: p.player_id,
+        position_label: p.position_label ?? "",
+        x: p.x ?? 50,
+        y: p.y ?? 50,
+        instruction: p.instruction ?? "",
+        confirmed: p.confirmed ?? null,
+        created_at: p.created_at,
+      })),
+    }
+    setState(s => ({
+      ...s,
+      convocatorias: s.convocatorias.some(c => c.match_id === matchId)
+        ? s.convocatorias.map(c => c.match_id === matchId ? refreshed : c)
+        : [...s.convocatorias, refreshed],
+    }))
+  }, [])
+
   const respondConvocatoria = useCallback(async (convocatoriaPlayerId: string, confirmed: boolean): Promise<string | null> => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = supabase as any
@@ -1290,6 +1328,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         deletePayment,
         getPlayerPayments,
         getConvocatoria,
+        refreshConvocatoria,
         saveConvocatoria,
         respondConvocatoria,
         getPlayerConvocatoria,

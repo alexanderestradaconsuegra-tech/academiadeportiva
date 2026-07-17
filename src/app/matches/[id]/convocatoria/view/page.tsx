@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
@@ -10,13 +10,15 @@ import { cn } from "@/lib/utils"
 
 export default function ConvocatoriaViewPage() {
   const { id } = useParams<{ id: string }>()
-  const { matches, players, currentUser, getConvocatoria, respondConvocatoria } = useApp()
+  const { matches, players, currentUser, getConvocatoria, refreshConvocatoria, respondConvocatoria } = useApp()
 
   const [responding, setResponding] = useState<"confirm" | "decline" | null>(null)
 
   const match = matches.find(m => m.id === id)
   const convocatoria = getConvocatoria(id)
   const myPlayerId = currentUser?.player_id ?? null
+
+  useEffect(() => { refreshConvocatoria(id) }, [id, refreshConvocatoria])
 
   async function handleRespond(confirmed: boolean) {
     if (!myPlayerId || !convocatoria) return

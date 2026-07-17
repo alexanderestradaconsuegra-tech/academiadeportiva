@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
@@ -146,12 +146,46 @@ function positionRole(position: string): Role {
   return "FWD"
 }
 
-function FootballPitch({ pitchPlayers, players }: {
+function FootballPitch({ pitchPlayers, players, onMove, editable }: {
   pitchPlayers: ConvocatoriaPlayer[]
   players: Player[]
+  onMove?: (id: string, x: number, y: number) => void
+  editable?: boolean
 }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+
+  function toPercent(clientX: number, clientY: number) {
+    const rect = containerRef.current!.getBoundingClientRect()
+    const x = Math.max(3, Math.min(97, ((clientX - rect.left) / rect.width) * 100))
+    const y = Math.max(3, Math.min(97, ((clientY - rect.top) / rect.height) * 100))
+    return { x, y }
+  }
+
+  function handlePointerDown(id: string, e: React.PointerEvent) {
+    if (!editable) return
+    e.stopPropagation()
+    e.preventDefault()
+    setDraggingId(id)
+  }
+
+  useEffect(() => {
+    if (!draggingId) return
+    function handleMove(e: PointerEvent) {
+      const { x, y } = toPercent(e.clientX, e.clientY)
+      onMove?.(draggingId!, x, y)
+    }
+    function handleUp() { setDraggingId(null) }
+    window.addEventListener("pointermove", handleMove)
+    window.addEventListener("pointerup", handleUp)
+    return () => {
+      window.removeEventListener("pointermove", handleMove)
+      window.removeEventListener("pointerup", handleUp)
+    }
+  }, [draggingId, onMove])
+
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden" style={{ aspectRatio: "10/16" }}>
+    <div ref={containerRef} className="relative w-full rounded-2xl overflow-hidden touch-none select-none" style={{ aspectRatio: "10/16" }}>
       {/* Green background with stripes */}
       <div className="absolute inset-0 bg-emerald-700">
         {Array.from({ length: 8 }).map((_, i) => (
@@ -199,10 +233,18 @@ function FootballPitch({ pitchPlayers, players }: {
         return (
           <div
             key={pp.id}
+            onPointerDown={e => handlePointerDown(pp.id, e)}
             className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5 z-20"
-            style={{ left: `${pp.x}%`, top: `${pp.y}%` }}
+            style={{
+              left: `${pp.x}%`, top: `${pp.y}%`,
+              touchAction: "none",
+              cursor: editable ? (draggingId === pp.id ? "grabbing" : "grab") : "default",
+            }}
           >
-            <div className="w-8 h-8 rounded-full bg-[#0B5CFF] border-2 border-white shadow-lg flex items-center justify-center text-white text-[9px] font-black">
+            <div className={cn(
+              "w-8 h-8 rounded-full bg-[#0B5CFF] border-2 border-white shadow-lg flex items-center justify-center text-white text-[9px] font-black transition-transform",
+              draggingId === pp.id && "scale-110 shadow-2xl"
+            )}>
               {pp.position_label.substring(0, 3)}
             </div>
             <span className="text-white text-[8px] font-bold bg-black/50 px-1.5 py-px rounded-full max-w-14 truncate leading-none">
@@ -217,7 +259,7 @@ function FootballPitch({ pitchPlayers, players }: {
 
 export default function ConvocatoriaPage() {
   const { id } = useParams<{ id: string }>()
-  const { matches, players, convocatorias, getConvocatoria, saveConvocatoria } = useApp()
+  const { matches, players, convocatorias, getConvocatoria, refreshConvocatoria, saveConvocatoria } = useApp()
 
   const match = matches.find(m => m.id === id)
   const eligiblePlayers = match?.category
@@ -236,6 +278,8 @@ export default function ConvocatoriaPage() {
   const [selectedFormation, setSelectedFormation] = useState<string>("")
 
   const formationKeys = Object.keys(FORMATIONS).filter(k => k.startsWith(activeFormat))
+
+  useEffect(() => { refreshConvocatoria(id) }, [id, refreshConvocatoria])
 
   useEffect(() => {
     const existing = getConvocatoria(id)
@@ -275,6 +319,10 @@ export default function ConvocatoriaPage() {
       setPitchPlayers(pp => [...pp, newP])
     }
     setSelectedIds(next)
+  }
+
+  function handleMovePlayer(ppId: string, x: number, y: number) {
+    setPitchPlayers(pp => pp.map(p => p.id === ppId ? { ...p, x, y } : p))
   }
 
   function applyFormation(formationKey: string) {
@@ -578,7 +626,8 @@ export default function ConvocatoriaPage() {
                 </div>
 
                 {/* Pitch */}
-                <FootballPitch pitchPlayers={pitchPlayers} players={players} />
+                <FootballPitch pitchPlayers={pitchPlayers} players={players} onMove={handleMovePlayer} editable />
+                <p className="text-xs text-slate-400 dark:text-slate-500 text-center -mt-2">Arrastra a un jugador para ajustar su posición</p>
 
                 {/* Formation legend */}
                 {selectedFormation && pitchPlayers.length > 0 && (

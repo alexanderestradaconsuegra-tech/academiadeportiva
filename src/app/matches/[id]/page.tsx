@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
@@ -30,7 +30,7 @@ const EMPTY_STAT_FORM = {
 export default function MatchDetailPage() {
   const params = useParams()
   const id = params.id as string
-  const { matches, players, currentUser, getMatchStats, addMatchStat, updateMatchStat, deleteMatchStat, getConvocatoria, updateMatch } = useApp()
+  const { matches, players, currentUser, getMatchStats, addMatchStat, updateMatchStat, deleteMatchStat, getConvocatoria, refreshConvocatoria, updateMatch } = useApp()
   const isOwner = currentUser?.role === "coach"
   const isAssistant = currentUser?.role === "assistant"
   const t = useT(matchesDict)
@@ -39,6 +39,8 @@ export default function MatchDetailPage() {
   const match = matches.find(m => m.id === id)
   const stats = getMatchStats(id)
   const convocatoria = getConvocatoria(id)
+
+  useEffect(() => { refreshConvocatoria(id) }, [id, refreshConvocatoria])
 
   const [showStatForm, setShowStatForm] = useState(false)
   const [editingStatId, setEditingStatId] = useState<string | null>(null)
