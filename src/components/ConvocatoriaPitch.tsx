@@ -101,18 +101,23 @@ export default function ConvocatoriaPitch({ pitchPlayers, players, onMove, edita
             }}
           >
             <div className={cn(
-              "relative w-9 h-9 rounded-full border-2 shadow-lg overflow-hidden bg-slate-200 transition-transform",
-              isMe ? "border-amber-400 ring-2 ring-amber-300 scale-110" : "border-white",
+              "relative w-11 h-11 rounded-full shadow-lg transition-transform",
+              isMe && "scale-110",
               draggingId === pp.id && "scale-110 shadow-2xl"
             )}>
-              <img
-                src={player?.photo_url || avatarUrl(player?.name ?? "?", pp.player_id)}
-                alt={player?.name ?? "?"}
-                className="w-full h-full object-cover pointer-events-none"
-              />
+              <div className={cn(
+                "w-full h-full rounded-full border-2 overflow-hidden bg-slate-200",
+                isMe ? "border-amber-400 ring-2 ring-amber-300" : "border-white"
+              )}>
+                <img
+                  src={player?.photo_url || avatarUrl(player?.name ?? "?", pp.player_id)}
+                  alt={player?.name ?? "?"}
+                  className="w-full h-full object-cover pointer-events-none"
+                />
+              </div>
               {pp.position_label && (
                 <span className={cn(
-                  "absolute -bottom-0.5 -right-0.5 text-[7px] font-black text-white px-1 rounded-full leading-tight border border-white",
+                  "absolute -bottom-1 left-1/2 -translate-x-1/2 text-[7px] font-black text-white px-1.5 py-px rounded-full leading-tight border border-white whitespace-nowrap",
                   isMe ? "bg-amber-600" : "bg-[#0B5CFF]"
                 )}>
                   {pp.position_label.substring(0, 3)}
