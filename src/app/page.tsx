@@ -71,6 +71,90 @@ function PlaceholderImage({ label, aspect = "16/9" }: { label: string; aspect?: 
   )
 }
 
+const CHALK_DOTS = Array.from({ length: 45 }, (_, i) => ({
+  cx: (i * 37 + (i % 7) * 13) % 400,
+  cy: (i * 53 + (i % 5) * 29) % 500,
+  r: 0.5 + (i % 3) * 0.4,
+  o: 0.06 + (i % 4) * 0.03,
+}))
+
+function TacticsBoardGraphic() {
+  const oPlayers = [
+    { x: 140, y: 440 }, { x: 260, y: 440 }, { x: 200, y: 360 },
+    { x: 110, y: 260 }, { x: 290, y: 260 }, { x: 200, y: 178 },
+  ]
+  const xPlayers = [
+    { x: 200, y: 400 }, { x: 150, y: 305 }, { x: 250, y: 305 },
+    { x: 172, y: 205 }, { x: 232, y: 145 },
+  ]
+  return (
+    <div className="relative w-full rounded-3xl overflow-hidden shadow-2xl shadow-black/40 border border-white/10" style={{ aspectRatio: "4/5" }}>
+      <svg viewBox="0 0 400 500" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="boardGreen" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#1e7a42" />
+            <stop offset="100%" stopColor="#155c33" />
+          </linearGradient>
+          <marker id="arrowHead" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="rgba(255,255,255,0.85)" />
+          </marker>
+        </defs>
+
+        <rect width="400" height="500" fill="url(#boardGreen)" />
+        {CHALK_DOTS.map((d, i) => (
+          <circle key={i} cx={d.cx} cy={d.cy} r={d.r} fill="#fff" opacity={d.o} />
+        ))}
+
+        {/* Pitch markings */}
+        <g stroke="rgba(255,255,255,0.55)" strokeWidth="1.6" fill="none">
+          <rect x="30" y="30" width="340" height="440" rx="4" />
+          <line x1="30" y1="250" x2="370" y2="250" />
+          <circle cx="200" cy="250" r="52" />
+          <circle cx="200" cy="250" r="2.2" fill="rgba(255,255,255,0.55)" />
+          <rect x="110" y="30" width="180" height="82" />
+          <rect x="150" y="30" width="100" height="36" />
+          <rect x="110" y="388" width="180" height="82" />
+          <rect x="150" y="434" width="100" height="36" />
+          <path d="M 30 60 A 30 30 0 0 0 60 30" />
+          <path d="M 370 60 A 30 30 0 0 1 340 30" />
+          <path d="M 30 440 A 30 30 0 0 1 60 470" />
+          <path d="M 370 440 A 30 30 0 0 0 340 470" />
+        </g>
+
+        {/* Tactical run arrows */}
+        <g fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeDasharray="7 6" strokeLinecap="round">
+          <path d="M 140 440 Q 70 380 110 260" markerEnd="url(#arrowHead)" />
+          <path d="M 110 260 Q 90 190 155 130" markerEnd="url(#arrowHead)" />
+          <path d="M 200 360 Q 210 260 200 185" markerEnd="url(#arrowHead)" />
+          <path d="M 200 178 Q 195 130 192 95" markerEnd="url(#arrowHead)" />
+        </g>
+
+        {/* Opponent markers (X) */}
+        <g stroke="rgba(255,255,255,0.9)" strokeWidth="2.4" strokeLinecap="round">
+          {xPlayers.map((p, i) => (
+            <g key={i}>
+              <line x1={p.x - 8} y1={p.y - 8} x2={p.x + 8} y2={p.y + 8} />
+              <line x1={p.x - 8} y1={p.y + 8} x2={p.x + 8} y2={p.y - 8} />
+            </g>
+          ))}
+        </g>
+
+        {/* Own team markers (O) */}
+        <g>
+          {oPlayers.map((p, i) => (
+            <circle key={i} cx={p.x} cy={p.y} r="10" fill="#0B5CFF" stroke="white" strokeWidth="1.5" />
+          ))}
+        </g>
+      </svg>
+
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-5">
+        <p className="text-white text-sm font-bold">Tablero táctico en vivo</p>
+        <p className="text-white/60 text-xs">Formaciones y jugadas, directo desde la app</p>
+      </div>
+    </div>
+  )
+}
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#05122F] text-white overflow-x-hidden">
@@ -159,10 +243,7 @@ export default function LandingPage() {
                 <span className="flex items-center gap-1.5"><Languages size={14} /> Español, inglés y portugués</span>
               </div>
             </div>
-            <PlaceholderImage
-              aspect="4/5"
-              label="Foto real de tu academia (entrenamiento o partido) — recomendado 1200×1500px, formato vertical"
-            />
+            <TacticsBoardGraphic />
           </div>
         </div>
       </section>
