@@ -54,7 +54,7 @@ export default function PlayerNav() {
               }
             </div>
             <div className="min-w-0">
-              <span className="text-[14px] font-bold text-slate-900 dark:text-white truncate block">{teamSettings?.name || "FutbolMetrics"}</span>
+              <span className="text-[14px] font-bold text-slate-900 dark:text-white truncate block">{teamSettings?.name || "Metrikas"}</span>
               <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Jugador</p>
             </div>
           </div>

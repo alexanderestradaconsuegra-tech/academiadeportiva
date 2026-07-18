@@ -36,7 +36,7 @@ export const matches = {
   confirmDeleteMatch: { es: "¿Eliminar este partido? También se borrarán las estadísticas de los jugadores en ese partido.", en: "Delete this match? Player statistics for this match will also be deleted.", pt: "Excluir esta partida? As estatísticas dos jogadores nesta partida também serão excluídas." },
   backToMatches: { es: "Volver a Partidos", en: "Back to Matches", pt: "Voltar para Partidas" },
   matchNotFound: { es: "Partido no encontrado", en: "Match not found", pt: "Partida não encontrada" },
-  vsHome: { es: "FutbolMetrics vs", en: "FutbolMetrics vs", pt: "FutbolMetrics vs" },
+  vsHome: { es: "Metrikas vs", en: "Metrikas vs", pt: "Metrikas vs" },
   vsAway: { es: "vs (visitante)", en: "vs (away)", pt: "vs (fora)" },
   watchMatchVideo: { es: "Ver video del partido (cámara 360)", en: "Watch match video (360 camera)", pt: "Ver vídeo da partida (câmera 360)" },
   playerStats: { es: "Estadísticas de Jugadores", en: "Player Statistics", pt: "Estatísticas dos Jogadores" },

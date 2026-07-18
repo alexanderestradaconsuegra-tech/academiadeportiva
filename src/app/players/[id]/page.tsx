@@ -243,7 +243,7 @@ export default function PlayerProfilePage() {
     setPdfLoading(true)
     await generatePlayerPDF({
       player,
-      academyName: teamSettings?.name ?? "FutbolMetrics",
+      academyName: teamSettings?.name ?? "Metrikas",
       evaluation: latestEval ?? undefined,
       activities,
       matchStats: playerMatches.map(pm => pm.stat),

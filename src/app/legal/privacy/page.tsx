@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-export const metadata = { title: "Política de Privacidad — FutbolMetrics" }
+export const metadata = { title: "Política de Privacidad — Metrikas" }
 
 export default function PrivacyPolicyPage() {
   return (
@@ -14,7 +14,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-base font-bold text-slate-900 dark:text-white">1. Quiénes somos</h2>
             <p>
-              FutbolMetrics es una plataforma de gestión deportiva ofrecida como software como servicio (SaaS) a academias
+              Metrikas es una plataforma de gestión deportiva ofrecida como software como servicio (SaaS) a academias
               de fútbol, clubes y escuelas deportivas ("Academias"). Cada Academia contrata el servicio para gestionar
               jugadores, entrenamientos, partidos, evaluaciones físicas y pagos de su propia institución.
             </p>
@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-base font-bold text-slate-900 dark:text-white">2. Roles y responsabilidades</h2>
             <p>
-              FutbolMetrics actúa como <strong>encargado del tratamiento</strong> de los datos que cada Academia carga en la
+              Metrikas actúa como <strong>encargado del tratamiento</strong> de los datos que cada Academia carga en la
               plataforma. La Academia (a través de su entrenador o representante) actúa como <strong>responsable del
               tratamiento</strong> de los datos de sus propios jugadores, y es quien debe obtener el consentimiento
               correspondiente de los jugadores y, cuando el jugador sea menor de edad, de sus padres o acudientes legales,
@@ -76,7 +76,7 @@ export default function PrivacyPolicyPage() {
             <p>
               Los jugadores (o sus padres/acudientes, si son menores de edad) y entrenadores pueden solicitar en cualquier
               momento a su Academia: acceso, corrección, actualización o eliminación de sus datos personales. La Academia,
-              como responsable del tratamiento, es el primer punto de contacto para ejercer estos derechos. FutbolMetrics
+              como responsable del tratamiento, es el primer punto de contacto para ejercer estos derechos. Metrikas
               facilita a la Academia las herramientas técnicas para atender estas solicitudes.
             </p>
           </section>

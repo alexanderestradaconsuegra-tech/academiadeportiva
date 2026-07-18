@@ -47,7 +47,7 @@ export default function Sidebar() {
             )}
           </div>
           <div className="min-w-0">
-            <span className="text-[15px] font-bold text-slate-900 dark:text-white tracking-tight truncate block">{teamSettings?.name || "FutbolMetrics"}</span>
+            <span className="text-[15px] font-bold text-slate-900 dark:text-white tracking-tight truncate block">{teamSettings?.name || "Metrikas"}</span>
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-widest">Pro</p>
           </div>
         </div>

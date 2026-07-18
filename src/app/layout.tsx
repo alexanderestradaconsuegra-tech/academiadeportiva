@@ -4,13 +4,13 @@ import "./globals.css"
 import { AppProvider } from "@/context/AppContext"
 
 export const metadata: Metadata = {
-  title: "FutbolMetrics — Academia de Fútbol",
+  title: "Metrikas — Academia de Fútbol",
   description: "Plataforma premium para entrenadores: registra jugadores, controla ejercicios y visualiza el progreso deportivo.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "FutbolMetrics",
+    title: "Metrikas",
   },
   icons: {
     icon: "/favicon.svg",

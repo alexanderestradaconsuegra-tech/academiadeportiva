@@ -654,7 +654,7 @@ export default function SettingsPage() {
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("teamInfoTitle")}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
-                    <Input label={t("teamNameLabel")} placeholder="FutbolMetrics" value={form.name} onChange={e => set("name", e.target.value)} required />
+                    <Input label={t("teamNameLabel")} placeholder="Metrikas" value={form.name} onChange={e => set("name", e.target.value)} required />
                   </div>
                   <Input label={t("cityLabel")} placeholder="Bogotá" value={form.city} onChange={e => set("city", e.target.value)} />
                   <Input label={t("foundedYearLabel")} type="number" placeholder="2018" min={1900} max={2100} value={form.founded_year} onChange={e => set("founded_year", e.target.value)} />

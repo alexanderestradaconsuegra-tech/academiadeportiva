@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-export const metadata = { title: "Términos de Servicio — FutbolMetrics" }
+export const metadata = { title: "Términos de Servicio — Metrikas" }
 
 export default function TermsOfServicePage() {
   return (
@@ -14,7 +14,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-base font-bold text-slate-900 dark:text-white">1. Aceptación de los términos</h2>
             <p>
-              Al crear una cuenta y registrar una academia en FutbolMetrics ("la Plataforma"), aceptas estos Términos de
+              Al crear una cuenta y registrar una academia en Metrikas ("la Plataforma"), aceptas estos Términos de
               Servicio y la Política de Privacidad. Si no estás de acuerdo, no debes usar la Plataforma.
             </p>
           </section>
@@ -22,7 +22,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-base font-bold text-slate-900 dark:text-white">2. Descripción del servicio</h2>
             <p>
-              FutbolMetrics es un software de gestión para academias de fútbol que permite administrar jugadores,
+              Metrikas es un software de gestión para academias de fútbol que permite administrar jugadores,
               entrenamientos, partidos, evaluaciones físicas, pagos internos de la academia y comunicación con jugadores,
               bajo un modelo de suscripción.
             </p>
@@ -43,7 +43,7 @@ export default function TermsOfServicePage() {
             <ul className="list-disc pl-5 space-y-1">
               <li>El acceso a la Plataforma requiere una suscripción activa, pagada de forma periódica según el plan contratado.</li>
               <li>Si el pago no se realiza o falla, el acceso de la academia puede ser suspendido hasta que se regularice la situación. Los datos de la academia no se eliminan por una suspensión temporal.</li>
-              <li>Los pagos que la academia registra dentro de la Plataforma para cobrar cuotas a sus propios jugadores (por ejemplo, mensualidades) son gestionados directamente por la academia; FutbolMetrics no procesa ni es responsable de esos cobros.</li>
+              <li>Los pagos que la academia registra dentro de la Plataforma para cobrar cuotas a sus propios jugadores (por ejemplo, mensualidades) son gestionados directamente por la academia; Metrikas no procesa ni es responsable de esos cobros.</li>
               <li>Los precios pueden actualizarse con previo aviso razonable.</li>
             </ul>
           </section>
@@ -52,7 +52,7 @@ export default function TermsOfServicePage() {
             <h2 className="text-base font-bold text-slate-900 dark:text-white">5. Propiedad de los datos</h2>
             <p>
               Los datos que una academia registra en la Plataforma (jugadores, estadísticas, evaluaciones, pagos, etc.)
-              son propiedad de esa academia. FutbolMetrics actúa únicamente como proveedor de la infraestructura técnica
+              son propiedad de esa academia. Metrikas actúa únicamente como proveedor de la infraestructura técnica
               para almacenarlos y gestionarlos, conforme a la Política de Privacidad.
             </p>
           </section>
@@ -80,7 +80,7 @@ export default function TermsOfServicePage() {
           <section>
             <h2 className="text-base font-bold text-slate-900 dark:text-white">8. Limitación de responsabilidad</h2>
             <p>
-              FutbolMetrics no será responsable por decisiones deportivas, médicas o administrativas que la academia
+              Metrikas no será responsable por decisiones deportivas, médicas o administrativas que la academia
               tome con base en la información registrada en la Plataforma. La Plataforma es una herramienta de gestión
               y no sustituye el criterio profesional de entrenadores, médicos deportivos o cuerpos técnicos.
             </p>
