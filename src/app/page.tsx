@@ -3,13 +3,43 @@ import type { Metadata } from "next"
 import {
   Trophy, Users, CalendarDays, CreditCard, Heart, PenTool, Bell, Languages,
   ShieldCheck, TrendingUp, CheckCircle2, ArrowRight, BarChart3, Radar as RadarIcon,
-  Video, UserCog, Star, Smartphone,
+  Video, UserCog, Star, Smartphone, MessageCircle, ChevronDown, Sparkles,
 } from "lucide-react"
 
 export const metadata: Metadata = {
   title: "Metrikas — Profesionaliza tu academia de fútbol",
   description: "La plataforma todo-en-uno para academias de fútbol: jugadores, partidos, formaciones, evaluaciones, pagos y comunicación en un solo lugar.",
 }
+
+const WHATSAPP_NUMBER = "5692103974"
+const WHATSAPP_MSG = encodeURIComponent("Hola, quiero información sobre Metrikas para mi academia")
+const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MSG}`
+
+const PRICE_MONTHLY = 15
+const PRICE_ANNUAL = Math.round(PRICE_MONTHLY * 12 * 0.7)
+
+const PLAN_INCLUDES = [
+  "Jugadores, categorías y fichas completas ilimitadas",
+  "Partidos, convocatoria y formaciones profesionales (11, 8, 7 y 5)",
+  "Evaluaciones físicas y gráficas de progreso",
+  "Calendario de entrenamientos con asistencia y RSVP",
+  "Pagos y mensualidades generados automáticamente",
+  "Salud, biometría, lesiones y pruebas físicas",
+  "Notificaciones push a jugadores y acudientes",
+  "Un profesor por categoría, con acceso controlado",
+  "Reportes en PDF y comparativa de jugadores",
+  "Español, inglés y portugués",
+]
+
+const FAQS = [
+  { q: "¿Cuánto cuesta Metrikas?", a: `US$${PRICE_MONTHLY} al mes por academia, sin importar cuántos jugadores tengas. Pagando el año completo obtienes 30% de descuento: US$${PRICE_ANNUAL}/año (equivale a US$${(PRICE_ANNUAL / 12).toFixed(1)}/mes). Empezamos en pesos chilenos y ya trabajamos con academias en toda Latinoamérica y EE.UU.` },
+  { q: "¿Hay contrato o permanencia mínima?", a: "No. No hay instalación, ni contratos largos, ni letra chica. Cancelas cuando quieras y sigues teniendo acceso hasta el final del período ya pagado." },
+  { q: "¿Funciona en cualquier país?", a: "Sí. Metrikas está disponible en español, inglés y portugués, y funciona igual para una academia en Chile, Colombia, México o Estados Unidos." },
+  { q: "¿Qué tan seguros están los datos de mis jugadores?", a: "Cada academia tiene sus datos completamente aislados a nivel de base de datos — ninguna otra academia puede verlos ni acceder a ellos, ni siquiera técnicamente. Las contraseñas se manejan cifradas." },
+  { q: "¿Puedo tener un profesor por categoría?", a: "Sí. Puedes crear un acceso independiente para cada profesor, y cada uno solo ve y gestiona los jugadores de su propia categoría — nunca los pagos ni la configuración general de la academia." },
+  { q: "¿Qué pasa si un mes no puedo pagar?", a: "Tu academia se suspende temporalmente hasta que se regularice el pago, pero tus datos nunca se borran. En cuanto pagas, todo vuelve a estar disponible tal como lo dejaste." },
+  { q: "¿Cómo empiezo?", a: "Escríbenos por WhatsApp o correo, te damos un código de activación y en minutos tienes tu academia funcionando." },
+]
 
 const FEATURES = [
   { icon: Users, title: "Jugadores y categorías", desc: "Ficha completa por jugador: datos, posición, categoría, objetivo deportivo y evolución histórica." },
@@ -53,20 +83,41 @@ export default function LandingPage() {
             </div>
             <span className="text-lg font-bold tracking-tight">Metrikas</span>
           </div>
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-blue-100/70">
+          <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-blue-100/70">
             <a href="#caracteristicas" className="hover:text-white transition-colors">Características</a>
-            <a href="#producto" className="hover:text-white transition-colors">Producto</a>
+            <a href="#precios" className="hover:text-white transition-colors">Precios</a>
             <a href="#roles" className="hover:text-white transition-colors">Cómo funciona</a>
-            <a href="#contacto" className="hover:text-white transition-colors">Contacto</a>
+            <a href="#preguntas" className="hover:text-white transition-colors">Preguntas</a>
           </nav>
-          <Link
-            href="/login"
-            className="h-9 px-4 rounded-xl bg-white text-[#071B4D] text-sm font-semibold flex items-center hover:bg-blue-50 transition-colors"
-          >
-            Iniciar sesión
-          </Link>
+          <div className="flex items-center gap-2">
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:flex h-9 px-3.5 rounded-xl border border-white/15 text-white text-sm font-semibold items-center gap-1.5 hover:bg-white/5 transition-colors"
+            >
+              <MessageCircle size={15} /> WhatsApp
+            </a>
+            <Link
+              href="/login"
+              className="h-9 px-4 rounded-xl bg-white text-[#071B4D] text-sm font-semibold flex items-center hover:bg-blue-50 transition-colors"
+            >
+              Iniciar sesión
+            </Link>
+          </div>
         </div>
       </header>
+
+      {/* Floating WhatsApp button */}
+      <a
+        href={WHATSAPP_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-400 shadow-xl shadow-emerald-900/40 flex items-center justify-center transition-all hover:scale-105"
+        title="Escríbenos por WhatsApp"
+      >
+        <MessageCircle className="w-6 h-6 text-white" fill="white" strokeWidth={1.5} />
+      </a>
 
       {/* Hero */}
       <section className="relative">
@@ -88,7 +139,9 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <a
-                  href="#contacto"
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="h-12 px-6 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-900/40"
                 >
                   Solicitar acceso <ArrowRight size={16} />
@@ -275,6 +328,93 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing */}
+      <section id="precios" className="bg-[#071B4D] text-white relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-4xl mx-auto px-6 py-16 md:py-24 relative z-10">
+          <div className="text-center max-w-xl mx-auto mb-12">
+            <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-3">Precios</p>
+            <h2 className="text-3xl md:text-4xl font-black mb-3">Un solo plan, todo incluido</h2>
+            <p className="text-blue-100/70">Sin límite de jugadores ni de módulos. Empieza en pesos chilenos, crece a donde quieras.</p>
+          </div>
+
+          <div className="bg-white text-slate-900 rounded-3xl p-8 md:p-10 shadow-2xl">
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <div className="inline-flex items-center gap-1.5 bg-blue-50 text-[#0B5CFF] text-xs font-bold px-3 py-1 rounded-full mb-4">
+                  <Sparkles size={12} /> Plan único
+                </div>
+                <div className="flex items-end gap-1 mb-1">
+                  <span className="text-5xl font-black">US${PRICE_MONTHLY}</span>
+                  <span className="text-slate-400 font-medium mb-1.5">/mes</span>
+                </div>
+                <p className="text-sm text-slate-500 mb-6">por academia, sin importar el número de jugadores</p>
+
+                <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 mb-6">
+                  <p className="text-sm font-bold text-emerald-700">Paga el año completo y ahorra 30%</p>
+                  <p className="text-xs text-emerald-600/80 mt-1">
+                    US${PRICE_ANNUAL}/año — equivale a US${(PRICE_ANNUAL / 12).toFixed(1)}/mes
+                  </p>
+                </div>
+
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full h-12 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all"
+                >
+                  <MessageCircle size={16} /> Solicitar acceso por WhatsApp
+                </a>
+                <p className="text-xs text-slate-400 text-center mt-3">Sin permanencia mínima · Cancela cuando quieras</p>
+              </div>
+
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Qué incluye la mensualidad</p>
+                <ul className="space-y-2.5">
+                  {PLAN_INCLUDES.map(item => (
+                    <li key={item} className="flex items-start gap-2.5 text-sm text-slate-700">
+                      <CheckCircle2 size={16} className="text-emerald-500 mt-0.5 shrink-0" /> {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="preguntas" className="bg-white text-slate-900">
+        <div className="max-w-3xl mx-auto px-6 py-16 md:py-24">
+          <div className="text-center mb-12">
+            <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Preguntas frecuentes</p>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900">Todo lo que quieres saber antes de empezar</h2>
+          </div>
+          <div className="space-y-3">
+            {FAQS.map(faq => (
+              <details key={faq.q} className="group bg-slate-50 rounded-2xl border border-slate-100 open:border-blue-200 open:bg-blue-50/40 transition-colors">
+                <summary className="flex items-center justify-between gap-4 px-5 py-4 cursor-pointer list-none">
+                  <span className="text-sm font-bold text-slate-900">{faq.q}</span>
+                  <ChevronDown size={16} className="text-slate-400 shrink-0 transition-transform group-open:rotate-180" />
+                </summary>
+                <p className="px-5 pb-4 text-sm text-slate-600 leading-relaxed">{faq.a}</p>
+              </details>
+            ))}
+          </div>
+          <div className="text-center mt-10">
+            <p className="text-sm text-slate-500 mb-3">¿Tienes otra pregunta?</p>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 transition-colors"
+            >
+              <MessageCircle size={16} /> Escríbenos por WhatsApp
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Social proof placeholder */}
       <section className="bg-white text-slate-900">
         <div className="max-w-6xl mx-auto px-6 pb-16 md:pb-24">
@@ -300,12 +440,22 @@ export default function LandingPage() {
           <p className="text-blue-100/70 mb-8 max-w-lg mx-auto">
             Escríbenos y activamos tu academia en Metrikas. Sin compromisos largos, cancela cuando quieras.
           </p>
-          <a
-            href="mailto:alexanderestradaconsuegra@gmail.com?subject=Quiero%20usar%20Metrikas%20en%20mi%20academia"
-            className="inline-flex items-center gap-2 h-12 px-7 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-900/40"
-          >
-            Solicitar acceso <ArrowRight size={16} />
-          </a>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 h-12 px-7 rounded-xl bg-emerald-500 text-white text-sm font-bold hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-900/30"
+            >
+              <MessageCircle size={16} /> WhatsApp
+            </a>
+            <a
+              href="mailto:alexanderestradaconsuegra@gmail.com?subject=Quiero%20usar%20Metrikas%20en%20mi%20academia"
+              className="inline-flex items-center gap-2 h-12 px-7 rounded-xl border border-white/20 text-white text-sm font-bold hover:bg-white/5 transition-all"
+            >
+              Escribir por correo <ArrowRight size={16} />
+            </a>
+          </div>
         </div>
       </section>
 
@@ -318,6 +468,7 @@ export default function LandingPage() {
           </div>
           <p className="text-xs text-blue-100/40">© {new Date().getFullYear()} Metrikas · Gestión deportiva</p>
           <div className="flex items-center gap-4 text-xs text-blue-100/50">
+            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">WhatsApp</a>
             <Link href="/legal/privacy" className="hover:text-white transition-colors">Privacidad</Link>
             <Link href="/legal/terms" className="hover:text-white transition-colors">Términos</Link>
             <Link href="/login" className="hover:text-white transition-colors">Iniciar sesión</Link>
