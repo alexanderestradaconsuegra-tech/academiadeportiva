@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description: "La plataforma todo-en-uno para academias de fútbol: jugadores, partidos, formaciones, evaluaciones, pagos y comunicación en un solo lugar.",
 }
 
-const WHATSAPP_NUMBER = "5692103974"
+const WHATSAPP_NUMBER = "56992103974"
 const WHATSAPP_MSG = encodeURIComponent("Hola, quiero información sobre Metrikas para mi academia")
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MSG}`
 
