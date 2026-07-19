@@ -5,6 +5,8 @@ import {
   ShieldCheck, TrendingUp, CheckCircle2, ArrowRight, BarChart3,
   Video, UserCog, Star, Smartphone, MessageCircle, ChevronDown, Sparkles,
 } from "lucide-react"
+import InteractiveFormationCard from "@/components/landing/InteractiveFormationCard"
+import FifaPlayerCard from "@/components/landing/FifaPlayerCard"
 
 export const metadata: Metadata = {
   title: "Metrikas — Profesionaliza tu academia de fútbol",
@@ -41,19 +43,6 @@ const FAQS = [
   { q: "¿Cómo empiezo?", a: "Escríbenos por WhatsApp o correo, te damos un código de activación y en minutos tienes tu academia funcionando." },
 ]
 
-// Real F11 · 4-3-3 formation coordinates (same layout used inside the app's convocatoria pitch)
-const FORMATION_433 = [
-  { x: 50, y: 8 },
-  { x: 82, y: 28 }, { x: 61, y: 25 }, { x: 39, y: 25 }, { x: 18, y: 28 },
-  { x: 75, y: 50 }, { x: 50, y: 47 }, { x: 25, y: 50 },
-  { x: 82, y: 74 }, { x: 50, y: 80 }, { x: 18, y: 74 },
-]
-
-// Radar chart matching the real evaluation axes (Velocidad, Fuerza, Técnica, Resistencia, Potencia, Agilidad)
-const RADAR_POLYGON = "50,16.6 73.7,36.3 81.3,68.1 50,75.8 23.7,65.2 20.4,32.9"
-const RADAR_OUTER = "50,12 82.9,31 82.9,69 50,88 17.1,69 17.1,31"
-const RADAR_MID = "50,31 66.5,40.5 66.5,59.5 50,69 33.5,59.5 33.5,40.5"
-const RADAR_AXES = [[50, 12], [82.9, 31], [82.9, 69], [50, 88], [17.1, 69], [17.1, 31]]
 
 const FEATURES = [
   { icon: Users, title: "Jugadores y categorías", desc: "Ficha completa por jugador: datos, posición, categoría, objetivo deportivo y evolución histórica." },
@@ -335,49 +324,11 @@ export default function LandingPage() {
               <p className="text-xs text-blue-100/60">Resultados, progreso y alertas de pago en una sola vista.</p>
             </div>
 
-            {/* Mock: Formation — real 4-3-3 */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-              <div className="rounded-xl bg-emerald-700 p-3 mb-4 aspect-[4/3] relative overflow-hidden">
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <rect x="4" y="4" width="92" height="92" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.8" />
-                  <line x1="4" y1="50" x2="96" y2="50" stroke="rgba(255,255,255,0.35)" strokeWidth="0.6" />
-                  <circle cx="50" cy="50" r="12" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="0.6" />
-                  <rect x="30" y="4" width="40" height="14" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.6" />
-                  <rect x="30" y="82" width="40" height="14" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.6" />
-                </svg>
-                {FORMATION_433.map((p, i) => (
-                  <div
-                    key={i}
-                    className="absolute -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-[#0B5CFF] border border-white shadow"
-                    style={{ left: `${p.x}%`, top: `${p.y}%` }}
-                  />
-                ))}
-                <span className="absolute top-1.5 left-1/2 -translate-x-1/2 text-[7px] font-bold text-white/40 uppercase tracking-widest">4-3-3</span>
-              </div>
-              <h3 className="text-sm font-bold mb-1">Formaciones profesionales</h3>
-              <p className="text-xs text-blue-100/60">F11, F8, F7 y F5, con posición ajustable de cada jugador.</p>
-            </div>
+            <InteractiveFormationCard />
 
-            {/* Mock: Evaluations — real radar chart */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-              <div className="rounded-xl bg-white p-3 mb-4 aspect-[4/3] flex items-center justify-center">
-                <svg viewBox="0 0 100 100" className="w-full h-full">
-                  <polygon points={RADAR_OUTER} fill="none" stroke="#E2E8F0" strokeWidth="0.8" />
-                  <polygon points={RADAR_MID} fill="none" stroke="#E2E8F0" strokeWidth="0.6" />
-                  {RADAR_AXES.map((pt, i) => (
-                    <line key={i} x1="50" y1="50" x2={pt[0]} y2={pt[1]} stroke="#E2E8F0" strokeWidth="0.6" />
-                  ))}
-                  <polygon points={RADAR_POLYGON} fill="#0B5CFF" fillOpacity="0.18" stroke="#0B5CFF" strokeWidth="1.6" strokeLinejoin="round" />
-                  {RADAR_POLYGON.split(" ").map((pt, i) => {
-                    const [x, y] = pt.split(",")
-                    return <circle key={i} cx={x} cy={y} r="1.8" fill="#0B5CFF" />
-                  })}
-                </svg>
-              </div>
-              <h3 className="text-sm font-bold mb-1">Evaluaciones físicas</h3>
-              <p className="text-xs text-blue-100/60">Velocidad, fuerza, técnica y resistencia — comparables mes a mes.</p>
-            </div>
+            <FifaPlayerCard />
           </div>
+          <p className="text-center text-xs text-blue-100/40 mt-6">Toca las formaciones y desliza la ficha del jugador — todo funciona igual dentro de la app real.</p>
         </div>
       </section>
 
