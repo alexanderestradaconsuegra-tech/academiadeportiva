@@ -38,44 +38,41 @@ function Phone({ children, float }: { children: React.ReactNode; float?: React.R
 
 function CalendarScreen() {
   return (
-    <div className="h-full bg-[#0d1117] flex flex-col overflow-hidden">
-      <div className="px-4 pt-2 pb-3 border-b border-white/8">
-        <p className="text-white text-[11px] font-bold">Julio 2026</p>
-        <p className="text-white/40 text-[9px]">3 eventos esta semana</p>
+    <div className="h-full bg-white flex flex-col overflow-hidden">
+      <div className="px-4 pt-2 pb-3 border-b border-slate-100">
+        <p className="text-slate-900 text-[11px] font-bold">Julio 2026</p>
+        <p className="text-slate-400 text-[9px]">3 eventos esta semana</p>
       </div>
-      {/* Week strip */}
       <div className="flex gap-1 px-3 py-2">
         {[{d:"L",n:"21",act:true},{d:"M",n:"22"},{d:"X",n:"23",ev:true},{d:"J",n:"24"},{d:"V",n:"25"},{d:"S",n:"26",ev:true},{d:"D",n:"27"}].map(day=>(
           <div key={day.n} className={`flex-1 flex flex-col items-center py-1.5 rounded-xl ${day.act ? "bg-[#0B5CFF]" : ""}`}>
-            <p className={`text-[7px] font-semibold ${day.act ? "text-white/70" : "text-white/30"}`}>{day.d}</p>
-            <p className={`text-[10px] font-bold ${day.act ? "text-white" : "text-white/60"}`}>{day.n}</p>
+            <p className={`text-[7px] font-semibold ${day.act ? "text-blue-100" : "text-slate-400"}`}>{day.d}</p>
+            <p className={`text-[10px] font-bold ${day.act ? "text-white" : "text-slate-700"}`}>{day.n}</p>
             {day.ev && <div className="w-1 h-1 rounded-full bg-emerald-400 mt-0.5" />}
           </div>
         ))}
       </div>
-      {/* Events */}
       <div className="flex-1 px-3 space-y-2 overflow-hidden">
         {[
           { time:"16:00", title:"Sub-15 · Entrenamiento", place:"Cancha principal", color:"#0B5CFF" },
           { time:"18:30", title:"Sub-13 · Entrenamiento", place:"Cancha 2", color:"#10b981" },
           { time:"—", title:"Sub-18 · Partido amistoso", place:"Sáb 26 · 10:00", color:"#f59e0b", muted:true },
         ].map(e=>(
-          <div key={e.title} className={`flex gap-2.5 p-2.5 rounded-xl ${e.muted ? "bg-white/3 opacity-60" : "bg-white/6"} border border-white/8`}>
+          <div key={e.title} className={`flex gap-2.5 p-2.5 rounded-xl border ${e.muted ? "opacity-50 border-slate-100 bg-slate-50" : "bg-slate-50 border-slate-100"}`}>
             <div className="w-0.5 rounded-full self-stretch shrink-0" style={{background: e.color}} />
             <div>
-              <p className="text-white text-[9px] font-bold leading-tight">{e.title}</p>
-              <p className="text-white/40 text-[8px] mt-0.5">{e.place}</p>
+              <p className="text-slate-800 text-[9px] font-bold leading-tight">{e.title}</p>
+              <p className="text-slate-400 text-[8px] mt-0.5">{e.place}</p>
             </div>
-            <p className="ml-auto text-[8px] font-semibold text-white/40 shrink-0">{e.time}</p>
+            <p className="ml-auto text-[8px] font-semibold text-slate-400 shrink-0">{e.time}</p>
           </div>
         ))}
       </div>
-      {/* Bottom nav */}
-      <div className="flex border-t border-white/8 py-2">
+      <div className="flex border-t border-slate-100 py-2">
         {["Hoy","Equipo","Notif.","Perfil"].map((n,i)=>(
           <div key={n} className="flex-1 flex flex-col items-center gap-0.5">
-            <div className={`w-3.5 h-3.5 rounded ${i===0?"bg-[#0B5CFF]":"bg-white/10"}`} />
-            <p className={`text-[6px] ${i===0?"text-[#0B5CFF] font-bold":"text-white/30"}`}>{n}</p>
+            <div className={`w-3.5 h-3.5 rounded ${i===0?"bg-[#0B5CFF]":"bg-slate-100"}`} />
+            <p className={`text-[6px] ${i===0?"text-[#0B5CFF] font-bold":"text-slate-400"}`}>{n}</p>
           </div>
         ))}
       </div>
@@ -92,36 +89,36 @@ function PlayersScreen() {
     { name:"Sara Molina",  pos:"MC",  cat:"Sub-15", score:76, up:false },
   ]
   return (
-    <div className="h-full bg-[#0d1117] flex flex-col overflow-hidden">
-      <div className="px-4 pt-2 pb-2 border-b border-white/8">
-        <p className="text-white text-[11px] font-bold">Jugadores</p>
-        <div className="flex items-center gap-1.5 mt-1.5 bg-white/5 rounded-lg px-2 py-1.5">
-          <div className="w-2 h-2 rounded-full bg-white/20" />
-          <p className="text-white/30 text-[8px]">Buscar...</p>
+    <div className="h-full bg-white flex flex-col overflow-hidden">
+      <div className="px-4 pt-2 pb-2 border-b border-slate-100">
+        <p className="text-slate-900 text-[11px] font-bold">Jugadores</p>
+        <div className="flex items-center gap-1.5 mt-1.5 bg-slate-50 rounded-lg px-2 py-1.5 border border-slate-100">
+          <div className="w-2 h-2 rounded-full bg-slate-300" />
+          <p className="text-slate-300 text-[8px]">Buscar...</p>
         </div>
       </div>
       <div className="flex-1 overflow-hidden px-3 pt-2 space-y-1.5">
         {players.map(p=>(
-          <div key={p.name} className="flex items-center gap-2.5 bg-white/4 rounded-xl p-2 border border-white/6">
-            <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-white/60 text-[8px] font-black shrink-0">
+          <div key={p.name} className="flex items-center gap-2.5 bg-slate-50 rounded-xl p-2 border border-slate-100">
+            <div className="w-8 h-8 rounded-xl bg-slate-200 flex items-center justify-center text-slate-500 text-[8px] font-black shrink-0">
               {p.pos}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white text-[9px] font-semibold truncate">{p.name}</p>
-              <p className="text-white/30 text-[8px]">{p.pos} · {p.cat}</p>
+              <p className="text-slate-800 text-[9px] font-semibold truncate">{p.name}</p>
+              <p className="text-slate-400 text-[8px]">{p.pos} · {p.cat}</p>
             </div>
             <div className="text-right shrink-0">
-              <p className={`text-[11px] font-black ${p.score>=85?"text-emerald-400":"text-white/70"}`}>{p.score}</p>
-              <p className={`text-[7px] ${p.up?"text-emerald-400":"text-red-400"}`}>{p.up?"↑":"↓"}</p>
+              <p className={`text-[11px] font-black ${p.score>=85?"text-emerald-500":"text-slate-500"}`}>{p.score}</p>
+              <p className={`text-[7px] ${p.up?"text-emerald-500":"text-red-400"}`}>{p.up?"↑":"↓"}</p>
             </div>
           </div>
         ))}
       </div>
-      <div className="flex border-t border-white/8 py-2">
+      <div className="flex border-t border-slate-100 py-2">
         {["Hoy","Equipo","Notif.","Perfil"].map((n,i)=>(
           <div key={n} className="flex-1 flex flex-col items-center gap-0.5">
-            <div className={`w-3.5 h-3.5 rounded ${i===1?"bg-[#0B5CFF]":"bg-white/10"}`} />
-            <p className={`text-[6px] ${i===1?"text-[#0B5CFF] font-bold":"text-white/30"}`}>{n}</p>
+            <div className={`w-3.5 h-3.5 rounded ${i===1?"bg-[#0B5CFF]":"bg-slate-100"}`} />
+            <p className={`text-[6px] ${i===1?"text-[#0B5CFF] font-bold":"text-slate-400"}`}>{n}</p>
           </div>
         ))}
       </div>
@@ -144,13 +141,13 @@ function ConvocatoriaScreen() {
     { name:"Mia",    pos:"EXD", x:82, y:73, confirmed: false },
   ]
   return (
-    <div className="h-full bg-[#0d1117] flex flex-col overflow-hidden">
-      <div className="px-4 pt-2 pb-2 border-b border-white/8 flex items-center justify-between">
+    <div className="h-full bg-white flex flex-col overflow-hidden">
+      <div className="px-4 pt-2 pb-2 border-b border-slate-100 flex items-center justify-between">
         <div>
-          <p className="text-white text-[10px] font-bold">Convocatoria</p>
-          <p className="text-white/30 text-[8px]">Sáb 26 · 10:00 · 4-3-3</p>
+          <p className="text-slate-900 text-[10px] font-bold">Convocatoria</p>
+          <p className="text-slate-400 text-[8px]">Sáb 26 · 10:00 · 4-3-3</p>
         </div>
-        <div className="text-[8px] font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full">9/11 ✓</div>
+        <div className="text-[8px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">9/11 ✓</div>
       </div>
       {/* Pitch */}
       <div className="flex-1 relative mx-3 my-2 rounded-xl overflow-hidden" style={{background:"#1a5c35"}}>
@@ -170,11 +167,11 @@ function ConvocatoriaScreen() {
           ))}
         </div>
       </div>
-      <div className="flex border-t border-white/8 py-2">
+      <div className="flex border-t border-slate-100 py-2">
         {["Hoy","Equipo","Notif.","Perfil"].map((n,i)=>(
           <div key={n} className="flex-1 flex flex-col items-center gap-0.5">
-            <div className={`w-3.5 h-3.5 rounded ${i===1?"bg-[#0B5CFF]":"bg-white/10"}`} />
-            <p className={`text-[6px] ${i===1?"text-[#0B5CFF] font-bold":"text-white/30"}`}>{n}</p>
+            <div className={`w-3.5 h-3.5 rounded ${i===1?"bg-[#0B5CFF]":"bg-slate-100"}`} />
+            <p className={`text-[6px] ${i===1?"text-[#0B5CFF] font-bold":"text-slate-400"}`}>{n}</p>
           </div>
         ))}
       </div>
