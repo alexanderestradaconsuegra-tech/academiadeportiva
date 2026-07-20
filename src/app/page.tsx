@@ -102,7 +102,8 @@ export default function LandingPage() {
               rel="noopener noreferrer"
               className="hidden sm:flex h-9 px-3.5 rounded-xl border border-white/15 text-white text-sm font-semibold items-center gap-1.5 hover:bg-white/5 transition-colors"
             >
-              <MessageCircle size={15} /> WhatsApp
+              <svg viewBox="0 0 32 32" className="w-4 h-4" fill="#25D366" xmlns="http://www.w3.org/2000/svg"><path d="M16 2C8.28 2 2 8.28 2 16c0 2.44.65 4.73 1.78 6.72L2 30l7.5-1.75A13.93 13.93 0 0016 30c7.72 0 14-6.28 14-14S23.72 2 16 2zm0 25.5a11.46 11.46 0 01-5.83-1.6l-.42-.25-4.45 1.04 1.06-4.33-.28-.45A11.5 11.5 0 1116 27.5zm6.3-8.6c-.35-.17-2.06-1.02-2.38-1.13-.32-.12-.55-.17-.78.17-.23.35-.9 1.13-1.1 1.37-.2.23-.4.26-.75.09-.35-.17-1.48-.55-2.82-1.74-1.04-.93-1.75-2.08-1.95-2.43-.2-.35-.02-.54.15-.71.16-.16.35-.42.52-.62.17-.2.23-.35.35-.58.12-.23.06-.44-.03-.61-.09-.17-.78-1.88-1.07-2.57-.28-.68-.57-.59-.78-.6l-.66-.01c-.23 0-.6.09-.92.42-.32.34-1.2 1.17-1.2 2.86s1.23 3.32 1.4 3.54c.17.23 2.42 3.7 5.87 5.19.82.35 1.46.56 1.96.72.82.26 1.57.22 2.16.13.66-.1 2.06-.84 2.35-1.66.29-.82.29-1.52.2-1.66-.08-.15-.31-.23-.66-.4z"/></svg>
+              WhatsApp
             </a>
             <Link
               href="/login"
@@ -119,10 +120,12 @@ export default function LandingPage() {
         href={WHATSAPP_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-400 shadow-xl shadow-emerald-900/40 flex items-center justify-center transition-all hover:scale-105"
+        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#20bd5a] shadow-xl shadow-emerald-900/40 flex items-center justify-center transition-all hover:scale-105"
         title="Escríbenos por WhatsApp"
       >
-        <MessageCircle className="w-6 h-6 text-white" fill="white" strokeWidth={1.5} />
+        <svg viewBox="0 0 32 32" className="w-7 h-7" fill="white" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 2C8.28 2 2 8.28 2 16c0 2.44.65 4.73 1.78 6.72L2 30l7.5-1.75A13.93 13.93 0 0016 30c7.72 0 14-6.28 14-14S23.72 2 16 2zm0 25.5a11.46 11.46 0 01-5.83-1.6l-.42-.25-4.45 1.04 1.06-4.33-.28-.45A11.5 11.5 0 1116 27.5zm6.3-8.6c-.35-.17-2.06-1.02-2.38-1.13-.32-.12-.55-.17-.78.17-.23.35-.9 1.13-1.1 1.37-.2.23-.4.26-.75.09-.35-.17-1.48-.55-2.82-1.74-1.04-.93-1.75-2.08-1.95-2.43-.2-.35-.02-.54.15-.71.16-.16.35-.42.52-.62.17-.2.23-.35.35-.58.12-.23.06-.44-.03-.61-.09-.17-.78-1.88-1.07-2.57-.28-.68-.57-.59-.78-.6l-.66-.01c-.23 0-.6.09-.92.42-.32.34-1.2 1.17-1.2 2.86s1.23 3.32 1.4 3.54c.17.23 2.42 3.7 5.87 5.19.82.35 1.46.56 1.96.72.82.26 1.57.22 2.16.13.66-.1 2.06-.84 2.35-1.66.29-.82.29-1.52.2-1.66-.08-.15-.31-.23-.66-.4z"/>
+        </svg>
       </a>
 
       {/* Hero — with interactive pitch */}
@@ -234,8 +237,9 @@ export default function LandingPage() {
       </section>
 
       {/* Exercise videos — compact strip */}
-      <section className="bg-[#030918] text-white">
-        <div className="max-w-5xl mx-auto px-6 py-14 md:py-20">
+      <section className="relative bg-[#050e2e] text-white overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-5xl mx-auto px-6 py-14 md:py-20 relative">
           <div className="grid lg:grid-cols-[1fr_auto] gap-10 lg:gap-16 items-center">
             {/* Text */}
             <div>
@@ -245,13 +249,12 @@ export default function LandingPage() {
               </h2>
               <p className="text-white/50 text-base leading-relaxed mb-7 max-w-lg">
                 Cada ejercicio incluye un video guía para que el jugador vea la técnica correcta antes de ejecutar.
-                Sprint, fuerza, pliometría, agilidad — todo documentado con su video, unidad de medida y benchmark por edad.
+                Sprint, fuerza, pliometría, agilidad — todo documentado con su video y unidad de medida.
               </p>
-              <div className="grid sm:grid-cols-3 gap-4">
+              <div className="grid sm:grid-cols-2 gap-4">
                 {[
                   { emoji: "🎬", title: "Video por ejercicio", desc: "YouTube o Vimeo embebido. El jugador lo ve directo en su app." },
                   { emoji: "📊", title: "Registro de intentos", desc: "Guarda el resultado de cada serie. Compara sesión a sesión." },
-                  { emoji: "🏅", title: "Benchmark por edad", desc: "Sabe si su marca es buena para Sub-13, Sub-15 o Sub-18." },
                 ].map(item => (
                   <div key={item.title} className="bg-white/[0.04] border border-white/8 rounded-2xl p-4">
                     <p className="text-xl mb-2">{item.emoji}</p>
