@@ -1,12 +1,13 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import {
-  Trophy, Users, CalendarDays, CreditCard, Heart, PenTool, Bell, Languages,
-  ShieldCheck, TrendingUp, CheckCircle2, ArrowRight, BarChart3,
+  Trophy, Users, CalendarDays, CreditCard, Heart, Bell, Languages,
+  ShieldCheck, CheckCircle2, ArrowRight, BarChart3,
   Video, UserCog, Star, Smartphone, MessageCircle, ChevronDown, Sparkles,
 } from "lucide-react"
-import InteractiveFormationCard from "@/components/landing/InteractiveFormationCard"
 import FifaPlayerCard from "@/components/landing/FifaPlayerCard"
+import InteractivePitchBuilder from "@/components/landing/InteractivePitchBuilder"
+import ProgressShowcase from "@/components/landing/ProgressShowcase"
 
 export const metadata: Metadata = {
   title: "Metrikas — Profesionaliza tu academia de fútbol",
@@ -298,78 +299,44 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Product showcase */}
-      <section id="producto" className="bg-[#071B4D] text-white">
-        <div className="max-w-6xl mx-auto px-6 py-16 md:py-24">
-          <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-3">El producto</p>
-            <h2 className="text-3xl md:text-4xl font-black leading-tight">
-              La tecnología de los <span className="text-blue-300">clubes grandes</span>,<br className="hidden md:block" /> al alcance de tu academia
+      {/* Product showcase — interactive pitch builder + FIFA card */}
+      <section id="producto" className="relative bg-[#050e2e] text-white overflow-hidden">
+        <div className="absolute top-1/4 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-fuchsia-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-6 py-16 md:py-24 relative">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-3">El producto en vivo</p>
+            <h2 className="text-3xl md:text-5xl font-black leading-[1.05]">
+              Arma tu equipo. <span className="bg-gradient-to-r from-[#0B5CFF] via-cyan-300 to-fuchsia-400 bg-clip-text text-transparent">Ahora mismo.</span>
             </h2>
-            <p className="text-blue-100/60 mt-4">Nada de hojas de cálculo. Esto es lo que tus jugadores y padres van a ver.</p>
+            <p className="text-blue-100/60 mt-4 text-lg">Cambia la formación, arrastra jugadores, mira las estadísticas — todo funciona igual en la app real.</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Mock: Dashboard */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
-              <div className="rounded-xl bg-white p-4 mb-4">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-3">Récord del equipo</p>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-emerald-50 rounded-lg p-2 text-center"><p className="text-lg font-black text-emerald-600">8</p><p className="text-[9px] text-emerald-600/70 font-semibold">Ganados</p></div>
-                  <div className="bg-amber-50 rounded-lg p-2 text-center"><p className="text-lg font-black text-amber-600">2</p><p className="text-[9px] text-amber-600/70 font-semibold">Empates</p></div>
-                  <div className="bg-red-50 rounded-lg p-2 text-center"><p className="text-lg font-black text-red-500">1</p><p className="text-[9px] text-red-400 font-semibold">Perdidos</p></div>
-                </div>
+          <div className="grid lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-8 lg:gap-12 items-start">
+            <InteractivePitchBuilder />
+            <div className="lg:sticky lg:top-24">
+              <div className="text-center mb-4">
+                <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-2">Ficha del jugador</p>
+                <p className="text-sm text-blue-100/60">Pasa el mouse sobre la tarjeta para el efecto holográfico</p>
               </div>
-              <h3 className="text-sm font-bold mb-1">Panel de control</h3>
-              <p className="text-xs text-blue-100/60">Resultados, progreso y alertas de pago en una sola vista.</p>
+              <FifaPlayerCard />
             </div>
-
-            <InteractiveFormationCard />
-
-            <FifaPlayerCard />
           </div>
-          <p className="text-center text-xs text-blue-100/40 mt-6">Toca las formaciones y desliza la ficha del jugador — todo funciona igual dentro de la app real.</p>
         </div>
       </section>
 
-      {/* Growth */}
-      <section className="bg-white text-slate-900">
-        <div className="max-w-6xl mx-auto px-6 py-16 md:py-24">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Crecimiento real</p>
-              <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-5 leading-tight">
-                Demuestra el progreso de tus deportistas, no solo lo prometas
-              </h2>
-              <p className="text-slate-500 leading-relaxed mb-6">
-                Cada evaluación queda registrada. Cada partido, cada entrenamiento, cada prueba física. Con el tiempo,
-                Metrikas construye una historia medible del crecimiento de cada jugador — algo que puedes mostrarle a
-                los padres, y que distingue a tu academia de la competencia.
-              </p>
-              <ul className="space-y-2.5">
-                {[
-                  "Reportes en PDF listos para compartir con padres",
-                  "Comparativa de jugadores lado a lado",
-                  "Historial completo de evaluaciones y partidos",
-                ].map(item => (
-                  <li key={item} className="flex items-center gap-2.5 text-sm text-slate-700">
-                    <TrendingUp size={16} className="text-emerald-500 shrink-0" /> {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100">
-              <div className="flex items-end gap-2 h-40">
-                {[62, 68, 65, 74, 79, 85, 88].map((v, i) => (
-                  <div key={i} className="flex-1 rounded-t-lg bg-gradient-to-t from-[#0B5CFF] to-blue-400" style={{ height: `${v}%` }} />
-                ))}
-              </div>
-              <div className="flex justify-between mt-3 text-[10px] text-slate-400 font-medium">
-                <span>Ene</span><span>Feb</span><span>Mar</span><span>Abr</span><span>May</span><span>Jun</span><span>Jul</span>
-              </div>
-              <p className="text-center text-xs text-slate-400 mt-4">Ejemplo ilustrativo de evolución de score general</p>
-            </div>
+      {/* Progress — colorful animated section */}
+      <section className="relative bg-gradient-to-b from-[#050e2e] to-[#0a1745] text-white overflow-hidden">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-6xl mx-auto px-6 py-16 md:py-24 relative">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <p className="text-xs font-bold text-emerald-300 uppercase tracking-widest mb-3">Crecimiento medible</p>
+            <h2 className="text-3xl md:text-5xl font-black leading-[1.05] mb-4">
+              Demuestra el <span className="bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 bg-clip-text text-transparent">progreso real</span> de cada deportista
+            </h2>
+            <p className="text-blue-100/60 text-lg">Números concretos, mes a mes. Nada que los padres puedan discutir.</p>
           </div>
+          <ProgressShowcase />
         </div>
       </section>
 
