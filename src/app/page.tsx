@@ -8,7 +8,7 @@ import {
 import FifaPlayerCard from "@/components/landing/FifaPlayerCard"
 import InteractivePitchBuilder from "@/components/landing/InteractivePitchBuilder"
 import ProgressShowcase from "@/components/landing/ProgressShowcase"
-import ExerciseLibrary from "@/components/landing/ExerciseLibrary"
+import FeatureShowcase from "@/components/landing/FeatureShowcase"
 
 export const metadata: Metadata = {
   title: "Metrikas — Profesionaliza tu academia de fútbol",
@@ -218,53 +218,18 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Exercise library — the differentiator */}
+      {/* Feature showcase */}
       <section id="producto" className="relative bg-[#050e2e] text-white overflow-hidden">
-        <div className="absolute top-1/3 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-6 py-16 md:py-24 relative">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <p className="text-xs font-bold text-amber-300 uppercase tracking-widest mb-3">Biblioteca de ejercicios</p>
+        <div className="absolute top-0 -left-60 w-[500px] h-[500px] bg-[#0B5CFF]/8 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#0B5CFF]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-5xl mx-auto px-6 py-16 md:py-28 relative">
+          <div className="text-center max-w-2xl mx-auto mb-20">
+            <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Todo en una sola plataforma</p>
             <h2 className="text-3xl md:text-5xl font-black leading-[1.05]">
-              <span className="bg-gradient-to-r from-amber-300 via-orange-300 to-red-400 bg-clip-text text-transparent">Cada ejercicio</span> con su video, sus métricas y su técnica exacta
+              Cada módulo diseñado para <span className="bg-gradient-to-r from-[#0B5CFF] to-cyan-400 bg-clip-text text-transparent">simplificar tu trabajo.</span>
             </h2>
-            <p className="text-blue-100/70 mt-4 text-lg">
-              Sprints, pliometría, fuerza, técnica — el cuerpo técnico define cómo se hace y el deportista lo ve
-              embebido en su app. Sin adivinar. Sin variantes. Como se practica en clubes profesionales.
-            </p>
           </div>
-
-          <ExerciseLibrary />
-
-          <div className="grid md:grid-cols-3 gap-4 mt-12">
-            <div className="flex items-start gap-3 p-5 rounded-2xl bg-white/[0.03] border border-white/10">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center shrink-0">
-                <BarChart3 size={18} className="text-blue-300" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white mb-1">Datos históricos por ejercicio</p>
-                <p className="text-xs text-blue-100/60 leading-relaxed">Cada intento queda registrado con valor, unidad e intensidad — el jugador ve su propia curva de mejora.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-5 rounded-2xl bg-white/[0.03] border border-white/10">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
-                <Video size={18} className="text-emerald-300" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white mb-1">Video embebido, no un enlace suelto</p>
-                <p className="text-xs text-blue-100/60 leading-relaxed">El deportista abre el ejercicio y ve el video reproducido dentro de la app — ideal para reforzar técnica en casa.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-5 rounded-2xl bg-white/[0.03] border border-white/10">
-              <div className="w-10 h-10 rounded-xl bg-fuchsia-500/20 flex items-center justify-center shrink-0">
-                <UserCog size={18} className="text-fuchsia-300" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white mb-1">Biblioteca compartida por la academia</p>
-                <p className="text-xs text-blue-100/60 leading-relaxed">El entrenador define los ejercicios una vez. Todos los profesores por categoría los usan sin duplicar trabajo.</p>
-              </div>
-            </div>
-          </div>
+          <FeatureShowcase />
         </div>
       </section>
 
