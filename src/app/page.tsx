@@ -233,6 +233,50 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Exercise videos — compact strip */}
+      <section className="bg-[#030918] text-white">
+        <div className="max-w-5xl mx-auto px-6 py-14 md:py-20">
+          <div className="grid lg:grid-cols-[1fr_auto] gap-10 lg:gap-16 items-center">
+            {/* Text */}
+            <div>
+              <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-3">Biblioteca de ejercicios</p>
+              <h2 className="text-2xl md:text-4xl font-black leading-tight mb-4">
+                El deportista sabe <span className="text-amber-400">exactamente</span> cómo entrenar.
+              </h2>
+              <p className="text-white/50 text-base leading-relaxed mb-7 max-w-lg">
+                Cada ejercicio incluye un video guía para que el jugador vea la técnica correcta antes de ejecutar.
+                Sprint, fuerza, pliometría, agilidad — todo documentado con su video, unidad de medida y benchmark por edad.
+              </p>
+              <div className="grid sm:grid-cols-3 gap-4">
+                {[
+                  { emoji: "🎬", title: "Video por ejercicio", desc: "YouTube o Vimeo embebido. El jugador lo ve directo en su app." },
+                  { emoji: "📊", title: "Registro de intentos", desc: "Guarda el resultado de cada serie. Compara sesión a sesión." },
+                  { emoji: "🏅", title: "Benchmark por edad", desc: "Sabe si su marca es buena para Sub-13, Sub-15 o Sub-18." },
+                ].map(item => (
+                  <div key={item.title} className="bg-white/[0.04] border border-white/8 rounded-2xl p-4">
+                    <p className="text-xl mb-2">{item.emoji}</p>
+                    <p className="text-sm font-bold text-white mb-1">{item.title}</p>
+                    <p className="text-xs text-white/40 leading-relaxed">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Video */}
+            <div className="flex justify-center lg:justify-end shrink-0">
+              <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl" style={{ width: 160, aspectRatio: "9/16" }}>
+                <iframe
+                  src="https://www.youtube.com/embed/AW6mpDDb12s"
+                  title="Ejemplo — Sprint 40m"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* FIFA player card showcase */}
       <section className="relative bg-[#050a20] text-white overflow-hidden">
         <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
