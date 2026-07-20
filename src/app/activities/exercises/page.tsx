@@ -43,6 +43,22 @@ export default function ExerciseLibraryPage() {
                 <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800">
                   <h2 className="text-sm font-bold text-slate-900 dark:text-white">{enumT.activityCategory(category)}</h2>
                 </div>
+                {category === "Velocidad" && (
+                  <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">Video destacado</p>
+                    <div className="flex justify-start">
+                      <div className="w-[200px] rounded-xl overflow-hidden shadow-md" style={{ aspectRatio: "9/16" }}>
+                        <iframe
+                          src="https://www.youtube.com/embed/AW6mpDDb12s"
+                          title="Velocidad - Video destacado"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="w-full h-full"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="divide-y divide-slate-50 dark:divide-slate-800">
                   {items.map(ex => (
                     <div key={ex.id} className="flex items-center gap-3 px-5 py-3">
