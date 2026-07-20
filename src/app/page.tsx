@@ -8,6 +8,7 @@ import {
 import FifaPlayerCard from "@/components/landing/FifaPlayerCard"
 import InteractivePitchBuilder from "@/components/landing/InteractivePitchBuilder"
 import ProgressShowcase from "@/components/landing/ProgressShowcase"
+import ExerciseLibrary from "@/components/landing/ExerciseLibrary"
 
 export const metadata: Metadata = {
   title: "Metrikas — Profesionaliza tu academia de fútbol",
@@ -75,89 +76,6 @@ function PlaceholderImage({ label, aspect = "16/9" }: { label: string; aspect?: 
   )
 }
 
-const CHALK_DOTS = Array.from({ length: 45 }, (_, i) => ({
-  cx: (i * 37 + (i % 7) * 13) % 400,
-  cy: (i * 53 + (i % 5) * 29) % 500,
-  r: 0.5 + (i % 3) * 0.4,
-  o: 0.06 + (i % 4) * 0.03,
-}))
-
-function TacticsBoardGraphic() {
-  const oPlayers = [
-    { x: 140, y: 440 }, { x: 260, y: 440 }, { x: 200, y: 360 },
-    { x: 110, y: 260 }, { x: 290, y: 260 }, { x: 200, y: 178 },
-  ]
-  const xPlayers = [
-    { x: 200, y: 400 }, { x: 150, y: 305 }, { x: 250, y: 305 },
-    { x: 172, y: 205 }, { x: 232, y: 145 },
-  ]
-  return (
-    <div className="relative w-full rounded-3xl overflow-hidden shadow-2xl shadow-black/40 border border-white/10" style={{ aspectRatio: "4/5" }}>
-      <svg viewBox="0 0 400 500" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-        <defs>
-          <linearGradient id="boardGreen" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#1e7a42" />
-            <stop offset="100%" stopColor="#155c33" />
-          </linearGradient>
-          <marker id="arrowHead" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
-            <path d="M0,0 L7,3.5 L0,7 Z" fill="rgba(255,255,255,0.85)" />
-          </marker>
-        </defs>
-
-        <rect width="400" height="500" fill="url(#boardGreen)" />
-        {CHALK_DOTS.map((d, i) => (
-          <circle key={i} cx={d.cx} cy={d.cy} r={d.r} fill="#fff" opacity={d.o} />
-        ))}
-
-        {/* Pitch markings */}
-        <g stroke="rgba(255,255,255,0.55)" strokeWidth="1.6" fill="none">
-          <rect x="30" y="30" width="340" height="440" rx="4" />
-          <line x1="30" y1="250" x2="370" y2="250" />
-          <circle cx="200" cy="250" r="52" />
-          <circle cx="200" cy="250" r="2.2" fill="rgba(255,255,255,0.55)" />
-          <rect x="110" y="30" width="180" height="82" />
-          <rect x="150" y="30" width="100" height="36" />
-          <rect x="110" y="388" width="180" height="82" />
-          <rect x="150" y="434" width="100" height="36" />
-          <path d="M 30 60 A 30 30 0 0 0 60 30" />
-          <path d="M 370 60 A 30 30 0 0 1 340 30" />
-          <path d="M 30 440 A 30 30 0 0 1 60 470" />
-          <path d="M 370 440 A 30 30 0 0 0 340 470" />
-        </g>
-
-        {/* Tactical run arrows */}
-        <g fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeDasharray="7 6" strokeLinecap="round">
-          <path d="M 140 440 Q 70 380 110 260" markerEnd="url(#arrowHead)" />
-          <path d="M 110 260 Q 90 190 155 130" markerEnd="url(#arrowHead)" />
-          <path d="M 200 360 Q 210 260 200 185" markerEnd="url(#arrowHead)" />
-          <path d="M 200 178 Q 195 130 192 95" markerEnd="url(#arrowHead)" />
-        </g>
-
-        {/* Opponent markers (X) */}
-        <g stroke="rgba(255,255,255,0.9)" strokeWidth="2.4" strokeLinecap="round">
-          {xPlayers.map((p, i) => (
-            <g key={i}>
-              <line x1={p.x - 8} y1={p.y - 8} x2={p.x + 8} y2={p.y + 8} />
-              <line x1={p.x - 8} y1={p.y + 8} x2={p.x + 8} y2={p.y - 8} />
-            </g>
-          ))}
-        </g>
-
-        {/* Own team markers (O) */}
-        <g>
-          {oPlayers.map((p, i) => (
-            <circle key={i} cx={p.x} cy={p.y} r="10" fill="#0B5CFF" stroke="white" strokeWidth="1.5" />
-          ))}
-        </g>
-      </svg>
-
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-5">
-        <p className="text-white text-sm font-bold">Tablero táctico en vivo</p>
-        <p className="text-white/60 text-xs">Formaciones y jugadas, directo desde la app</p>
-      </div>
-    </div>
-  )
-}
 
 export default function LandingPage() {
   return (
@@ -171,10 +89,10 @@ export default function LandingPage() {
             </div>
             <span className="text-lg font-bold tracking-tight">Metrikas</span>
           </div>
-          <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-blue-100/70">
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-blue-100/70">
             <a href="#caracteristicas" className="hover:text-white transition-colors">Características</a>
+            <a href="#producto" className="hover:text-white transition-colors">Ejercicios</a>
             <a href="#precios" className="hover:text-white transition-colors">Precios</a>
-            <a href="#roles" className="hover:text-white transition-colors">Cómo funciona</a>
             <a href="#preguntas" className="hover:text-white transition-colors">Preguntas</a>
           </nav>
           <div className="flex items-center gap-2">
@@ -207,23 +125,24 @@ export default function LandingPage() {
         <MessageCircle className="w-6 h-6 text-white" fill="white" strokeWidth={1.5} />
       </a>
 
-      {/* Hero */}
+      {/* Hero — with interactive pitch */}
       <section className="relative">
         <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle at 15% 20%, white 1px, transparent 1px), radial-gradient(circle at 85% 60%, white 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="max-w-6xl mx-auto px-6 pt-16 pb-20 md:pt-24 md:pb-28 relative z-10">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-fuchsia-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-6 pt-12 pb-16 md:pt-20 md:pb-24 relative z-10">
+          <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-10 lg:gap-16 items-center">
             <div>
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-4 py-1.5 mb-6">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-slow" />
-                <span className="text-white/80 text-xs font-medium">Hecho para academias que quieren crecer</span>
+                <span className="text-white/80 text-xs font-medium">Interactivo · pruébalo ahora →</span>
               </div>
-              <h1 className="text-4xl md:text-5xl font-black leading-[1.1] mb-5">
-                La plataforma que <span className="text-blue-300">profesionaliza</span> tu academia de fútbol
+              <h1 className="text-4xl md:text-5xl xl:text-6xl font-black leading-[1.05] mb-5">
+                Arma tu equipo. <span className="bg-gradient-to-r from-[#0B5CFF] via-cyan-300 to-fuchsia-400 bg-clip-text text-transparent">Mide el progreso.</span> Profesionaliza tu academia.
               </h1>
               <p className="text-blue-100/70 text-base md:text-lg leading-relaxed mb-8 max-w-lg">
-                Gestiona jugadores, arma tus convocatorias con formaciones reales, mide el progreso físico de cada
-                deportista y controla las mensualidades — todo desde una sola plataforma, en tiempo real.
+                Convocatoria con formaciones reales, evaluaciones físicas, biblioteca de ejercicios en video, pagos
+                automáticos y comunicación con jugadores — todo desde una sola plataforma.
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <a
@@ -247,7 +166,7 @@ export default function LandingPage() {
                 <span className="flex items-center gap-1.5"><Languages size={14} /> Español, inglés y portugués</span>
               </div>
             </div>
-            <TacticsBoardGraphic />
+            <InteractivePitchBuilder />
           </div>
         </div>
       </section>
@@ -299,26 +218,84 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Product showcase — interactive pitch builder + FIFA card */}
+      {/* Exercise library — the differentiator */}
       <section id="producto" className="relative bg-[#050e2e] text-white overflow-hidden">
-        <div className="absolute top-1/4 -left-40 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-fuchsia-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/3 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="max-w-7xl mx-auto px-6 py-16 md:py-24 relative">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-3">El producto en vivo</p>
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <p className="text-xs font-bold text-amber-300 uppercase tracking-widest mb-3">Biblioteca de ejercicios</p>
             <h2 className="text-3xl md:text-5xl font-black leading-[1.05]">
-              Arma tu equipo. <span className="bg-gradient-to-r from-[#0B5CFF] via-cyan-300 to-fuchsia-400 bg-clip-text text-transparent">Ahora mismo.</span>
+              <span className="bg-gradient-to-r from-amber-300 via-orange-300 to-red-400 bg-clip-text text-transparent">Cada ejercicio</span> con su video, sus métricas y su técnica exacta
             </h2>
-            <p className="text-blue-100/60 mt-4 text-lg">Cambia la formación, arrastra jugadores, mira las estadísticas — todo funciona igual en la app real.</p>
+            <p className="text-blue-100/70 mt-4 text-lg">
+              Sprints, pliometría, fuerza, técnica — el cuerpo técnico define cómo se hace y el deportista lo ve
+              embebido en su app. Sin adivinar. Sin variantes. Como se practica en clubes profesionales.
+            </p>
           </div>
 
-          <div className="grid lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] gap-8 lg:gap-12 items-start">
-            <InteractivePitchBuilder />
-            <div className="lg:sticky lg:top-24">
-              <div className="text-center mb-4">
-                <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-2">Ficha del jugador</p>
-                <p className="text-sm text-blue-100/60">Pasa el mouse sobre la tarjeta para el efecto holográfico</p>
+          <ExerciseLibrary />
+
+          <div className="grid md:grid-cols-3 gap-4 mt-12">
+            <div className="flex items-start gap-3 p-5 rounded-2xl bg-white/[0.03] border border-white/10">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center shrink-0">
+                <BarChart3 size={18} className="text-blue-300" />
               </div>
+              <div>
+                <p className="text-sm font-bold text-white mb-1">Datos históricos por ejercicio</p>
+                <p className="text-xs text-blue-100/60 leading-relaxed">Cada intento queda registrado con valor, unidad e intensidad — el jugador ve su propia curva de mejora.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-5 rounded-2xl bg-white/[0.03] border border-white/10">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                <Video size={18} className="text-emerald-300" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white mb-1">Video embebido, no un enlace suelto</p>
+                <p className="text-xs text-blue-100/60 leading-relaxed">El deportista abre el ejercicio y ve el video reproducido dentro de la app — ideal para reforzar técnica en casa.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-5 rounded-2xl bg-white/[0.03] border border-white/10">
+              <div className="w-10 h-10 rounded-xl bg-fuchsia-500/20 flex items-center justify-center shrink-0">
+                <UserCog size={18} className="text-fuchsia-300" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white mb-1">Biblioteca compartida por la academia</p>
+                <p className="text-xs text-blue-100/60 leading-relaxed">El entrenador define los ejercicios una vez. Todos los profesores por categoría los usan sin duplicar trabajo.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FIFA player card showcase */}
+      <section className="relative bg-[#050a20] text-white overflow-hidden">
+        <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-6xl mx-auto px-6 py-16 md:py-24 relative">
+          <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-12 items-center">
+            <div>
+              <p className="text-xs font-bold text-cyan-300 uppercase tracking-widest mb-3">Ficha del jugador</p>
+              <h2 className="text-3xl md:text-5xl font-black leading-[1.05] mb-4">
+                Estadísticas <span className="bg-gradient-to-r from-cyan-300 via-blue-300 to-fuchsia-300 bg-clip-text text-transparent">estilo videojuego</span> con datos reales
+              </h2>
+              <p className="text-blue-100/70 text-lg leading-relaxed mb-6">
+                Cada evaluación genera una ficha con 6 atributos, un rating general y una insignia de nivel. El jugador
+                la ve en su celular. Los padres ven el crecimiento. La academia demuestra su trabajo.
+              </p>
+              <ul className="space-y-3">
+                {[
+                  { label: "Velocidad, Fuerza, Técnica, Resistencia, Potencia y Agilidad" },
+                  { label: "Rating general que sube con cada evaluación" },
+                  { label: "Insignia PRO / TOP / ELITE según el nivel alcanzado" },
+                  { label: "Efecto holográfico moderno — pasa el mouse sobre la tarjeta" },
+                ].map(item => (
+                  <li key={item.label} className="flex items-start gap-2.5 text-sm text-blue-100/80">
+                    <CheckCircle2 size={16} className="text-emerald-400 mt-0.5 shrink-0" /> {item.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="flex justify-center">
               <FifaPlayerCard />
             </div>
           </div>
