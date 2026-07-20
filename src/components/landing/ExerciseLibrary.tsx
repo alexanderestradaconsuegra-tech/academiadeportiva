@@ -127,24 +127,34 @@ export default function ExerciseLibrary() {
             <h3 className="text-3xl font-black text-white leading-tight mb-2">{cat.key}</h3>
             <p className="text-sm text-white/85 mb-6">{cat.desc}</p>
 
-            {/* Mock video preview */}
-            <div className="relative bg-black/40 backdrop-blur rounded-2xl overflow-hidden aspect-video border border-white/20 group cursor-pointer">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-14 h-14 rounded-full bg-white/95 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
-                  <PlayCircle size={40} className="text-slate-900" fill="currentColor" strokeWidth={0} />
+            {/* Video preview */}
+            {active === 0 ? (
+              <div className="flex justify-center">
+                <div className="rounded-2xl overflow-hidden border border-white/20 shadow-2xl" style={{ width: "180px", aspectRatio: "9/16" }}>
+                  <iframe
+                    src="https://www.youtube.com/embed/AW6mpDDb12s"
+                    title="Video guía · Sprint 40m"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    className="w-full h-full"
+                  />
                 </div>
               </div>
-              <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
-                <div className="flex items-center gap-2 text-xs text-white/90">
-                  <Video size={12} />
-                  <span className="font-semibold">Video guía · {cat.exercises[0].name}</span>
+            ) : (
+              <div className="relative bg-black/40 backdrop-blur rounded-2xl overflow-hidden aspect-video border border-white/20 group cursor-pointer">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-full bg-white/95 flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                    <PlayCircle size={40} className="text-slate-900" fill="currentColor" strokeWidth={0} />
+                  </div>
+                </div>
+                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                  <div className="flex items-center gap-2 text-xs text-white/90">
+                    <Video size={12} />
+                    <span className="font-semibold">Video guía · {cat.exercises[0].name}</span>
+                  </div>
                 </div>
               </div>
-              {/* fake timeline */}
-              <div className="absolute inset-x-3 bottom-2 h-0.5 bg-white/20 rounded-full overflow-hidden">
-                <div className="h-full bg-white w-1/3 rounded-full" />
-              </div>
-            </div>
+            )}
             <p className="text-xs text-white/70 mt-3 text-center">Cada ejercicio guarda su enlace a YouTube o Vimeo. El deportista lo ve embebido en su app.</p>
           </div>
         </div>
