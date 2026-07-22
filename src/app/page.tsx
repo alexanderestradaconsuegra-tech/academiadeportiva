@@ -175,24 +175,55 @@ export default function LandingPage() {
 
       {/* Problem / Solution */}
       <section className="bg-white text-slate-900">
-        <div className="max-w-6xl mx-auto px-6 py-16 md:py-20">
-          <div className="grid md:grid-cols-2 gap-10 items-center">
-            <div className="bg-slate-50 rounded-3xl p-8">
-              <p className="text-xs font-bold text-red-500 uppercase tracking-widest mb-3">Sin Metrikas</p>
-              <ul className="space-y-3 text-sm text-slate-600">
-                <li className="flex items-start gap-2.5"><span className="text-red-400 mt-0.5">✕</span> Convocatorias por grupos de WhatsApp que nadie confirma</li>
-                <li className="flex items-start gap-2.5"><span className="text-red-400 mt-0.5">✕</span> Hojas de Excel dispersas para pagos y asistencia</li>
-                <li className="flex items-start gap-2.5"><span className="text-red-400 mt-0.5">✕</span> Sin forma clara de mostrar el progreso de un jugador</li>
-                <li className="flex items-start gap-2.5"><span className="text-red-400 mt-0.5">✕</span> Un solo usuario compartido entre todos los profesores</li>
+        <div className="max-w-5xl mx-auto px-6 py-16 md:py-24">
+          <div className="text-center mb-12">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">El antes y el después</p>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900">¿Por qué las academias cambian a Metrikas?</h2>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Sin Metrikas */}
+            <div className="rounded-3xl border-2 border-red-100 bg-red-50/40 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                  <span className="text-red-500 font-black text-sm">✕</span>
+                </div>
+                <p className="text-sm font-black text-red-500 uppercase tracking-widest">Sin Metrikas</p>
+              </div>
+              <ul className="space-y-4">
+                {[
+                  "Convocatorias por grupos de WhatsApp que nadie confirma",
+                  "Hojas de Excel dispersas para pagos y asistencia",
+                  "Sin forma clara de mostrar el progreso de un jugador",
+                  "Un solo usuario compartido entre todos los profesores",
+                ].map(t => (
+                  <li key={t} className="flex items-start gap-3">
+                    <span className="w-5 h-5 rounded-full bg-red-200 text-red-500 flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">✕</span>
+                    <span className="text-slate-600 text-sm leading-snug">{t}</span>
+                  </li>
+                ))}
               </ul>
             </div>
-            <div className="bg-blue-50 rounded-3xl p-8 border border-blue-100">
-              <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Con Metrikas</p>
-              <ul className="space-y-3 text-sm text-slate-700">
-                <li className="flex items-start gap-2.5"><CheckCircle2 size={16} className="text-[#0B5CFF] mt-0.5 shrink-0" /> Convocatoria con confirmación individual y notificación push</li>
-                <li className="flex items-start gap-2.5"><CheckCircle2 size={16} className="text-[#0B5CFF] mt-0.5 shrink-0" /> Pagos y mensualidades generados y controlados automáticamente</li>
-                <li className="flex items-start gap-2.5"><CheckCircle2 size={16} className="text-[#0B5CFF] mt-0.5 shrink-0" /> Evaluaciones y gráficas que demuestran la evolución real</li>
-                <li className="flex items-start gap-2.5"><CheckCircle2 size={16} className="text-[#0B5CFF] mt-0.5 shrink-0" /> Un profesor por categoría, con su propio acceso controlado</li>
+            {/* Con Metrikas */}
+            <div className="rounded-3xl border-2 border-[#0B5CFF]/20 bg-[#0B5CFF]/[0.04] p-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-[#0B5CFF]/8 rounded-full blur-2xl pointer-events-none" />
+              <div className="flex items-center gap-3 mb-6 relative">
+                <div className="w-8 h-8 rounded-full bg-[#0B5CFF] flex items-center justify-center">
+                  <CheckCircle2 size={14} className="text-white" />
+                </div>
+                <p className="text-sm font-black text-[#0B5CFF] uppercase tracking-widest">Con Metrikas</p>
+              </div>
+              <ul className="space-y-4 relative">
+                {[
+                  "Convocatoria con confirmación individual y notificación push",
+                  "Pagos y mensualidades generados y controlados automáticamente",
+                  "Evaluaciones y gráficas que demuestran la evolución real",
+                  "Un profesor por categoría, con su propio acceso controlado",
+                ].map(t => (
+                  <li key={t} className="flex items-start gap-3">
+                    <CheckCircle2 size={18} className="text-[#0B5CFF] shrink-0 mt-0.5" />
+                    <span className="text-slate-700 text-sm leading-snug font-medium">{t}</span>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
@@ -221,14 +252,14 @@ export default function LandingPage() {
       </section>
 
       {/* Feature showcase */}
-      <section id="producto" className="relative bg-[#050e2e] text-white overflow-hidden">
-        <div className="absolute top-0 -left-60 w-[500px] h-[500px] bg-[#0B5CFF]/8 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#0B5CFF]/5 rounded-full blur-3xl pointer-events-none" />
+      <section id="producto" className="relative bg-slate-100 text-slate-900 overflow-hidden">
+        <div className="absolute top-0 -left-60 w-[500px] h-[500px] bg-[#0B5CFF]/6 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#0B5CFF]/4 rounded-full blur-3xl pointer-events-none" />
         <div className="max-w-5xl mx-auto px-6 py-16 md:py-28 relative">
           <div className="text-center max-w-2xl mx-auto mb-20">
             <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Todo en una sola plataforma</p>
-            <h2 className="text-3xl md:text-5xl font-black leading-[1.05]">
-              Cada módulo diseñado para <span className="bg-gradient-to-r from-[#0B5CFF] to-cyan-400 bg-clip-text text-transparent">simplificar tu trabajo.</span>
+            <h2 className="text-3xl md:text-5xl font-black leading-[1.05] text-slate-900">
+              Cada módulo diseñado para <span className="bg-gradient-to-r from-[#0B5CFF] to-cyan-500 bg-clip-text text-transparent">simplificar tu trabajo.</span>
             </h2>
           </div>
           <FeatureShowcase />

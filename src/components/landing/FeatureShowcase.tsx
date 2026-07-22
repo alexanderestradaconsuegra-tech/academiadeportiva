@@ -1,5 +1,5 @@
 "use client"
-import { Calendar, Users, ClipboardList, ChevronRight, Check, X } from "lucide-react"
+import { Calendar, Users, Check, X, CheckCircle2 } from "lucide-react"
 
 /* ── Realistic phone frame ──────────────────── */
 function Phone({ children, float }: { children: React.ReactNode; float?: React.ReactNode }) {
@@ -82,11 +82,11 @@ function CalendarScreen() {
 
 function PlayersScreen() {
   const players = [
-    { name:"Mateo García", pos:"POR", cat:"Sub-15", score:88, up:true },
-    { name:"Lucas Pérez",  pos:"DFC", cat:"Sub-15", score:82, up:true },
-    { name:"Emma Torres",  pos:"LI",  cat:"Sub-13", score:79, up:false },
-    { name:"Diego Ruiz",   pos:"MCD", cat:"Sub-18", score:91, up:true },
-    { name:"Sara Molina",  pos:"MC",  cat:"Sub-15", score:76, up:false },
+    { name:"Mateo García", pos:"POR", cat:"Sub-15", score:88, up:true,  color:"#0B5CFF", initials:"MG" },
+    { name:"Lucas Pérez",  pos:"DFC", cat:"Sub-15", score:82, up:true,  color:"#10b981", initials:"LP" },
+    { name:"Emma Torres",  pos:"LI",  cat:"Sub-13", score:79, up:false, color:"#f59e0b", initials:"ET" },
+    { name:"Diego Ruiz",   pos:"MCD", cat:"Sub-18", score:91, up:true,  color:"#8b5cf6", initials:"DR" },
+    { name:"Sara Molina",  pos:"MC",  cat:"Sub-15", score:76, up:false, color:"#ec4899", initials:"SM" },
   ]
   return (
     <div className="h-full bg-white flex flex-col overflow-hidden">
@@ -100,8 +100,8 @@ function PlayersScreen() {
       <div className="flex-1 overflow-hidden px-3 pt-2 space-y-1.5">
         {players.map(p=>(
           <div key={p.name} className="flex items-center gap-2.5 bg-slate-50 rounded-xl p-2 border border-slate-100">
-            <div className="w-8 h-8 rounded-xl bg-slate-200 flex items-center justify-center text-slate-500 text-[8px] font-black shrink-0">
-              {p.pos}
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[8px] font-black shrink-0" style={{background: p.color}}>
+              {p.initials}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-slate-800 text-[9px] font-semibold truncate">{p.name}</p>
@@ -238,20 +238,6 @@ const FEATURES = [
     float: undefined,
     reverse: true,
   },
-  {
-    icon: ClipboardList,
-    label: "Convocatorias & Asistencias",
-    title: "Un control absoluto sobre la asistencia de tus jugadores.",
-    desc: "Adiós a las convocatorias por WhatsApp sin respuesta. El jugador confirma o declina desde la app y tú ves el estado en tiempo real.",
-    bullets: [
-      "Convoca a tu equipo en 1 clic desde el tablero táctico",
-      "El jugador confirma directamente desde su celular",
-      "Sigue en tiempo real quién viene y quién no",
-    ],
-    screen: <ConvocatoriaScreen />,
-    float: ConvocatoriaFloat,
-    reverse: false,
-  },
 ]
 
 export default function FeatureShowcase() {
@@ -274,16 +260,16 @@ export default function FeatureShowcase() {
             {/* Text */}
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-5">
-                <Icon size={16} className="text-white/50" />
-                <span className="text-sm font-semibold text-white/50">{f.label}</span>
+                <Icon size={16} className="text-[#0B5CFF]" />
+                <span className="text-sm font-semibold text-slate-400">{f.label}</span>
               </div>
-              <h3 className="text-2xl md:text-[1.75rem] font-black text-white leading-snug mb-4">{f.title}</h3>
-              <p className="text-white/50 text-base leading-relaxed mb-7">{f.desc}</p>
+              <h3 className="text-2xl md:text-[1.75rem] font-black text-slate-900 leading-snug mb-4">{f.title}</h3>
+              <p className="text-slate-500 text-base leading-relaxed mb-7">{f.desc}</p>
               <ul className="space-y-3.5">
                 {f.bullets.map(b => (
                   <li key={b} className="flex items-start gap-3">
-                    <ChevronRight size={15} className="text-white/30 mt-0.5 shrink-0" />
-                    <span className="text-sm text-white/70 leading-snug">{b}</span>
+                    <CheckCircle2 size={16} className="text-[#0B5CFF] mt-0.5 shrink-0" />
+                    <span className="text-sm text-slate-600 leading-snug">{b}</span>
                   </li>
                 ))}
               </ul>
