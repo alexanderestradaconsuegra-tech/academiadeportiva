@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, RsvpStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
@@ -70,6 +70,7 @@ interface AppContextType extends AppState {
   deletePositionSession: (playerId: string, sessionLabel: string) => void
   getPlayerPositionSamples: (playerId: string) => PositionSample[]
   upsertAttendance: (trainingId: string, playerId: string, status: AttendanceStatus) => void
+  upsertRsvp: (trainingId: string, playerId: string, rsvp: RsvpStatus) => void
   getTrainingAttendance: (trainingId: string) => Attendance[]
   getPlayerAttendance: (playerId: string) => Attendance[]
   addPhysicalTest: (data: Omit<PhysicalTest, "id" | "created_at">) => PhysicalTest
@@ -245,6 +246,7 @@ function mapAttendance(row: Tables<"attendance">): Attendance {
     training_id: row.training_id,
     player_id: row.player_id,
     status: row.status as AttendanceStatus,
+    rsvp: (row.rsvp ?? "pending") as RsvpStatus,
     notes: row.notes ?? null,
     created_at: row.created_at,
   }
@@ -988,11 +990,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (existing) {
         return { ...s, attendance: s.attendance.map(a => a.training_id === trainingId && a.player_id === playerId ? { ...a, status } : a) }
       }
-      const record: Attendance = { id: crypto.randomUUID(), training_id: trainingId, player_id: playerId, status, notes: null, created_at: new Date().toISOString() }
+      const record: Attendance = { id: crypto.randomUUID(), training_id: trainingId, player_id: playerId, status, rsvp: "pending", notes: null, created_at: new Date().toISOString() }
       return { ...s, attendance: [...s.attendance, record] }
     })
     supabase.from("attendance").upsert({ training_id: trainingId, player_id: playerId, status }, { onConflict: "training_id,player_id" })
       .then(({ error }) => { if (error) dbg("upsertAttendance:", error) })
+  }, [])
+
+  const upsertRsvp = useCallback((trainingId: string, playerId: string, rsvp: RsvpStatus) => {
+    setState(s => {
+      const existing = s.attendance.find(a => a.training_id === trainingId && a.player_id === playerId)
+      if (existing) {
+        return { ...s, attendance: s.attendance.map(a => a.training_id === trainingId && a.player_id === playerId ? { ...a, rsvp } : a) }
+      }
+      const record: Attendance = { id: crypto.randomUUID(), training_id: trainingId, player_id: playerId, status: "present", rsvp, notes: null, created_at: new Date().toISOString() }
+      return { ...s, attendance: [...s.attendance, record] }
+    })
+    supabase.from("attendance").upsert({ training_id: trainingId, player_id: playerId, rsvp, status: "present" as const }, { onConflict: "training_id,player_id" })
+      .then(({ error }) => { if (error) dbg("upsertRsvp:", error) })
   }, [])
 
   const getTrainingAttendance = useCallback(
@@ -1314,6 +1329,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         deletePositionSession,
         getPlayerPositionSamples,
         upsertAttendance,
+        upsertRsvp,
         getTrainingAttendance,
         getPlayerAttendance,
         addPhysicalTest,

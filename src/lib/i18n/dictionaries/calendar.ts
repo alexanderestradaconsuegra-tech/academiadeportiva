@@ -45,7 +45,10 @@ export const calendar = {
 
   // Player RSVP
   rsvpPrompt: { es: "¿Vas a entrenar?", en: "Are you coming?", pt: "Você vai treinar?" },
-  iWillAttend: { es: "Voy", en: "I'll be there", pt: "Vou" },
+  iWillAttend: { es: "Sí, voy", en: "I'll be there", pt: "Vou" },
   iCannotAttend: { es: "No puedo", en: "Can't make it", pt: "Não posso" },
   yourStatus: { es: "Tu respuesta", en: "Your response", pt: "Sua resposta" },
+  confirmed: { es: "confirmados", en: "confirmed", pt: "confirmados" },
+  declined:  { es: "no pueden", en: "can't make it", pt: "não podem" },
+  pending:   { es: "sin responder", en: "pending", pt: "sem resposta" },
 } satisfies Translations

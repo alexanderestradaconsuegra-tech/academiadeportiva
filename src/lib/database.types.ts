@@ -20,6 +20,7 @@ export type Database = {
           training_id: string
           player_id: string
           status: "present" | "absent" | "late" | "excused"
+          rsvp: "confirmed" | "declined" | "pending"
           notes: string | null
           created_at: string
         }
@@ -28,6 +29,7 @@ export type Database = {
           training_id: string
           player_id: string
           status: "present" | "absent" | "late" | "excused"
+          rsvp?: "confirmed" | "declined" | "pending"
           notes?: string | null
           created_at?: string
         }
@@ -36,6 +38,7 @@ export type Database = {
           training_id?: string
           player_id?: string
           status?: "present" | "absent" | "late" | "excused"
+          rsvp?: "confirmed" | "declined" | "pending"
           notes?: string | null
           created_at?: string
         }

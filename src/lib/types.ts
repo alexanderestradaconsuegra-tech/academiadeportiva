@@ -139,12 +139,14 @@ export interface Injury {
 }
 
 export type AttendanceStatus = "present" | "absent" | "late" | "excused"
+export type RsvpStatus = "confirmed" | "declined" | "pending"
 
 export interface Attendance {
   id: string
   training_id: string
   player_id: string
   status: AttendanceStatus
+  rsvp: RsvpStatus
   notes: string | null
   created_at: string
 }
