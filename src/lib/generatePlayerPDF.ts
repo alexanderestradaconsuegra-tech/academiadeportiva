@@ -244,7 +244,7 @@ export async function generatePlayerPDF(data: ReportData) {
   doc.setFont("helvetica", "normal")
   doc.setFontSize(7)
   doc.setTextColor(150, 160, 180)
-  doc.text(`FutbolMetrics · ${data.academyName} · ${new Date().getFullYear()}`, W / 2, 293, { align: "center" })
+  doc.text(`Metrikas · ${data.academyName} · ${new Date().getFullYear()}`, W / 2, 293, { align: "center" })
 
   doc.save(`reporte-${data.player.name.replace(/\s+/g, "-").toLowerCase()}.pdf`)
 }

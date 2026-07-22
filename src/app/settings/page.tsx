@@ -8,7 +8,7 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
 import PhotoUpload from "@/components/ui/PhotoUpload"
-import { Trophy, Check, KeyRound, UserCheck, Sun, Moon, Send, Languages } from "lucide-react"
+import { Trophy, Check, KeyRound, UserCheck, Sun, Moon, Send, Languages, Mail } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Category, Language } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
@@ -20,7 +20,7 @@ const LANGUAGES: { code: Language; label: string }[] = [
   { code: "pt", label: "Português" },
 ]
 
-const CATEGORIES: Category[] = ["Sub-10", "Sub-12", "Sub-14", "Sub-16", "Sub-18", "Juvenil", "Senior"]
+const CATEGORIES: Category[] = ["Sub-5", "Sub-6", "Sub-7", "Sub-8", "Sub-9", "Sub-10", "Sub-11", "Sub-12", "Sub-13", "Sub-14", "Sub-15", "Otra"]
 
 function NotificationBroadcast() {
   const t = useT(settings)
@@ -87,15 +87,151 @@ function NotificationBroadcast() {
   )
 }
 
+function MyAccount() {
+  const t = useT(settings)
+  const [currentEmail, setCurrentEmail] = useState("")
+  const [newEmail, setNewEmail] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [savingEmail, setSavingEmail] = useState(false)
+  const [savingPassword, setSavingPassword] = useState(false)
+  const [emailMsg, setEmailMsg] = useState<{ type: "success" | "error"; text: string } | null>(null)
+  const [passwordMsg, setPasswordMsg] = useState<{ type: "success" | "error"; text: string } | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setCurrentEmail(data.user?.email ?? ""))
+  }, [])
+
+  async function handleEmailUpdate(e: React.FormEvent) {
+    e.preventDefault()
+    setEmailMsg(null)
+    setSavingEmail(true)
+    const { error } = await supabase.auth.updateUser({ email: newEmail })
+    setSavingEmail(false)
+    if (error) {
+      setEmailMsg({ type: "error", text: error.message })
+      return
+    }
+    setEmailMsg({ type: "success", text: t("emailUpdateConfirmSent") })
+    setNewEmail("")
+  }
+
+  async function handlePasswordUpdate(e: React.FormEvent) {
+    e.preventDefault()
+    setPasswordMsg(null)
+    if (newPassword.length < 6) {
+      setPasswordMsg({ type: "error", text: t("passwordTooShort") })
+      return
+    }
+    setSavingPassword(true)
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    setSavingPassword(false)
+    if (error) {
+      setPasswordMsg({ type: "error", text: error.message })
+      return
+    }
+    setPasswordMsg({ type: "success", text: t("passwordUpdated") })
+    setNewPassword("")
+  }
+
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 mb-6">
+      <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-1.5">
+        <Mail size={14} className="text-[#0B5CFF]" /> {t("myAccountTitle")}
+      </h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">{t("myAccountSubtitle")}</p>
+
+      {currentEmail && (
+        <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">
+          {t("currentEmailLabel")}: <span className="font-semibold text-slate-600 dark:text-slate-300">{currentEmail}</span>
+        </p>
+      )}
+
+      <form onSubmit={handleEmailUpdate} className="flex flex-col sm:flex-row items-start sm:items-end gap-3 mb-1">
+        <div className="flex-1 w-full">
+          <Input label={t("newEmailLabel")} type="email" placeholder={t("emailPlaceholder")} value={newEmail} onChange={e => setNewEmail(e.target.value)} />
+        </div>
+        <Button size="sm" type="submit" loading={savingEmail} disabled={!newEmail}>{t("updateEmail")}</Button>
+      </form>
+      {emailMsg && <p className={cn("text-xs mt-2 mb-3", emailMsg.type === "success" ? "text-emerald-600" : "text-red-600")}>{emailMsg.text}</p>}
+
+      <form onSubmit={handlePasswordUpdate} className="flex flex-col sm:flex-row items-start sm:items-end gap-3 mt-4">
+        <div className="flex-1 w-full">
+          <Input label={t("newPasswordLabel")} type="password" placeholder={t("passwordPlaceholder")} value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+        </div>
+        <Button size="sm" type="submit" loading={savingPassword} disabled={newPassword.length < 6}>{t("updatePassword")}</Button>
+      </form>
+      {passwordMsg && <p className={cn("text-xs mt-2", passwordMsg.type === "success" ? "text-emerald-600" : "text-red-600")}>{passwordMsg.text}</p>}
+    </div>
+  )
+}
+
+const BILLING_STATUS_LABEL: Record<string, { label: string; bg: string }> = {
+  trialing: { label: "En prueba", bg: "bg-blue-50 text-blue-600" },
+  active: { label: "Activa", bg: "bg-emerald-50 text-emerald-600" },
+  past_due: { label: "Pago pendiente", bg: "bg-amber-50 text-amber-600" },
+  suspended: { label: "Suspendida", bg: "bg-red-50 text-red-600" },
+  canceled: { label: "Cancelada", bg: "bg-slate-100 text-slate-500" },
+}
+
+function BillingCard() {
+  const { teamSettings } = useApp()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const status = teamSettings?.subscription_status ?? "active"
+  const cfg = BILLING_STATUS_LABEL[status] ?? BILLING_STATUS_LABEL.active
+  const hasStripe = !!teamSettings?.stripe_customer_id
+
+  async function handleClick() {
+    setError("")
+    setLoading(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const endpoint = hasStripe ? "/api/billing/portal" : "/api/billing/create-checkout-session"
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    })
+    const data = await res.json()
+    setLoading(false)
+    if (!res.ok || !data.url) {
+      setError(data.error || "No se pudo continuar.")
+      return
+    }
+    window.location.href = data.url
+  }
+
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Facturación</h3>
+        <span className={cn("text-xs font-bold px-2 py-0.5 rounded-lg", cfg.bg)}>{cfg.label}</span>
+      </div>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+        {teamSettings?.subscription_current_period_end
+          ? `Vence el ${new Date(teamSettings.subscription_current_period_end).toLocaleDateString("es-CO")}`
+          : "Tu suscripción es gestionada manualmente por el equipo de soporte."}
+      </p>
+      {error && <p className="text-xs text-red-600 mb-3">{error}</p>}
+      <Button size="sm" type="button" loading={loading} onClick={handleClick}>
+        {hasStripe ? "Gestionar suscripción" : "Suscribirse con tarjeta"}
+      </Button>
+    </div>
+  )
+}
+
 function AccessManager() {
   const t = useT(settings)
   const { players } = useApp()
   const [withAccess, setWithAccess] = useState<Set<string>>(new Set())
   const [loadingList, setLoadingList] = useState(true)
   const [openFor, setOpenFor] = useState<string | null>(null)
+  const [editingFor, setEditingFor] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState<string | null>(null)
   const [error, setError] = useState("")
   const [form, setForm] = useState({ email: "", password: "" })
+  const [editForm, setEditForm] = useState({ email: "", password: "" })
 
   useEffect(() => {
     supabase.from("profiles").select("player_id").not("player_id", "is", null)
@@ -127,6 +263,28 @@ function AccessManager() {
     setForm({ email: "", password: "" })
   }
 
+  async function handleUpdate(playerId: string) {
+    setError("")
+    setSaving(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const res = await fetch("/api/admin/update-account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ player_id: playerId, email: editForm.email || undefined, password: editForm.password || undefined }),
+    })
+    const data = await res.json()
+    setSaving(false)
+    if (!res.ok) {
+      setError(data.error || t("accessUpdateError"))
+      return
+    }
+    setEditingFor(null)
+    setEditForm({ email: "", password: "" })
+    setSaved(playerId)
+    setTimeout(() => setSaved(null), 2500)
+  }
+
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
       <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{t("accessManagerTitle")}</h3>
@@ -151,9 +309,19 @@ function AccessManager() {
                     <p className="text-xs text-slate-400 dark:text-slate-500">{p.position}</p>
                   </div>
                   {has ? (
-                    <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg">
-                      <UserCheck size={12} /> {t("withAccess")}
-                    </span>
+                    <>
+                      {saved === p.id && (
+                        <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold">
+                          <Check size={12} /> {t("saved")}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg">
+                        <UserCheck size={12} /> {t("withAccess")}
+                      </span>
+                      <Button variant="outline" size="sm" type="button" onClick={() => { setEditingFor(editingFor === p.id ? null : p.id); setError(""); setEditForm({ email: "", password: "" }) }}>
+                        {t("editAccess")}
+                      </Button>
+                    </>
                   ) : (
                     <Button variant="outline" size="sm" type="button" onClick={() => { setOpenFor(openFor === p.id ? null : p.id); setError(""); setForm({ email: "", password: "" }) }}>
                       <KeyRound size={13} /> {t("createAccess")}
@@ -174,9 +342,183 @@ function AccessManager() {
                     </div>
                   </div>
                 )}
+                {editingFor === p.id && has && (
+                  <div className="p-3 pt-0 space-y-3 border-t border-slate-100 dark:border-slate-800 mt-1">
+                    <p className="text-xs text-slate-400 dark:text-slate-500 pt-3">{t("editAccessHint")}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Input label={t("newEmailLabel")} type="email" placeholder={t("emailPlaceholder")} value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} />
+                      <Input label={t("newPasswordLabel")} type="text" placeholder={t("passwordPlaceholder")} value={editForm.password} onChange={e => setEditForm(f => ({ ...f, password: e.target.value }))} />
+                    </div>
+                    {error && <p className="text-xs text-red-600">{error}</p>}
+                    <div className="flex justify-end gap-2">
+                      <Button variant="secondary" size="sm" type="button" onClick={() => setEditingFor(null)}>{t("cancel")}</Button>
+                      <Button
+                        size="sm" type="button" loading={saving}
+                        disabled={!editForm.email && editForm.password.length < 6}
+                        onClick={() => handleUpdate(p.id)}
+                      >
+                        {t("saveChanges")}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )
           })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface Assistant { id: string; full_name: string | null; category: Category | null; created_at: string }
+
+function AssistantManager() {
+  const t = useT(settings)
+  const [assistants, setAssistants] = useState<Assistant[] | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState<string | null>(null)
+  const [error, setError] = useState("")
+  const [form, setForm] = useState({ email: "", password: "", full_name: "", category: CATEGORIES[0] as Category })
+  const [editForm, setEditForm] = useState({ email: "", password: "" })
+
+  async function load() {
+    setLoading(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const res = await fetch("/api/admin/assistants", { headers: { Authorization: `Bearer ${token}` } })
+    const data = await res.json()
+    if (res.ok) setAssistants(data.assistants)
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  async function handleCreate() {
+    setError("")
+    setCreating(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const res = await fetch("/api/admin/create-assistant", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(form),
+    })
+    const data = await res.json()
+    setCreating(false)
+    if (!res.ok) {
+      setError(data.error || t("accessCreateError"))
+      return
+    }
+    setShowForm(false)
+    setForm({ email: "", password: "", full_name: "", category: CATEGORIES[0] })
+    load()
+  }
+
+  async function handleUpdate(profileId: string) {
+    setError("")
+    setSaving(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const res = await fetch("/api/admin/update-account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ profile_id: profileId, email: editForm.email || undefined, password: editForm.password || undefined }),
+    })
+    const data = await res.json()
+    setSaving(false)
+    if (!res.ok) {
+      setError(data.error || t("accessUpdateError"))
+      return
+    }
+    setEditingId(null)
+    setEditForm({ email: "", password: "" })
+    setSaved(profileId)
+    setTimeout(() => setSaved(null), 2500)
+  }
+
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Profesores de categoría</h3>
+        <Button size="sm" variant="outline" type="button" onClick={() => { setShowForm(s => !s); setError("") }}>
+          <KeyRound size={13} /> Nuevo profesor
+        </Button>
+      </div>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+        Cada profesor solo puede gestionar los jugadores, partidos y entrenamientos de su propia categoría. No ve pagos ni la configuración de la academia.
+      </p>
+
+      {showForm && (
+        <div className="rounded-xl border border-slate-100 dark:border-slate-800 p-4 mb-4 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input label={t("emailLabel")} type="email" placeholder={t("emailPlaceholder")} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+            <Input label={t("passwordLabel")} type="text" placeholder={t("passwordPlaceholder")} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
+            <Input label="Nombre completo" placeholder="Ej: Andrés Gómez" value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} />
+            <div>
+              <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5 block">Categoría</label>
+              <select
+                value={form.category}
+                onChange={e => setForm(f => ({ ...f, category: e.target.value as Category }))}
+                className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-[#0B5CFF] outline-none"
+              >
+                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+          {error && <p className="text-xs text-red-600">{error}</p>}
+          <div className="flex justify-end">
+            <Button size="sm" type="button" loading={creating} disabled={!form.email || form.password.length < 6} onClick={handleCreate}>
+              Crear profesor
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <p className="text-xs text-slate-400">{t("loading")}</p>
+      ) : !assistants || assistants.length === 0 ? (
+        <p className="text-xs text-slate-400">Aún no has creado profesores de categoría.</p>
+      ) : (
+        <div className="space-y-2">
+          {assistants.map(a => (
+            <div key={a.id} className="rounded-xl border border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3 p-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{a.full_name || "—"}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">{a.category}</p>
+                </div>
+                {saved === a.id && (
+                  <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold">
+                    <Check size={12} /> {t("saved")}
+                  </span>
+                )}
+                <Button variant="outline" size="sm" type="button" onClick={() => { setEditingId(editingId === a.id ? null : a.id); setError(""); setEditForm({ email: "", password: "" }) }}>
+                  {t("editAccess")}
+                </Button>
+              </div>
+              {editingId === a.id && (
+                <div className="p-3 pt-0 space-y-3 border-t border-slate-100 dark:border-slate-800 mt-1">
+                  <p className="text-xs text-slate-400 dark:text-slate-500 pt-3">{t("editAccessHint")}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Input label={t("newEmailLabel")} type="email" placeholder={t("emailPlaceholder")} value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} />
+                    <Input label={t("newPasswordLabel")} type="text" placeholder={t("passwordPlaceholder")} value={editForm.password} onChange={e => setEditForm(f => ({ ...f, password: e.target.value }))} />
+                  </div>
+                  {error && <p className="text-xs text-red-600">{error}</p>}
+                  <div className="flex justify-end gap-2">
+                    <Button variant="secondary" size="sm" type="button" onClick={() => setEditingId(null)}>{t("cancel")}</Button>
+                    <Button size="sm" type="button" loading={saving} disabled={!editForm.email && editForm.password.length < 6} onClick={() => handleUpdate(a.id)}>
+                      {t("saveChanges")}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -223,6 +565,8 @@ export default function SettingsPage() {
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in max-w-3xl">
         <PageHeader title={t("title")} subtitle={t("subtitle")} />
+
+        <MyAccount />
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 mb-6 flex items-center justify-between">
           <div>
@@ -279,6 +623,7 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {isCoach && (
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left: Logo preview */}
@@ -309,7 +654,7 @@ export default function SettingsPage() {
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("teamInfoTitle")}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
-                    <Input label={t("teamNameLabel")} placeholder="FutbolMetrics" value={form.name} onChange={e => set("name", e.target.value)} required />
+                    <Input label={t("teamNameLabel")} placeholder="Metrikas" value={form.name} onChange={e => set("name", e.target.value)} required />
                   </div>
                   <Input label={t("cityLabel")} placeholder="Bogotá" value={form.city} onChange={e => set("city", e.target.value)} />
                   <Input label={t("foundedYearLabel")} type="number" placeholder="2018" min={1900} max={2100} value={form.founded_year} onChange={e => set("founded_year", e.target.value)} />
@@ -332,11 +677,14 @@ export default function SettingsPage() {
             </div>
           </div>
         </form>
+        )}
 
         {isCoach && (
           <div className="mt-6 space-y-6">
+            <BillingCard />
             <NotificationBroadcast />
             <AccessManager />
+            <AssistantManager />
           </div>
         )}
       </div>

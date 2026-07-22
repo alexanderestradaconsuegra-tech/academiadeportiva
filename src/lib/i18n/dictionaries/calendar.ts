@@ -42,4 +42,13 @@ export const calendar = {
   presentCount: { es: "presentes", en: "present", pt: "presentes" },
   of: { es: "de", en: "of", pt: "de" },
   closeAttendance: { es: "Cerrar", en: "Close", pt: "Fechar" },
+
+  // Player RSVP
+  rsvpPrompt: { es: "¿Vas a entrenar?", en: "Are you coming?", pt: "Você vai treinar?" },
+  iWillAttend: { es: "Sí, voy", en: "I'll be there", pt: "Vou" },
+  iCannotAttend: { es: "No puedo", en: "Can't make it", pt: "Não posso" },
+  yourStatus: { es: "Tu respuesta", en: "Your response", pt: "Sua resposta" },
+  confirmed: { es: "confirmados", en: "confirmed", pt: "confirmados" },
+  declined:  { es: "no pueden", en: "can't make it", pt: "não podem" },
+  pending:   { es: "sin responder", en: "pending", pt: "sem resposta" },
 } satisfies Translations

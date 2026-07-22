@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
@@ -30,14 +30,17 @@ const EMPTY_STAT_FORM = {
 export default function MatchDetailPage() {
   const params = useParams()
   const id = params.id as string
-  const { matches, players, currentUser, getMatchStats, addMatchStat, updateMatchStat, deleteMatchStat, getConvocatoria, updateMatch } = useApp()
-  const isCoach = currentUser?.role === "coach"
+  const { matches, players, currentUser, getMatchStats, addMatchStat, updateMatchStat, deleteMatchStat, getConvocatoria, refreshConvocatoria, updateMatch } = useApp()
+  const isOwner = currentUser?.role === "coach"
+  const isAssistant = currentUser?.role === "assistant"
   const t = useT(matchesDict)
   const enumT = useEnumT()
 
   const match = matches.find(m => m.id === id)
   const stats = getMatchStats(id)
   const convocatoria = getConvocatoria(id)
+
+  useEffect(() => { refreshConvocatoria(id) }, [id, refreshConvocatoria])
 
   const [showStatForm, setShowStatForm] = useState(false)
   const [editingStatId, setEditingStatId] = useState<string | null>(null)
@@ -67,6 +70,7 @@ export default function MatchDetailPage() {
     )
   }
 
+  const isCoach = isOwner || (isAssistant && match.category === currentUser?.category)
   const matchId = match.id
   const playersWithoutStat = players.filter(p => !stats.some(s => s.player_id === p.id))
   const played = match.our_score !== null && match.opponent_score !== null

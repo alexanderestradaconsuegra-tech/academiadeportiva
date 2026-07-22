@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
           <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur mx-auto flex items-center justify-center mb-4">
             <Trophy className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-black text-white mb-1">FutbolMetrics</h1>
+          <h1 className="text-2xl font-black text-white mb-1">Metrikas</h1>
           <p className="text-blue-200/70 text-sm">Recuperar contraseña</p>
         </div>
 
@@ -48,7 +48,7 @@ export default function ForgotPasswordPage() {
                 Revisa tu bandeja de entrada. El enlace expira en 1 hora.
               </p>
               <button
-                onClick={() => router.push("/")}
+                onClick={() => router.push("/login")}
                 className="text-sm text-[#0B5CFF] hover:underline font-medium"
               >
                 Volver al inicio de sesión
@@ -91,7 +91,7 @@ export default function ForgotPasswordPage() {
                 </button>
               </form>
               <div className="mt-5 pt-5 border-t border-slate-100 dark:border-slate-800 text-center">
-                <button onClick={() => router.push("/")} className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
+                <button onClick={() => router.push("/login")} className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
                   Volver al inicio de sesión
                 </button>
               </div>

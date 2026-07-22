@@ -4,7 +4,8 @@ import { useParams } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
-import { ArrowLeft, Check, Users, MessageSquare, X, Send, ChevronDown } from "lucide-react"
+import ConvocatoriaPitch from "@/components/ConvocatoriaPitch"
+import { ArrowLeft, Check, Users, MessageSquare, X, Send } from "lucide-react"
 import { avatarUrl, formatDate, cn } from "@/lib/utils"
 import type { ConvocatoriaPlayer, Player } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
@@ -146,78 +147,9 @@ function positionRole(position: string): Role {
   return "FWD"
 }
 
-function FootballPitch({ pitchPlayers, players }: {
-  pitchPlayers: ConvocatoriaPlayer[]
-  players: Player[]
-}) {
-  return (
-    <div className="relative w-full rounded-2xl overflow-hidden" style={{ aspectRatio: "10/16" }}>
-      {/* Green background with stripes */}
-      <div className="absolute inset-0 bg-emerald-700">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute inset-y-0"
-            style={{
-              left: `${i * 12.5}%`,
-              width: "12.5%",
-              background: i % 2 === 0 ? "rgba(0,0,0,0.06)" : "transparent",
-            }}
-          />
-        ))}
-      </div>
-      {/* Field lines */}
-      <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 160" preserveAspectRatio="none">
-        {/* Outer border */}
-        <rect x="3" y="4" width="94" height="152" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.2" />
-        {/* Center line */}
-        <line x1="3" y1="80" x2="97" y2="80" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
-        {/* Center circle */}
-        <circle cx="50" cy="80" r="12" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
-        <circle cx="50" cy="80" r="1" fill="rgba(255,255,255,0.5)" />
-        {/* Top penalty area */}
-        <rect x="22" y="4" width="56" height="22" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
-        <rect x="34" y="4" width="32" height="10" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
-        {/* Bottom penalty area */}
-        <rect x="22" y="134" width="56" height="22" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
-        <rect x="34" y="146" width="32" height="10" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
-        {/* Top goal */}
-        <rect x="38" y="2" width="24" height="4" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
-        {/* Bottom goal */}
-        <rect x="38" y="154" width="24" height="4" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
-        {/* Penalty spots */}
-        <circle cx="50" cy="18" r="1" fill="rgba(255,255,255,0.5)" />
-        <circle cx="50" cy="142" r="1" fill="rgba(255,255,255,0.5)" />
-      </svg>
-      {/* Labels */}
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 text-[9px] font-bold text-white/50 uppercase tracking-widest z-10">Ellos</div>
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-bold text-white/50 uppercase tracking-widest z-10">Nosotros</div>
-      {/* Players */}
-      {pitchPlayers.map(pp => {
-        const player = players.find(p => p.id === pp.player_id)
-        const firstName = player?.name.split(" ")[0] ?? "?"
-        return (
-          <div
-            key={pp.id}
-            className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5 z-20"
-            style={{ left: `${pp.x}%`, top: `${pp.y}%` }}
-          >
-            <div className="w-8 h-8 rounded-full bg-[#0B5CFF] border-2 border-white shadow-lg flex items-center justify-center text-white text-[9px] font-black">
-              {pp.position_label.substring(0, 3)}
-            </div>
-            <span className="text-white text-[8px] font-bold bg-black/50 px-1.5 py-px rounded-full max-w-14 truncate leading-none">
-              {firstName}
-            </span>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
 export default function ConvocatoriaPage() {
   const { id } = useParams<{ id: string }>()
-  const { matches, players, convocatorias, getConvocatoria, saveConvocatoria } = useApp()
+  const { matches, players, convocatorias, getConvocatoria, refreshConvocatoria, saveConvocatoria } = useApp()
 
   const match = matches.find(m => m.id === id)
   const eligiblePlayers = match?.category
@@ -234,9 +166,10 @@ export default function ConvocatoriaPage() {
   const [activeTab, setActiveTab] = useState<"players" | "pitch">("players")
   const [activeFormat, setActiveFormat] = useState<FormatKey>("F11")
   const [selectedFormation, setSelectedFormation] = useState<string>("")
-  const [showFormationDropdown, setShowFormationDropdown] = useState(false)
 
   const formationKeys = Object.keys(FORMATIONS).filter(k => k.startsWith(activeFormat))
+
+  useEffect(() => { refreshConvocatoria(id) }, [id, refreshConvocatoria])
 
   useEffect(() => {
     const existing = getConvocatoria(id)
@@ -278,11 +211,14 @@ export default function ConvocatoriaPage() {
     setSelectedIds(next)
   }
 
+  function handleMovePlayer(ppId: string, x: number, y: number) {
+    setPitchPlayers(pp => pp.map(p => p.id === ppId ? { ...p, x, y } : p))
+  }
+
   function applyFormation(formationKey: string) {
     const posDefs = FORMATIONS[formationKey]
     if (!posDefs) return
     setSelectedFormation(formationKey)
-    setShowFormationDropdown(false)
 
     // Sort selected players by role
     const selected = Array.from(selectedIds)
@@ -547,7 +483,7 @@ export default function ConvocatoriaPage() {
                   {FORMAT_KEYS.map(fmt => (
                     <button
                       key={fmt}
-                      onClick={() => { setActiveFormat(fmt); setShowFormationDropdown(false) }}
+                      onClick={() => setActiveFormat(fmt)}
                       className={cn(
                         "flex-1 h-9 rounded-xl text-sm font-bold transition-colors",
                         activeFormat === fmt
@@ -560,40 +496,28 @@ export default function ConvocatoriaPage() {
                   ))}
                 </div>
 
-                {/* Formation selector */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowFormationDropdown(d => !d)}
-                    className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-between px-4 text-sm font-semibold text-slate-700 dark:text-slate-200"
-                  >
-                    <span>{selectedFormation && selectedFormation.startsWith(activeFormat) ? selectedFormation : `Elegir formación ${activeFormat}`}</span>
-                    <ChevronDown size={16} className="text-slate-400" />
-                  </button>
-                  {showFormationDropdown && (
-                    <div className="absolute left-0 right-0 top-12 z-30 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl overflow-hidden">
-                      {formationKeys.map(key => (
-                        <button
-                          key={key}
-                          onClick={() => applyFormation(key)}
-                          className={cn(
-                            "w-full text-left px-4 py-3 text-sm font-semibold transition-colors",
-                            selectedFormation === key
-                              ? "bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF]"
-                              : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                          )}
-                        >
-                          {key}
-                          <span className="text-xs font-normal text-slate-400 ml-2">
-                            {FORMATIONS[key].length} jugadores
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                {/* Formation selector — grid of pills */}
+                <div className="grid grid-cols-2 gap-2">
+                  {formationKeys.map(key => (
+                    <button
+                      key={key}
+                      onClick={() => applyFormation(key)}
+                      className={cn(
+                        "h-11 rounded-xl text-sm font-bold transition-colors border",
+                        selectedFormation === key
+                          ? "bg-[#0B5CFF] text-white border-[#0B5CFF]"
+                          : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                      )}
+                    >
+                      {key.split(" · ")[1]}
+                      <span className="block text-[10px] font-normal opacity-60">{FORMATIONS[key].length} jugadores</span>
+                    </button>
+                  ))}
                 </div>
 
                 {/* Pitch */}
-                <FootballPitch pitchPlayers={pitchPlayers} players={players} />
+                <ConvocatoriaPitch pitchPlayers={pitchPlayers} players={players} onMove={handleMovePlayer} editable />
+                <p className="text-xs text-slate-400 dark:text-slate-500 text-center -mt-2">Arrastra a un jugador para ajustar su posición</p>
 
                 {/* Formation legend */}
                 {selectedFormation && pitchPlayers.length > 0 && (

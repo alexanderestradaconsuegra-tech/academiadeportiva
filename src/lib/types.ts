@@ -16,13 +16,18 @@ export type Position =
 export type DominantFoot = "Derecha" | "Izquierda" | "Ambidiestro"
 
 export type Category =
+  | "Sub-5"
+  | "Sub-6"
+  | "Sub-7"
+  | "Sub-8"
+  | "Sub-9"
   | "Sub-10"
+  | "Sub-11"
   | "Sub-12"
+  | "Sub-13"
   | "Sub-14"
-  | "Sub-16"
-  | "Sub-18"
-  | "Juvenil"
-  | "Senior"
+  | "Sub-15"
+  | "Otra"
 
 export type ActivityCategory =
   | "Velocidad"
@@ -134,12 +139,24 @@ export interface Injury {
 }
 
 export type AttendanceStatus = "present" | "absent" | "late" | "excused"
+export type RsvpStatus = "confirmed" | "declined" | "pending"
+
+export interface TrainingSchedule {
+  id: string
+  day_of_week: number   // 0=Dom … 6=Sáb
+  time: string
+  category: string | null
+  location: string
+  notes: string
+  created_at: string
+}
 
 export interface Attendance {
   id: string
   training_id: string
   player_id: string
   status: AttendanceStatus
+  rsvp: RsvpStatus
   notes: string | null
   created_at: string
 }
@@ -155,7 +172,7 @@ export interface PhysicalTest {
   created_at: string
 }
 
-export type UserRole = "coach" | "player"
+export type UserRole = "coach" | "player" | "assistant"
 
 export interface Profile {
   id: string
@@ -163,7 +180,10 @@ export interface Profile {
   player_id: string | null
   full_name: string
   academy_id: string | null
+  category: Category | null
 }
+
+export type SubscriptionStatus = "trialing" | "active" | "past_due" | "suspended" | "canceled"
 
 export interface TeamSettings {
   id: string
@@ -181,6 +201,10 @@ export interface TeamSettings {
   calib_p1_lng: number | null
   calib_p2_lat: number | null
   calib_p2_lng: number | null
+  subscription_status: SubscriptionStatus
+  subscription_current_period_end: string | null
+  stripe_customer_id: string | null
+  stripe_subscription_id: string | null
 }
 
 export interface Training {
