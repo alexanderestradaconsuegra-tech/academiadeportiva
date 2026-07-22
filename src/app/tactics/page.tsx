@@ -1,11 +1,11 @@
 "use client"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/ui/PageHeader"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Select from "@/components/ui/Select"
-import { MousePointer2, PenTool, Plus, Undo2, Eraser, Save, Trash2, FolderOpen, Users, CircleDot, LayoutGrid } from "lucide-react"
+import { MousePointer2, PenTool, Plus, Undo2, Eraser, Save, Trash2, FolderOpen, Users, CircleDot, LayoutGrid, Play, Square } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import { useT } from "@/lib/i18n/useT"
 import { tactics } from "@/lib/i18n/dictionaries/tactics"
@@ -17,6 +17,8 @@ interface Play { id: string; name: string; markers: Marker[]; lines: Line[]; cre
 const STORAGE_KEY = "futbolmetrics_tactics_plays"
 const W = 105
 const H = 68
+const ANIM_DURATION = 3000 // ms
+const ASSIGN_RADIUS = 8   // SVG units — max distance from line start to marker
 
 const FORMATIONS: Record<string, { x: number; y: number }[]> = {
   "F11 · 4-4-2": [
@@ -44,7 +46,6 @@ const FORMATIONS: Record<string, { x: number; y: number }[]> = {
     { x: 52, y: 10 }, { x: 52, y: 34 }, { x: 52, y: 58 },
     { x: 64, y: 34 },
   ],
-  // Fútbol 8
   "F8 · 3-2-2": [
     { x: 10, y: 34 },
     { x: 26, y: 14 }, { x: 26, y: 34 }, { x: 26, y: 54 },
@@ -69,7 +70,6 @@ const FORMATIONS: Record<string, { x: number; y: number }[]> = {
     { x: 45, y: 24 }, { x: 45, y: 44 },
     { x: 60, y: 14 }, { x: 60, y: 34 }, { x: 60, y: 54 },
   ],
-  // Fútbol 7
   "F7 · 2-3-1": [
     { x: 10, y: 34 },
     { x: 26, y: 20 }, { x: 26, y: 48 },
@@ -94,7 +94,6 @@ const FORMATIONS: Record<string, { x: number; y: number }[]> = {
     { x: 45, y: 14 }, { x: 45, y: 34 }, { x: 45, y: 54 },
     { x: 60, y: 24 }, { x: 60, y: 44 },
   ],
-  // Fútbol 5 / Futsal
   "F5 · 1-2-1": [
     { x: 10, y: 34 },
     { x: 26, y: 34 },
@@ -123,9 +122,21 @@ const FORMATIONS: Record<string, { x: number; y: number }[]> = {
 const FORMAT_KEYS = ["F11", "F8", "F7", "F5"] as const
 type FormatKey = typeof FORMAT_KEYS[number]
 
+function interpolatePath(points: { x: number; y: number }[], t: number) {
+  if (points.length < 2) return points[0] ?? { x: 0, y: 0 }
+  const idx = t * (points.length - 1)
+  const i = Math.min(Math.floor(idx), points.length - 2)
+  const frac = idx - i
+  const p0 = points[i]
+  const p1 = points[i + 1]
+  return { x: p0.x + (p1.x - p0.x) * frac, y: p0.y + (p1.y - p0.y) * frac }
+}
+
 export default function TacticsPage() {
   const t = useT(tactics)
   const svgRef = useRef<SVGSVGElement>(null)
+  const rafRef = useRef<number | null>(null)
+
   const [mode, setMode] = useState<"move" | "draw">("move")
   const [lineType, setLineType] = useState<"run" | "pass">("run")
   const [markers, setMarkers] = useState<Marker[]>([])
@@ -136,6 +147,11 @@ export default function TacticsPage() {
   const [showSaveInput, setShowSaveInput] = useState(false)
   const [playName, setPlayName] = useState("")
   const [activeFormat, setActiveFormat] = useState<FormatKey>("F11")
+
+  // Animation state
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [animProgress, setAnimProgress] = useState(0) // 0–1
+  const [animPositions, setAnimPositions] = useState<Record<string, { x: number; y: number }>>({})
 
   const formationKeys = Object.keys(FORMATIONS).filter(k => k.startsWith(activeFormat))
 
@@ -194,18 +210,19 @@ export default function TacticsPage() {
   function clearBoard() {
     if (markers.length === 0 && lines.length === 0) return
     if (!confirm(t("confirmClearBoard"))) return
+    stopAnimation()
     setMarkers([])
     setLines([])
   }
 
   function handleMarkerPointerDown(id: string, e: React.PointerEvent) {
-    if (mode !== "move") return
+    if (mode !== "move" || isPlaying) return
     e.stopPropagation()
     setDraggingId(id)
   }
 
   function handleSvgPointerDown(e: React.PointerEvent) {
-    if (mode !== "draw") return
+    if (mode !== "draw" || isPlaying) return
     const p = toPoint(e.clientX, e.clientY)
     setDrawingLine({ id: crypto.randomUUID(), points: [p], type: lineType })
   }
@@ -237,6 +254,75 @@ export default function TacticsPage() {
     }
   }, [draggingId, drawingLine])
 
+  // Build assignments: each line → nearest marker within ASSIGN_RADIUS of line start
+  function buildAssignments() {
+    const used = new Set<string>()
+    const assignments: Array<{ markerId: string; line: Line }> = []
+    for (const line of lines) {
+      if (line.points.length < 2) continue
+      const start = line.points[0]
+      let nearest: Marker | null = null
+      let minDist = ASSIGN_RADIUS
+      for (const m of markers) {
+        if (used.has(m.id)) continue
+        const d = Math.hypot(m.x - start.x, m.y - start.y)
+        if (d < minDist) { minDist = d; nearest = m }
+      }
+      if (nearest) {
+        assignments.push({ markerId: nearest.id, line })
+        used.add(nearest.id)
+      }
+    }
+    return assignments
+  }
+
+  const stopAnimation = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
+    }
+    setIsPlaying(false)
+    setAnimProgress(0)
+    setAnimPositions({})
+  }, [])
+
+  function togglePlay() {
+    if (isPlaying) { stopAnimation(); return }
+
+    const assignments = buildAssignments()
+    if (assignments.length === 0) return
+
+    setIsPlaying(true)
+    const startTime = performance.now()
+
+    function tick(now: number) {
+      const progress = Math.min((now - startTime) / ANIM_DURATION, 1)
+      setAnimProgress(progress)
+
+      const positions: Record<string, { x: number; y: number }> = {}
+      for (const { markerId, line } of assignments) {
+        positions[markerId] = interpolatePath(line.points, progress)
+      }
+      setAnimPositions(positions)
+
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick)
+      } else {
+        rafRef.current = null
+        setIsPlaying(false)
+        setAnimProgress(0)
+        // keep markers at end positions
+        setMarkers(ms => ms.map(m => positions[m.id] ? { ...m, ...positions[m.id] } : m))
+        setAnimPositions({})
+      }
+    }
+
+    rafRef.current = requestAnimationFrame(tick)
+  }
+
+  // Cleanup on unmount
+  useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }, [])
+
   function savePlay() {
     if (!playName.trim()) return
     const play: Play = { id: crypto.randomUUID(), name: playName.trim(), markers, lines, created_at: new Date().toISOString() }
@@ -246,6 +332,7 @@ export default function TacticsPage() {
   }
 
   function loadPlay(play: Play) {
+    stopAnimation()
     setMarkers(play.markers)
     setLines(play.lines)
     setMode("move")
@@ -256,6 +343,8 @@ export default function TacticsPage() {
     persistPlays(plays.filter(p => p.id !== id))
   }
 
+  const assignmentCount = buildAssignments().length
+
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
@@ -264,24 +353,24 @@ export default function TacticsPage() {
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 mb-6">
           {/* Toolbar */}
           <div className="flex items-center gap-2 mb-4 flex-wrap">
-            <Button size="sm" variant={mode === "move" ? "primary" : "outline"} onClick={() => setMode("move")}>
+            <Button size="sm" variant={mode === "move" ? "primary" : "outline"} onClick={() => setMode("move")} disabled={isPlaying}>
               <MousePointer2 size={14} /> {t("move")}
             </Button>
-            <Button size="sm" variant={mode === "draw" ? "primary" : "outline"} onClick={() => setMode("draw")}>
+            <Button size="sm" variant={mode === "draw" ? "primary" : "outline"} onClick={() => setMode("draw")} disabled={isPlaying}>
               <PenTool size={14} /> {t("draw")}
             </Button>
             <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
-            <Button size="sm" variant="outline" onClick={() => addMarker("home")}>
+            <Button size="sm" variant="outline" onClick={() => addMarker("home")} disabled={isPlaying}>
               <Plus size={14} /> {t("player")}
             </Button>
-            <Button size="sm" variant="outline" onClick={() => addMarker("away")}>
+            <Button size="sm" variant="outline" onClick={() => addMarker("away")} disabled={isPlaying}>
               <Plus size={14} /> {t("opponent")}
             </Button>
-            <Button size="sm" variant="outline" onClick={addBall} disabled={markers.some(m => m.team === "ball")}>
+            <Button size="sm" variant="outline" onClick={addBall} disabled={markers.some(m => m.team === "ball") || isPlaying}>
               <CircleDot size={14} /> {t("ball")}
             </Button>
             <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
-            {mode === "draw" && (
+            {mode === "draw" && !isPlaying && (
               <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
                 <Button size="sm" variant={lineType === "run" ? "primary" : "ghost"} onClick={() => setLineType("run")}>
                   {t("movement")}
@@ -291,10 +380,10 @@ export default function TacticsPage() {
                 </Button>
               </div>
             )}
-            <Button size="sm" variant="ghost" onClick={undoLine} disabled={lines.length === 0}>
+            <Button size="sm" variant="ghost" onClick={undoLine} disabled={lines.length === 0 || isPlaying}>
               <Undo2 size={14} /> {t("undoLine")}
             </Button>
-            <Button size="sm" variant="ghost" onClick={clearBoard}>
+            <Button size="sm" variant="ghost" onClick={clearBoard} disabled={isPlaying}>
               <Eraser size={14} /> {t("clearAll")}
             </Button>
             <div className="flex items-center gap-2 flex-wrap">
@@ -305,6 +394,7 @@ export default function TacticsPage() {
                     key={fmt}
                     type="button"
                     onClick={() => setActiveFormat(fmt)}
+                    disabled={isPlaying}
                     className={`h-6 px-2 rounded-lg text-[11px] font-bold transition-colors ${
                       activeFormat === fmt
                         ? "bg-white dark:bg-slate-900 text-[#0B5CFF] shadow-sm"
@@ -324,6 +414,23 @@ export default function TacticsPage() {
               />
             </div>
             <div className="flex-1" />
+
+            {/* Play / Stop button */}
+            <button
+              onClick={togglePlay}
+              disabled={lines.length === 0}
+              title={isPlaying ? "Detener animación" : assignmentCount === 0 ? "Dibuja líneas partiendo desde los jugadores para animar" : `Animar ${assignmentCount} jugador${assignmentCount !== 1 ? "es" : ""}`}
+              className={`flex items-center gap-2 h-9 px-4 rounded-xl font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                isPlaying
+                  ? "bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/30 animate-pulse"
+                  : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+              }`}
+            >
+              {isPlaying ? <><Square size={13} fill="white" /> Parar</> : <><Play size={13} fill="white" /> Animar</>}
+            </button>
+
+            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-1" />
+
             {showSaveInput ? (
               <div className="flex items-center gap-2">
                 <Input
@@ -338,17 +445,36 @@ export default function TacticsPage() {
                 <Button size="sm" variant="ghost" onClick={() => { setShowSaveInput(false); setPlayName("") }}>{t("cancel")}</Button>
               </div>
             ) : (
-              <Button size="sm" onClick={() => setShowSaveInput(true)}>
+              <Button size="sm" onClick={() => setShowSaveInput(true)} disabled={isPlaying}>
                 <Save size={14} /> {t("savePlay")}
               </Button>
             )}
           </div>
 
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
-            {mode === "move"
-              ? t("helperMove")
-              : t("helperDraw")}
-          </p>
+          {/* Progress bar during animation */}
+          {isPlaying && (
+            <div className="w-full h-1 bg-slate-200 dark:bg-slate-700 rounded-full mb-3 overflow-hidden">
+              <div
+                className="h-full bg-emerald-500 rounded-full transition-none"
+                style={{ width: `${animProgress * 100}%` }}
+              />
+            </div>
+          )}
+
+          {/* Helper text */}
+          {!isPlaying && (
+            <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
+              {mode === "move"
+                ? t("helperMove")
+                : t("helperDraw")}
+              {lines.length > 0 && assignmentCount === 0 && (
+                <span className="ml-2 text-amber-500">· Inicia las líneas cerca de un jugador para animarlo.</span>
+              )}
+              {assignmentCount > 0 && (
+                <span className="ml-2 text-emerald-600 dark:text-emerald-400 font-medium">· {assignmentCount} jugador{assignmentCount !== 1 ? "es" : ""} listo{assignmentCount !== 1 ? "s" : ""} para animar — presiona ▶ Animar.</span>
+              )}
+            </p>
+          )}
 
           {/* Field */}
           <div className="relative w-full aspect-[105/68] rounded-xl overflow-hidden bg-gradient-to-b from-emerald-600 to-emerald-700 select-none touch-none">
@@ -376,11 +502,9 @@ export default function TacticsPage() {
                 <line x1={W / 2} y1={1} x2={W / 2} y2={H - 1} />
                 <circle cx={W / 2} cy={H / 2} r={9.15} />
                 <circle cx={W / 2} cy={H / 2} r={0.4} fill="#ffffff" />
-                {/* Left box */}
                 <rect x={1} y={13.84} width={16.5} height={40.32} />
                 <rect x={1} y={24.84} width={5.5} height={18.32} />
                 <circle cx={12} cy={H / 2} r={0.4} fill="#ffffff" />
-                {/* Right box */}
                 <rect x={W - 17.5} y={13.84} width={16.5} height={40.32} />
                 <rect x={W - 6.5} y={24.84} width={5.5} height={18.32} />
                 <circle cx={W - 12} cy={H / 2} r={0.4} fill="#ffffff" />
@@ -398,8 +522,8 @@ export default function TacticsPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   markerEnd={l.type === "pass" ? "url(#arrowhead-pass)" : "url(#arrowhead)"}
-                  onDoubleClick={() => removeLine(l.id)}
-                  style={{ cursor: mode === "move" ? "pointer" : "default", pointerEvents: mode === "move" ? "stroke" : "none" }}
+                  onDoubleClick={() => !isPlaying && removeLine(l.id)}
+                  style={{ cursor: mode === "move" && !isPlaying ? "pointer" : "default", pointerEvents: mode === "move" ? "stroke" : "none" }}
                 />
               ))}
               {drawingLine && (
@@ -416,31 +540,38 @@ export default function TacticsPage() {
               )}
 
               {/* Markers */}
-              {markers.map(m => (
-                <g
-                  key={m.id}
-                  onPointerDown={e => handleMarkerPointerDown(m.id, e)}
-                  onDoubleClick={() => removeMarker(m.id)}
-                  style={{ cursor: mode === "move" ? "grab" : "default" }}
-                >
-                  {m.team === "ball" ? (
-                    <>
-                      <circle cx={m.x} cy={m.y} r={1.6} fill="#ffffff" stroke="#0F172A" strokeWidth={0.25} />
-                      <path
-                        d={`M${m.x - 0.7},${m.y - 0.3} L${m.x},${m.y - 1} L${m.x + 0.7},${m.y - 0.3} L${m.x + 0.4},${m.y + 0.6} L${m.x - 0.4},${m.y + 0.6} Z`}
-                        fill="#0F172A"
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <circle cx={m.x} cy={m.y} r={2.6} fill={m.team === "home" ? "#0B5CFF" : "#EF4444"} stroke="#ffffff" strokeWidth={0.3} />
-                      <text x={m.x} y={m.y} fontSize={2.4} fontWeight="bold" fill="#ffffff" textAnchor="middle" dominantBaseline="central">
-                        {m.label}
-                      </text>
-                    </>
-                  )}
-                </g>
-              ))}
+              {markers.map(m => {
+                const pos = animPositions[m.id] ?? { x: m.x, y: m.y }
+                const isAnimated = !!animPositions[m.id]
+                return (
+                  <g
+                    key={m.id}
+                    onPointerDown={e => handleMarkerPointerDown(m.id, e)}
+                    onDoubleClick={() => !isPlaying && removeMarker(m.id)}
+                    style={{ cursor: mode === "move" && !isPlaying ? "grab" : "default" }}
+                  >
+                    {m.team === "ball" ? (
+                      <>
+                        <circle cx={pos.x} cy={pos.y} r={1.6} fill="#ffffff" stroke="#0F172A" strokeWidth={0.25} />
+                        <path
+                          d={`M${pos.x - 0.7},${pos.y - 0.3} L${pos.x},${pos.y - 1} L${pos.x + 0.7},${pos.y - 0.3} L${pos.x + 0.4},${pos.y + 0.6} L${pos.x - 0.4},${pos.y + 0.6} Z`}
+                          fill="#0F172A"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        {isAnimated && (
+                          <circle cx={pos.x} cy={pos.y} r={3.8} fill={m.team === "home" ? "#0B5CFF" : "#EF4444"} fillOpacity={0.25} />
+                        )}
+                        <circle cx={pos.x} cy={pos.y} r={2.6} fill={m.team === "home" ? "#0B5CFF" : "#EF4444"} stroke="#ffffff" strokeWidth={0.3} />
+                        <text x={pos.x} y={pos.y} fontSize={2.4} fontWeight="bold" fill="#ffffff" textAnchor="middle" dominantBaseline="central">
+                          {m.label}
+                        </text>
+                      </>
+                    )}
+                  </g>
+                )
+              })}
             </svg>
           </div>
 
