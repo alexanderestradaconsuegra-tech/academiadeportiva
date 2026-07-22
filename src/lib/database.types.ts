@@ -59,6 +59,36 @@ export type Database = {
           },
         ]
       }
+      training_schedules: {
+        Row: {
+          id: string
+          day_of_week: number
+          time: string
+          category: string | null
+          location: string
+          notes: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          day_of_week: number
+          time?: string
+          category?: string | null
+          location?: string
+          notes?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          day_of_week?: number
+          time?: string
+          category?: string | null
+          location?: string
+          notes?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           id: string

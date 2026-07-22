@@ -9,7 +9,7 @@ import Select from "@/components/ui/Select"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
 import Badge from "@/components/ui/Badge"
-import { Plus, X, CalendarDays, MapPin, Clock, Pencil, Trash2, ClipboardList, Check, UserCheck, UserX, HelpCircle } from "lucide-react"
+import { Plus, X, CalendarDays, MapPin, Clock, Pencil, Trash2, ClipboardList, Check, UserCheck, UserX, HelpCircle, RepeatIcon, Sparkles, ChevronDown, ChevronUp } from "lucide-react"
 import { cn, formatDate, avatarUrl } from "@/lib/utils"
 import type { Category, Training, AttendanceStatus, RsvpStatus } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
@@ -43,7 +43,7 @@ async function notifyNewTraining(data: { title: string; date: string; time: stri
 }
 
 export default function CalendarPage() {
-  const { trainings, players, currentUser, addTraining, updateTraining, deleteTraining, upsertAttendance, upsertRsvp, getTrainingAttendance } = useApp()
+  const { trainings, players, currentUser, addTraining, updateTraining, deleteTraining, upsertAttendance, upsertRsvp, getTrainingAttendance, trainingSchedules, upsertTrainingSchedule, deleteTrainingSchedule, generateMonthTrainings } = useApp()
   const isOwner = currentUser?.role === "coach"
   const isAssistant = currentUser?.role === "assistant"
   const isCoach = isOwner || isAssistant
@@ -55,8 +55,23 @@ export default function CalendarPage() {
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [attendanceTraining, setAttendanceTraining] = useState<Training | null>(null)
+  const [showSchedule, setShowSchedule] = useState(false)
+  const [generating, setGenerating] = useState(false)
+  const [genResult, setGenResult] = useState<{ created: number; skipped: number } | null>(null)
   const t = useT(calendar)
   const e = useEnumT()
+
+  const now = new Date()
+  const [genYear, setGenYear]   = useState(now.getFullYear())
+  const [genMonth, setGenMonth] = useState(now.getMonth() + 1)
+
+  async function handleGenerate() {
+    setGenerating(true)
+    setGenResult(null)
+    const result = await generateMonthTrainings(genYear, genMonth)
+    setGenResult(result)
+    setGenerating(false)
+  }
 
   const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))
 
@@ -160,6 +175,81 @@ export default function CalendarPage() {
                 </div>
               </form>
             </div>
+          </div>
+        )}
+
+        {/* Recurring schedule panel — solo entrenador principal */}
+        {isOwner && (
+          <div className="mb-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <button
+              onClick={() => setShowSchedule(s => !s)}
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center">
+                  <RepeatIcon size={15} className="text-violet-500" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">Horario recurrente</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
+                    {trainingSchedules.length === 0
+                      ? "Sin días configurados — configura los días fijos de entrenamiento"
+                      : `${trainingSchedules.length} día${trainingSchedules.length > 1 ? "s" : ""} configurado${trainingSchedules.length > 1 ? "s" : ""}`}
+                  </p>
+                </div>
+              </div>
+              {showSchedule ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+            </button>
+
+            {showSchedule && (
+              <div className="border-t border-slate-100 dark:border-slate-800 px-5 py-5 space-y-5">
+                <WeekScheduleEditor
+                  schedules={trainingSchedules}
+                  categories={CATEGORIES}
+                  onUpsert={upsertTrainingSchedule}
+                  onDelete={deleteTrainingSchedule}
+                  e={e}
+                />
+
+                {/* Generar mes */}
+                {trainingSchedules.length > 0 && (
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <p className="text-xs font-bold text-slate-600 dark:text-slate-400 mb-3">Generar entrenamientos para un mes</p>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <select
+                        value={genMonth}
+                        onChange={ev => setGenMonth(Number(ev.target.value))}
+                        className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-400"
+                      >
+                        {["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"].map((m,i) => (
+                          <option key={m} value={i+1}>{m}</option>
+                        ))}
+                      </select>
+                      <select
+                        value={genYear}
+                        onChange={ev => setGenYear(Number(ev.target.value))}
+                        className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-400"
+                      >
+                        {[now.getFullYear(), now.getFullYear()+1].map(y => <option key={y} value={y}>{y}</option>)}
+                      </select>
+                      <button
+                        onClick={handleGenerate}
+                        disabled={generating}
+                        className="h-9 px-4 rounded-xl bg-violet-500 hover:bg-violet-600 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 transition-colors"
+                      >
+                        <Sparkles size={13} />
+                        {generating ? "Generando…" : "Generar entrenamientos"}
+                      </button>
+                      {genResult && (
+                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                          ✓ {genResult.created} creados{genResult.skipped > 0 ? ` · ${genResult.skipped} ya existían` : ""}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -453,6 +543,145 @@ function AttendanceModal({ training, players, attendance, onUpsert, onClose }: {
           <Button size="sm" onClick={onClose}>{t("closeAttendance")}</Button>
         </div>
       </div>
+    </div>
+  )
+}
+
+/* ── WeekScheduleEditor ─────────────────────────────────────────────────── */
+const DAYS = [
+  { dow: 1, label: "Lun" }, { dow: 2, label: "Mar" }, { dow: 3, label: "Mié" },
+  { dow: 4, label: "Jue" }, { dow: 5, label: "Vie" }, { dow: 6, label: "Sáb" },
+  { dow: 0, label: "Dom" },
+]
+
+function WeekScheduleEditor({ schedules, categories, onUpsert, onDelete, e }: {
+  schedules: { id: string; day_of_week: number; time: string; category: string | null; location: string }[]
+  categories: Category[]
+  onUpsert: (s: { day_of_week: number; time: string; category: string | null; location: string; notes: string }) => Promise<void>
+  onDelete: (id: string) => void
+  e: ReturnType<typeof useEnumT>
+}) {
+  const scheduleMap = Object.fromEntries(schedules.map(s => [s.day_of_week, s]))
+  const [editing, setEditing] = useState<number | null>(null)
+  const [time, setTime]         = useState("")
+  const [category, setCategory] = useState("")
+  const [location, setLocation] = useState("")
+  const [saving, setSaving]     = useState(false)
+
+  function openDay(dow: number) {
+    const existing = scheduleMap[dow]
+    setTime(existing?.time ?? "")
+    setCategory(existing?.category ?? "")
+    setLocation(existing?.location ?? "")
+    setEditing(dow)
+  }
+
+  async function save() {
+    if (editing === null) return
+    setSaving(true)
+    await onUpsert({ day_of_week: editing, time, category: category || null, location, notes: "" })
+    setSaving(false)
+    setEditing(null)
+  }
+
+  return (
+    <div>
+      <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
+        Activa los días de entrenamiento. El sistema generará todos esos días en el mes que elijas.
+      </p>
+      <div className="flex flex-wrap gap-2 mb-4">
+        {DAYS.map(({ dow, label }) => {
+          const active = !!scheduleMap[dow]
+          return (
+            <button
+              key={dow}
+              onClick={() => active ? onDelete(scheduleMap[dow].id) : openDay(dow)}
+              onContextMenu={ev => { ev.preventDefault(); if (active) openDay(dow) }}
+              className={cn(
+                "relative flex flex-col items-center px-3 py-2 rounded-xl text-xs font-bold transition-all border",
+                active
+                  ? "bg-violet-500 text-white border-violet-500 shadow-sm shadow-violet-200 dark:shadow-violet-900/40"
+                  : "bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700 hover:border-violet-300 hover:text-violet-500"
+              )}
+              title={active ? "Click para quitar · clic derecho para editar" : "Click para activar"}
+            >
+              {label}
+              {active && (
+                <span className="text-[9px] font-semibold text-violet-100 mt-0.5">
+                  {scheduleMap[dow].time || "—"}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {schedules.length > 0 && (
+        <div className="flex flex-wrap gap-3">
+          {schedules.map(s => {
+            const day = DAYS.find(d => d.dow === s.day_of_week)
+            return (
+              <div key={s.id} className="flex items-center gap-2 bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 rounded-xl px-3 py-2">
+                <span className="text-xs font-black text-violet-600 dark:text-violet-400">{day?.label}</span>
+                {s.time && <span className="text-[11px] text-violet-500 dark:text-violet-300">{s.time}</span>}
+                {s.category && <span className="text-[10px] text-violet-400 dark:text-violet-500">{s.category}</span>}
+                {s.location && <span className="text-[10px] text-slate-400 truncate max-w-24">{s.location}</span>}
+                <button onClick={() => openDay(s.day_of_week)} className="text-violet-300 hover:text-violet-500 transition-colors ml-1">
+                  <Pencil size={10} />
+                </button>
+                <button onClick={() => onDelete(s.id)} className="text-violet-300 hover:text-red-400 transition-colors">
+                  <X size={10} />
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Mini form para configurar un día */}
+      {editing !== null && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm animate-scale-in">
+            <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
+              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                Configurar {DAYS.find(d => d.dow === editing)?.label}
+              </p>
+              <button onClick={() => setEditing(null)} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <X size={14} />
+              </button>
+            </div>
+            <div className="p-4 space-y-3">
+              <label className="block">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 block">Hora</span>
+                <input type="time" value={time} onChange={ev => setTime(ev.target.value)}
+                  className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 block">Categoría (opcional)</span>
+                <select value={category} onChange={ev => setCategory(ev.target.value)}
+                  className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-400">
+                  <option value="">Todas las categorías</option>
+                  {categories.map(c => <option key={c} value={c}>{e.category(c)}</option>)}
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 block">Lugar (opcional)</span>
+                <input type="text" value={location} onChange={ev => setLocation(ev.target.value)} placeholder="Ej: Cancha 1"
+                  className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+              </label>
+              <div className="flex gap-2 pt-1">
+                <button onClick={() => setEditing(null)} className="flex-1 h-9 rounded-xl border border-slate-200 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                  Cancelar
+                </button>
+                <button onClick={save} disabled={saving}
+                  className="flex-1 h-9 rounded-xl bg-violet-500 hover:bg-violet-600 disabled:opacity-50 text-white text-sm font-bold transition-colors">
+                  {saving ? "Guardando…" : "Guardar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
