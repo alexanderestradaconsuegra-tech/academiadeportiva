@@ -83,11 +83,8 @@ export default function LandingPage() {
       {/* Nav */}
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#05122F]/80 border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#0B5CFF] flex items-center justify-center shrink-0">
-              <Trophy className="w-4.5 h-4.5 text-white" size={18} />
-            </div>
-            <span className="text-lg font-bold tracking-tight">Metrikas</span>
+          <div className="flex items-center">
+            <img src="/logo-metrikas.png" alt="Metrikas" className="h-10 w-auto object-contain" />
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-blue-100/70">
             <a href="#caracteristicas" className="hover:text-white transition-colors">Características</a>
@@ -551,9 +548,8 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="bg-[#05122F] border-t border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-blue-300" />
-            <span className="text-sm font-bold">Metrikas</span>
+          <div className="flex items-center">
+            <img src="/logo-metrikas.png" alt="Metrikas" className="h-8 w-auto object-contain" />
           </div>
           <p className="text-xs text-blue-100/40">© {new Date().getFullYear()} Metrikas · Gestión deportiva</p>
           <div className="flex items-center gap-4 text-xs text-blue-100/50">
