@@ -90,24 +90,57 @@ function NotificationBroadcast() {
 function AccessManager() {
   const t = useT(settings)
   const { players } = useApp()
-  const [withAccess, setWithAccess] = useState<Set<string>>(new Set())
+  // Map player_id → { user_id, email }
+  const [accessMap, setAccessMap] = useState<Record<string, { user_id: string; email: string }>>({})
   const [loadingList, setLoadingList] = useState(true)
   const [openFor, setOpenFor] = useState<string | null>(null)
-  const [creating, setCreating] = useState(false)
+  const [mode, setMode] = useState<"create" | "edit">("create")
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
   const [form, setForm] = useState({ email: "", password: "" })
 
   useEffect(() => {
-    supabase.from("profiles").select("player_id").not("player_id", "is", null)
-      .then(({ data }) => {
-        setWithAccess(new Set((data ?? []).map(r => r.player_id as string)))
+    supabase.from("profiles").select("id, player_id").eq("role", "player").not("player_id", "is", null)
+      .then(async ({ data: profileRows }) => {
+        if (!profileRows?.length) { setLoadingList(false); return }
+        // Fetch emails via admin list (server-side only) — we only have client here,
+        // so store user_id and let the edit form work by user_id
+        const map: Record<string, { user_id: string; email: string }> = {}
+        for (const row of profileRows) {
+          if (row.player_id) map[row.player_id] = { user_id: row.id, email: "" }
+        }
+        // Fetch emails from our admin endpoint
+        const { data: sessionData } = await supabase.auth.getSession()
+        const token = sessionData.session?.access_token
+        const res = await fetch("/api/admin/list-accounts", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (res.ok) {
+          const list: { id: string; email: string }[] = await res.json()
+          for (const u of list) {
+            for (const pid of Object.keys(map)) {
+              if (map[pid].user_id === u.id) map[pid].email = u.email
+            }
+          }
+        }
+        setAccessMap(map)
         setLoadingList(false)
       })
   }, [])
 
+  function openCreate(playerId: string) {
+    setOpenFor(playerId); setMode("create"); setError(""); setSuccess(""); setForm({ email: "", password: "" })
+  }
+  function openEdit(playerId: string) {
+    const current = accessMap[playerId]
+    setOpenFor(playerId); setMode("edit"); setError(""); setSuccess("")
+    setForm({ email: current?.email ?? "", password: "" })
+  }
+  function closePanel() { setOpenFor(null) }
+
   async function handleCreate(playerId: string) {
-    setError("")
-    setCreating(true)
+    setError(""); setSaving(true)
     const { data: sessionData } = await supabase.auth.getSession()
     const token = sessionData.session?.access_token
     const player = players.find(p => p.id === playerId)
@@ -117,14 +150,32 @@ function AccessManager() {
       body: JSON.stringify({ email: form.email, password: form.password, player_id: playerId, full_name: player?.name }),
     })
     const data = await res.json()
-    setCreating(false)
-    if (!res.ok) {
-      setError(data.error || t("accessCreateError"))
-      return
-    }
-    setWithAccess(s => new Set(s).add(playerId))
-    setOpenFor(null)
-    setForm({ email: "", password: "" })
+    setSaving(false)
+    if (!res.ok) { setError(data.error || t("accessCreateError")); return }
+    setAccessMap(m => ({ ...m, [playerId]: { user_id: data.user?.id ?? "", email: form.email } }))
+    closePanel()
+  }
+
+  async function handleEdit(playerId: string) {
+    setError(""); setSaving(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const userId = accessMap[playerId]?.user_id
+    const res = await fetch("/api/admin/update-account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        user_id: userId,
+        email: form.email || undefined,
+        password: form.password || undefined,
+      }),
+    })
+    const data = await res.json()
+    setSaving(false)
+    if (!res.ok) { setError(data.error || "Error al actualizar acceso"); return }
+    setAccessMap(m => ({ ...m, [playerId]: { ...m[playerId], email: form.email || m[playerId].email } }))
+    setSuccess("Acceso actualizado correctamente")
+    setTimeout(() => { setSuccess(""); closePanel() }, 1500)
   }
 
   return (
@@ -139,7 +190,9 @@ function AccessManager() {
       ) : (
         <div className="space-y-2">
           {players.map(p => {
-            const has = withAccess.has(p.id)
+            const access = accessMap[p.id]
+            const has = !!access
+            const isOpen = openFor === p.id
             return (
               <div key={p.id} className="rounded-xl border border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-3 p-3">
@@ -148,29 +201,55 @@ function AccessManager() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{p.name}</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">{p.position}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                      {has && access.email ? access.email : p.position}
+                    </p>
                   </div>
                   {has ? (
-                    <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg">
-                      <UserCheck size={12} /> {t("withAccess")}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg">
+                        <UserCheck size={12} /> {t("withAccess")}
+                      </span>
+                      <Button variant="outline" size="sm" type="button" onClick={() => isOpen ? closePanel() : openEdit(p.id)}>
+                        <KeyRound size={13} /> Editar
+                      </Button>
+                    </div>
                   ) : (
-                    <Button variant="outline" size="sm" type="button" onClick={() => { setOpenFor(openFor === p.id ? null : p.id); setError(""); setForm({ email: "", password: "" }) }}>
+                    <Button variant="outline" size="sm" type="button" onClick={() => isOpen ? closePanel() : openCreate(p.id)}>
                       <KeyRound size={13} /> {t("createAccess")}
                     </Button>
                   )}
                 </div>
-                {openFor === p.id && !has && (
+                {isOpen && (
                   <div className="p-3 pt-0 space-y-3 border-t border-slate-100 dark:border-slate-800 mt-1">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
-                      <Input label={t("emailLabel")} type="email" placeholder={t("emailPlaceholder")} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-                      <Input label={t("passwordLabel")} type="text" placeholder={t("passwordPlaceholder")} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} />
+                      <Input
+                        label={t("emailLabel")}
+                        type="email"
+                        placeholder={t("emailPlaceholder")}
+                        value={form.email}
+                        onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                      />
+                      <Input
+                        label={mode === "edit" ? "Nueva contraseña (dejar vacío para no cambiar)" : t("passwordLabel")}
+                        type="text"
+                        placeholder={mode === "edit" ? "••••••" : t("passwordPlaceholder")}
+                        value={form.password}
+                        onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                      />
                     </div>
                     {error && <p className="text-xs text-red-600">{error}</p>}
+                    {success && <p className="text-xs text-emerald-600">{success}</p>}
                     <div className="flex justify-end">
-                      <Button size="sm" type="button" loading={creating} disabled={!form.email || form.password.length < 6} onClick={() => handleCreate(p.id)}>
-                        {t("createAccess")}
-                      </Button>
+                      {mode === "create" ? (
+                        <Button size="sm" type="button" loading={saving} disabled={!form.email || form.password.length < 6} onClick={() => handleCreate(p.id)}>
+                          {t("createAccess")}
+                        </Button>
+                      ) : (
+                        <Button size="sm" type="button" loading={saving} disabled={!form.email && !form.password} onClick={() => handleEdit(p.id)}>
+                          Guardar cambios
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
