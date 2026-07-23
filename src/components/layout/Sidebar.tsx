@@ -10,6 +10,7 @@ import {
   LayoutDashboard, Users, Dumbbell, BarChart3, FileText, LogOut, Trophy, ChevronRight, Heart, Settings, CalendarDays, Sun, Moon, PenTool, Radar, CreditCard
 } from "lucide-react"
 import PushToggle from "@/components/PushToggle"
+import MetrikasLogo from "@/components/ui/MetrikasLogo"
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -41,11 +42,14 @@ export default function Sidebar() {
             {teamSettings?.logo_url ? (
               <img src={teamSettings.logo_url} alt={teamSettings.name} className="w-full h-full object-cover" />
             ) : (
-              <Trophy className="w-5 h-5 text-white" />
+              <MetrikasLogo variant="icon" height={22} theme="dark" />
             )}
           </div>
           <div className="min-w-0">
-            <span className="text-[15px] font-bold text-slate-900 dark:text-white tracking-tight truncate block">{teamSettings?.name || "FutbolMetrics"}</span>
+            {teamSettings?.name
+              ? <span className="text-[15px] font-bold text-slate-900 dark:text-white tracking-tight truncate block">{teamSettings.name}</span>
+              : <><MetrikasLogo variant="full" height={15} theme="light" className="dark:hidden" /><MetrikasLogo variant="full" height={15} theme="dark" className="hidden dark:block" /></>
+            }
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-widest">Pro</p>
           </div>
         </div>
