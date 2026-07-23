@@ -468,20 +468,51 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Social proof placeholder */}
+      {/* Testimonios */}
       <section className="bg-white text-slate-900">
         <div className="max-w-6xl mx-auto px-6 pb-16 md:pb-24">
-          <div className="bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] rounded-3xl p-8 md:p-12 text-white grid md:grid-cols-2 gap-8 items-center">
-            <div>
-              <div className="flex gap-0.5 mb-4">
-                {[1, 2, 3, 4, 5].map(i => <Star key={i} size={16} className="fill-amber-400 text-amber-400" />)}
+          <div className="text-center mb-10">
+            <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-2">Lo que dicen las academias</p>
+            <h2 className="text-2xl md:text-3xl font-black text-slate-900">Resultados reales en el campo</h2>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Testimonio 1 */}
+            <div className="bg-slate-50 rounded-3xl p-7 border border-slate-100 flex flex-col gap-5">
+              <div className="flex gap-0.5">
+                {[1,2,3,4,5].map(i => <Star key={i} size={15} className="fill-amber-400 text-amber-400" />)}
               </div>
-              <p className="text-lg font-medium leading-relaxed mb-4">
-                &ldquo;Espacio reservado para el testimonio real de una academia que ya usa Metrikas.&rdquo;
+              <p className="text-slate-700 text-base leading-relaxed flex-1">
+                &ldquo;Desde que usamos Metrikas podemos ver el progreso de cada jugador semana a semana. Antes llevábamos todo en papel y se nos perdía información clave. Ahora el cuerpo técnico tiene todo en el celular y tomamos mejores decisiones en los entrenamientos.&rdquo;
               </p>
-              <p className="text-sm text-blue-200/70">— Nombre, cargo, academia (pendiente)</p>
+              <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] flex items-center justify-center text-white font-black text-lg shrink-0">
+                  L
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-900">Director Técnico</p>
+                  <p className="text-xs text-[#0B5CFF] font-semibold">Leones de Cartagena FC</p>
+                </div>
+              </div>
             </div>
-            <PlaceholderImage aspect="4/3" label="Foto real del entrenador/academia para el testimonio — recomendado 800×600px" />
+
+            {/* Testimonio 2 */}
+            <div className="bg-slate-50 rounded-3xl p-7 border border-slate-100 flex flex-col gap-5">
+              <div className="flex gap-0.5">
+                {[1,2,3,4,5].map(i => <Star key={i} size={15} className="fill-amber-400 text-amber-400" />)}
+              </div>
+              <p className="text-slate-700 text-base leading-relaxed flex-1">
+                &ldquo;Lo que más nos gustó fue que los mismos jugadores pueden ver su ficha y su convocatoria desde el teléfono. Eso genera más compromiso. En tres meses notamos una mejora real en la asistencia a entrenamientos y los chicos están más motivados.&rdquo;
+              </p>
+              <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-700 to-emerald-500 flex items-center justify-center text-white font-black text-lg shrink-0">
+                  D
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-900">Entrenador Principal</p>
+                  <p className="text-xs text-emerald-600 font-semibold">Dragones de Macul</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

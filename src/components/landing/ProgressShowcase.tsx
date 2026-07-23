@@ -117,94 +117,48 @@ export default function ProgressShowcase() {
         </div>
       </div>
 
-      {/* Big chart */}
-      <div className="bg-gradient-to-br from-white/[0.04] to-white/[0.02] border border-white/10 rounded-3xl p-6 md:p-8 mb-8 backdrop-blur">
+      {/* Bar chart */}
+      <div className="bg-white/[0.06] border border-white/10 rounded-3xl p-6 md:p-8 mb-8">
         <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
           <div>
             <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-1">Evolución medida</p>
             <h3 className="text-xl md:text-2xl font-black text-white">Cada mes, un salto real</h3>
           </div>
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5 text-xs text-white/60">
-              <span className="w-3 h-3 rounded-full bg-slate-400" /> Sin Metrikas
+            <span className="flex items-center gap-1.5 text-xs text-white/50">
+              <span className="w-3 h-3 rounded bg-slate-500/70 inline-block" /> Sin Metrikas
             </span>
-            <span className="flex items-center gap-1.5 text-xs text-white/60">
-              <span className="w-3 h-3 rounded-full bg-gradient-to-br from-[#0B5CFF] to-fuchsia-500" /> Con Metrikas
+            <span className="flex items-center gap-1.5 text-xs text-white/80">
+              <span className="w-3 h-3 rounded bg-[#0B5CFF] inline-block" /> Con Metrikas
             </span>
           </div>
         </div>
 
-        <div className="relative w-full" style={{ aspectRatio: "16/6" }}>
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
-            <defs>
-              <linearGradient id="gradAfter" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#0B5CFF" stopOpacity="0.55" />
-                <stop offset="100%" stopColor="#0B5CFF" stopOpacity="0" />
-              </linearGradient>
-              <linearGradient id="gradBefore" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#64748B" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="#64748B" stopOpacity="0" />
-              </linearGradient>
-              <linearGradient id="lineAfter" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#0B5CFF" />
-                <stop offset="100%" stopColor="#e879f9" />
-              </linearGradient>
-            </defs>
-
-            {/* Horizontal grid */}
-            {[0, 25, 50, 75, 100].map(y => (
-              <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="rgba(255,255,255,0.06)" strokeWidth="0.2" />
-            ))}
-
-            {/* Before area + line */}
-            <path d={areaPath(BEFORE)} fill="url(#gradBefore)" />
-            <polyline
-              points={points(BEFORE)}
-              fill="none"
-              stroke="rgba(148,163,184,0.7)"
-              strokeWidth="0.6"
-              strokeDasharray="1.5 1"
-              vectorEffect="non-scaling-stroke"
-            />
-
-            {/* After area + line */}
-            <path d={areaPath(AFTER)} fill="url(#gradAfter)" />
-            <polyline
-              points={points(AFTER)}
-              fill="none"
-              stroke="url(#lineAfter)"
-              strokeWidth="0.9"
-              vectorEffect="non-scaling-stroke"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-
-            {/* Data points on after */}
-            {AFTER.map((v, i) => {
-              const x = (i / (AFTER.length - 1)) * 100
-              const y = 100 - (v / maxVal) * 100 * progress
-              return (
-                <g key={i}>
-                  <circle cx={x} cy={y} r="1.2" fill="white" vectorEffect="non-scaling-stroke" />
-                  <circle cx={x} cy={y} r="0.6" fill="#0B5CFF" vectorEffect="non-scaling-stroke" />
-                </g>
-              )
-            })}
-          </svg>
-
-          {/* Peak badge */}
-          <div
-            className="absolute -translate-x-1/2 -translate-y-full"
-            style={{ left: "100%", top: `${100 - (AFTER[AFTER.length - 1] / maxVal) * 100 * progress}%`, transform: "translate(-100%, -140%)" }}
-          >
-            <div className="px-2 py-1 rounded-lg bg-gradient-to-br from-[#0B5CFF] to-fuchsia-600 text-white text-[10px] font-black shadow-lg shadow-blue-900/50">
-              +{Math.round((AFTER[AFTER.length - 1] - BEFORE[0]) * progress)} pts
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-6 mt-3 text-[10px] text-white/40 font-semibold">
-          {MONTHS.map(m => <span key={m} className="text-center">{m}</span>)}
+        <div className="flex items-end gap-2 md:gap-4 h-40">
+          {MONTHS.map((month, i) => {
+            const before = BEFORE[i]
+            const after  = BEFORE[i] + Math.round((AFTER[i] - BEFORE[i]) * progress)
+            const maxH   = 100
+            return (
+              <div key={month} className="flex-1 flex flex-col items-center gap-1">
+                <div className="w-full flex items-end gap-0.5 md:gap-1" style={{ height: 128 }}>
+                  {/* Before bar */}
+                  <div className="flex-1 rounded-t-md bg-slate-500/40 transition-all duration-700"
+                    style={{ height: `${(before / maxH) * 100}%` }} />
+                  {/* After bar */}
+                  <div className="flex-1 rounded-t-md bg-[#0B5CFF] shadow-md shadow-blue-900/30 transition-all duration-700 relative"
+                    style={{ height: `${(after / maxH) * 100}%` }}>
+                    {i === MONTHS.length - 1 && (
+                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap px-1.5 py-0.5 rounded bg-emerald-500 text-white text-[9px] font-black">
+                        +{Math.round((AFTER[i] - BEFORE[i]) * progress)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <span className="text-[10px] text-white/40 font-semibold">{month}</span>
+              </div>
+            )
+          })}
         </div>
       </div>
 
