@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
@@ -146,12 +146,43 @@ function positionRole(position: string): Role {
   return "FWD"
 }
 
-function FootballPitch({ pitchPlayers, players }: {
+function FootballPitch({ pitchPlayers, players, onMove }: {
   pitchPlayers: ConvocatoriaPlayer[]
   players: Player[]
+  onMove?: (playerId: string, x: number, y: number) => void
 }) {
+  const pitchRef = useRef<HTMLDivElement>(null)
+  const draggingId = useRef<string | null>(null)
+
+  const handlePointerDown = useCallback((playerId: string, e: React.PointerEvent<HTMLDivElement>) => {
+    if (!onMove) return
+    e.preventDefault()
+    e.stopPropagation()
+    draggingId.current = playerId
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  }, [onMove])
+
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!draggingId.current || !pitchRef.current || !onMove) return
+    const rect = pitchRef.current.getBoundingClientRect()
+    const x = Math.max(4, Math.min(96, ((e.clientX - rect.left) / rect.width) * 100))
+    const y = Math.max(4, Math.min(96, ((e.clientY - rect.top) / rect.height) * 100))
+    onMove(draggingId.current, Math.round(x * 10) / 10, Math.round(y * 10) / 10)
+  }, [onMove])
+
+  const handlePointerUp = useCallback(() => {
+    draggingId.current = null
+  }, [])
+
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden" style={{ aspectRatio: "10/16" }}>
+    <div
+      ref={pitchRef}
+      className="relative w-full rounded-2xl overflow-hidden select-none touch-none"
+      style={{ aspectRatio: "10/16" }}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp}
+    >
       {/* Green background with stripes */}
       <div className="absolute inset-0 bg-emerald-700">
         {Array.from({ length: 8 }).map((_, i) => (
@@ -168,30 +199,27 @@ function FootballPitch({ pitchPlayers, players }: {
       </div>
       {/* Field lines */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 160" preserveAspectRatio="none">
-        {/* Outer border */}
         <rect x="3" y="4" width="94" height="152" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.2" />
-        {/* Center line */}
         <line x1="3" y1="80" x2="97" y2="80" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
-        {/* Center circle */}
         <circle cx="50" cy="80" r="12" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
         <circle cx="50" cy="80" r="1" fill="rgba(255,255,255,0.5)" />
-        {/* Top penalty area */}
         <rect x="22" y="4" width="56" height="22" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
         <rect x="34" y="4" width="32" height="10" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
-        {/* Bottom penalty area */}
         <rect x="22" y="134" width="56" height="22" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
         <rect x="34" y="146" width="32" height="10" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.8" />
-        {/* Top goal */}
         <rect x="38" y="2" width="24" height="4" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
-        {/* Bottom goal */}
         <rect x="38" y="154" width="24" height="4" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="0.8" />
-        {/* Penalty spots */}
         <circle cx="50" cy="18" r="1" fill="rgba(255,255,255,0.5)" />
         <circle cx="50" cy="142" r="1" fill="rgba(255,255,255,0.5)" />
       </svg>
       {/* Labels */}
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 text-[9px] font-bold text-white/50 uppercase tracking-widest z-10">Ellos</div>
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-bold text-white/50 uppercase tracking-widest z-10">Nosotros</div>
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 text-[9px] font-bold text-white/50 uppercase tracking-widest z-10 pointer-events-none">Ellos</div>
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-bold text-white/50 uppercase tracking-widest z-10 pointer-events-none">Nosotros</div>
+      {onMove && (
+        <div className="absolute top-1/2 right-2 -translate-y-1/2 text-[8px] text-white/40 font-medium pointer-events-none">
+          Arrastra
+        </div>
+      )}
       {/* Players */}
       {pitchPlayers.map(pp => {
         const player = players.find(p => p.id === pp.player_id)
@@ -199,13 +227,17 @@ function FootballPitch({ pitchPlayers, players }: {
         return (
           <div
             key={pp.id}
-            className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5 z-20"
+            className={cn(
+              "absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5 z-20",
+              onMove ? "cursor-grab active:cursor-grabbing" : ""
+            )}
             style={{ left: `${pp.x}%`, top: `${pp.y}%` }}
+            onPointerDown={onMove ? (e) => handlePointerDown(pp.player_id, e) : undefined}
           >
-            <div className="w-8 h-8 rounded-full bg-[#0B5CFF] border-2 border-white shadow-lg flex items-center justify-center text-white text-[9px] font-black">
+            <div className="w-9 h-9 rounded-full bg-[#0B5CFF] border-2 border-white shadow-lg flex items-center justify-center text-white text-[9px] font-black pointer-events-none">
               {pp.position_label.substring(0, 3)}
             </div>
-            <span className="text-white text-[8px] font-bold bg-black/50 px-1.5 py-px rounded-full max-w-14 truncate leading-none">
+            <span className="text-white text-[8px] font-bold bg-black/50 px-1.5 py-px rounded-full max-w-[3.5rem] truncate leading-none pointer-events-none">
               {firstName}
             </span>
           </div>
@@ -253,6 +285,9 @@ export default function ConvocatoriaPage() {
     }
   }, [id, convocatorias]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const Y_BY_ROLE: Record<Role, number> = { GK: 8, DEF: 26, MID: 50, FWD: 76 }
+  const X_SPREAD = [50, 25, 75, 37, 63, 12, 88, 57, 43]
+
   function togglePlayer(playerId: string) {
     const next = new Set(selectedIds)
     if (next.has(playerId)) {
@@ -262,13 +297,21 @@ export default function ConvocatoriaPage() {
       next.add(playerId)
       const player = players.find(p => p.id === playerId)
       const posLabel = POSITIONS[player?.position ?? ""] ?? (player?.position?.substring(0, 3).toUpperCase() ?? "")
+      const role = positionRole(player?.position ?? "")
+      // Spread same-role players horizontally
+      const sameRoleCount = pitchPlayers.filter(pp => {
+        const pl = players.find(p => p.id === pp.player_id)
+        return pl && positionRole(pl.position) === role
+      }).length
+      const x = X_SPREAD[sameRoleCount % X_SPREAD.length]
+      const y = Y_BY_ROLE[role]
       const newP: ConvocatoriaPlayer = {
         id: crypto.randomUUID(),
         convocatoria_id: "",
         player_id: playerId,
         position_label: posLabel,
-        x: 50,
-        y: 50,
+        x,
+        y,
         instruction: "",
         confirmed: null,
         created_at: new Date().toISOString(),
@@ -316,6 +359,10 @@ export default function ConvocatoriaPage() {
     const assignedIds = new Set(updated.map(p => p.player_id))
     const rest = pitchPlayers.filter(pp => !assignedIds.has(pp.player_id) && selectedIds.has(pp.player_id))
     setPitchPlayers([...updated, ...rest])
+  }
+
+  function movePlayer(playerId: string, x: number, y: number) {
+    setPitchPlayers(pp => pp.map(p => p.player_id === playerId ? { ...p, x, y } : p))
   }
 
   function openInstruction(playerId: string) {
@@ -593,7 +640,7 @@ export default function ConvocatoriaPage() {
                 </div>
 
                 {/* Pitch */}
-                <FootballPitch pitchPlayers={pitchPlayers} players={players} />
+                <FootballPitch pitchPlayers={pitchPlayers} players={players} onMove={movePlayer} />
 
                 {/* Formation legend */}
                 {selectedFormation && pitchPlayers.length > 0 && (
