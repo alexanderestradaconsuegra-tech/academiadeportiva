@@ -168,6 +168,57 @@ export default function ConvocatoriaViewPage() {
           </div>
         )}
 
+        {/* Formation pitch */}
+        {convocatoria.players.some(p => p.x !== undefined && p.y !== undefined) && (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                Formación {convocatoria.formation && convocatoria.formation !== "custom" ? `· ${convocatoria.formation.replace("F11 · ","").replace("F7 · ","")}` : ""}
+              </p>
+            </div>
+            <div className="p-4">
+              <div className="relative w-full rounded-xl overflow-hidden" style={{ background: "#2d6a2d", aspectRatio: "2/3" }}>
+                {/* Pitch lines */}
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 150" preserveAspectRatio="none">
+                  <rect x="2" y="2" width="96" height="146" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5"/>
+                  <line x1="2" y1="75" x2="98" y2="75" stroke="rgba(255,255,255,0.4)" strokeWidth="1"/>
+                  <circle cx="50" cy="75" r="12" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1"/>
+                  <rect x="22" y="2" width="56" height="22" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+                  <rect x="22" y="126" width="56" height="22" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+                  <rect x="35" y="2" width="30" height="10" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+                  <rect x="35" y="138" width="30" height="10" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+                </svg>
+                {/* Players */}
+                {convocatoria.players.map(pp => {
+                  const player = players.find(p => p.id === pp.player_id)
+                  const isMe = pp.player_id === myPlayerId
+                  return (
+                    <div key={pp.player_id}
+                      className="absolute flex flex-col items-center gap-0.5"
+                      style={{ left: `${pp.x}%`, top: `${pp.y}%`, transform: "translate(-50%,-50%)" }}
+                    >
+                      <div className={cn(
+                        "w-7 h-7 rounded-full border-2 flex items-center justify-center text-[10px] font-black text-white shadow-md",
+                        isMe ? "bg-amber-400 border-amber-200 scale-110" : "bg-[#0B5CFF] border-blue-300"
+                      )}>
+                        {player?.name?.charAt(0) ?? "?"}
+                      </div>
+                      <span className="text-[8px] font-bold text-white drop-shadow leading-none bg-black/30 px-1 rounded">
+                        {pp.position_label || player?.name?.split(" ")[0] || "?"}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+              <p className="text-xs text-slate-400 text-center mt-2">
+                <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-amber-400 inline-block"/>Tú</span>
+                <span className="mx-2">·</span>
+                <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-[#0B5CFF] inline-block"/>Compañeros</span>
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Full player list */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
           <div className="p-4 border-b border-slate-100 dark:border-slate-800">
