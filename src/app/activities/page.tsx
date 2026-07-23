@@ -25,9 +25,11 @@ const catBadgeMap: Record<string, "amber" | "red" | "blue" | "green" | "orange" 
 }
 
 export default function ActivitiesPage() {
-  const { players, activities, exercises, addActivity } = useApp()
+  const { players, activities, exercises, addActivity, currentUser } = useApp()
   const t = useT(activitiesDict)
   const enumT = useEnumT()
+  const isPlayer = currentUser?.role === "player"
+  const ownPlayerId = currentUser?.player_id ?? null
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [filterPlayer, setFilterPlayer] = useState("all")
@@ -70,6 +72,7 @@ export default function ActivitiesPage() {
   }
 
   const filtered = activities.filter(a => {
+    if (isPlayer) return a.player_id === ownPlayerId && (filterCat === "all" || a.category === filterCat)
     const matchP = filterPlayer === "all" || a.player_id === filterPlayer
     const matchC = filterCat === "all" || a.category === filterCat
     return matchP && matchC
@@ -78,15 +81,17 @@ export default function ActivitiesPage() {
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
-        <PageHeader title={t("title")} subtitle={`${activities.length} ${t("trainingRecordsCount")}`}>
+        <PageHeader title={t("title")} subtitle={`${filtered.length} ${t("trainingRecordsCount")}`}>
           <Link href="/activities/exercises">
             <Button variant="outline">
               <Film size={15} /> {t("exerciseVideos")}
             </Button>
           </Link>
-          <Button onClick={() => setShowForm(true)}>
-            <Plus size={16} /> {t("registerActivity")}
-          </Button>
+          {!isPlayer && (
+            <Button onClick={() => setShowForm(true)}>
+              <Plus size={16} /> {t("registerActivity")}
+            </Button>
+          )}
         </PageHeader>
 
         {/* Modal form */}
@@ -138,11 +143,13 @@ export default function ActivitiesPage() {
 
         {/* Filters */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 mb-6 flex flex-wrap gap-3">
-          <select value={filterPlayer} onChange={e => setFilterPlayer(e.target.value)}
-            className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
-            <option value="all">{t("allPlayers")}</option>
-            {players.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
+          {!isPlayer && (
+            <select value={filterPlayer} onChange={e => setFilterPlayer(e.target.value)}
+              className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
+              <option value="all">{t("allPlayers")}</option>
+              {players.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          )}
           <select value={filterCat} onChange={e => setFilterCat(e.target.value)}
             className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
             <option value="all">{t("allCategories")}</option>
@@ -171,8 +178,7 @@ export default function ActivitiesPage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-slate-900 dark:text-white">{a.exercise}</p>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-xs text-slate-400 dark:text-slate-500">{player?.name ?? "?"}</span>
-                        <span className="text-slate-200">·</span>
+                        {!isPlayer && <><span className="text-xs text-slate-400 dark:text-slate-500">{player?.name ?? "?"}</span><span className="text-slate-200">·</span></>}
                         <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(a.date)}</span>
                         {videoUrl && (
                           <>
