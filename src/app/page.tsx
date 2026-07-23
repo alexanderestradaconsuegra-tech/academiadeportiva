@@ -84,7 +84,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#05122F]/80 border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center">
-            <img src="/logo-metrikas.png" alt="Metrikas" className="h-10 w-auto object-contain" />
+            <img src="/logo-metrikas.png" alt="Metrikas" className="h-16 w-auto max-w-[200px] object-contain" />
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-blue-100/70">
             <a href="#caracteristicas" className="hover:text-white transition-colors">Características</a>
@@ -549,7 +549,7 @@ export default function LandingPage() {
       <footer className="bg-[#05122F] border-t border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center">
-            <img src="/logo-metrikas.png" alt="Metrikas" className="h-8 w-auto object-contain" />
+            <img src="/logo-metrikas.png" alt="Metrikas" className="h-14 w-auto max-w-[180px] object-contain" />
           </div>
           <p className="text-xs text-blue-100/40">© {new Date().getFullYear()} Metrikas · Gestión deportiva</p>
           <div className="flex items-center gap-4 text-xs text-blue-100/50">
