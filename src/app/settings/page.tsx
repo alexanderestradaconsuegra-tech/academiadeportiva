@@ -8,7 +8,7 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
 import PhotoUpload from "@/components/ui/PhotoUpload"
-import { Trophy, Check, KeyRound, UserCheck, Sun, Moon, Send, Languages } from "lucide-react"
+import { Trophy, Check, KeyRound, UserCheck, Sun, Moon, Send, Languages, UserPlus, GraduationCap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Category, Language } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
@@ -183,6 +183,110 @@ function AccessManager() {
   )
 }
 
+function CoachManager() {
+  const [coaches, setCoaches] = useState<{ id: string; full_name: string; category: string | null }[]>([])
+  const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+  const [form, setForm] = useState({ email: "", password: "", full_name: "", category: CATEGORIES[0] as Category })
+
+  useEffect(() => {
+    supabase.from("profiles").select("id, full_name, category").eq("role", "assistant")
+      .then(({ data }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setCoaches((data ?? []).map((r: any) => ({ id: r.id, full_name: r.full_name, category: r.category })))
+        setLoading(false)
+      })
+  }, [])
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault()
+    setError("")
+    setSuccess("")
+    setCreating(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const res = await fetch("/api/admin/create-account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        email: form.email,
+        password: form.password,
+        full_name: form.full_name,
+        role: "assistant",
+        category: form.category,
+      }),
+    })
+    const data = await res.json()
+    setCreating(false)
+    if (!res.ok) { setError(data.error || "Error al crear entrenador"); return }
+    setCoaches(c => [...c, { id: data.user?.id ?? "", full_name: form.full_name, category: form.category }])
+    setSuccess(`Entrenador ${form.full_name} creado correctamente para ${form.category}`)
+    setForm({ email: "", password: "", full_name: "", category: CATEGORIES[0] as Category })
+  }
+
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+      <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+        <GraduationCap size={15} className="text-[#0B5CFF]" /> Entrenadores por categoría
+      </h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+        Cada entrenador asistente solo ve jugadores, entrenamientos y partidos de su categoría.
+      </p>
+
+      {loading ? (
+        <p className="text-xs text-slate-400">Cargando...</p>
+      ) : coaches.length > 0 && (
+        <div className="space-y-2 mb-5">
+          {coaches.map(c => (
+            <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                {c.full_name.charAt(0)}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">{c.full_name}</p>
+                <p className="text-xs text-slate-400">{c.category ?? "Sin categoría"}</p>
+              </div>
+              <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400">
+                Asistente
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <form onSubmit={handleCreate} className="space-y-3 border-t border-slate-100 dark:border-slate-800 pt-4">
+        <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+          <UserPlus size={13} /> Crear nuevo entrenador
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Input label="Nombre completo" placeholder="Carlos Martínez" value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} required />
+          <div>
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5 block">Categoría</label>
+            <select
+              value={form.category}
+              onChange={e => setForm(f => ({ ...f, category: e.target.value as Category }))}
+              className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 outline-none focus:border-[#0B5CFF] w-full"
+            >
+              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <Input label="Correo electrónico" type="email" placeholder="coach@academia.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} required />
+          <Input label="Contraseña" type="text" placeholder="Mínimo 6 caracteres" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} required />
+        </div>
+        {error && <p className="text-xs text-red-600">{error}</p>}
+        {success && <p className="text-xs text-emerald-600">{success}</p>}
+        <div className="flex justify-end">
+          <Button size="sm" type="submit" loading={creating} disabled={!form.email || form.password.length < 6 || !form.full_name}>
+            <UserPlus size={13} /> Crear entrenador
+          </Button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
 export default function SettingsPage() {
   const { teamSettings, updateTeamSettings, currentUser, darkMode, toggleDarkMode, language } = useApp()
   const isCoach = currentUser?.role === "coach"
@@ -337,6 +441,7 @@ export default function SettingsPage() {
           <div className="mt-6 space-y-6">
             <NotificationBroadcast />
             <AccessManager />
+            <CoachManager />
           </div>
         )}
       </div>

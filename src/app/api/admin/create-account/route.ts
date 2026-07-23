@@ -18,9 +18,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Solo el entrenador puede crear accesos." }, { status: 403 })
   }
 
-  const { email, password, player_id, full_name } = await req.json()
-  if (!email || !password || !player_id) {
-    return NextResponse.json({ error: "Email, contraseña y jugador son requeridos." }, { status: 400 })
+  const { email, password, player_id, full_name, role, category } = await req.json()
+  const targetRole = role === "assistant" ? "assistant" : "player"
+
+  if (!email || !password) {
+    return NextResponse.json({ error: "Email y contraseña son requeridos." }, { status: 400 })
+  }
+  if (targetRole === "player" && !player_id) {
+    return NextResponse.json({ error: "El jugador es requerido." }, { status: 400 })
   }
 
   const { data: userData, error: userError } = await admin.auth.admin.createUser({
@@ -31,17 +36,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No se pudo crear el acceso." }, { status: 500 })
   }
 
-  const { error: profileError } = await admin.from("profiles").insert({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const profileInsert: any = {
     id: userData.user.id,
-    role: "player",
-    player_id,
+    role: targetRole,
+    player_id: targetRole === "player" ? player_id : null,
     full_name: full_name || null,
     academy_id: callerProfile.academy_id,
-  })
+  }
+  if (targetRole === "assistant" && category) {
+    profileInsert.category = category
+  }
+
+  const { error: profileError } = await admin.from("profiles").insert(profileInsert)
   if (profileError) {
     console.error("[create-account] createProfile error:", profileError.message)
     return NextResponse.json({ error: "No se pudo configurar el perfil." }, { status: 500 })
   }
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, user: { id: userData.user.id } })
 }

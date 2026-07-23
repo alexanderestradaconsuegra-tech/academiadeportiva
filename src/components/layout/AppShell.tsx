@@ -8,6 +8,7 @@ import MobileHeader from "./MobileHeader"
 import PlayerNav from "./PlayerNav"
 
 const PLAYER_ALLOWED_PREFIXES = ["/matches", "/players", "/activities", "/tactics"]
+const ASSISTANT_BLOCKED_PREFIXES = ["/payments", "/settings", "/reports", "/charts"]
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isOnboarding, authReady, currentUser, isTrialExpired, trialDaysLeft } = useApp()
@@ -15,6 +16,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
   const isPlayer = currentUser?.role === "player"
+  const isAssistant = currentUser?.role === "assistant"
   const ownPlayerPath = currentUser?.player_id ? `/players/${currentUser.player_id}` : null
 
   const isOnAllowedPlayerPath = isPlayer && (
@@ -38,7 +40,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (isPlayer && ownPlayerPath && !isOnAllowedPlayerPath) {
       router.replace(ownPlayerPath)
     }
-  }, [authReady, isAuthenticated, isOnboarding, isTrialExpired, isPlayer, ownPlayerPath, isOnAllowedPlayerPath, pathname, router])
+    if (isAssistant && ASSISTANT_BLOCKED_PREFIXES.some(p => pathname.startsWith(p))) {
+      router.replace("/dashboard")
+    }
+  }, [authReady, isAuthenticated, isOnboarding, isTrialExpired, isPlayer, isAssistant, ownPlayerPath, isOnAllowedPlayerPath, pathname, router])
 
   if (!authReady || !isAuthenticated) return null
   if (isOnboarding) return null

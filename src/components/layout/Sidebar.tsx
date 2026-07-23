@@ -18,20 +18,23 @@ export default function Sidebar() {
   const t = useT(nav)
   const tCommon = useT(common)
 
-  const NAV = [
-    { href: "/dashboard", icon: LayoutDashboard, label: t("dashboard") },
-    { href: "/players", icon: Users, label: t("players") },
-    { href: "/activities", icon: Dumbbell, label: t("activities") },
-    { href: "/calendar", icon: CalendarDays, label: t("calendar") },
-    { href: "/matches", icon: Trophy, label: t("matches") },
-    { href: "/health", icon: Heart, label: t("health"), badge: "LIVE" },
-    { href: "/tactics", icon: PenTool, label: t("tactics") },
-    { href: "/heatmap", icon: Radar, label: t("heatmap") },
-    { href: "/payments", icon: CreditCard, label: t("paymentsNav") },
-    { href: "/charts", icon: BarChart3, label: t("charts") },
-    { href: "/reports", icon: FileText, label: t("reports") },
-    { href: "/settings", icon: Settings, label: t("settings") },
+  const isAssistant = currentUser?.role === "assistant"
+
+  const ALL_NAV = [
+    { href: "/dashboard", icon: LayoutDashboard, label: t("dashboard"), adminOnly: false },
+    { href: "/players", icon: Users, label: t("players"), adminOnly: false },
+    { href: "/activities", icon: Dumbbell, label: t("activities"), adminOnly: false },
+    { href: "/calendar", icon: CalendarDays, label: t("calendar"), adminOnly: false },
+    { href: "/matches", icon: Trophy, label: t("matches"), adminOnly: false },
+    { href: "/health", icon: Heart, label: t("health"), badge: "LIVE", adminOnly: false },
+    { href: "/tactics", icon: PenTool, label: t("tactics"), adminOnly: false },
+    { href: "/heatmap", icon: Radar, label: t("heatmap"), adminOnly: false },
+    { href: "/payments", icon: CreditCard, label: t("paymentsNav"), adminOnly: true },
+    { href: "/charts", icon: BarChart3, label: t("charts"), adminOnly: true },
+    { href: "/reports", icon: FileText, label: t("reports"), adminOnly: true },
+    { href: "/settings", icon: Settings, label: t("settings"), adminOnly: true },
   ]
+  const NAV = ALL_NAV.filter(item => !isAssistant || !item.adminOnly)
 
   return (
     <aside className="no-print hidden md:flex fixed left-0 top-0 h-screen w-64 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 flex-col z-30 shadow-sm">
@@ -97,7 +100,9 @@ export default function Sidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate">{currentUser?.full_name || t("trainer")}</p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500">{t("coach")}</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500">
+              {isAssistant ? `Asistente · ${currentUser?.category ?? ""}` : t("coach")}
+            </p>
           </div>
           <button
             onClick={toggleDarkMode}

@@ -354,6 +354,8 @@ function mapProfile(row: Tables<"profiles">): Profile {
     player_id: row.player_id,
     full_name: row.full_name || "",
     academy_id: row.academy_id ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    category: (row as any).category ?? null,
   }
 }
 
@@ -407,7 +409,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, teamSettings: data ? mapTeamSettings(data) : null }))
   }, [])
 
-  const loadPlayerData = useCallback(async () => {
+  const loadPlayerData = useCallback(async (categoryFilter?: string | null) => {
     const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes, positionSamplesRes, matchesRes, matchStatsRes, exercisesRes, attendanceRes, physicalTestsRes, injuriesRes, paymentsRes] = await Promise.all([
       supabase.from("players").select("*"),
       supabase.from("activities").select("*"),
@@ -422,7 +424,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from("attendance").select("*"),
       supabase.from("physical_tests").select("*"),
       supabase.from("injuries").select("*"),
-      supabase.from("payments").select("*"),
+      categoryFilter ? supabase.from("payments").select("*").limit(0) : supabase.from("payments").select("*"),
     ])
     // Fetch convocatorias with players joined
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -448,22 +450,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         created_at: p.created_at,
       })),
     }))
+    const allPlayers = (playersRes.data ?? []).map(mapPlayer)
+    const filteredPlayers = categoryFilter ? allPlayers.filter(p => p.category === categoryFilter) : allPlayers
+    const filteredPlayerIds = new Set(filteredPlayers.map(p => p.id))
+    const allTrainings = (trainingsRes.data ?? []).map(mapTraining)
+    const filteredTrainings = categoryFilter ? allTrainings.filter(t => t.category === categoryFilter) : allTrainings
+    const allMatches = (matchesRes.data ?? []).map(mapMatch)
+    const filteredMatches = categoryFilter ? allMatches.filter(m => m.category === categoryFilter) : allMatches
+
     setState(s => ({
       ...s,
-      players: (playersRes.data ?? []).map(mapPlayer),
-      activities: (activitiesRes.data ?? []).map(mapActivity),
-      evaluations: (evaluationsRes.data ?? []).map(mapEvaluation),
-      healthProfiles: (healthRes.data ?? []).map(mapHealthProfile),
-      liveSessions: (sessionsRes.data ?? []).map(mapLiveSession),
-      trainings: (trainingsRes.data ?? []).map(mapTraining),
-      positionSamples: (positionSamplesRes.data ?? []).map(mapPositionSample),
-      matches: (matchesRes.data ?? []).map(mapMatch),
+      players: filteredPlayers,
+      activities: categoryFilter
+        ? (activitiesRes.data ?? []).map(mapActivity).filter(a => filteredPlayerIds.has(a.player_id))
+        : (activitiesRes.data ?? []).map(mapActivity),
+      evaluations: categoryFilter
+        ? (evaluationsRes.data ?? []).map(mapEvaluation).filter(e => filteredPlayerIds.has(e.player_id))
+        : (evaluationsRes.data ?? []).map(mapEvaluation),
+      healthProfiles: categoryFilter
+        ? (healthRes.data ?? []).map(mapHealthProfile).filter(h => filteredPlayerIds.has(h.player_id))
+        : (healthRes.data ?? []).map(mapHealthProfile),
+      liveSessions: categoryFilter
+        ? (sessionsRes.data ?? []).map(mapLiveSession).filter(ls => filteredPlayerIds.has(ls.player_id))
+        : (sessionsRes.data ?? []).map(mapLiveSession),
+      trainings: filteredTrainings,
+      positionSamples: categoryFilter
+        ? (positionSamplesRes.data ?? []).map(mapPositionSample).filter(ps => filteredPlayerIds.has(ps.player_id))
+        : (positionSamplesRes.data ?? []).map(mapPositionSample),
+      matches: filteredMatches,
       matchStats: (matchStatsRes.data ?? []).map(mapMatchStat),
       exercises: (exercisesRes.data ?? []).map(mapExercise),
       attendance: (attendanceRes.data ?? []).map(mapAttendance),
-      physicalTests: (physicalTestsRes.data ?? []).map(mapPhysicalTest),
-      injuries: (injuriesRes.data ?? []).map(mapInjury),
-      payments: (paymentsRes.data ?? []).map(mapPayment),
+      physicalTests: categoryFilter
+        ? (physicalTestsRes.data ?? []).map(mapPhysicalTest).filter(pt => filteredPlayerIds.has(pt.player_id))
+        : (physicalTestsRes.data ?? []).map(mapPhysicalTest),
+      injuries: categoryFilter
+        ? (injuriesRes.data ?? []).map(mapInjury).filter(inj => filteredPlayerIds.has(inj.player_id))
+        : (injuriesRes.data ?? []).map(mapInjury),
+      payments: categoryFilter ? [] : (paymentsRes.data ?? []).map(mapPayment),
       convocatorias,
     }))
   }, [])
@@ -481,7 +505,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const profile = await loadProfileFor(userId)
         if (profile) {
           setState(s => ({ ...s, isAuthenticated: true, currentUser: profile }))
-          await Promise.all([loadTeamSettings(), loadPlayerData()])
+          const catFilter = profile.role === "assistant" ? profile.category : null
+          await Promise.all([loadTeamSettings(), loadPlayerData(catFilter)])
         } else {
           setState(s => ({ ...s, isAuthenticated: true, isOnboarding: true }))
         }
