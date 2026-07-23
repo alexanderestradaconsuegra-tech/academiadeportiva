@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: "FutbolMetrics",
   },
   icons: {
-    icon: "/favicon.svg",
+    icon: "/favicon.png",
     apple: "/icon-192.png",
   },
   other: {
