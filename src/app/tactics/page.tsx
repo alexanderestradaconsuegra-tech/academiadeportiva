@@ -81,6 +81,15 @@ export default function TacticsPage() {
   const [plays,   setPlays]   = useState<Play[]>([])
   const [activeId,setActiveId]= useState<string|null>(null)
 
+  // ── Undo history ─────────────────────────────────────────────────────────
+  const histRef = useRef<{markers:Marker[];lines:TLine[]}[]>([])
+  function pushHistory(m:Marker[],l:TLine[]){ histRef.current=[...histRef.current.slice(-29),{markers:m,lines:l}] }
+  function undo(){
+    const h=histRef.current; if(!h.length) return
+    const prev=h[h.length-1]; histRef.current=h.slice(0,-1)
+    setMarkers(prev.markers); setLines(prev.lines)
+  }
+
   // ── Animation state (overlaid on top, never touches edit state)
   const [animPos,  setAnimPos]  = useState<Record<string,[number,number]>|null>(null)
   const [animBall, setAnimBall] = useState<[number,number]|null>(null)
@@ -188,23 +197,26 @@ export default function TacticsPage() {
 
     if(tool==="move"){
       const hit=markers.find(m=>Math.hypot(m.x-pos[0],m.y-pos[1])<HIT_R)
-      if(hit) setDragging(hit.id)
+      if(hit){ pushHistory(markers,lines); setDragging(hit.id) }
     } else if(tool==="run"||tool==="pass"){
       setDrawing([pos])
     } else if(tool==="home"){
+      pushHistory(markers,lines)
       setMarkers(ms=>[...ms,{id:uid(),x:pos[0],y:pos[1],team:"home",label:String(ms.filter(m=>m.team==="home").length+1)}])
     } else if(tool==="away"){
+      pushHistory(markers,lines)
       setMarkers(ms=>[...ms,{id:uid(),x:pos[0],y:pos[1],team:"away",label:String(ms.filter(m=>m.team==="away").length+1)}])
     } else if(tool==="ball"){
+      pushHistory(markers,lines)
       setMarkers(ms=>[...ms.filter(m=>m.team!=="ball"),{id:uid(),x:pos[0],y:pos[1],team:"ball"}])
     } else if(tool==="erase"){
       const hm=markers.find(m=>Math.hypot(m.x-pos[0],m.y-pos[1])<HIT_R)
-      if(hm){ setMarkers(ms=>ms.filter(m=>m.id!==hm.id)); return }
+      if(hm){ pushHistory(markers,lines); setMarkers(ms=>ms.filter(m=>m.id!==hm.id)); return }
       const hl=lines.find(l=>{
         const a=l.pts[0], b=l.pts[l.pts.length-1]
         return Math.hypot(a[0]-pos[0],a[1]-pos[1])<HIT_R||Math.hypot(b[0]-pos[0],b[1]-pos[1])<HIT_R
       })
-      if(hl) setLines(ls=>ls.filter(l=>l.id!==hl.id))
+      if(hl){ pushHistory(markers,lines); setLines(ls=>ls.filter(l=>l.id!==hl.id)) }
     }
   }
 
@@ -218,6 +230,7 @@ export default function TacticsPage() {
   function onUp(){
     if(dragging){ setDragging(null); return }
     if(drawing&&drawing.length>=2){
+      pushHistory(markers,lines)
       setLines(ls=>[...ls,{id:uid(),type:tool==="pass"?"pass":"run",pts:drawing}])
     }
     setDrawing(null)
@@ -413,9 +426,14 @@ export default function TacticsPage() {
                       className="px-7 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold shadow-lg hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                       ▶ Ver jugada
                     </button>
-                    <button onClick={resetAnim}
-                      className="px-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 transition-colors">
-                      ↺ Reiniciar
+                    <button onClick={undo}
+                      disabled={histRef.current.length===0}
+                      className="px-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 disabled:opacity-30 transition-colors">
+                      ↩ Deshacer
+                    </button>
+                    <button onClick={()=>{ resetAnim(); pushHistory(markers,lines); setMarkers([]); setLines([]) }}
+                      className="px-4 py-2.5 rounded-xl border-2 border-red-200 bg-white dark:bg-slate-800 text-red-500 text-sm font-bold hover:bg-red-50 transition-colors">
+                      ✕ Limpiar
                     </button>
                   </>
                 )}
