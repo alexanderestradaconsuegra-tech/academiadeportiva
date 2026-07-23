@@ -181,6 +181,8 @@ export interface TeamSettings {
   calib_p1_lng: number | null
   calib_p2_lat: number | null
   calib_p2_lng: number | null
+  trial_expires_at: string | null
+  activation_code: string | null
 }
 
 export interface Training {

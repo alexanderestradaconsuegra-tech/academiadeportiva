@@ -135,9 +135,14 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 pt-12 pb-16 md:pt-20 md:pb-24 relative z-10">
           <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-10 lg:gap-16 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-4 py-1.5 mb-6">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-slow" />
-                <span className="text-white/80 text-xs font-medium">Interactivo · pruébalo ahora →</span>
+              <div className="flex flex-wrap gap-2 mb-6">
+                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-4 py-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-slow" />
+                  <span className="text-white/80 text-xs font-medium">Interactivo · pruébalo ahora →</span>
+                </div>
+                <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/30 backdrop-blur rounded-full px-4 py-1.5">
+                  <span className="text-emerald-300 text-xs font-bold">🎁 7 días gratis · sin tarjeta</span>
+                </div>
               </div>
               <h1 className="text-4xl md:text-5xl xl:text-6xl font-black leading-[1.05] mb-5">
                 Arma tu equipo. <span className="bg-gradient-to-r from-[#0B5CFF] via-cyan-300 to-fuchsia-400 bg-clip-text text-transparent">Mide el progreso.</span> Profesionaliza tu academia.
@@ -153,7 +158,7 @@ export default function LandingPage() {
                   rel="noopener noreferrer"
                   className="h-12 px-6 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-900/40"
                 >
-                  Solicitar acceso <ArrowRight size={16} />
+                  Probar gratis 7 días <ArrowRight size={16} />
                 </a>
                 <Link
                   href="/login"

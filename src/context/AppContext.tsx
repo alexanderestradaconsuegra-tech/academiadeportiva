@@ -88,6 +88,9 @@ interface AppContextType extends AppState {
   respondConvocatoria: (convocatoriaPlayerId: string, confirmed: boolean) => Promise<string | null>
   getPlayerConvocatoria: (playerId: string) => { convocatoria: Convocatoria; match: Match } | null
   autoGenerateMonthlyPayments: () => Promise<number>
+  isTrialExpired: boolean
+  trialDaysLeft: number | null
+  activateWithCode: (code: string) => Promise<string | null>
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -214,6 +217,10 @@ function mapTeamSettings(row: Tables<"team_settings">): TeamSettings {
     calib_p1_lng: row.calib_p1_lng,
     calib_p2_lat: row.calib_p2_lat,
     calib_p2_lng: row.calib_p2_lng,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    trial_expires_at: (row as any).trial_expires_at ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    activation_code: (row as any).activation_code ?? null,
   }
 }
 
@@ -531,9 +538,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const userId = sessionData.session?.user.id
     if (!userId) return "No autenticado"
 
-    const { data: academy, error: academyErr } = await supabase
+    const trialExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    const activationCode = Math.floor(100000 + Math.random() * 900000).toString()
+
+    const { data: academy, error: academyErr } = await (supabase as any)
       .from("team_settings")
-      .insert({ name: academyName, language: lang, updated_at: new Date().toISOString() })
+      .insert({ name: academyName, language: lang, updated_at: new Date().toISOString(), trial_expires_at: trialExpiresAt, activation_code: activationCode })
       .select()
       .single()
     if (academyErr || !academy) return academyErr?.message ?? "Error al crear la academia"
@@ -544,6 +554,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .select()
       .single()
     if (profileErr || !profileRow) return profileErr?.message ?? "Error al crear el perfil"
+
+    // Seed demo players
+    const demoPlayers: { name: string; position: import("@/lib/types").Position; category: import("@/lib/types").Category; age: number; dominant_foot: import("@/lib/types").DominantFoot }[] = [
+      { name: "Carlos Rodríguez", position: "Portero",              category: "Sub-16", age: 16, dominant_foot: "Derecha" },
+      { name: "Luis Martínez",    position: "Defensa Central",      category: "Sub-16", age: 17, dominant_foot: "Derecha" },
+      { name: "Andrés Torres",    position: "Lateral Derecho",      category: "Sub-16", age: 16, dominant_foot: "Derecha" },
+      { name: "Miguel Vargas",    position: "Lateral Izquierdo",    category: "Sub-16", age: 17, dominant_foot: "Izquierda" },
+      { name: "Sebastián López",  position: "Mediocampista Central",category: "Sub-16", age: 16, dominant_foot: "Derecha" },
+      { name: "Diego Herrera",    position: "Mediocampista Central",category: "Sub-16", age: 17, dominant_foot: "Derecha" },
+      { name: "Mateo Gómez",      position: "Delantero Centro",     category: "Sub-16", age: 16, dominant_foot: "Derecha" },
+      { name: "Juan Pérez",       position: "Delantero Centro",     category: "Sub-16", age: 17, dominant_foot: "Izquierda" },
+    ]
+    for (const p of demoPlayers) {
+      await supabase.from("players").insert({
+        id: crypto.randomUUID(), academy_id: academy.id,
+        name: p.name, position: p.position, category: p.category,
+        age: p.age, dominant_foot: p.dominant_foot,
+        birth_date: null as unknown as string, height: null as unknown as number, weight: null as unknown as number, club: null as unknown as string, objective: null as unknown as string, notes: null as unknown as string, photo_url: null as unknown as string,
+        created_at: new Date().toISOString(),
+      })
+    }
 
     const profile = mapProfile(profileRow)
     const settings = mapTeamSettings(academy)
@@ -1222,6 +1253,38 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return newPayments.length
   }, [state.teamSettings, state.payments, state.players])
 
+  // ── Trial helpers ─────────────────────────────────────────────────────────
+  const isTrialExpired = (() => {
+    const exp = state.teamSettings?.trial_expires_at
+    if (!exp) return false
+    return new Date(exp) < new Date()
+  })()
+
+  const trialDaysLeft = (() => {
+    const exp = state.teamSettings?.trial_expires_at
+    if (!exp) return null
+    const diff = new Date(exp).getTime() - Date.now()
+    if (diff <= 0) return 0
+    return Math.ceil(diff / (1000 * 60 * 60 * 24))
+  })()
+
+  const activateWithCode = useCallback(async (code: string): Promise<string | null> => {
+    const academyId = state.teamSettings?.id
+    if (!academyId) return "No hay academia activa"
+    const stored = state.teamSettings?.activation_code
+    if (!stored || code.trim() !== stored.trim()) return "Código incorrecto. Verifica el código que te enviamos por WhatsApp."
+    const { error } = await (supabase as any)
+      .from("team_settings")
+      .update({ trial_expires_at: null, activation_code: null, updated_at: new Date().toISOString() })
+      .eq("id", academyId)
+    if (error) return error.message
+    setState(s => ({
+      ...s,
+      teamSettings: s.teamSettings ? { ...s.teamSettings, trial_expires_at: null, activation_code: null } : s.teamSettings
+    }))
+    return null
+  }, [state.teamSettings])
+
   return (
     <AppContext.Provider
       value={{
@@ -1284,6 +1347,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         respondConvocatoria,
         getPlayerConvocatoria,
         autoGenerateMonthlyPayments,
+        isTrialExpired,
+        trialDaysLeft,
+        activateWithCode,
       }}
     >
       {children}
