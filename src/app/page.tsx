@@ -82,9 +82,9 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#05122F] text-white overflow-x-hidden">
       {/* Nav */}
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#05122F]/80 border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center -ml-4">
-            <img src="/logo-metrikas.png" alt="Metrikas" className="h-40 w-auto max-w-[280px] object-contain object-left" />
+            <img src="/logo-metrikas.png" alt="Metrikas" className="h-28 w-auto max-w-[240px] object-contain object-left" />
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-blue-100/70">
             <a href="#caracteristicas" className="hover:text-white transition-colors">Características</a>
@@ -104,7 +104,7 @@ export default function LandingPage() {
             </a>
             <Link
               href="/login"
-              className="h-9 px-4 rounded-xl bg-white text-[#071B4D] text-sm font-semibold flex items-center hover:bg-blue-50 transition-colors"
+              className="h-9 px-4 rounded-xl bg-white text-[#071B4D] text-sm font-semibold flex items-center whitespace-nowrap hover:bg-blue-50 transition-colors"
             >
               Iniciar sesión
             </Link>
