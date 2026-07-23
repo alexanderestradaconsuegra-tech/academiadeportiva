@@ -24,7 +24,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!authReady) return
     if (!isAuthenticated) {
-      if (pathname !== "/") router.replace("/")
+      if (pathname !== "/login") router.replace("/login")
       return
     }
     if (isOnboarding) {
