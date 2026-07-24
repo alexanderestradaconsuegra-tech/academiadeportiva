@@ -98,6 +98,14 @@ export default function HealthPage() {
   const [gpsError, setGpsError] = useState("")
   const [showSavedMsg, setShowSavedMsg] = useState(false)
   const [dbSessions, setDbSessions] = useState<LiveSession[]>([])
+  const [showManualForm, setShowManualForm] = useState(false)
+  const [manualForm, setManualForm] = useState({
+    date: new Date().toISOString().split("T")[0],
+    durationH: "", durationM: "", durationS: "",
+    distanceKm: "", avgHr: "", maxHr: "", minHr: "",
+    spo2: "", calories: "", notes: "",
+  })
+  const [manualSaving, setManualSaving] = useState(false)
 
   // Load sessions directly from Supabase so GPX-uploaded sessions appear immediately
   useEffect(() => {
@@ -257,6 +265,51 @@ export default function HealthPage() {
     setBtDevice(null)
   }, [])
 
+  async function saveManualEntry() {
+    setManualSaving(true)
+    const durationS = (parseInt(manualForm.durationH || "0") * 3600) +
+                      (parseInt(manualForm.durationM || "0") * 60) +
+                      (parseInt(manualForm.durationS || "0"))
+    const distanceM = manualForm.distanceKm ? Math.round(parseFloat(manualForm.distanceKm) * 1000) : 0
+    const avgHr = manualForm.avgHr ? parseInt(manualForm.avgHr) : null
+    const maxHr = manualForm.maxHr ? parseInt(manualForm.maxHr) : null
+    const minHr = manualForm.minHr ? parseInt(manualForm.minHr) : null
+    const spo2 = manualForm.spo2 ? parseFloat(manualForm.spo2) : null
+    const calories = manualForm.calories ? parseInt(manualForm.calories) : null
+    const avgSpeed = durationS > 0 && distanceM > 0 ? parseFloat(((distanceM / durationS) * 3.6).toFixed(1)) : null
+    const started = new Date(manualForm.date + "T12:00:00").toISOString()
+    const ended = durationS > 0 ? new Date(new Date(started).getTime() + durationS * 1000).toISOString() : null
+    const notes = [
+      manualForm.notes,
+      spo2 ? `SpO2: ${spo2}%` : null,
+    ].filter(Boolean).join(" · ") || null
+
+    await supabase.from("live_sessions").insert({
+      player_id: selectedPlayer,
+      started_at: started,
+      ended_at: ended,
+      device_name: "Entrada manual",
+      device_type: "manual" as const,
+      hr_samples: [], speed_samples: [],
+      avg_hr: avgHr, max_hr_session: maxHr, min_hr_session: minHr,
+      avg_speed_kmh: avgSpeed, max_speed_kmh: null,
+      distance_m: distanceM || null,
+      duration_s: durationS || null,
+      calories_est: calories,
+      notes,
+    })
+    // Refresh sessions
+    const { data } = await supabase.from("live_sessions")
+      .select("*").eq("player_id", selectedPlayer)
+      .order("started_at", { ascending: false }).limit(50)
+    if (data) setDbSessions(data as unknown as LiveSession[])
+    setManualForm({ date: new Date().toISOString().split("T")[0], durationH: "", durationM: "", durationS: "", distanceKm: "", avgHr: "", maxHr: "", minHr: "", spo2: "", calories: "", notes: "" })
+    setShowManualForm(false)
+    setManualSaving(false)
+    setShowSavedMsg(true)
+    setTimeout(() => setShowSavedMsg(false), 3000)
+  }
+
   function startSession() {
     setHrSamples([])
     setSpeedSamples([])
@@ -341,6 +394,12 @@ export default function HealthPage() {
             onStart={startSession}
             sessions={playerSessions}
             isPlayer={isPlayer}
+            showManualForm={showManualForm}
+            onToggleManualForm={() => setShowManualForm(v => !v)}
+            manualForm={manualForm}
+            onManualFormChange={(k: string, v: string) => setManualForm(f => ({ ...f, [k]: v }))}
+            onSaveManual={saveManualEntry}
+            manualSaving={manualSaving}
           />
         ) : (
           <LivePanel
@@ -389,6 +448,7 @@ function SetupPanel({
   players, selectedPlayer, onPlayerChange, selectedDevice, onDeviceChange,
   btStatus, btDevice, onConnectBT, onDisconnectBT,
   gpsEnabled, gpsError, onStartGPS, onStopGPS, onStart, sessions, isPlayer,
+  showManualForm, onToggleManualForm, manualForm, onManualFormChange, onSaveManual, manualSaving,
 }: any) {
   const t = useT(healthDict)
   const stepOffset = isPlayer ? 1 : 0
@@ -514,6 +574,81 @@ function SetupPanel({
 
       {/* Recent sessions */}
       <div className="space-y-4">
+        {/* Manual entry form */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+          <button
+            onClick={onToggleManualForm}
+            className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-base">✍️</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">Agregar datos manualmente</span>
+            </div>
+            <span className="text-slate-400 text-lg">{showManualForm ? "−" : "+"}</span>
+          </button>
+          {showManualForm && (
+            <div className="px-5 pb-5 border-t border-slate-100 dark:border-slate-800 space-y-4 pt-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Fecha</label>
+                  <input type="date" value={manualForm.date} onChange={e => onManualFormChange("date", e.target.value)}
+                    className="mt-1 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Distancia (km)</label>
+                  <input type="number" step="0.01" placeholder="0.00" value={manualForm.distanceKm} onChange={e => onManualFormChange("distanceKm", e.target.value)}
+                    className="mt-1 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Duración</label>
+                <div className="grid grid-cols-3 gap-2 mt-1">
+                  {[["durationH","Horas"],["durationM","Minutos"],["durationS","Segundos"]].map(([k,lbl]) => (
+                    <div key={k}>
+                      <input type="number" min="0" placeholder="0" value={manualForm[k]} onChange={e => onManualFormChange(k, e.target.value)}
+                        className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 text-center focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                      <p className="text-[9px] text-slate-400 text-center mt-0.5">{lbl}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {[["avgHr","FC Media (bpm)"],["maxHr","FC Máx (bpm)"],["minHr","FC Mín (bpm)"]].map(([k,lbl]) => (
+                  <div key={k}>
+                    <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">{lbl}</label>
+                    <input type="number" placeholder="—" value={manualForm[k]} onChange={e => onManualFormChange(k, e.target.value)}
+                      className="mt-1 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">SpO2 / Oxígeno (%)</label>
+                  <input type="number" min="50" max="100" step="0.1" placeholder="98.0" value={manualForm.spo2} onChange={e => onManualFormChange("spo2", e.target.value)}
+                    className="mt-1 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Calorías (kcal)</label>
+                  <input type="number" placeholder="—" value={manualForm.calories} onChange={e => onManualFormChange("calories", e.target.value)}
+                    className="mt-1 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Notas (opcional)</label>
+                <input type="text" placeholder="Ej: Carrera matutina, desnivel +150m..." value={manualForm.notes} onChange={e => onManualFormChange("notes", e.target.value)}
+                  className="mt-1 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" />
+              </div>
+              <button
+                onClick={onSaveManual}
+                disabled={manualSaving}
+                className="w-full py-3 bg-[#0B5CFF] text-white rounded-xl text-sm font-bold hover:opacity-90 transition-all disabled:opacity-50"
+              >
+                {manualSaving ? "Guardando..." : "Guardar sesión"}
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
           <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("previousSessions")}</h2>
           {sessions.length === 0 ? (
