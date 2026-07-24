@@ -1,6 +1,7 @@
 "use client"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { useApp } from "@/context/AppContext"
+import { supabase } from "@/lib/supabase"
 import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/ui/PageHeader"
 import Button from "@/components/ui/Button"
@@ -96,6 +97,18 @@ export default function HealthPage() {
   const [gpsEnabled, setGpsEnabled] = useState(false)
   const [gpsError, setGpsError] = useState("")
   const [showSavedMsg, setShowSavedMsg] = useState(false)
+  const [dbSessions, setDbSessions] = useState<LiveSession[]>([])
+
+  // Load sessions directly from Supabase so GPX-uploaded sessions appear immediately
+  useEffect(() => {
+    if (!selectedPlayer) return
+    supabase.from("live_sessions")
+      .select("*")
+      .eq("player_id", selectedPlayer)
+      .order("started_at", { ascending: false })
+      .limit(50)
+      .then(({ data }) => { if (data) setDbSessions(data as unknown as LiveSession[]) })
+  }, [selectedPlayer, showSavedMsg])
 
   const btCharRef = useRef<any>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -293,8 +306,7 @@ export default function HealthPage() {
     startTimeRef.current = 0
   }
 
-  const playerSessions = liveSessions.filter(s => s.player_id === selectedPlayer)
-    .sort((a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime())
+  const playerSessions = dbSessions
 
   return (
     <AppShell>

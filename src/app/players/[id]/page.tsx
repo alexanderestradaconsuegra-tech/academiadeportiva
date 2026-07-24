@@ -1139,6 +1139,11 @@ export default function PlayerProfilePage() {
                           Ver mapa de calor →
                         </Link>
                       )}
+                      {isOwnProfile && (
+                        <Link href="/health" className="mt-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#0B5CFF] hover:underline pt-1">
+                          Ver datos de salud →
+                        </Link>
+                      )}
                     </div>
                   ) : (
                     <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
