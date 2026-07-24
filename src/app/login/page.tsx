@@ -190,6 +190,24 @@ export default function LoginPage() {
                     </a>
                   </div>
                 </form>
+
+                {/* Demo access */}
+                <div className="mt-5 pt-5 border-t border-slate-100 dark:border-slate-800">
+                  <p className="text-center text-xs text-slate-400 mb-3">¿Quieres explorar sin registrarte?</p>
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={async () => {
+                      setError("")
+                      setLoading(true)
+                      const err = await login("demo@metrikas.app", "DEMO2024")
+                      if (err) { setError("No se pudo iniciar el modo demo."); setLoading(false) }
+                    }}
+                    className="w-full h-10 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 text-sm font-semibold hover:border-[#0B5CFF] hover:text-[#0B5CFF] transition-all disabled:opacity-60"
+                  >
+                    {loading ? "Entrando..." : "Probar Demo →"}
+                  </button>
+                </div>
               </>
             ) : (
               <>

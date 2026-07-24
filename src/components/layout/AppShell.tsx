@@ -57,6 +57,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div className={isPlayer ? "flex-1 flex flex-col min-h-screen md:ml-56" : "flex-1 flex flex-col min-h-screen md:ml-64 print:ml-0"}>
         {!isPlayer && <MobileHeader />}
 
+        {/* Demo mode banner */}
+        {currentUser?.academy_id === "a0000002-0000-0000-0000-000000000000" && (
+          <div className="no-print bg-violet-600 px-4 py-2 flex items-center justify-center gap-3">
+            <span className="text-xs font-bold text-white tracking-wide uppercase">MODO DEMO</span>
+            <span className="text-violet-200 text-xs">Estás explorando con datos de ejemplo · los cambios no afectan cuentas reales</span>
+          </div>
+        )}
+
         {/* Trial banner — coach only, while trial is active */}
         {!isPlayer && trialDaysLeft !== null && trialDaysLeft > 0 && (
           <div className="no-print bg-amber-50 dark:bg-amber-500/10 border-b border-amber-200 dark:border-amber-500/20 px-4 py-2 flex items-center justify-between gap-3">
