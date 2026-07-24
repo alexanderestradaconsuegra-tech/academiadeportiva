@@ -195,23 +195,33 @@ const EMPTY_EVAL_FORM = {
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, getPlayerConvocatoria, currentUser, language, teamSettings, trainings, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, updatePayment } = useApp()
+  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, getPlayerConvocatoria, currentUser, language, teamSettings, trainings, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, updatePayment, addPositionSamples, getPlayerPositionSamples } = useApp()
   const isCoach = currentUser?.role === "coach"
   const isOwnProfile = currentUser?.role === "player" && currentUser.player_id === id
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [gpsLoading, setGpsLoading] = useState(false)
-  const [gpsSummary, setGpsSummary] = useState<TrackSummary | null>(null)
+  const [gpsLastSummary, setGpsLastSummary] = useState<TrackSummary | null>(null)
   const [gpsError, setGpsError] = useState<string | null>(null)
-  const [gpsFileName, setGpsFileName] = useState<string | null>(null)
+  const [gpsSavedLabel, setGpsSavedLabel] = useState<string | null>(null)
+
+  const positionSamples = getPlayerPositionSamples(id)
+  // Group samples by session_label to list saved GPS sessions
+  const gpsSessions = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const s of positionSamples) {
+      map.set(s.session_label, (map.get(s.session_label) ?? 0) + 1)
+    }
+    return Array.from(map.entries()).map(([label, count]) => ({ label, count })).reverse()
+  }, [positionSamples])
 
   async function handleGpsFile(ev: React.ChangeEvent<HTMLInputElement>) {
     const file = ev.target.files?.[0]
     if (!file) return
     setGpsLoading(true)
     setGpsError(null)
-    setGpsSummary(null)
-    setGpsFileName(file.name)
+    setGpsLastSummary(null)
+    setGpsSavedLabel(null)
     try {
       const text = await file.text()
       const points = parseTrackFile(file.name, text)
@@ -219,7 +229,26 @@ export default function PlayerProfilePage() {
         setGpsError("El archivo no contiene puntos GPS válidos. Asegúrate de exportar un .gpx o .csv con columnas lat/lon.")
         return
       }
-      setGpsSummary(summarizeTrack(points))
+      const summary = summarizeTrack(points)
+      setGpsLastSummary(summary)
+
+      // Build session label from filename + date
+      const datePart = summary.startTime
+        ? summary.startTime.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "2-digit" })
+        : new Date().toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "2-digit" })
+      const label = `${file.name.replace(/\.[^.]+$/, "")} · ${datePart}`
+
+      // Save raw lat/lng as x/y (coach can view in heatmap after calibration)
+      const MAX_POINTS = 800
+      const step = Math.max(1, Math.floor(points.length / MAX_POINTS))
+      const sampled = points.filter((_, i) => i % step === 0)
+      addPositionSamples(sampled.map(p => ({
+        player_id: id,
+        session_label: label,
+        x: p.lat,
+        y: p.lng,
+      })))
+      setGpsSavedLabel(label)
     } catch {
       setGpsError("Error al leer el archivo. Intenta de nuevo.")
     } finally {
@@ -1014,19 +1043,33 @@ export default function PlayerProfilePage() {
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2 mb-3">
                     <MapPin size={15} className="text-emerald-500" />
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Subir Track GPS</h2>
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Tracks GPS</h2>
                   </div>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mb-4 leading-relaxed">
-                    Exporta tu entrenamiento desde <strong>Garmin Connect</strong>, <strong>Apple Health</strong>, <strong>Strava</strong> o cualquier reloj como archivo <span className="font-semibold">.gpx</span> o <span className="font-semibold">.csv</span> y súbelo aquí.
+
+                  {/* Saved sessions list */}
+                  {gpsSessions.length > 0 && (
+                    <div className="mb-4 space-y-1.5">
+                      {gpsSessions.map(s => (
+                        <div key={s.label} className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl px-3 py-2.5 border border-emerald-100 dark:border-emerald-500/20">
+                          <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
+                          <p className="text-xs font-medium text-emerald-800 dark:text-emerald-300 flex-1 truncate">{s.label}</p>
+                          <span className="text-[10px] text-emerald-500 shrink-0">{s.count} pts</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mb-3 leading-relaxed">
+                    Exporta tu entrenamiento desde <strong>Garmin Connect</strong>, <strong>Apple Health</strong>, <strong>Strava</strong> o cualquier reloj como <span className="font-semibold">.gpx</span> o <span className="font-semibold">.csv</span>.
                   </p>
                   <input ref={fileInputRef} type="file" accept=".gpx,.csv" className="hidden" onChange={handleGpsFile} />
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={gpsLoading}
-                    className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10 rounded-xl py-4 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10 rounded-xl py-3.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Upload size={16} />
-                    {gpsLoading ? "Procesando…" : "Seleccionar archivo .gpx / .csv"}
+                    {gpsLoading ? "Guardando en sistema…" : "Subir archivo .gpx / .csv"}
                   </button>
 
                   {gpsError && (
@@ -1036,22 +1079,18 @@ export default function PlayerProfilePage() {
                     </div>
                   )}
 
-                  {gpsSummary && (
-                    <div className="mt-3 space-y-2">
+                  {gpsSavedLabel && gpsLastSummary && (
+                    <div className="mt-3">
                       <div className="flex items-center gap-1.5 mb-2">
-                        <CheckCircle2 size={14} className="text-emerald-500" />
-                        <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 truncate">
-                          {gpsFileName} — {gpsSummary.points.length.toLocaleString()} puntos
-                        </p>
+                        <CheckCircle2 size={13} className="text-emerald-500" />
+                        <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">¡Guardado en el sistema!</p>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         {[
-                          { label: "Distancia", value: gpsSummary.distanceM >= 1000 ? `${(gpsSummary.distanceM / 1000).toFixed(2)} km` : `${Math.round(gpsSummary.distanceM)} m` },
-                          { label: "Duración", value: gpsSummary.durationS > 0 ? `${Math.floor(gpsSummary.durationS / 60)}:${String(Math.round(gpsSummary.durationS % 60)).padStart(2, "0")} min` : "—" },
-                          { label: "Vel. media", value: gpsSummary.avgSpeedKmh > 0 ? `${gpsSummary.avgSpeedKmh.toFixed(1)} km/h` : "—" },
-                          { label: "Vel. máx.", value: gpsSummary.maxSpeedKmh > 0 ? `${gpsSummary.maxSpeedKmh.toFixed(1)} km/h` : "—" },
-                          { label: "Puntos", value: gpsSummary.points.length.toLocaleString() },
-                          { label: "Inicio", value: gpsSummary.startTime ? gpsSummary.startTime.toLocaleDateString("es-ES", { day: "2-digit", month: "short" }) : "—" },
+                          { label: "Distancia", value: gpsLastSummary.distanceM >= 1000 ? `${(gpsLastSummary.distanceM / 1000).toFixed(2)} km` : `${Math.round(gpsLastSummary.distanceM)} m` },
+                          { label: "Duración", value: gpsLastSummary.durationS > 0 ? `${Math.floor(gpsLastSummary.durationS / 60)}:${String(Math.round(gpsLastSummary.durationS % 60)).padStart(2, "0")} min` : "—" },
+                          { label: "Vel. media", value: gpsLastSummary.avgSpeedKmh > 0 ? `${gpsLastSummary.avgSpeedKmh.toFixed(1)} km/h` : "—" },
+                          { label: "Vel. máx.", value: gpsLastSummary.maxSpeedKmh > 0 ? `${gpsLastSummary.maxSpeedKmh.toFixed(1)} km/h` : "—" },
                         ].map(m => (
                           <div key={m.label} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-2.5 border border-slate-100 dark:border-slate-700">
                             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mb-0.5">{m.label}</p>
