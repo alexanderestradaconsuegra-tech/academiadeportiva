@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
@@ -9,7 +9,8 @@ import Badge from "@/components/ui/Badge"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import NotificationToggle from "@/components/ui/NotificationToggle"
-import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck, CreditCard, Loader2 } from "lucide-react"
+import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck, CreditCard, Loader2, Upload, CheckCircle2, AlertCircle } from "lucide-react"
+import { parseTrackFile, summarizeTrack, type TrackSummary } from "@/lib/gps"
 import { generatePlayerPDF } from "@/lib/generatePlayerPDF"
 import PlayerForm from "@/components/ui/PlayerForm"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
@@ -196,6 +197,36 @@ export default function PlayerProfilePage() {
   const router = useRouter()
   const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, getPlayerConvocatoria, currentUser, language, teamSettings, trainings, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, updatePayment } = useApp()
   const isCoach = currentUser?.role === "coach"
+  const isOwnProfile = currentUser?.role === "player" && currentUser.player_id === id
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [gpsLoading, setGpsLoading] = useState(false)
+  const [gpsSummary, setGpsSummary] = useState<TrackSummary | null>(null)
+  const [gpsError, setGpsError] = useState<string | null>(null)
+  const [gpsFileName, setGpsFileName] = useState<string | null>(null)
+
+  async function handleGpsFile(ev: React.ChangeEvent<HTMLInputElement>) {
+    const file = ev.target.files?.[0]
+    if (!file) return
+    setGpsLoading(true)
+    setGpsError(null)
+    setGpsSummary(null)
+    setGpsFileName(file.name)
+    try {
+      const text = await file.text()
+      const points = parseTrackFile(file.name, text)
+      if (points.length < 2) {
+        setGpsError("El archivo no contiene puntos GPS válidos. Asegúrate de exportar un .gpx o .csv con columnas lat/lon.")
+        return
+      }
+      setGpsSummary(summarizeTrack(points))
+    } catch {
+      setGpsError("Error al leer el archivo. Intenta de nuevo.")
+    } finally {
+      setGpsLoading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }
 
   // Players can only view their own profile
   if (currentUser?.role === "player" && currentUser.player_id && currentUser.player_id !== id) {
@@ -975,6 +1006,61 @@ export default function PlayerProfilePage() {
                   <Link href="/health" className="mt-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#0B5CFF] hover:underline">
                     {t("viewLiveMonitor")}
                   </Link>
+                </div>
+              )}
+
+              {/* GPS upload — visible to the player on their own profile */}
+              {isOwnProfile && (
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2 mb-3">
+                    <MapPin size={15} className="text-emerald-500" />
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Subir Track GPS</h2>
+                  </div>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mb-4 leading-relaxed">
+                    Exporta tu entrenamiento desde <strong>Garmin Connect</strong>, <strong>Apple Health</strong>, <strong>Strava</strong> o cualquier reloj como archivo <span className="font-semibold">.gpx</span> o <span className="font-semibold">.csv</span> y súbelo aquí.
+                  </p>
+                  <input ref={fileInputRef} type="file" accept=".gpx,.csv" className="hidden" onChange={handleGpsFile} />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={gpsLoading}
+                    className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10 rounded-xl py-4 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Upload size={16} />
+                    {gpsLoading ? "Procesando…" : "Seleccionar archivo .gpx / .csv"}
+                  </button>
+
+                  {gpsError && (
+                    <div className="mt-3 flex items-start gap-2 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl p-3">
+                      <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
+                      <p className="text-xs text-red-600 dark:text-red-400">{gpsError}</p>
+                    </div>
+                  )}
+
+                  {gpsSummary && (
+                    <div className="mt-3 space-y-2">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <CheckCircle2 size={14} className="text-emerald-500" />
+                        <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 truncate">
+                          {gpsFileName} — {gpsSummary.points.length.toLocaleString()} puntos
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          { label: "Distancia", value: gpsSummary.distanceM >= 1000 ? `${(gpsSummary.distanceM / 1000).toFixed(2)} km` : `${Math.round(gpsSummary.distanceM)} m` },
+                          { label: "Duración", value: gpsSummary.durationS > 0 ? `${Math.floor(gpsSummary.durationS / 60)}:${String(Math.round(gpsSummary.durationS % 60)).padStart(2, "0")} min` : "—" },
+                          { label: "Vel. media", value: gpsSummary.avgSpeedKmh > 0 ? `${gpsSummary.avgSpeedKmh.toFixed(1)} km/h` : "—" },
+                          { label: "Vel. máx.", value: gpsSummary.maxSpeedKmh > 0 ? `${gpsSummary.maxSpeedKmh.toFixed(1)} km/h` : "—" },
+                          { label: "Puntos", value: gpsSummary.points.length.toLocaleString() },
+                          { label: "Inicio", value: gpsSummary.startTime ? gpsSummary.startTime.toLocaleDateString("es-ES", { day: "2-digit", month: "short" }) : "—" },
+                        ].map(m => (
+                          <div key={m.label} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-2.5 border border-slate-100 dark:border-slate-700">
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mb-0.5">{m.label}</p>
+                            <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{m.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

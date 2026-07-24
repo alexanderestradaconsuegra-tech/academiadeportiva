@@ -97,3 +97,54 @@ export function parseTrackFile(filename: string, text: string): ParsedTrackPoint
   if (filename.toLowerCase().endsWith(".gpx")) return parseGpx(text)
   return parseCsv(text)
 }
+
+// ── Track summary (distance, speed, duration) ──────────────────────────────
+
+export interface TrackSummary {
+  points: ParsedTrackPoint[]
+  distanceM: number
+  durationS: number
+  avgSpeedKmh: number
+  maxSpeedKmh: number
+  startTime?: Date
+}
+
+function haversineM(a: ParsedTrackPoint, b: ParsedTrackPoint): number {
+  const R = 6371000
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s))
+}
+
+export function summarizeTrack(points: ParsedTrackPoint[]): TrackSummary {
+  let distanceM = 0
+  let maxSpeedKmh = 0
+
+  const timestamps = points.map(p => (p.time ? new Date(p.time).getTime() : NaN)).filter(t => !isNaN(t))
+  const hasTime = timestamps.length === points.length
+
+  for (let i = 1; i < points.length; i++) {
+    const d = haversineM(points[i - 1], points[i])
+    distanceM += d
+    if (hasTime) {
+      const dt = (timestamps[i] - timestamps[i - 1]) / 1000
+      if (dt > 0 && dt < 60) {
+        const spd = (d / dt) * 3.6
+        if (spd > maxSpeedKmh && spd < 50) maxSpeedKmh = spd
+      }
+    }
+  }
+
+  const durationS = hasTime ? (timestamps[timestamps.length - 1] - timestamps[0]) / 1000 : 0
+  const avgSpeedKmh = durationS > 0 ? (distanceM / durationS) * 3.6 : 0
+
+  return {
+    points,
+    distanceM,
+    durationS,
+    avgSpeedKmh,
+    maxSpeedKmh,
+    startTime: hasTime ? new Date(timestamps[0]) : undefined,
+  }
+}
