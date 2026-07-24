@@ -820,15 +820,15 @@ function SessionHistoryCard({ session }: { session: LiveSession }) {
           </div>
         </div>
         <div className="text-right">
-          <p className="text-sm font-black text-red-500">{session.avg_hr}</p>
-          <p className="text-[9px] text-slate-400 dark:text-slate-500">{t("avgBpm")}</p>
+          <p className="text-sm font-black text-red-500">{session.avg_hr ?? "—"}</p>
+          <p className="text-[9px] text-slate-400 dark:text-slate-500">{session.avg_hr ? t("avgBpm") : "sin FC"}</p>
         </div>
       </div>
       <div className="grid grid-cols-3 gap-2">
         {[
-          { icon: "⚡", label: t("maxHrShort"), value: `${session.max_hr_session} bpm` },
-          { icon: "🔥", label: t("caloriesShort"), value: `${session.calories_est} kcal` },
-          { icon: "📍", label: t("distanceShort"), value: `${(session.distance_m / 1000).toFixed(1)} km` },
+          { icon: "⚡", label: t("maxHrShort"), value: session.max_hr_session ? `${session.max_hr_session} bpm` : "—" },
+          { icon: "🔥", label: t("caloriesShort"), value: session.calories_est ? `${session.calories_est} kcal` : "—" },
+          { icon: "📍", label: t("distanceShort"), value: session.distance_m ? `${(session.distance_m / 1000).toFixed(1)} km` : "—" },
         ].map(s => (
           <div key={s.label} className="bg-white dark:bg-slate-900 rounded-lg p-2 text-center border border-slate-100 dark:border-slate-800">
             <p className="text-[9px] text-slate-400 dark:text-slate-500">{s.icon} {s.label}</p>

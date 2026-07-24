@@ -61,10 +61,17 @@ export interface ParsedTrackPoint {
   cadence?: number // pasos/min o pedaleos/min
 }
 
-function getTagText(el: Element, ...tags: string[]): string | undefined {
-  for (const tag of tags) {
-    const found = el.getElementsByTagName(tag)[0]
-    if (found?.textContent) return found.textContent.trim()
+// Search by local name (ignores namespace prefix) across all descendants.
+// This handles Garmin (gpxtpx:hr), Polar (ns3:hr), generic (hr), etc.
+function findByLocalName(el: Element, ...localNames: string[]): string | undefined {
+  const lowerNames = localNames.map(n => n.toLowerCase())
+  const all = el.getElementsByTagName("*")
+  for (let i = 0; i < all.length; i++) {
+    const child = all[i]
+    const local = (child.localName ?? child.tagName.split(":").pop() ?? "").toLowerCase()
+    if (lowerNames.includes(local) && child.textContent?.trim()) {
+      return child.textContent.trim()
+    }
   }
   return undefined
 }
@@ -79,10 +86,10 @@ export function parseGpx(text: string): ParsedTrackPoint[] {
     const lng = parseFloat(el.getAttribute("lon") || "")
     if (Number.isNaN(lat) || Number.isNaN(lng)) continue
     const timeEl = el.getElementsByTagName("time")[0]
-    // Heart rate: Garmin uses gpxtpx:hr, others use hr directly
-    const hrRaw = getTagText(el, "gpxtpx:hr", "ns3:hr", "hr")
-    const spo2Raw = getTagText(el, "gpxtpx:spo2", "spo2", "SpO2")
-    const cadRaw = getTagText(el, "gpxtpx:cad", "ns3:cad", "cad", "cadence")
+    // Search by local name — works with any namespace prefix (Garmin, Polar, generic, etc.)
+    const hrRaw = findByLocalName(el, "hr", "heartrate", "heartratebpm")
+    const spo2Raw = findByLocalName(el, "spo2", "spo2pct", "oxygensaturation", "spO2")
+    const cadRaw = findByLocalName(el, "cad", "cadence", "runningcadence")
     points.push({
       lat,
       lng,
