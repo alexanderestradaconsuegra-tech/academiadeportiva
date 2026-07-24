@@ -56,6 +56,17 @@ export interface ParsedTrackPoint {
   lat: number
   lng: number
   time?: string
+  hr?: number      // pulsaciones bpm
+  spo2?: number    // oxígeno en sangre %
+  cadence?: number // pasos/min o pedaleos/min
+}
+
+function getTagText(el: Element, ...tags: string[]): string | undefined {
+  for (const tag of tags) {
+    const found = el.getElementsByTagName(tag)[0]
+    if (found?.textContent) return found.textContent.trim()
+  }
+  return undefined
 }
 
 export function parseGpx(text: string): ParsedTrackPoint[] {
@@ -68,7 +79,18 @@ export function parseGpx(text: string): ParsedTrackPoint[] {
     const lng = parseFloat(el.getAttribute("lon") || "")
     if (Number.isNaN(lat) || Number.isNaN(lng)) continue
     const timeEl = el.getElementsByTagName("time")[0]
-    points.push({ lat, lng, time: timeEl?.textContent || undefined })
+    // Heart rate: Garmin uses gpxtpx:hr, others use hr directly
+    const hrRaw = getTagText(el, "gpxtpx:hr", "ns3:hr", "hr")
+    const spo2Raw = getTagText(el, "gpxtpx:spo2", "spo2", "SpO2")
+    const cadRaw = getTagText(el, "gpxtpx:cad", "ns3:cad", "cad", "cadence")
+    points.push({
+      lat,
+      lng,
+      time: timeEl?.textContent?.trim() || undefined,
+      hr: hrRaw ? parseFloat(hrRaw) : undefined,
+      spo2: spo2Raw ? parseFloat(spo2Raw) : undefined,
+      cadence: cadRaw ? parseFloat(cadRaw) : undefined,
+    })
   }
   return points
 }
@@ -80,6 +102,8 @@ export function parseCsv(text: string): ParsedTrackPoint[] {
   const latIdx = header.findIndex(h => h === "lat" || h === "latitude")
   const lngIdx = header.findIndex(h => h === "lng" || h === "lon" || h === "longitude")
   const timeIdx = header.findIndex(h => h === "time" || h === "timestamp")
+  const hrIdx = header.findIndex(h => h === "hr" || h === "heart_rate" || h === "heartrate" || h === "bpm")
+  const spo2Idx = header.findIndex(h => h === "spo2" || h === "spo2%" || h === "oxygen")
   if (latIdx === -1 || lngIdx === -1) return []
   const points: ParsedTrackPoint[] = []
   for (let i = 1; i < lines.length; i++) {
@@ -88,7 +112,15 @@ export function parseCsv(text: string): ParsedTrackPoint[] {
     const lat = parseFloat(cols[latIdx])
     const lng = parseFloat(cols[lngIdx])
     if (Number.isNaN(lat) || Number.isNaN(lng)) continue
-    points.push({ lat, lng, time: timeIdx >= 0 ? cols[timeIdx]?.trim() : undefined })
+    const hrVal = hrIdx >= 0 ? parseFloat(cols[hrIdx]) : NaN
+    const spo2Val = spo2Idx >= 0 ? parseFloat(cols[spo2Idx]) : NaN
+    points.push({
+      lat,
+      lng,
+      time: timeIdx >= 0 ? cols[timeIdx]?.trim() : undefined,
+      hr: !isNaN(hrVal) ? hrVal : undefined,
+      spo2: !isNaN(spo2Val) ? spo2Val : undefined,
+    })
   }
   return points
 }
@@ -96,6 +128,28 @@ export function parseCsv(text: string): ParsedTrackPoint[] {
 export function parseTrackFile(filename: string, text: string): ParsedTrackPoint[] {
   if (filename.toLowerCase().endsWith(".gpx")) return parseGpx(text)
   return parseCsv(text)
+}
+
+// Extract HR biometrics summary from parsed track points
+export interface BiometricSummary {
+  avgHr: number
+  maxHr: number
+  minHr: number
+  avgSpo2: number | null
+  hasHr: boolean
+  hasSpo2: boolean
+}
+
+export function extractBiometrics(points: ParsedTrackPoint[]): BiometricSummary {
+  const hrPoints = points.filter(p => p.hr && p.hr > 30 && p.hr < 250)
+  const spo2Points = points.filter(p => p.spo2 && p.spo2 > 50 && p.spo2 <= 100)
+  const hasHr = hrPoints.length > 0
+  const hasSpo2 = spo2Points.length > 0
+  const avgHr = hasHr ? Math.round(hrPoints.reduce((s, p) => s + p.hr!, 0) / hrPoints.length) : 0
+  const maxHr = hasHr ? Math.max(...hrPoints.map(p => p.hr!)) : 0
+  const minHr = hasHr ? Math.min(...hrPoints.map(p => p.hr!)) : 0
+  const avgSpo2 = hasSpo2 ? Math.round(spo2Points.reduce((s, p) => s + p.spo2!, 0) / spo2Points.length) : null
+  return { avgHr, maxHr, minHr, avgSpo2, hasHr, hasSpo2 }
 }
 
 // ── Track summary (distance, speed, duration) ──────────────────────────────

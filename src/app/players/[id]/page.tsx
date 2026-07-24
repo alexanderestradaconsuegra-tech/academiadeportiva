@@ -10,7 +10,7 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import NotificationToggle from "@/components/ui/NotificationToggle"
 import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck, CreditCard, Loader2, Upload, CheckCircle2, AlertCircle } from "lucide-react"
-import { parseTrackFile, summarizeTrack, buildTransform, type TrackSummary } from "@/lib/gps"
+import { parseTrackFile, summarizeTrack, extractBiometrics, buildTransform, type TrackSummary, type BiometricSummary } from "@/lib/gps"
 import { generatePlayerPDF } from "@/lib/generatePlayerPDF"
 import PlayerForm from "@/components/ui/PlayerForm"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
@@ -195,13 +195,14 @@ const EMPTY_EVAL_FORM = {
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, getPlayerConvocatoria, currentUser, language, teamSettings, trainings, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, updatePayment, addPositionSamples, getPlayerPositionSamples } = useApp()
+  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, getPlayerConvocatoria, currentUser, language, teamSettings, trainings, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, updatePayment, addPositionSamples, getPlayerPositionSamples, addLiveSession } = useApp()
   const isCoach = currentUser?.role === "coach"
   const isOwnProfile = currentUser?.role === "player" && currentUser.player_id === id
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [gpsLoading, setGpsLoading] = useState(false)
   const [gpsLastSummary, setGpsLastSummary] = useState<TrackSummary | null>(null)
+  const [gpsBiometrics, setGpsBiometrics] = useState<BiometricSummary | null>(null)
   const [gpsError, setGpsError] = useState<string | null>(null)
   const [gpsSavedLabel, setGpsSavedLabel] = useState<string | null>(null)
 
@@ -230,6 +231,7 @@ export default function PlayerProfilePage() {
     setGpsLoading(true)
     setGpsError(null)
     setGpsLastSummary(null)
+    setGpsBiometrics(null)
     setGpsSavedLabel(null)
     try {
       const text = await file.text()
@@ -241,10 +243,8 @@ export default function PlayerProfilePage() {
       const summary = summarizeTrack(points)
       setGpsLastSummary(summary)
 
-      if (!gpsTransform) {
-        setGpsError("El entrenador aún no ha calibrado la cancha con GPS. Pídele que lo haga desde la sección Heatmap.")
-        return
-      }
+      const bio = extractBiometrics(points)
+      setGpsBiometrics(bio)
 
       // Build session label from filename + date
       const datePart = summary.startTime
@@ -252,19 +252,42 @@ export default function PlayerProfilePage() {
         : new Date().toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "2-digit" })
       const label = `${file.name.replace(/\.[^.]+$/, "")} · ${datePart}`
 
-      // Apply calibration transform (lat/lng → pitch meters) same as heatmap page
-      const MAX_POINTS = 1500
-      const step = Math.max(1, Math.ceil(points.length / MAX_POINTS))
-      const samples: { player_id: string; session_label: string; x: number; y: number }[] = []
-      for (let i = 0; i < points.length; i += step) {
-        const p = gpsTransform.toPitch(points[i])
-        if (p) samples.push({ player_id: id, session_label: label, x: p.x, y: p.y })
+      // Save biometric session (HR, SpO2) if present — always, no calibration needed
+      if (bio.hasHr) {
+        addLiveSession({
+          player_id: id,
+          started_at: summary.startTime?.toISOString() ?? new Date().toISOString(),
+          ended_at: summary.startTime && summary.durationS > 0
+            ? new Date(summary.startTime.getTime() + summary.durationS * 1000).toISOString()
+            : undefined,
+          device_name: file.name,
+          device_type: "manual",
+          hr_samples: [],
+          speed_samples: [],
+          avg_hr: bio.avgHr,
+          max_hr_session: bio.maxHr,
+          min_hr_session: bio.minHr,
+          avg_speed_kmh: summary.avgSpeedKmh,
+          max_speed_kmh: summary.maxSpeedKmh,
+          distance_m: summary.distanceM,
+          duration_s: summary.durationS,
+          calories_est: Math.round(bio.avgHr > 0 ? (bio.avgHr * summary.durationS * 0.014) : 0),
+          notes: bio.avgSpo2 ? `SpO2 promedio: ${bio.avgSpo2}%` : "",
+        })
       }
-      if (samples.length === 0) {
-        setGpsError("Ningún punto del track quedó dentro de la cancha. Verifica que el archivo corresponde a un entrenamiento en esta cancha.")
-        return
+
+      // Save GPS heatmap only if calibrated
+      if (gpsTransform) {
+        const MAX_POINTS = 1500
+        const step = Math.max(1, Math.ceil(points.length / MAX_POINTS))
+        const samples: { player_id: string; session_label: string; x: number; y: number }[] = []
+        for (let i = 0; i < points.length; i += step) {
+          const p = gpsTransform.toPitch(points[i])
+          if (p) samples.push({ player_id: id, session_label: label, x: p.x, y: p.y })
+        }
+        if (samples.length > 0) addPositionSamples(samples)
       }
-      addPositionSamples(samples)
+
       setGpsSavedLabel(label)
     } catch {
       setGpsError("Error al leer el archivo. Intenta de nuevo.")
@@ -1125,6 +1148,13 @@ export default function PlayerProfilePage() {
                               { label: "Duración", value: gpsLastSummary.durationS > 0 ? `${Math.floor(gpsLastSummary.durationS / 60)}:${String(Math.round(gpsLastSummary.durationS % 60)).padStart(2, "0")} min` : "—" },
                               { label: "Vel. media", value: gpsLastSummary.avgSpeedKmh > 0 ? `${gpsLastSummary.avgSpeedKmh.toFixed(1)} km/h` : "—" },
                               { label: "Vel. máx.", value: gpsLastSummary.maxSpeedKmh > 0 ? `${gpsLastSummary.maxSpeedKmh.toFixed(1)} km/h` : "—" },
+                              ...(gpsBiometrics?.hasHr ? [
+                                { label: "FC media", value: `${gpsBiometrics.avgHr} bpm` },
+                                { label: "FC máx.", value: `${gpsBiometrics.maxHr} bpm` },
+                              ] : []),
+                              ...(gpsBiometrics?.hasSpo2 ? [
+                                { label: "SpO2 media", value: `${gpsBiometrics.avgSpo2}%` },
+                              ] : []),
                             ].map(m => (
                               <div key={m.label} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-2.5 border border-slate-100 dark:border-slate-700">
                                 <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mb-0.5">{m.label}</p>
@@ -1132,6 +1162,11 @@ export default function PlayerProfilePage() {
                               </div>
                             ))}
                           </div>
+                          {!gpsTransform && (
+                            <p className="text-[10px] text-amber-500 dark:text-amber-400 mt-2">
+                              ⚠ Heatmap no disponible — el entrenador debe calibrar la cancha primero.
+                            </p>
+                          )}
                         </div>
                       )}
                     </>
