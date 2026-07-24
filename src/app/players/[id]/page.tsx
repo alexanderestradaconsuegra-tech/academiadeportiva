@@ -1038,17 +1038,22 @@ export default function PlayerProfilePage() {
                 </div>
               )}
 
-              {/* GPS upload — visible to the player on their own profile */}
-              {isOwnProfile && (
+              {/* GPS tracks — coach sees all sessions, player can also upload */}
+              {(isOwnProfile || isCoach) && (
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2 mb-3">
                     <MapPin size={15} className="text-emerald-500" />
                     <h2 className="text-sm font-bold text-slate-900 dark:text-white">Tracks GPS</h2>
+                    {gpsSessions.length > 0 && (
+                      <span className="ml-auto text-xs bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold px-2 py-0.5 rounded-lg">
+                        {gpsSessions.length} sesión{gpsSessions.length !== 1 ? "es" : ""}
+                      </span>
+                    )}
                   </div>
 
                   {/* Saved sessions list */}
-                  {gpsSessions.length > 0 && (
-                    <div className="mb-4 space-y-1.5">
+                  {gpsSessions.length > 0 ? (
+                    <div className={cn("space-y-1.5", isOwnProfile && "mb-4")}>
                       {gpsSessions.map(s => (
                         <div key={s.label} className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl px-3 py-2.5 border border-emerald-100 dark:border-emerald-500/20">
                           <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
@@ -1056,49 +1061,63 @@ export default function PlayerProfilePage() {
                           <span className="text-[10px] text-emerald-500 shrink-0">{s.count} pts</span>
                         </div>
                       ))}
+                      {isCoach && (
+                        <Link href="/heatmap" className="mt-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#0B5CFF] hover:underline pt-1">
+                          Ver mapa de calor →
+                        </Link>
+                      )}
                     </div>
+                  ) : (
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
+                      {isCoach ? "El jugador aún no ha subido ningún track GPS." : "Aún no has subido tracks. Exporta desde tu reloj o Strava."}
+                    </p>
                   )}
 
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mb-3 leading-relaxed">
-                    Exporta tu entrenamiento desde <strong>Garmin Connect</strong>, <strong>Apple Health</strong>, <strong>Strava</strong> o cualquier reloj como <span className="font-semibold">.gpx</span> o <span className="font-semibold">.csv</span>.
-                  </p>
-                  <input ref={fileInputRef} type="file" accept=".gpx,.csv" className="hidden" onChange={handleGpsFile} />
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={gpsLoading}
-                    className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10 rounded-xl py-3.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Upload size={16} />
-                    {gpsLoading ? "Guardando en sistema…" : "Subir archivo .gpx / .csv"}
-                  </button>
+                  {/* Upload button — only for player on own profile */}
+                  {isOwnProfile && (
+                    <>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mb-3 leading-relaxed">
+                        Exporta tu entrenamiento desde <strong>Garmin Connect</strong>, <strong>Apple Health</strong>, <strong>Strava</strong> o cualquier reloj como <span className="font-semibold">.gpx</span> o <span className="font-semibold">.csv</span>.
+                      </p>
+                      <input ref={fileInputRef} type="file" accept=".gpx,.csv" className="hidden" onChange={handleGpsFile} />
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={gpsLoading}
+                        className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10 rounded-xl py-3.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Upload size={16} />
+                        {gpsLoading ? "Guardando en sistema…" : "Subir archivo .gpx / .csv"}
+                      </button>
 
-                  {gpsError && (
-                    <div className="mt-3 flex items-start gap-2 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl p-3">
-                      <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
-                      <p className="text-xs text-red-600 dark:text-red-400">{gpsError}</p>
-                    </div>
-                  )}
+                      {gpsError && (
+                        <div className="mt-3 flex items-start gap-2 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl p-3">
+                          <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
+                          <p className="text-xs text-red-600 dark:text-red-400">{gpsError}</p>
+                        </div>
+                      )}
 
-                  {gpsSavedLabel && gpsLastSummary && (
-                    <div className="mt-3">
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <CheckCircle2 size={13} className="text-emerald-500" />
-                        <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">¡Guardado en el sistema!</p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        {[
-                          { label: "Distancia", value: gpsLastSummary.distanceM >= 1000 ? `${(gpsLastSummary.distanceM / 1000).toFixed(2)} km` : `${Math.round(gpsLastSummary.distanceM)} m` },
-                          { label: "Duración", value: gpsLastSummary.durationS > 0 ? `${Math.floor(gpsLastSummary.durationS / 60)}:${String(Math.round(gpsLastSummary.durationS % 60)).padStart(2, "0")} min` : "—" },
-                          { label: "Vel. media", value: gpsLastSummary.avgSpeedKmh > 0 ? `${gpsLastSummary.avgSpeedKmh.toFixed(1)} km/h` : "—" },
-                          { label: "Vel. máx.", value: gpsLastSummary.maxSpeedKmh > 0 ? `${gpsLastSummary.maxSpeedKmh.toFixed(1)} km/h` : "—" },
-                        ].map(m => (
-                          <div key={m.label} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-2.5 border border-slate-100 dark:border-slate-700">
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mb-0.5">{m.label}</p>
-                            <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{m.value}</p>
+                      {gpsSavedLabel && gpsLastSummary && (
+                        <div className="mt-3">
+                          <div className="flex items-center gap-1.5 mb-2">
+                            <CheckCircle2 size={13} className="text-emerald-500" />
+                            <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">¡Guardado en el sistema!</p>
                           </div>
-                        ))}
-                      </div>
-                    </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {[
+                              { label: "Distancia", value: gpsLastSummary.distanceM >= 1000 ? `${(gpsLastSummary.distanceM / 1000).toFixed(2)} km` : `${Math.round(gpsLastSummary.distanceM)} m` },
+                              { label: "Duración", value: gpsLastSummary.durationS > 0 ? `${Math.floor(gpsLastSummary.durationS / 60)}:${String(Math.round(gpsLastSummary.durationS % 60)).padStart(2, "0")} min` : "—" },
+                              { label: "Vel. media", value: gpsLastSummary.avgSpeedKmh > 0 ? `${gpsLastSummary.avgSpeedKmh.toFixed(1)} km/h` : "—" },
+                              { label: "Vel. máx.", value: gpsLastSummary.maxSpeedKmh > 0 ? `${gpsLastSummary.maxSpeedKmh.toFixed(1)} km/h` : "—" },
+                            ].map(m => (
+                              <div key={m.label} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-2.5 border border-slate-100 dark:border-slate-700">
+                                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mb-0.5">{m.label}</p>
+                                <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{m.value}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
