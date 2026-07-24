@@ -1,5 +1,5 @@
 "use client"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
@@ -11,6 +11,7 @@ import Input from "@/components/ui/Input"
 import NotificationToggle from "@/components/ui/NotificationToggle"
 import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck, CreditCard, Loader2, Upload, CheckCircle2, AlertCircle } from "lucide-react"
 import { parseTrackFile, summarizeTrack, extractBiometrics, buildTransform, type TrackSummary, type BiometricSummary } from "@/lib/gps"
+import { supabase } from "@/lib/supabase"
 import { generatePlayerPDF } from "@/lib/generatePlayerPDF"
 import PlayerForm from "@/components/ui/PlayerForm"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
@@ -205,6 +206,19 @@ export default function PlayerProfilePage() {
   const [gpsBiometrics, setGpsBiometrics] = useState<BiometricSummary | null>(null)
   const [gpsError, setGpsError] = useState<string | null>(null)
   const [gpsSavedLabel, setGpsSavedLabel] = useState<string | null>(null)
+  const [savedSessions, setSavedSessions] = useState<{ id: string; device_name: string | null; started_at: string; distance_m: number | null; avg_hr: number | null }[]>([])
+
+  // Load player's saved GPS sessions from Supabase on mount
+  useEffect(() => {
+    if (!id) return
+    supabase.from("live_sessions")
+      .select("id, device_name, started_at, distance_m, avg_hr")
+      .eq("player_id", id)
+      .eq("device_type", "manual")
+      .order("started_at", { ascending: false })
+      .limit(20)
+      .then(({ data }) => { if (data) setSavedSessions(data) })
+  }, [id])
 
   const positionSamples = getPlayerPositionSamples(id)
   // Group samples by session_label to list saved GPS sessions
@@ -252,28 +266,32 @@ export default function PlayerProfilePage() {
         : new Date().toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "2-digit" })
       const label = `${file.name.replace(/\.[^.]+$/, "")} · ${datePart}`
 
-      // Save biometric session (HR, SpO2) if present — always, no calibration needed
-      if (bio.hasHr) {
-        addLiveSession({
+      // Save biometric session directly to Supabase with error handling
+      if (bio.hasHr || summary.distanceM > 0) {
+        const { error: lsErr } = await supabase.from("live_sessions").insert({
           player_id: id,
           started_at: summary.startTime?.toISOString() ?? new Date().toISOString(),
           ended_at: summary.startTime && summary.durationS > 0
             ? new Date(summary.startTime.getTime() + summary.durationS * 1000).toISOString()
-            : undefined,
+            : null,
           device_name: file.name,
-          device_type: "manual",
+          device_type: "manual" as const,
           hr_samples: [],
           speed_samples: [],
-          avg_hr: bio.avgHr,
-          max_hr_session: bio.maxHr,
-          min_hr_session: bio.minHr,
-          avg_speed_kmh: summary.avgSpeedKmh,
-          max_speed_kmh: summary.maxSpeedKmh,
-          distance_m: summary.distanceM,
-          duration_s: summary.durationS,
-          calories_est: Math.round(bio.avgHr > 0 ? (bio.avgHr * summary.durationS * 0.014) : 0),
-          notes: bio.avgSpo2 ? `SpO2 promedio: ${bio.avgSpo2}%` : "",
+          avg_hr: bio.hasHr ? bio.avgHr : null,
+          max_hr_session: bio.hasHr ? bio.maxHr : null,
+          min_hr_session: bio.hasHr ? bio.minHr : null,
+          avg_speed_kmh: summary.avgSpeedKmh || null,
+          max_speed_kmh: summary.maxSpeedKmh || null,
+          distance_m: summary.distanceM || null,
+          duration_s: summary.durationS || null,
+          calories_est: bio.avgHr > 0 ? Math.round(bio.avgHr * summary.durationS * 0.014) : null,
+          notes: bio.avgSpo2 ? `SpO2 promedio: ${bio.avgSpo2}%` : null,
         })
+        if (lsErr) {
+          setGpsError(`Error al guardar sesión: ${lsErr.message}`)
+          return
+        }
       }
 
       // Save GPS heatmap only if calibrated
@@ -285,10 +303,23 @@ export default function PlayerProfilePage() {
           const p = gpsTransform.toPitch(points[i])
           if (p) samples.push({ player_id: id, session_label: label, x: p.x, y: p.y })
         }
-        if (samples.length > 0) addPositionSamples(samples)
+        if (samples.length > 0) {
+          const { error: psErr } = await supabase.from("position_samples").insert(samples)
+          if (psErr) {
+            setGpsError(`Error al guardar mapa de posiciones: ${psErr.message}`)
+          }
+        }
       }
 
       setGpsSavedLabel(label)
+      // Refresh local sessions list
+      supabase.from("live_sessions")
+        .select("id, device_name, started_at, distance_m, avg_hr")
+        .eq("player_id", id)
+        .eq("device_type", "manual")
+        .order("started_at", { ascending: false })
+        .limit(20)
+        .then(({ data }) => { if (data) setSavedSessions(data) })
     } catch {
       setGpsError("Error al leer el archivo. Intenta de nuevo.")
     } finally {
@@ -1084,21 +1115,23 @@ export default function PlayerProfilePage() {
                   <div className="flex items-center gap-2 mb-3">
                     <MapPin size={15} className="text-emerald-500" />
                     <h2 className="text-sm font-bold text-slate-900 dark:text-white">Tracks GPS</h2>
-                    {gpsSessions.length > 0 && (
+                    {savedSessions.length > 0 && (
                       <span className="ml-auto text-xs bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold px-2 py-0.5 rounded-lg">
-                        {gpsSessions.length} sesión{gpsSessions.length !== 1 ? "es" : ""}
+                        {savedSessions.length} sesión{savedSessions.length !== 1 ? "es" : ""}
                       </span>
                     )}
                   </div>
 
                   {/* Saved sessions list */}
-                  {gpsSessions.length > 0 ? (
+                  {savedSessions.length > 0 ? (
                     <div className={cn("space-y-1.5", isOwnProfile && "mb-4")}>
-                      {gpsSessions.map(s => (
-                        <div key={s.label} className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl px-3 py-2.5 border border-emerald-100 dark:border-emerald-500/20">
+                      {savedSessions.map(s => (
+                        <div key={s.id} className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl px-3 py-2.5 border border-emerald-100 dark:border-emerald-500/20">
                           <CheckCircle2 size={13} className="text-emerald-500 shrink-0" />
-                          <p className="text-xs font-medium text-emerald-800 dark:text-emerald-300 flex-1 truncate">{s.label}</p>
-                          <span className="text-[10px] text-emerald-500 shrink-0">{s.count} pts</span>
+                          <p className="text-xs font-medium text-emerald-800 dark:text-emerald-300 flex-1 truncate">{s.device_name ?? "Track"}</p>
+                          <span className="text-[10px] text-emerald-500 shrink-0">
+                            {s.distance_m ? `${(s.distance_m / 1000).toFixed(1)} km` : new Date(s.started_at).toLocaleDateString("es-ES")}
+                          </span>
                         </div>
                       ))}
                       {isCoach && (
