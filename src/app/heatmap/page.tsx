@@ -225,7 +225,7 @@ export default function HeatmapPage() {
     setImporting(true)
     try {
       const text = await file.text()
-      const points = parseTrackFile(file.name, text)
+      const { points } = parseTrackFile(file.name, text)
       if (points.length === 0) {
         setImportError(t("noGpsPointsFound"))
         setImporting(false)

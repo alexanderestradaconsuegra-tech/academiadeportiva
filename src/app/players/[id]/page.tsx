@@ -249,12 +249,12 @@ export default function PlayerProfilePage() {
     setGpsSavedLabel(null)
     try {
       const text = await file.text()
-      const points = parseTrackFile(file.name, text)
+      const { points, meta } = parseTrackFile(file.name, text)
       if (points.length < 2) {
         setGpsError("El archivo no contiene puntos GPS válidos. Asegúrate de exportar un .gpx o .csv con columnas lat/lon.")
         return
       }
-      const summary = summarizeTrack(points)
+      const summary = summarizeTrack(points, meta)
       setGpsLastSummary(summary)
 
       const bio = extractBiometrics(points)
@@ -286,7 +286,10 @@ export default function PlayerProfilePage() {
           distance_m: summary.distanceM || null,
           duration_s: summary.durationS || null,
           calories_est: bio.avgHr > 0 ? Math.round(bio.avgHr * summary.durationS * 0.014) : null,
-          notes: bio.avgSpo2 ? `SpO2 promedio: ${bio.avgSpo2}%` : null,
+          notes: [
+            bio.avgSpo2 ? `SpO2: ${bio.avgSpo2}%` : null,
+            summary.elevationGainM ? `Desnivel+: ${Math.round(summary.elevationGainM)}m` : null,
+          ].filter(Boolean).join(" · ") || null,
         })
         if (lsErr) {
           setGpsError(`Error al guardar sesión: ${lsErr.message}`)

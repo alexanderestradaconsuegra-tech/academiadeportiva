@@ -824,6 +824,9 @@ function SessionHistoryCard({ session }: { session: LiveSession }) {
           <p className="text-[9px] text-slate-400 dark:text-slate-500">{session.avg_hr ? t("avgBpm") : "sin FC"}</p>
         </div>
       </div>
+      {session.notes && (
+        <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-2">{session.notes}</p>
+      )}
       <div className="grid grid-cols-3 gap-2">
         {[
           { icon: "⚡", label: t("maxHrShort"), value: session.max_hr_session ? `${session.max_hr_session} bpm` : "—" },

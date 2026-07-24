@@ -56,6 +56,7 @@ export interface ParsedTrackPoint {
   lat: number
   lng: number
   time?: string
+  ele?: number     // elevación en metros
   hr?: number      // pulsaciones bpm
   spo2?: number    // oxígeno en sangre %
   cadence?: number // pasos/min o pedaleos/min
@@ -76,9 +77,31 @@ function findByLocalName(el: Element, ...localNames: string[]): string | undefin
   return undefined
 }
 
-export function parseGpx(text: string): ParsedTrackPoint[] {
+export interface GpxMeta {
+  totalDistanceM?: number  // from <totalDistance> in track extensions (Apple Health, etc.)
+  totalTimeS?: number      // from <totalTime>
+  elevationGainM?: number  // from <cumulativeClimb>
+  elevationLossM?: number  // from <cumulativeDecrease>
+}
+
+export function parseGpx(text: string): { points: ParsedTrackPoint[]; meta: GpxMeta } {
   const doc = new DOMParser().parseFromString(text, "application/xml")
   const points: ParsedTrackPoint[] = []
+
+  // Extract track-level metadata (Apple Health, Strava, etc.)
+  const meta: GpxMeta = {}
+  const trkExtEl = doc.getElementsByTagName("trk")[0]?.getElementsByTagName("extensions")[0]
+  if (trkExtEl) {
+    const totalDist = findByLocalName(trkExtEl, "totaldistance", "distance")
+    const totalTime = findByLocalName(trkExtEl, "totaltime", "movingtime")
+    const climb = findByLocalName(trkExtEl, "cumulativeclimb", "elevationgain", "totalascent")
+    const decrease = findByLocalName(trkExtEl, "cumulativedecrease", "elevationloss", "totaldescent")
+    if (totalDist) meta.totalDistanceM = parseFloat(totalDist)
+    if (totalTime) meta.totalTimeS = parseFloat(totalTime)
+    if (climb) meta.elevationGainM = parseFloat(climb)
+    if (decrease) meta.elevationLossM = parseFloat(decrease)
+  }
+
   const trkpts = doc.getElementsByTagName("trkpt")
   for (let i = 0; i < trkpts.length; i++) {
     const el = trkpts[i]
@@ -86,20 +109,22 @@ export function parseGpx(text: string): ParsedTrackPoint[] {
     const lng = parseFloat(el.getAttribute("lon") || "")
     if (Number.isNaN(lat) || Number.isNaN(lng)) continue
     const timeEl = el.getElementsByTagName("time")[0]
+    const eleEl = el.getElementsByTagName("ele")[0]
     // Search by local name — works with any namespace prefix (Garmin, Polar, generic, etc.)
     const hrRaw = findByLocalName(el, "hr", "heartrate", "heartratebpm")
-    const spo2Raw = findByLocalName(el, "spo2", "spo2pct", "oxygensaturation", "spO2")
+    const spo2Raw = findByLocalName(el, "spo2", "spo2pct", "oxygensaturation", "spo2")
     const cadRaw = findByLocalName(el, "cad", "cadence", "runningcadence")
     points.push({
       lat,
       lng,
       time: timeEl?.textContent?.trim() || undefined,
+      ele: eleEl?.textContent ? parseFloat(eleEl.textContent) : undefined,
       hr: hrRaw ? parseFloat(hrRaw) : undefined,
       spo2: spo2Raw ? parseFloat(spo2Raw) : undefined,
       cadence: cadRaw ? parseFloat(cadRaw) : undefined,
     })
   }
-  return points
+  return { points, meta }
 }
 
 export function parseCsv(text: string): ParsedTrackPoint[] {
@@ -132,9 +157,9 @@ export function parseCsv(text: string): ParsedTrackPoint[] {
   return points
 }
 
-export function parseTrackFile(filename: string, text: string): ParsedTrackPoint[] {
+export function parseTrackFile(filename: string, text: string): { points: ParsedTrackPoint[]; meta: GpxMeta } {
   if (filename.toLowerCase().endsWith(".gpx")) return parseGpx(text)
-  return parseCsv(text)
+  return { points: parseCsv(text), meta: {} }
 }
 
 // Extract HR biometrics summary from parsed track points
@@ -167,7 +192,10 @@ export interface TrackSummary {
   durationS: number
   avgSpeedKmh: number
   maxSpeedKmh: number
+  elevationGainM?: number
+  elevationLossM?: number
   startTime?: Date
+  meta: GpxMeta
 }
 
 function haversineM(a: ParsedTrackPoint, b: ParsedTrackPoint): number {
@@ -178,9 +206,11 @@ function haversineM(a: ParsedTrackPoint, b: ParsedTrackPoint): number {
   return R * 2 * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s))
 }
 
-export function summarizeTrack(points: ParsedTrackPoint[]): TrackSummary {
+export function summarizeTrack(points: ParsedTrackPoint[], meta: GpxMeta = {}): TrackSummary {
   let distanceM = 0
   let maxSpeedKmh = 0
+  let elevationGainM = 0
+  let elevationLossM = 0
 
   const timestamps = points.map(p => (p.time ? new Date(p.time).getTime() : NaN)).filter(t => !isNaN(t))
   const hasTime = timestamps.length === points.length
@@ -195,17 +225,31 @@ export function summarizeTrack(points: ParsedTrackPoint[]): TrackSummary {
         if (spd > maxSpeedKmh && spd < 50) maxSpeedKmh = spd
       }
     }
+    // Elevation gain/loss from per-point ele tags
+    const eleA = points[i - 1].ele, eleB = points[i].ele
+    if (eleA !== undefined && eleB !== undefined) {
+      const diff = eleB - eleA
+      if (diff > 0) elevationGainM += diff
+      else elevationLossM += Math.abs(diff)
+    }
   }
 
-  const durationS = hasTime ? (timestamps[timestamps.length - 1] - timestamps[0]) / 1000 : 0
-  const avgSpeedKmh = durationS > 0 ? (distanceM / durationS) * 3.6 : 0
+  // Prefer file-provided totals when they exist (Apple Health, Strava export)
+  const finalDistanceM = meta.totalDistanceM ?? distanceM
+  const finalDurationS = meta.totalTimeS ?? (hasTime ? (timestamps[timestamps.length - 1] - timestamps[0]) / 1000 : 0)
+  const finalGain = meta.elevationGainM ?? (elevationGainM > 0 ? elevationGainM : undefined)
+  const finalLoss = meta.elevationLossM ?? (elevationLossM > 0 ? elevationLossM : undefined)
+  const avgSpeedKmh = finalDurationS > 0 ? (finalDistanceM / finalDurationS) * 3.6 : 0
 
   return {
     points,
-    distanceM,
-    durationS,
+    distanceM: finalDistanceM,
+    durationS: finalDurationS,
     avgSpeedKmh,
     maxSpeedKmh,
+    elevationGainM: finalGain,
+    elevationLossM: finalLoss,
+    meta,
     startTime: hasTime ? new Date(timestamps[0]) : undefined,
   }
 }
