@@ -76,9 +76,13 @@ const DEVICE_TYPES = [
 ] as const
 
 export default function HealthPage() {
-  const { players, addLiveSession, liveSessions } = useApp()
+  const { players, addLiveSession, liveSessions, currentUser } = useApp()
   const t = useT(healthDict)
-  const [selectedPlayer, setSelectedPlayer] = useState(players[0]?.id ?? "")
+  const isPlayer = currentUser?.role === "player"
+  const ownPlayerId = currentUser?.player_id ?? null
+  const [selectedPlayer, setSelectedPlayer] = useState(
+    isPlayer && ownPlayerId ? ownPlayerId : (players[0]?.id ?? "")
+  )
   const [selectedDevice, setSelectedDevice] = useState("manual")
   const [btStatus, setBtStatus] = useState<ConnectionStatus>("disconnected")
   const [btDevice, setBtDevice] = useState<string | null>(null)
@@ -324,6 +328,7 @@ export default function HealthPage() {
             onStopGPS={stopGPS}
             onStart={startSession}
             sessions={playerSessions}
+            isPlayer={isPlayer}
           />
         ) : (
           <LivePanel
@@ -371,14 +376,16 @@ export default function HealthPage() {
 function SetupPanel({
   players, selectedPlayer, onPlayerChange, selectedDevice, onDeviceChange,
   btStatus, btDevice, onConnectBT, onDisconnectBT,
-  gpsEnabled, gpsError, onStartGPS, onStopGPS, onStart, sessions,
+  gpsEnabled, gpsError, onStartGPS, onStopGPS, onStart, sessions, isPlayer,
 }: any) {
   const t = useT(healthDict)
+  const stepOffset = isPlayer ? 1 : 0
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
       {/* Config */}
       <div className="xl:col-span-2 space-y-5">
-        {/* Player */}
+        {/* Player selector — hidden for player role (they only see own data) */}
+        {!isPlayer && (
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
           <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-500/15 text-[#0B5CFF] text-xs font-black flex items-center justify-center">1</span>
@@ -405,11 +412,12 @@ function SetupPanel({
             ))}
           </div>
         </div>
+        )}
 
         {/* Device */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
           <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-500/15 text-[#0B5CFF] text-xs font-black flex items-center justify-center">2</span>
+            <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-500/15 text-[#0B5CFF] text-xs font-black flex items-center justify-center">{isPlayer ? 1 : 2}</span>
             {t("deviceTypeStep")}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
