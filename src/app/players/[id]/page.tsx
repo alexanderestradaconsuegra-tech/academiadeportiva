@@ -10,7 +10,7 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import NotificationToggle from "@/components/ui/NotificationToggle"
 import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck, CreditCard, Loader2, Upload, CheckCircle2, AlertCircle } from "lucide-react"
-import { parseTrackFile, summarizeTrack, type TrackSummary } from "@/lib/gps"
+import { parseTrackFile, summarizeTrack, buildTransform, type TrackSummary } from "@/lib/gps"
 import { generatePlayerPDF } from "@/lib/generatePlayerPDF"
 import PlayerForm from "@/components/ui/PlayerForm"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
@@ -215,6 +215,15 @@ export default function PlayerProfilePage() {
     return Array.from(map.entries()).map(([label, count]) => ({ label, count })).reverse()
   }, [positionSamples])
 
+  const gpsTransform = useMemo(() => {
+    const ts = teamSettings
+    if (!ts?.calib_p0_lat || !ts?.calib_p0_lng || !ts?.calib_p1_lat || !ts?.calib_p1_lng || !ts?.calib_p2_lat || !ts?.calib_p2_lng) return null
+    return buildTransform(
+      { p0: { lat: ts.calib_p0_lat, lng: ts.calib_p0_lng }, p1: { lat: ts.calib_p1_lat, lng: ts.calib_p1_lng }, p2: { lat: ts.calib_p2_lat, lng: ts.calib_p2_lng } },
+      105, 68
+    )
+  }, [teamSettings])
+
   async function handleGpsFile(ev: React.ChangeEvent<HTMLInputElement>) {
     const file = ev.target.files?.[0]
     if (!file) return
@@ -232,22 +241,30 @@ export default function PlayerProfilePage() {
       const summary = summarizeTrack(points)
       setGpsLastSummary(summary)
 
+      if (!gpsTransform) {
+        setGpsError("El entrenador aún no ha calibrado la cancha con GPS. Pídele que lo haga desde la sección Heatmap.")
+        return
+      }
+
       // Build session label from filename + date
       const datePart = summary.startTime
         ? summary.startTime.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "2-digit" })
         : new Date().toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "2-digit" })
       const label = `${file.name.replace(/\.[^.]+$/, "")} · ${datePart}`
 
-      // Save raw lat/lng as x/y (coach can view in heatmap after calibration)
-      const MAX_POINTS = 800
-      const step = Math.max(1, Math.floor(points.length / MAX_POINTS))
-      const sampled = points.filter((_, i) => i % step === 0)
-      addPositionSamples(sampled.map(p => ({
-        player_id: id,
-        session_label: label,
-        x: p.lat,
-        y: p.lng,
-      })))
+      // Apply calibration transform (lat/lng → pitch meters) same as heatmap page
+      const MAX_POINTS = 1500
+      const step = Math.max(1, Math.ceil(points.length / MAX_POINTS))
+      const samples: { player_id: string; session_label: string; x: number; y: number }[] = []
+      for (let i = 0; i < points.length; i += step) {
+        const p = gpsTransform.toPitch(points[i])
+        if (p) samples.push({ player_id: id, session_label: label, x: p.x, y: p.y })
+      }
+      if (samples.length === 0) {
+        setGpsError("Ningún punto del track quedó dentro de la cancha. Verifica que el archivo corresponde a un entrenamiento en esta cancha.")
+        return
+      }
+      addPositionSamples(samples)
       setGpsSavedLabel(label)
     } catch {
       setGpsError("Error al leer el archivo. Intenta de nuevo.")
