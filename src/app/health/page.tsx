@@ -802,43 +802,57 @@ function LivePanel({
 
 // ── Session History Card ─────────────────────────────────────────────────
 function SessionHistoryCard({ session }: { session: LiveSession }) {
-  const t = useT(healthDict)
   const deviceIcons: Record<string, string> = {
-    polar_h10: "🫀", wahoo_tickr: "💓", garmin_hrm: "⌚", generic_ble: "📡", manual: "✍️"
+    polar_h10: "🫀", wahoo_tickr: "💓", garmin_hrm: "⌚", generic_ble: "📡", manual: "📁"
   }
-  const dur = session.duration_s
-  const h = Math.floor(dur / 3600), m = Math.floor((dur % 3600) / 60)
-  const durStr = h > 0 ? `${h}h ${m}m` : `${m}m`
+  const dur = session.duration_s ?? 0
+  const h = Math.floor(dur / 3600), m = Math.floor((dur % 3600) / 60), s = dur % 60
+  const durStr = h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`
+  const hasHr = session.avg_hr != null && session.avg_hr > 0
+  const hasDistance = session.distance_m != null && session.distance_m > 0
+  const hasSpeed = session.avg_speed_kmh != null && session.avg_speed_kmh > 0
+
+  // Build stats grid — always show what we have
+  const stats = [
+    hasDistance && { icon: "📍", label: "Distancia", value: `${(session.distance_m! / 1000).toFixed(2)} km` },
+    { icon: "⏱", label: "Duración", value: durStr },
+    hasSpeed && { icon: "⚡", label: "Vel. media", value: `${session.avg_speed_kmh!.toFixed(1)} km/h` },
+    session.max_speed_kmh && session.max_speed_kmh > 0 && { icon: "🚀", label: "Vel. máx", value: `${session.max_speed_kmh.toFixed(1)} km/h` },
+    hasHr && { icon: "❤️", label: "FC media", value: `${session.avg_hr} bpm` },
+    hasHr && session.max_hr_session && { icon: "📈", label: "FC máx", value: `${session.max_hr_session} bpm` },
+    session.calories_est && { icon: "🔥", label: "Calorías", value: `${session.calories_est} kcal` },
+  ].filter(Boolean) as { icon: string; label: string; value: string }[]
+
   return (
     <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">{deviceIcons[session.device_type] ?? "📡"}</span>
-          <div>
-            <p className="text-xs font-bold text-slate-900 dark:text-white">{session.device_name ?? session.device_type}</p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500">{formatDate(session.started_at.split("T")[0])} · {durStr}</p>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-lg">{deviceIcons[session.device_type] ?? "📁"}</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{session.device_name ?? session.device_type}</p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500">{formatDate(session.started_at.split("T")[0])}</p>
+        </div>
+        {hasHr && (
+          <div className="text-right shrink-0">
+            <p className="text-sm font-black text-red-500">{session.avg_hr}</p>
+            <p className="text-[9px] text-slate-400">bpm prom</p>
           </div>
-        </div>
-        <div className="text-right">
-          <p className="text-sm font-black text-red-500">{session.avg_hr ?? "—"}</p>
-          <p className="text-[9px] text-slate-400 dark:text-slate-500">{session.avg_hr ? t("avgBpm") : "sin FC"}</p>
-        </div>
+        )}
       </div>
       {session.notes && (
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-2">{session.notes}</p>
+        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mb-2 font-medium">{session.notes}</p>
       )}
-      <div className="grid grid-cols-3 gap-2">
-        {[
-          { icon: "⚡", label: t("maxHrShort"), value: session.max_hr_session ? `${session.max_hr_session} bpm` : "—" },
-          { icon: "🔥", label: t("caloriesShort"), value: session.calories_est ? `${session.calories_est} kcal` : "—" },
-          { icon: "📍", label: t("distanceShort"), value: session.distance_m ? `${(session.distance_m / 1000).toFixed(1)} km` : "—" },
-        ].map(s => (
-          <div key={s.label} className="bg-white dark:bg-slate-900 rounded-lg p-2 text-center border border-slate-100 dark:border-slate-800">
-            <p className="text-[9px] text-slate-400 dark:text-slate-500">{s.icon} {s.label}</p>
-            <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{s.value}</p>
-          </div>
-        ))}
-      </div>
+      {stats.length > 0 ? (
+        <div className="grid grid-cols-3 gap-2">
+          {stats.map(s => (
+            <div key={s.label} className="bg-white dark:bg-slate-900 rounded-lg p-2 text-center border border-slate-100 dark:border-slate-800">
+              <p className="text-[9px] text-slate-400 dark:text-slate-500">{s.icon} {s.label}</p>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{s.value}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-[10px] text-slate-400">Sin datos registrados</p>
+      )}
     </div>
   )
 }
