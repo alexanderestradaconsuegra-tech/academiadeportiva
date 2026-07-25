@@ -72,10 +72,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left panel — branding */}
-      <div className="hidden lg:flex w-[55%] bg-gradient-to-br from-[#071B4D] via-[#0B2E8A] to-[#0B5CFF] relative overflow-hidden flex-col justify-between p-12">
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
-        <div className="absolute top-1/4 right-20 w-40 h-40 rounded-full bg-white/5 blur-2xl" />
-        <div className="absolute bottom-1/3 left-10 w-60 h-60 rounded-full bg-blue-400/10 blur-3xl" />
+      <div className="hidden lg:flex w-[55%] relative overflow-hidden flex-col justify-between p-12" style={{ backgroundImage: "url('/login-bg.avif')", backgroundSize: "cover", backgroundPosition: "center" }}>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#071B4D]/80 via-[#0B2E8A]/70 to-[#0B5CFF]/60" />
 
         <div className="flex items-center gap-3 relative z-10">
           <div className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center shrink-0">
