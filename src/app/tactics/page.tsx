@@ -5,7 +5,7 @@ import PageHeader from "@/components/ui/PageHeader"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Select from "@/components/ui/Select"
-import { MousePointer2, PenTool, Plus, Undo2, Eraser, Save, Trash2, FolderOpen, Users, CircleDot, LayoutGrid } from "lucide-react"
+import { MousePointer2, PenTool, Plus, Undo2, Eraser, Save, Trash2, FolderOpen, Users, CircleDot, LayoutGrid, Play, Square, RefreshCw } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import { useT } from "@/lib/i18n/useT"
 import { tactics } from "@/lib/i18n/dictionaries/tactics"
@@ -136,6 +136,10 @@ export default function TacticsPage() {
   const [showSaveInput, setShowSaveInput] = useState(false)
   const [playName, setPlayName] = useState("")
   const [activeFormat, setActiveFormat] = useState<FormatKey>("F11")
+  const [animState, setAnimState] = useState<"idle" | "playing" | "done">("idle")
+  const [ballAnimPos, setBallAnimPos] = useState<{ x: number; y: number } | null>(null)
+  const [activeLineIdx, setActiveLineIdx] = useState<number>(-1)
+  const animRafRef = useRef<number | null>(null)
 
   const formationKeys = Object.keys(FORMATIONS).filter(k => k.startsWith(activeFormat))
 
@@ -256,6 +260,71 @@ export default function TacticsPage() {
     persistPlays(plays.filter(p => p.id !== id))
   }
 
+  type AnimSeg = { x1: number; y1: number; x2: number; y2: number; lineIdx: number }
+  function buildAnimPath(): AnimSeg[] {
+    const segs: AnimSeg[] = []
+    lines.forEach((line, li) => {
+      for (let i = 0; i < line.points.length - 1; i++) {
+        segs.push({ x1: line.points[i].x, y1: line.points[i].y, x2: line.points[i + 1].x, y2: line.points[i + 1].y, lineIdx: li })
+      }
+    })
+    return segs
+  }
+
+  function playAnimation() {
+    if (animRafRef.current) cancelAnimationFrame(animRafRef.current)
+    if (lines.length === 0) return
+    const segs = buildAnimPath()
+    const segLens = segs.map(s => Math.hypot(s.x2 - s.x1, s.y2 - s.y1))
+    const totalLen = segLens.reduce((a, b) => a + b, 0)
+    if (totalLen === 0) return
+    const SPEED = 16
+    const duration = (totalLen / SPEED) * 1000
+    setAnimState("playing")
+    const startTime = performance.now()
+    function tick(now: number) {
+      const elapsed = Math.min(1, (now - startTime) / duration)
+      const targetDist = elapsed * totalLen
+      let accumulated = 0
+      let pos = { x: segs[0].x1, y: segs[0].y1 }
+      let currLineIdx = segs[0].lineIdx
+      for (let i = 0; i < segs.length; i++) {
+        if (accumulated + segLens[i] >= targetDist) {
+          const frac = segLens[i] > 0 ? (targetDist - accumulated) / segLens[i] : 0
+          pos = { x: segs[i].x1 + (segs[i].x2 - segs[i].x1) * frac, y: segs[i].y1 + (segs[i].y2 - segs[i].y1) * frac }
+          currLineIdx = segs[i].lineIdx
+          break
+        }
+        accumulated += segLens[i]
+        if (i === segs.length - 1) {
+          pos = { x: segs[i].x2, y: segs[i].y2 }
+          currLineIdx = segs[i].lineIdx
+        }
+      }
+      setBallAnimPos(pos)
+      setActiveLineIdx(currLineIdx)
+      if (elapsed < 1) {
+        animRafRef.current = requestAnimationFrame(tick)
+      } else {
+        setAnimState("done")
+        animRafRef.current = null
+      }
+    }
+    animRafRef.current = requestAnimationFrame(tick)
+  }
+
+  function stopAnimation() {
+    if (animRafRef.current) cancelAnimationFrame(animRafRef.current)
+    animRafRef.current = null
+    setAnimState("idle")
+    setBallAnimPos(null)
+    setActiveLineIdx(-1)
+  }
+
+  useEffect(() => {
+    return () => { if (animRafRef.current) cancelAnimationFrame(animRafRef.current) }
+  }, [])
+
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
@@ -323,6 +392,28 @@ export default function TacticsPage() {
                 className="h-8 text-xs w-32"
               />
             </div>
+            {lines.length > 0 && (
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+                {animState === "playing" ? (
+                  <Button size="sm" variant="primary" onClick={stopAnimation}>
+                    <Square size={12} /> Parar
+                  </Button>
+                ) : animState === "done" ? (
+                  <>
+                    <Button size="sm" variant="primary" onClick={playAnimation}>
+                      <RefreshCw size={12} /> Repetir
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={stopAnimation}>
+                      <Square size={12} />
+                    </Button>
+                  </>
+                ) : (
+                  <Button size="sm" variant="primary" onClick={playAnimation}>
+                    <Play size={12} /> Reproducir
+                  </Button>
+                )}
+              </div>
+            )}
             <div className="flex-1" />
             {showSaveInput ? (
               <div className="flex items-center gap-2">
@@ -368,6 +459,13 @@ export default function TacticsPage() {
                 <marker id="arrowhead-pass" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto" markerUnits="userSpaceOnUse">
                   <path d="M0,0 L4,2 L0,4 Z" fill="#38BDF8" />
                 </marker>
+                <marker id="arrowhead-active" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto" markerUnits="userSpaceOnUse">
+                  <path d="M0,0 L4,2 L0,4 Z" fill="#ffffff" />
+                </marker>
+                <filter id="ballGlow">
+                  <feGaussianBlur stdDeviation="0.6" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
               </defs>
 
               {/* Field markings */}
@@ -387,21 +485,25 @@ export default function TacticsPage() {
               </g>
 
               {/* Saved lines */}
-              {lines.map(l => (
-                <polyline
-                  key={l.id}
-                  points={l.points.map(p => `${p.x},${p.y}`).join(" ")}
-                  fill="none"
-                  stroke={l.type === "pass" ? "#38BDF8" : "#FBBF24"}
-                  strokeWidth={0.7}
-                  strokeDasharray={l.type === "pass" ? "1.4 1" : undefined}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  markerEnd={l.type === "pass" ? "url(#arrowhead-pass)" : "url(#arrowhead)"}
-                  onDoubleClick={() => removeLine(l.id)}
-                  style={{ cursor: mode === "move" ? "pointer" : "default", pointerEvents: mode === "move" ? "stroke" : "none" }}
-                />
-              ))}
+              {lines.map((l, li) => {
+                const isActive = animState === "playing" && activeLineIdx === li
+                return (
+                  <polyline
+                    key={l.id}
+                    points={l.points.map(p => `${p.x},${p.y}`).join(" ")}
+                    fill="none"
+                    stroke={isActive ? "#ffffff" : l.type === "pass" ? "#38BDF8" : "#FBBF24"}
+                    strokeWidth={isActive ? 1.1 : 0.7}
+                    strokeOpacity={isActive ? 1 : animState === "playing" ? 0.4 : 1}
+                    strokeDasharray={l.type === "pass" && !isActive ? "1.4 1" : undefined}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    markerEnd={isActive ? "url(#arrowhead-active)" : l.type === "pass" ? "url(#arrowhead-pass)" : "url(#arrowhead)"}
+                    onDoubleClick={() => removeLine(l.id)}
+                    style={{ cursor: mode === "move" ? "pointer" : "default", pointerEvents: mode === "move" ? "stroke" : "none" }}
+                  />
+                )
+              })}
               {drawingLine && (
                 <polyline
                   points={drawingLine.points.map(p => `${p.x},${p.y}`).join(" ")}
@@ -413,6 +515,18 @@ export default function TacticsPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
+              )}
+
+              {/* Animated ball */}
+              {ballAnimPos && (
+                <g style={{ pointerEvents: "none" }}>
+                  <circle cx={ballAnimPos.x} cy={ballAnimPos.y} r={2.4} fill="rgba(255,255,255,0.35)" filter="url(#ballGlow)" />
+                  <circle cx={ballAnimPos.x} cy={ballAnimPos.y} r={1.7} fill="#ffffff" stroke="#0F172A" strokeWidth={0.25} />
+                  <path
+                    d={`M${ballAnimPos.x - 0.7},${ballAnimPos.y - 0.3} L${ballAnimPos.x},${ballAnimPos.y - 1.1} L${ballAnimPos.x + 0.7},${ballAnimPos.y - 0.3} L${ballAnimPos.x + 0.45},${ballAnimPos.y + 0.7} L${ballAnimPos.x - 0.45},${ballAnimPos.y + 0.7} Z`}
+                    fill="#0F172A"
+                  />
+                </g>
               )}
 
               {/* Markers */}
