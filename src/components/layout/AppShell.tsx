@@ -9,7 +9,7 @@ import BottomNav from "./BottomNav"
 import MobileHeader from "./MobileHeader"
 import PlayerNav from "./PlayerNav"
 
-const PLAYER_ALLOWED_PREFIXES = ["/matches", "/players", "/calendar", "/activities"]
+const PLAYER_ALLOWED_PREFIXES = ["/matches", "/players", "/calendar", "/activities", "/tactics"]
 const BLOCKED_STATUSES = new Set(["suspended", "canceled"])
 
 function SuspendedScreen({ isCoach }: { isCoach: boolean }) {

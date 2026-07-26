@@ -4,58 +4,59 @@ import { RotateCcw, Sparkles } from "lucide-react"
 
 interface Spot { id: string; label: string; x: number; y: number; role: "GK" | "DEF" | "MID" | "FWD" }
 
+// x = left→right (profundidad ofensiva), y = top→bottom (ancho del campo)
 const FORMATIONS: Record<string, Spot[]> = {
   "4-3-3": [
-    { id: "gk", label: "POR", x: 50, y: 8,  role: "GK" },
-    { id: "ld", label: "LD",  x: 82, y: 28, role: "DEF" },
-    { id: "d1", label: "DFC", x: 61, y: 25, role: "DEF" },
-    { id: "d2", label: "DFC", x: 39, y: 25, role: "DEF" },
-    { id: "li", label: "LI",  x: 18, y: 28, role: "DEF" },
-    { id: "m1", label: "MC",  x: 75, y: 50, role: "MID" },
-    { id: "m2", label: "MCD", x: 50, y: 47, role: "MID" },
-    { id: "m3", label: "MC",  x: 25, y: 50, role: "MID" },
-    { id: "ed", label: "EXD", x: 82, y: 74, role: "FWD" },
-    { id: "dc", label: "DC",  x: 50, y: 80, role: "FWD" },
-    { id: "ei", label: "EXI", x: 18, y: 74, role: "FWD" },
+    { id: "gk", label: "POR", x: 8,  y: 50, role: "GK" },
+    { id: "ld", label: "LD",  x: 25, y: 18, role: "DEF" },
+    { id: "d1", label: "DFC", x: 23, y: 38, role: "DEF" },
+    { id: "d2", label: "DFC", x: 23, y: 62, role: "DEF" },
+    { id: "li", label: "LI",  x: 25, y: 82, role: "DEF" },
+    { id: "m1", label: "MC",  x: 46, y: 22, role: "MID" },
+    { id: "m2", label: "MCD", x: 44, y: 50, role: "MID" },
+    { id: "m3", label: "MC",  x: 46, y: 78, role: "MID" },
+    { id: "ed", label: "EXD", x: 72, y: 18, role: "FWD" },
+    { id: "dc", label: "DC",  x: 76, y: 50, role: "FWD" },
+    { id: "ei", label: "EXI", x: 72, y: 82, role: "FWD" },
   ],
   "4-4-2": [
-    { id: "gk", label: "POR", x: 50, y: 8,  role: "GK" },
-    { id: "ld", label: "LD",  x: 82, y: 28, role: "DEF" },
-    { id: "d1", label: "DFC", x: 61, y: 25, role: "DEF" },
-    { id: "d2", label: "DFC", x: 39, y: 25, role: "DEF" },
-    { id: "li", label: "LI",  x: 18, y: 28, role: "DEF" },
-    { id: "med", label: "MD",  x: 82, y: 52, role: "MID" },
-    { id: "m1",  label: "MC",  x: 61, y: 50, role: "MID" },
-    { id: "m2",  label: "MC",  x: 39, y: 50, role: "MID" },
-    { id: "mei", label: "MI",  x: 18, y: 52, role: "MID" },
-    { id: "d1c", label: "DC",  x: 62, y: 78, role: "FWD" },
-    { id: "d2c", label: "DC",  x: 38, y: 78, role: "FWD" },
+    { id: "gk",  label: "POR", x: 8,  y: 50, role: "GK" },
+    { id: "ld",  label: "LD",  x: 25, y: 18, role: "DEF" },
+    { id: "d1",  label: "DFC", x: 23, y: 38, role: "DEF" },
+    { id: "d2",  label: "DFC", x: 23, y: 62, role: "DEF" },
+    { id: "li",  label: "LI",  x: 25, y: 82, role: "DEF" },
+    { id: "med", label: "MD",  x: 46, y: 18, role: "MID" },
+    { id: "m1",  label: "MC",  x: 44, y: 38, role: "MID" },
+    { id: "m2",  label: "MC",  x: 44, y: 62, role: "MID" },
+    { id: "mei", label: "MI",  x: 46, y: 82, role: "MID" },
+    { id: "d1c", label: "DC",  x: 74, y: 38, role: "FWD" },
+    { id: "d2c", label: "DC",  x: 74, y: 62, role: "FWD" },
   ],
   "4-2-3-1": [
-    { id: "gk", label: "POR", x: 50, y: 8,  role: "GK" },
-    { id: "ld", label: "LD",  x: 82, y: 27, role: "DEF" },
-    { id: "d1", label: "DFC", x: 61, y: 24, role: "DEF" },
-    { id: "d2", label: "DFC", x: 39, y: 24, role: "DEF" },
-    { id: "li", label: "LI",  x: 18, y: 27, role: "DEF" },
-    { id: "mcd1", label: "MCD", x: 63, y: 44, role: "MID" },
-    { id: "mcd2", label: "MCD", x: 37, y: 44, role: "MID" },
-    { id: "exd",  label: "EXD", x: 82, y: 62, role: "MID" },
-    { id: "mco",  label: "MCO", x: 50, y: 60, role: "MID" },
-    { id: "exi",  label: "EXI", x: 18, y: 62, role: "MID" },
-    { id: "dc",   label: "DC",  x: 50, y: 80, role: "FWD" },
+    { id: "gk",   label: "POR", x: 8,  y: 50, role: "GK" },
+    { id: "ld",   label: "LD",  x: 25, y: 18, role: "DEF" },
+    { id: "d1",   label: "DFC", x: 23, y: 38, role: "DEF" },
+    { id: "d2",   label: "DFC", x: 23, y: 62, role: "DEF" },
+    { id: "li",   label: "LI",  x: 25, y: 82, role: "DEF" },
+    { id: "mcd1", label: "MCD", x: 42, y: 38, role: "MID" },
+    { id: "mcd2", label: "MCD", x: 42, y: 62, role: "MID" },
+    { id: "exd",  label: "EXD", x: 58, y: 18, role: "MID" },
+    { id: "mco",  label: "MCO", x: 58, y: 50, role: "MID" },
+    { id: "exi",  label: "EXI", x: 58, y: 82, role: "MID" },
+    { id: "dc",   label: "DC",  x: 76, y: 50, role: "FWD" },
   ],
   "3-5-2": [
-    { id: "gk", label: "POR", x: 50, y: 8,  role: "GK" },
-    { id: "d1", label: "DFC", x: 70, y: 24, role: "DEF" },
-    { id: "d2", label: "DFC", x: 50, y: 22, role: "DEF" },
-    { id: "d3", label: "DFC", x: 30, y: 24, role: "DEF" },
-    { id: "md", label: "MD",  x: 88, y: 50, role: "MID" },
-    { id: "m1", label: "MC",  x: 68, y: 48, role: "MID" },
-    { id: "mcd",label: "MCD", x: 50, y: 46, role: "MID" },
-    { id: "m2", label: "MC",  x: 32, y: 48, role: "MID" },
-    { id: "mi", label: "MI",  x: 12, y: 50, role: "MID" },
-    { id: "d1c",label: "DC",  x: 63, y: 78, role: "FWD" },
-    { id: "d2c",label: "DC",  x: 37, y: 78, role: "FWD" },
+    { id: "gk",  label: "POR", x: 8,  y: 50, role: "GK" },
+    { id: "d1",  label: "DFC", x: 23, y: 28, role: "DEF" },
+    { id: "d2",  label: "DFC", x: 22, y: 50, role: "DEF" },
+    { id: "d3",  label: "DFC", x: 23, y: 72, role: "DEF" },
+    { id: "md",  label: "MD",  x: 48, y: 14, role: "MID" },
+    { id: "m1",  label: "MC",  x: 44, y: 34, role: "MID" },
+    { id: "mcd", label: "MCD", x: 42, y: 50, role: "MID" },
+    { id: "m2",  label: "MC",  x: 44, y: 66, role: "MID" },
+    { id: "mi",  label: "MI",  x: 48, y: 86, role: "MID" },
+    { id: "d1c", label: "DC",  x: 74, y: 38, role: "FWD" },
+    { id: "d2c", label: "DC",  x: 74, y: 62, role: "FWD" },
   ],
 }
 
@@ -139,7 +140,7 @@ export default function InteractivePitchBuilder() {
       <div
         ref={containerRef}
         className="relative w-full rounded-3xl overflow-hidden touch-none select-none shadow-2xl shadow-emerald-950/50"
-        style={{ aspectRatio: "3/4" }}
+        style={{ aspectRatio: "4/3", maxHeight: "420px" }}
       >
         {/* Gradient turf */}
         <div
@@ -161,19 +162,19 @@ export default function InteractivePitchBuilder() {
           />
         ))}
 
-        {/* Field markings */}
-        <svg viewBox="0 0 100 133" preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none">
+        {/* Field markings — horizontal layout */}
+        <svg viewBox="0 0 133 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none">
           <g stroke="rgba(255,255,255,0.7)" strokeWidth="0.4" fill="none">
-            <rect x="3" y="3" width="94" height="127" />
-            <line x1="3" y1="66.5" x2="97" y2="66.5" />
-            <circle cx="50" cy="66.5" r="10" />
-            <circle cx="50" cy="66.5" r="0.8" fill="rgba(255,255,255,0.8)" />
-            <rect x="22" y="3" width="56" height="18" />
-            <rect x="34" y="3" width="32" height="8" />
-            <rect x="22" y="112" width="56" height="18" />
-            <rect x="34" y="122" width="32" height="8" />
-            <path d="M 30 21 A 20 20 0 0 0 70 21" />
-            <path d="M 30 112 A 20 20 0 0 1 70 112" />
+            <rect x="3" y="3" width="127" height="94" />
+            <line x1="66.5" y1="3" x2="66.5" y2="97" />
+            <circle cx="66.5" cy="50" r="10" />
+            <circle cx="66.5" cy="50" r="0.8" fill="rgba(255,255,255,0.8)" />
+            <rect x="3" y="22" width="18" height="56" />
+            <rect x="3" y="34" width="8" height="32" />
+            <rect x="112" y="22" width="18" height="56" />
+            <rect x="122" y="34" width="8" height="32" />
+            <path d="M 21 30 A 20 20 0 0 1 21 70" />
+            <path d="M 112 30 A 20 20 0 0 0 112 70" />
           </g>
         </svg>
 

@@ -8,7 +8,7 @@ import {
 import FifaPlayerCard from "@/components/landing/FifaPlayerCard"
 import InteractivePitchBuilder from "@/components/landing/InteractivePitchBuilder"
 import ProgressShowcase from "@/components/landing/ProgressShowcase"
-import ExerciseLibrary from "@/components/landing/ExerciseLibrary"
+import FeatureShowcase from "@/components/landing/FeatureShowcase"
 
 export const metadata: Metadata = {
   title: "Metrikas — Profesionaliza tu academia de fútbol",
@@ -102,7 +102,8 @@ export default function LandingPage() {
               rel="noopener noreferrer"
               className="hidden sm:flex h-9 px-3.5 rounded-xl border border-white/15 text-white text-sm font-semibold items-center gap-1.5 hover:bg-white/5 transition-colors"
             >
-              <MessageCircle size={15} /> WhatsApp
+              <svg viewBox="0 0 32 32" className="w-4 h-4" fill="#25D366" xmlns="http://www.w3.org/2000/svg"><path d="M16 2C8.28 2 2 8.28 2 16c0 2.44.65 4.73 1.78 6.72L2 30l7.5-1.75A13.93 13.93 0 0016 30c7.72 0 14-6.28 14-14S23.72 2 16 2zm0 25.5a11.46 11.46 0 01-5.83-1.6l-.42-.25-4.45 1.04 1.06-4.33-.28-.45A11.5 11.5 0 1116 27.5zm6.3-8.6c-.35-.17-2.06-1.02-2.38-1.13-.32-.12-.55-.17-.78.17-.23.35-.9 1.13-1.1 1.37-.2.23-.4.26-.75.09-.35-.17-1.48-.55-2.82-1.74-1.04-.93-1.75-2.08-1.95-2.43-.2-.35-.02-.54.15-.71.16-.16.35-.42.52-.62.17-.2.23-.35.35-.58.12-.23.06-.44-.03-.61-.09-.17-.78-1.88-1.07-2.57-.28-.68-.57-.59-.78-.6l-.66-.01c-.23 0-.6.09-.92.42-.32.34-1.2 1.17-1.2 2.86s1.23 3.32 1.4 3.54c.17.23 2.42 3.7 5.87 5.19.82.35 1.46.56 1.96.72.82.26 1.57.22 2.16.13.66-.1 2.06-.84 2.35-1.66.29-.82.29-1.52.2-1.66-.08-.15-.31-.23-.66-.4z"/></svg>
+              WhatsApp
             </a>
             <Link
               href="/login"
@@ -119,15 +120,16 @@ export default function LandingPage() {
         href={WHATSAPP_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-400 shadow-xl shadow-emerald-900/40 flex items-center justify-center transition-all hover:scale-105"
+        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#20bd5a] shadow-xl shadow-emerald-900/40 flex items-center justify-center transition-all hover:scale-105"
         title="Escríbenos por WhatsApp"
       >
-        <MessageCircle className="w-6 h-6 text-white" fill="white" strokeWidth={1.5} />
+        <svg viewBox="0 0 32 32" className="w-7 h-7" fill="white" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 2C8.28 2 2 8.28 2 16c0 2.44.65 4.73 1.78 6.72L2 30l7.5-1.75A13.93 13.93 0 0016 30c7.72 0 14-6.28 14-14S23.72 2 16 2zm0 25.5a11.46 11.46 0 01-5.83-1.6l-.42-.25-4.45 1.04 1.06-4.33-.28-.45A11.5 11.5 0 1116 27.5zm6.3-8.6c-.35-.17-2.06-1.02-2.38-1.13-.32-.12-.55-.17-.78.17-.23.35-.9 1.13-1.1 1.37-.2.23-.4.26-.75.09-.35-.17-1.48-.55-2.82-1.74-1.04-.93-1.75-2.08-1.95-2.43-.2-.35-.02-.54.15-.71.16-.16.35-.42.52-.62.17-.2.23-.35.35-.58.12-.23.06-.44-.03-.61-.09-.17-.78-1.88-1.07-2.57-.28-.68-.57-.59-.78-.6l-.66-.01c-.23 0-.6.09-.92.42-.32.34-1.2 1.17-1.2 2.86s1.23 3.32 1.4 3.54c.17.23 2.42 3.7 5.87 5.19.82.35 1.46.56 1.96.72.82.26 1.57.22 2.16.13.66-.1 2.06-.84 2.35-1.66.29-.82.29-1.52.2-1.66-.08-.15-.31-.23-.66-.4z"/>
+        </svg>
       </a>
 
       {/* Hero — with interactive pitch */}
       <section className="relative">
-        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: "radial-gradient(circle at 15% 20%, white 1px, transparent 1px), radial-gradient(circle at 85% 60%, white 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-fuchsia-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="max-w-7xl mx-auto px-6 pt-12 pb-16 md:pt-20 md:pb-24 relative z-10">
@@ -173,24 +175,55 @@ export default function LandingPage() {
 
       {/* Problem / Solution */}
       <section className="bg-white text-slate-900">
-        <div className="max-w-6xl mx-auto px-6 py-16 md:py-20">
-          <div className="grid md:grid-cols-2 gap-10 items-center">
-            <div className="bg-slate-50 rounded-3xl p-8">
-              <p className="text-xs font-bold text-red-500 uppercase tracking-widest mb-3">Sin Metrikas</p>
-              <ul className="space-y-3 text-sm text-slate-600">
-                <li className="flex items-start gap-2.5"><span className="text-red-400 mt-0.5">✕</span> Convocatorias por grupos de WhatsApp que nadie confirma</li>
-                <li className="flex items-start gap-2.5"><span className="text-red-400 mt-0.5">✕</span> Hojas de Excel dispersas para pagos y asistencia</li>
-                <li className="flex items-start gap-2.5"><span className="text-red-400 mt-0.5">✕</span> Sin forma clara de mostrar el progreso de un jugador</li>
-                <li className="flex items-start gap-2.5"><span className="text-red-400 mt-0.5">✕</span> Un solo usuario compartido entre todos los profesores</li>
+        <div className="max-w-5xl mx-auto px-6 py-16 md:py-24">
+          <div className="text-center mb-12">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">El antes y el después</p>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900">¿Por qué las academias cambian a Metrikas?</h2>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Sin Metrikas */}
+            <div className="rounded-3xl border-2 border-red-100 bg-red-50/40 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                  <span className="text-red-500 font-black text-sm">✕</span>
+                </div>
+                <p className="text-sm font-black text-red-500 uppercase tracking-widest">Sin Metrikas</p>
+              </div>
+              <ul className="space-y-4">
+                {[
+                  "Convocatorias por grupos de WhatsApp que nadie confirma",
+                  "Hojas de Excel dispersas para pagos y asistencia",
+                  "Sin forma clara de mostrar el progreso de un jugador",
+                  "Un solo usuario compartido entre todos los profesores",
+                ].map(t => (
+                  <li key={t} className="flex items-start gap-3">
+                    <span className="w-5 h-5 rounded-full bg-red-200 text-red-500 flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">✕</span>
+                    <span className="text-slate-600 text-sm leading-snug">{t}</span>
+                  </li>
+                ))}
               </ul>
             </div>
-            <div className="bg-blue-50 rounded-3xl p-8 border border-blue-100">
-              <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Con Metrikas</p>
-              <ul className="space-y-3 text-sm text-slate-700">
-                <li className="flex items-start gap-2.5"><CheckCircle2 size={16} className="text-[#0B5CFF] mt-0.5 shrink-0" /> Convocatoria con confirmación individual y notificación push</li>
-                <li className="flex items-start gap-2.5"><CheckCircle2 size={16} className="text-[#0B5CFF] mt-0.5 shrink-0" /> Pagos y mensualidades generados y controlados automáticamente</li>
-                <li className="flex items-start gap-2.5"><CheckCircle2 size={16} className="text-[#0B5CFF] mt-0.5 shrink-0" /> Evaluaciones y gráficas que demuestran la evolución real</li>
-                <li className="flex items-start gap-2.5"><CheckCircle2 size={16} className="text-[#0B5CFF] mt-0.5 shrink-0" /> Un profesor por categoría, con su propio acceso controlado</li>
+            {/* Con Metrikas */}
+            <div className="rounded-3xl border-2 border-[#0B5CFF]/20 bg-[#0B5CFF]/[0.04] p-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-[#0B5CFF]/8 rounded-full blur-2xl pointer-events-none" />
+              <div className="flex items-center gap-3 mb-6 relative">
+                <div className="w-8 h-8 rounded-full bg-[#0B5CFF] flex items-center justify-center">
+                  <CheckCircle2 size={14} className="text-white" />
+                </div>
+                <p className="text-sm font-black text-[#0B5CFF] uppercase tracking-widest">Con Metrikas</p>
+              </div>
+              <ul className="space-y-4 relative">
+                {[
+                  "Convocatoria con confirmación individual y notificación push",
+                  "Pagos y mensualidades generados y controlados automáticamente",
+                  "Evaluaciones y gráficas que demuestran la evolución real",
+                  "Un profesor por categoría, con su propio acceso controlado",
+                ].map(t => (
+                  <li key={t} className="flex items-start gap-3">
+                    <CheckCircle2 size={18} className="text-[#0B5CFF] shrink-0 mt-0.5" />
+                    <span className="text-slate-700 text-sm leading-snug font-medium">{t}</span>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
@@ -218,50 +251,59 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Exercise library — the differentiator */}
-      <section id="producto" className="relative bg-[#050e2e] text-white overflow-hidden">
-        <div className="absolute top-1/3 -left-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-6 py-16 md:py-24 relative">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <p className="text-xs font-bold text-amber-300 uppercase tracking-widest mb-3">Biblioteca de ejercicios</p>
-            <h2 className="text-3xl md:text-5xl font-black leading-[1.05]">
-              <span className="bg-gradient-to-r from-amber-300 via-orange-300 to-red-400 bg-clip-text text-transparent">Cada ejercicio</span> con su video, sus métricas y su técnica exacta
+      {/* Feature showcase */}
+      <section id="producto" className="relative bg-slate-100 text-slate-900 overflow-hidden">
+        <div className="absolute top-0 -left-60 w-[500px] h-[500px] bg-[#0B5CFF]/6 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#0B5CFF]/4 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-5xl mx-auto px-6 py-16 md:py-28 relative">
+          <div className="text-center max-w-2xl mx-auto mb-20">
+            <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Todo en una sola plataforma</p>
+            <h2 className="text-3xl md:text-5xl font-black leading-[1.05] text-slate-900">
+              Cada módulo diseñado para <span className="bg-gradient-to-r from-[#0B5CFF] to-cyan-500 bg-clip-text text-transparent">simplificar tu trabajo.</span>
             </h2>
-            <p className="text-blue-100/70 mt-4 text-lg">
-              Sprints, pliometría, fuerza, técnica — el cuerpo técnico define cómo se hace y el deportista lo ve
-              embebido en su app. Sin adivinar. Sin variantes. Como se practica en clubes profesionales.
-            </p>
           </div>
+          <FeatureShowcase />
+        </div>
+      </section>
 
-          <ExerciseLibrary />
-
-          <div className="grid md:grid-cols-3 gap-4 mt-12">
-            <div className="flex items-start gap-3 p-5 rounded-2xl bg-white/[0.03] border border-white/10">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center shrink-0">
-                <BarChart3 size={18} className="text-blue-300" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white mb-1">Datos históricos por ejercicio</p>
-                <p className="text-xs text-blue-100/60 leading-relaxed">Cada intento queda registrado con valor, unidad e intensidad — el jugador ve su propia curva de mejora.</p>
+      {/* Exercise videos — compact strip */}
+      <section className="relative bg-[#050e2e] text-white overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-5xl mx-auto px-6 py-14 md:py-20 relative">
+          <div className="grid lg:grid-cols-[1fr_auto] gap-10 lg:gap-16 items-center">
+            {/* Text */}
+            <div>
+              <p className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-3">Biblioteca de ejercicios</p>
+              <h2 className="text-2xl md:text-4xl font-black leading-tight mb-4">
+                El deportista sabe <span className="text-amber-400">exactamente</span> cómo entrenar.
+              </h2>
+              <p className="text-white/50 text-base leading-relaxed mb-7 max-w-lg">
+                Cada ejercicio incluye un video guía para que el jugador vea la técnica correcta antes de ejecutar.
+                Sprint, fuerza, pliometría, agilidad — todo documentado con su video y unidad de medida.
+              </p>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {[
+                  { emoji: "🎬", title: "Video por ejercicio", desc: "YouTube o Vimeo embebido. El jugador lo ve directo en su app." },
+                  { emoji: "📊", title: "Registro de intentos", desc: "Guarda el resultado de cada serie. Compara sesión a sesión." },
+                ].map(item => (
+                  <div key={item.title} className="bg-white/[0.04] border border-white/8 rounded-2xl p-4">
+                    <p className="text-xl mb-2">{item.emoji}</p>
+                    <p className="text-sm font-bold text-white mb-1">{item.title}</p>
+                    <p className="text-xs text-white/40 leading-relaxed">{item.desc}</p>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="flex items-start gap-3 p-5 rounded-2xl bg-white/[0.03] border border-white/10">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
-                <Video size={18} className="text-emerald-300" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white mb-1">Video embebido, no un enlace suelto</p>
-                <p className="text-xs text-blue-100/60 leading-relaxed">El deportista abre el ejercicio y ve el video reproducido dentro de la app — ideal para reforzar técnica en casa.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 p-5 rounded-2xl bg-white/[0.03] border border-white/10">
-              <div className="w-10 h-10 rounded-xl bg-fuchsia-500/20 flex items-center justify-center shrink-0">
-                <UserCog size={18} className="text-fuchsia-300" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-white mb-1">Biblioteca compartida por la academia</p>
-                <p className="text-xs text-blue-100/60 leading-relaxed">El entrenador define los ejercicios una vez. Todos los profesores por categoría los usan sin duplicar trabajo.</p>
+            {/* Video */}
+            <div className="flex justify-center lg:justify-end shrink-0">
+              <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl" style={{ width: 160, aspectRatio: "9/16" }}>
+                <iframe
+                  src="https://www.youtube.com/embed/AW6mpDDb12s"
+                  title="Ejemplo — Sprint 40m"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                />
               </div>
             </div>
           </div>

@@ -2,7 +2,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useApp } from "@/context/AppContext"
-import { Trophy, UserCircle, LogOut, Sun, Moon, CalendarDays, Film } from "lucide-react"
+import { Trophy, UserCircle, LogOut, Sun, Moon, CalendarDays, Film, Clapperboard } from "lucide-react"
 import { cn } from "@/lib/utils"
 import PushToggle from "@/components/PushToggle"
 
@@ -16,6 +16,7 @@ export default function PlayerNav() {
     { href: "/matches", icon: Trophy, label: "Partidos" },
     { href: "/calendar", icon: CalendarDays, label: "Entrenos" },
     { href: "/activities/exercises", icon: Film, label: "Ejercicios" },
+    { href: "/tactics", icon: Clapperboard, label: "Tácticas" },
   ]
 
   return (
