@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createCheckoutPreference } from "@/lib/mercadopago"
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
+import { createPreapproval } from "@/lib/mercadopago"
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,12 +14,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "academy_id requerido" }, { status: 400 })
     }
 
-    const preference = await createCheckoutPreference(plan, academy_id)
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => (cookieStore as any).getAll(),
+          setAll: () => {},
+        },
+      }
+    )
 
-    const isProd = process.env.NODE_ENV === "production"
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user?.email) {
+      return NextResponse.json({ error: "No autenticado" }, { status: 401 })
+    }
+
+    const preapproval = await createPreapproval(plan, academy_id, user.email)
+
     return NextResponse.json({
-      checkout_url: isProd ? preference.init_point : preference.sandbox_init_point,
-      preference_id: preference.id,
+      checkout_url: preapproval.init_point,
+      preapproval_id: preapproval.id,
     })
   } catch (e: any) {
     console.error("checkout error:", e)

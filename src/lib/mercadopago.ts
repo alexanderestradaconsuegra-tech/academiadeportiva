@@ -13,35 +13,34 @@ export const MP_PRICES = {
 
 export const MP_CURRENCY = process.env.MP_CURRENCY ?? "USD"
 
-export async function createCheckoutPreference(plan: "monthly" | "annual", academyId: string) {
+/** Creates an automatic recurring subscription (Preapproval API). */
+export async function createPreapproval(
+  plan: "monthly" | "annual",
+  academyId: string,
+  payerEmail: string,
+) {
   const isAnnual = plan === "annual"
   const amount = MP_PRICES[plan]
   const appUrl = (process.env.NEXT_PUBLIC_URL ?? "https://metrikas.pro").replace(/\/$/, "")
 
   const body = {
-    items: [{
-      id: `metrikas-${plan}`,
-      title: isAnnual ? "Metrikas — Plan Anual (12 meses)" : "Metrikas — Plan Mensual",
-      description: isAnnual
-        ? "Acceso completo por 12 meses · Ahorra 30%"
-        : "Acceso completo por 1 mes · Renueva manualmente",
-      quantity: 1,
-      unit_price: amount,
+    reason: isAnnual
+      ? "Metrikas Pro — Plan Anual (12 meses)"
+      : "Metrikas Pro — Plan Mensual",
+    auto_recurring: {
+      frequency: isAnnual ? 12 : 1,
+      frequency_type: "months",
+      transaction_amount: amount,
       currency_id: MP_CURRENCY,
-    }],
-    back_urls: {
-      success: `${appUrl}/subscribe/success?plan=${plan}&academy=${academyId}`,
-      failure: `${appUrl}/subscribe?error=1`,
-      pending: `${appUrl}/subscribe?pending=1`,
     },
-    auto_return: "approved",
+    back_url: `${appUrl}/subscribe/success?plan=${plan}&academy=${academyId}`,
+    payer_email: payerEmail,
     external_reference: `${academyId}::${plan}`,
     notification_url: `${appUrl}/api/webhooks/mercadopago`,
-    statement_descriptor: "METRIKAS",
-    expires: false,
+    status: "pending",
   }
 
-  const res = await fetch(`${MP_BASE}/checkout/preferences`, {
+  const res = await fetch(`${MP_BASE}/preapproval`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken()}`,
@@ -58,8 +57,15 @@ export async function createCheckoutPreference(plan: "monthly" | "annual", acade
   return res.json() as Promise<{
     id: string
     init_point: string
-    sandbox_init_point: string
+    status: string
   }>
+}
+
+export async function getPreapproval(preapprovalId: string) {
+  const res = await fetch(`${MP_BASE}/preapproval/${preapprovalId}`, {
+    headers: { Authorization: `Bearer ${accessToken()}` },
+  })
+  return res.json()
 }
 
 export async function getPayment(paymentId: string | number) {
@@ -86,7 +92,7 @@ export function isSubscriptionBlocked(
   graceDays = 5,
 ): boolean {
   if (!status) return false
-  if (status === "suspended" || status === "canceled") return true
+  if (status === "suspended" || status === "canceled" || status === "cancelled") return true
 
   const now = new Date()
   const cutoff = (dateStr: string) => {
@@ -98,7 +104,7 @@ export function isSubscriptionBlocked(
   if (status === "trialing") {
     return trialEnd ? cutoff(trialEnd) : false
   }
-  if (status === "active" || status === "past_due") {
+  if (status === "active" || status === "past_due" || status === "authorized") {
     return periodEnd ? cutoff(periodEnd) : false
   }
   return false

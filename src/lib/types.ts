@@ -188,6 +188,7 @@ export interface TeamSettings {
   subscription_current_period_end: string | null
   mp_payment_id: string | null
   mp_plan: string | null
+  mp_preapproval_id: string | null
 }
 
 export interface Training {

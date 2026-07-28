@@ -230,6 +230,8 @@ function mapTeamSettings(row: Tables<"team_settings">): TeamSettings {
     mp_payment_id: (row as any).mp_payment_id ?? null,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mp_plan: (row as any).mp_plan ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mp_preapproval_id: (row as any).mp_preapproval_id ?? null,
   }
 }
 
@@ -1294,7 +1296,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!ts) return false
     const status = ts.subscription_status
     if (!status) return false
-    if (status === "suspended" || status === "canceled") return true
+    if (status === "suspended" || status === "canceled" || status === "cancelled") return true
     const GRACE_MS = 5 * 24 * 60 * 60 * 1000
     const now = Date.now()
     if (status === "active" || status === "past_due") {
