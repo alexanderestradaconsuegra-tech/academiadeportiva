@@ -32,7 +32,7 @@ interface AppState {
 interface AppContextType extends AppState {
   language: Language
   login: (email: string, password: string) => Promise<string | null>
-  createAcademy: (academyName: string, lang: Language, coachName: string) => Promise<string | null>
+  createAcademy: (academyName: string, lang: Language, coachName: string, code: string) => Promise<string | null>
   logout: () => void
   addPlayer: (player: Omit<Player, "id" | "created_at">) => Player
   updatePlayer: (id: string, data: Partial<Player>) => void
@@ -558,27 +558,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return null
   }, [loadProfileFor, loadTeamSettings, loadPlayerData, state.teamSettings?.language])
 
-  const createAcademy = useCallback(async (academyName: string, lang: Language, coachName: string): Promise<string | null> => {
+  const createAcademy = useCallback(async (academyName: string, lang: Language, coachName: string, code: string): Promise<string | null> => {
     const { data: sessionData } = await supabase.auth.getSession()
     const userId = sessionData.session?.user.id
     if (!userId) return "No autenticado"
 
-    const trialExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-    const activationCode = Math.floor(100000 + Math.random() * 900000).toString()
+    const { data: academyId, error: rpcErr } = await (supabase as any).rpc("create_academy_with_code", {
+      p_name: academyName,
+      p_coach_name: coachName,
+      p_language: lang,
+      p_code: code.trim(),
+    })
+    if (rpcErr || !academyId) return rpcErr?.message ?? "Código de activación inválido o ya utilizado."
 
-    const { data: academy, error: academyErr } = await (supabase as any)
-      .from("team_settings")
-      .insert({ name: academyName, language: lang, updated_at: new Date().toISOString(), trial_expires_at: trialExpiresAt, activation_code: activationCode })
-      .select()
-      .single()
-    if (academyErr || !academy) return academyErr?.message ?? "Error al crear la academia"
-
-    const { data: profileRow, error: profileErr } = await supabase
-      .from("profiles")
-      .insert({ id: userId, role: "coach", full_name: coachName, academy_id: academy.id })
-      .select()
-      .single()
-    if (profileErr || !profileRow) return profileErr?.message ?? "Error al crear el perfil"
+    const { data: profileRow } = await supabase.from("profiles").select("*").eq("id", userId).single()
+    const { data: academy } = await (supabase as any).from("team_settings").select("*").eq("id", academyId).single()
+    if (!profileRow || !academy) return "Error al cargar el perfil creado."
 
     // Seed demo players
     const demoPlayers: { name: string; position: import("@/lib/types").Position; category: import("@/lib/types").Category; age: number; dominant_foot: import("@/lib/types").DominantFoot }[] = [
@@ -593,7 +588,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ]
     for (const p of demoPlayers) {
       await supabase.from("players").insert({
-        id: crypto.randomUUID(), academy_id: academy.id,
+        id: crypto.randomUUID(), academy_id: academyId,
         name: p.name, position: p.position, category: p.category,
         age: p.age, dominant_foot: p.dominant_foot,
         birth_date: null as unknown as string, height: null as unknown as number, weight: null as unknown as number, club: null as unknown as string, objective: null as unknown as string, notes: null as unknown as string, photo_url: null as unknown as string,

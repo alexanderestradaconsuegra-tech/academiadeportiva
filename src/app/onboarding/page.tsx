@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useApp } from "@/context/AppContext"
-import { Trophy, Building2, User, AlertCircle } from "lucide-react"
+import { Trophy, Building2, User, AlertCircle, KeyRound } from "lucide-react"
 import type { Language } from "@/lib/types"
 
 const LANG_OPTIONS: { value: Language; label: string; flag: string }[] = [
@@ -17,20 +17,23 @@ export default function OnboardingPage() {
   const [academyName, setAcademyName] = useState("")
   const [coachName, setCoachName] = useState("")
   const [language, setLanguage] = useState<Language>("es")
+  const [activationCode, setActivationCode] = useState("")
 
   // Pre-fill from the register form if user came through that flow
   useEffect(() => {
     try {
       const pending = sessionStorage.getItem("pendingAcademy")
       if (pending) {
-        const { academyName: a, fullName: f, language: l } = JSON.parse(pending)
+        const { academyName: a, fullName: f, language: l, activationCode: c } = JSON.parse(pending)
         if (a) setAcademyName(a)
         if (f) setCoachName(f)
         if (l) setLanguage(l)
+        if (c) setActivationCode(c)
         sessionStorage.removeItem("pendingAcademy")
       }
     } catch { /* ignore */ }
   }, [])
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -38,7 +41,7 @@ export default function OnboardingPage() {
     e.preventDefault()
     setError("")
     setLoading(true)
-    const err = await createAcademy(academyName.trim(), language, coachName.trim())
+    const err = await createAcademy(academyName.trim(), language, coachName.trim(), activationCode.trim())
     if (err) {
       setError(err)
       setLoading(false)
@@ -61,6 +64,24 @@ export default function OnboardingPage() {
 
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-2xl">
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Activation code */}
+            <div>
+              <label className="text-xs font-semibold text-slate-700 uppercase tracking-wide block mb-1.5">
+                Código de activación
+              </label>
+              <div className="relative">
+                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={activationCode}
+                  onChange={e => setActivationCode(e.target.value.trim())}
+                  required
+                  placeholder="Te lo envía Metrikas al contratar"
+                  className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all font-mono tracking-wider"
+                />
+              </div>
+            </div>
+
             {/* Academy name */}
             <div>
               <label className="text-xs font-semibold text-slate-700 uppercase tracking-wide block mb-1.5">
