@@ -138,8 +138,8 @@ export default function InteractivePitchBuilder() {
       {/* Pitch */}
       <div
         ref={containerRef}
-        className="relative w-full rounded-3xl overflow-hidden touch-none select-none shadow-2xl shadow-emerald-950/50"
-        style={{ aspectRatio: "3/4" }}
+        className="relative w-full rounded-3xl overflow-hidden select-none shadow-2xl shadow-emerald-950/50"
+        style={{ aspectRatio: "3/4", touchAction: "pan-y" }}
       >
         {/* Gradient turf */}
         <div

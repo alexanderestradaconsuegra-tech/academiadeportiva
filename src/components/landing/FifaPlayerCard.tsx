@@ -5,7 +5,7 @@ import { User, Zap } from "lucide-react"
 const PLAYER = {
   name: "THIAGO E.",
   position: "EI",
-  category: "SUB-16",
+  category: "SUB-13",
   photoUrl: "https://lh3.googleusercontent.com/d/1Ht2izdMUdsY1j1SzKDLuFFiHeZnXMNdW" as string | null,
   stats: [
     { key: "VEL", value: 93 },
@@ -52,7 +52,7 @@ export default function FifaPlayerCard() {
         onMouseLeave={() => setTilt({ rx: 0, ry: 0, mx: 50, my: 50 })}
         className="relative w-[260px] rounded-3xl overflow-hidden select-none cursor-pointer shrink-0"
         style={{
-          height: "380px",
+          height: "420px",
           transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
           transition: "transform 200ms cubic-bezier(0.03,0.98,0.52,0.99)",
           transformStyle: "preserve-3d",
@@ -96,7 +96,7 @@ export default function FifaPlayerCard() {
         </div>
 
         {/* ── PHOTO ── */}
-        <div className="relative z-30 flex justify-center mt-3">
+        <div className="relative z-30 flex justify-center mt-1">
           {/* Glow behind photo */}
           <div className="absolute w-40 h-40 rounded-full opacity-30 blur-2xl"
             style={{ background: "radial-gradient(circle, rgba(11,92,255,0.9) 0%, transparent 70%)" }} />

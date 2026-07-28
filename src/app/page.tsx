@@ -173,29 +173,9 @@ export default function LandingPage() {
                 </Link>
               </div>
 
-              {/* Trust pills */}
-              <div className="flex flex-wrap gap-2">
-                {["Sin contrato ni permanencia", "Funciona en cualquier celular", "Desde US$15/mes"].map(t => (
-                  <span key={t} className="text-xs text-white/40 bg-white/5 border border-white/8 rounded-full px-3 py-1 font-medium">{t}</span>
-                ))}
-              </div>
             </div>
 
             <InteractivePitchBuilder />
-          </div>
-
-          {/* Stats strip */}
-          <div className="grid grid-cols-3 gap-4 mt-14 pt-10 border-t border-white/8">
-            {[
-              { value: "+200", label: "Jugadores activos" },
-              { value: "3", label: "Idiomas disponibles" },
-              { value: "100%", label: "Datos seguros" },
-            ].map(s => (
-              <div key={s.label} className="text-center">
-                <p className="text-2xl md:text-3xl font-black text-white">{s.value}</p>
-                <p className="text-xs text-blue-100/40 font-medium mt-0.5">{s.label}</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -339,8 +319,8 @@ export default function LandingPage() {
       </section>
 
       {/* FIFA player card showcase */}
-      <section className="relative bg-gradient-to-br from-slate-50 via-blue-50/40 to-slate-100 text-slate-900 overflow-hidden">
-        <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-400/8 rounded-full blur-3xl pointer-events-none" />
+      <section className="relative bg-white text-slate-900 overflow-hidden">
+        <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-400/5 rounded-full blur-3xl pointer-events-none" />
         <div className="max-w-6xl mx-auto px-6 py-16 md:py-24 relative">
           <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-12 items-center">
             <div>
