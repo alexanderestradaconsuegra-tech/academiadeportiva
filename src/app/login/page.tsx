@@ -76,13 +76,8 @@ export default function LoginPage() {
       <div className="hidden lg:flex w-[55%] relative overflow-hidden flex-col justify-between p-12" style={{ backgroundImage: "url('/login-bg.avif')", backgroundSize: "cover", backgroundPosition: "center" }}>
         <div className="absolute inset-0 bg-gradient-to-br from-[#071B4D]/80 via-[#0B2E8A]/70 to-[#0B5CFF]/60" />
 
-        <div className="flex items-center gap-3 relative z-10">
-          <div className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center shrink-0">
-            <img src="/logo-metrikas.png" alt="Metrikas" className="h-10 w-auto object-contain" />
-          </div>
-          <div>
-            <p className="text-blue-200/60 text-xs font-medium">Gestión de academias deportivas</p>
-          </div>
+        <div className="relative z-10">
+          <img src="/logo-metrikas.png" alt="Metrikas" className="h-20 w-auto object-contain" />
         </div>
 
         <div className="relative z-10">
@@ -125,7 +120,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md animate-fade-in">
           {/* Mobile logo */}
           <div className="flex lg:hidden items-center justify-center mb-10">
-            <img src="/logo-metrikas.png" alt="Metrikas" className="h-14 w-auto object-contain" />
+            <img src="/logo-metrikas.png" alt="Metrikas" className="h-20 w-auto object-contain" />
           </div>
 
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 dark:border-slate-800">

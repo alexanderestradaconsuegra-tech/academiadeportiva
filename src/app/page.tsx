@@ -339,28 +339,29 @@ export default function LandingPage() {
       </section>
 
       {/* FIFA player card showcase */}
-      <section className="relative bg-[#050a20] text-white overflow-hidden">
-        <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+      <section className="relative bg-gradient-to-br from-slate-50 via-blue-50/40 to-slate-100 text-slate-900 overflow-hidden">
+        <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-400/8 rounded-full blur-3xl pointer-events-none" />
         <div className="max-w-6xl mx-auto px-6 py-16 md:py-24 relative">
           <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-12 items-center">
             <div>
-              <p className="text-xs font-bold text-cyan-300 uppercase tracking-widest mb-3">Ficha del jugador</p>
-              <h2 className="text-3xl md:text-5xl font-black leading-[1.05] mb-4">
-                Estadísticas <span className="bg-gradient-to-r from-cyan-300 via-blue-300 to-fuchsia-300 bg-clip-text text-transparent">estilo videojuego</span> con datos reales
+              <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Ficha del jugador</p>
+              <h2 className="text-3xl md:text-5xl font-black leading-[1.05] mb-4 text-slate-900">
+                Estadísticas <span className="text-[#0B5CFF]">estilo videojuego</span> con datos reales
               </h2>
-              <p className="text-blue-100/70 text-lg leading-relaxed mb-6">
+              <p className="text-slate-500 text-lg leading-relaxed mb-6">
                 Cada evaluación genera una ficha con 6 atributos, un rating general y una insignia de nivel. El jugador
                 la ve en su celular. Los padres ven el crecimiento. La academia demuestra su trabajo.
               </p>
               <ul className="space-y-3">
                 {[
-                  { label: "Velocidad, Fuerza, Técnica, Resistencia, Potencia y Agilidad" },
-                  { label: "Rating general que sube con cada evaluación" },
-                  { label: "Insignia PRO / TOP / ELITE según el nivel alcanzado" },
-                  { label: "Efecto holográfico moderno — pasa el mouse sobre la tarjeta" },
-                ].map(item => (
-                  <li key={item.label} className="flex items-start gap-2.5 text-sm text-blue-100/80">
-                    <CheckCircle2 size={16} className="text-emerald-400 mt-0.5 shrink-0" /> {item.label}
+                  "Velocidad, Fuerza, Técnica, Resistencia, Potencia y Agilidad",
+                  "Rating general que sube con cada evaluación",
+                  "Insignia PRO / TOP / ELITE según el nivel alcanzado",
+                  "Efecto holográfico — pasa el mouse sobre la tarjeta",
+                  "Descargable como imagen para compartir con los padres",
+                ].map(label => (
+                  <li key={label} className="flex items-start gap-2.5 text-sm text-slate-600">
+                    <CheckCircle2 size={16} className="text-emerald-500 mt-0.5 shrink-0" /> {label}
                   </li>
                 ))}
               </ul>
@@ -428,10 +429,10 @@ export default function LandingPage() {
                 <span className="text-white/40 text-lg mb-2">/mes</span>
               </div>
               <p className="text-white/30 text-sm mb-8">por academia · acceso por 30 días</p>
-              <ul className="space-y-2.5 mb-8 flex-1">
-                {PLAN_INCLUDES.slice(0, 5).map(item => (
-                  <li key={item} className="flex items-start gap-2.5 text-sm text-white/60">
-                    <CheckCircle2 size={15} className="text-emerald-400 mt-0.5 shrink-0" /> {item}
+              <ul className="space-y-2 mb-8 flex-1">
+                {PLAN_INCLUDES.map(item => (
+                  <li key={item} className="flex items-start gap-2 text-xs text-white/60">
+                    <CheckCircle2 size={13} className="text-emerald-400 mt-0.5 shrink-0" /> {item}
                   </li>
                 ))}
               </ul>
@@ -458,10 +459,10 @@ export default function LandingPage() {
                 </div>
                 <p className="text-blue-200/60 text-sm mb-1">US${PRICE_ANNUAL}/año · equivale a 2 meses gratis</p>
                 <p className="text-blue-300/50 text-xs mb-8">Acceso garantizado por 12 meses completos</p>
-                <ul className="space-y-2.5 mb-8">
-                  {PLAN_INCLUDES.slice(0, 5).map(item => (
-                    <li key={item} className="flex items-start gap-2.5 text-sm text-blue-100/80">
-                      <CheckCircle2 size={15} className="text-white mt-0.5 shrink-0" /> {item}
+                <ul className="space-y-2 mb-8">
+                  {PLAN_INCLUDES.map(item => (
+                    <li key={item} className="flex items-start gap-2 text-xs text-blue-100/80">
+                      <CheckCircle2 size={13} className="text-white mt-0.5 shrink-0" /> {item}
                     </li>
                   ))}
                 </ul>
