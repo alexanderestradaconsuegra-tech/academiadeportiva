@@ -184,6 +184,10 @@ export interface TeamSettings {
   calib_p2_lng: number | null
   trial_expires_at: string | null
   activation_code: string | null
+  subscription_status: string | null
+  subscription_current_period_end: string | null
+  mp_payment_id: string | null
+  mp_plan: string | null
 }
 
 export interface Training {

@@ -90,6 +90,7 @@ interface AppContextType extends AppState {
   autoGenerateMonthlyPayments: () => Promise<number>
   isTrialExpired: boolean
   trialDaysLeft: number | null
+  isSubscriptionBlocked: boolean
   activateWithCode: (code: string) => Promise<string | null>
 }
 
@@ -221,6 +222,14 @@ function mapTeamSettings(row: Tables<"team_settings">): TeamSettings {
     trial_expires_at: (row as any).trial_expires_at ?? null,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     activation_code: (row as any).activation_code ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    subscription_status: (row as any).subscription_status ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    subscription_current_period_end: (row as any).subscription_current_period_end ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mp_payment_id: (row as any).mp_payment_id ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mp_plan: (row as any).mp_plan ?? null,
   }
 }
 
@@ -1280,6 +1289,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return new Date(exp) < new Date()
   })()
 
+  const isSubscriptionBlocked = (() => {
+    const ts = state.teamSettings
+    if (!ts) return false
+    const status = ts.subscription_status
+    if (!status) return false
+    if (status === "suspended" || status === "canceled") return true
+    const GRACE_MS = 5 * 24 * 60 * 60 * 1000
+    const now = Date.now()
+    if (status === "active" || status === "past_due") {
+      const end = ts.subscription_current_period_end
+      return end ? new Date(end).getTime() + GRACE_MS < now : false
+    }
+    return false
+  })()
+
   const trialDaysLeft = (() => {
     const exp = state.teamSettings?.trial_expires_at
     if (!exp) return null
@@ -1368,6 +1392,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         getPlayerConvocatoria,
         autoGenerateMonthlyPayments,
         isTrialExpired,
+        isSubscriptionBlocked,
         trialDaysLeft,
         activateWithCode,
       }}

@@ -11,7 +11,7 @@ const PLAYER_ALLOWED_PREFIXES = ["/matches", "/players", "/activities", "/tactic
 const ASSISTANT_BLOCKED_PREFIXES = ["/payments", "/settings", "/reports", "/charts"]
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isOnboarding, authReady, currentUser, isTrialExpired, trialDaysLeft } = useApp()
+  const { isAuthenticated, isOnboarding, authReady, currentUser, isTrialExpired, trialDaysLeft, isSubscriptionBlocked } = useApp()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -33,8 +33,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       if (pathname !== "/onboarding") router.replace("/onboarding")
       return
     }
-    if (isTrialExpired && pathname !== "/expired") {
-      router.replace("/expired")
+    if ((isTrialExpired || isSubscriptionBlocked) && !pathname.startsWith("/subscribe")) {
+      router.replace("/subscribe")
       return
     }
     if (isPlayer && ownPlayerPath && !isOnAllowedPlayerPath) {
@@ -43,11 +43,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (isAssistant && ASSISTANT_BLOCKED_PREFIXES.some(p => pathname.startsWith(p))) {
       router.replace("/dashboard")
     }
-  }, [authReady, isAuthenticated, isOnboarding, isTrialExpired, isPlayer, isAssistant, ownPlayerPath, isOnAllowedPlayerPath, pathname, router])
+  }, [authReady, isAuthenticated, isOnboarding, isTrialExpired, isSubscriptionBlocked, isPlayer, isAssistant, ownPlayerPath, isOnAllowedPlayerPath, pathname, router])
 
   if (!authReady || !isAuthenticated) return null
   if (isOnboarding) return null
-  if (isTrialExpired) return null
+  if (isTrialExpired || isSubscriptionBlocked) return null
   if (isPlayer && !isOnAllowedPlayerPath) return null
 
   return (
