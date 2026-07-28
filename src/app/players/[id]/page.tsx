@@ -12,7 +12,8 @@ import NotificationToggle from "@/components/ui/NotificationToggle"
 import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck, CreditCard, Loader2, Upload, CheckCircle2, AlertCircle } from "lucide-react"
 import { parseTrackFile, summarizeTrack, extractBiometrics, buildTransform, type TrackSummary, type BiometricSummary } from "@/lib/gps"
 import { supabase } from "@/lib/supabase"
-import { generatePlayerPDF, generatePlayerCard } from "@/lib/generatePlayerPDF"
+import { generatePlayerPDF } from "@/lib/generatePlayerPDF"
+import PlayerCardModal from "@/components/ui/PlayerCardModal"
 import PlayerForm from "@/components/ui/PlayerForm"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
 import type { Evaluation, PhysicalTest, InjurySeverity } from "@/lib/types"
@@ -369,8 +370,8 @@ export default function PlayerProfilePage() {
   const upcomingConvocatoria = getPlayerConvocatoria(id)
 
   const [pdfLoading, setPdfLoading] = useState(false)
-  const [cardLoading, setCardLoading] = useState(false)
   const [showPdfMenu, setShowPdfMenu] = useState(false)
+  const [showCardModal, setShowCardModal] = useState(false)
   const pdfMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -397,18 +398,6 @@ export default function PlayerProfilePage() {
       trainings,
     })
     setPdfLoading(false)
-  }
-
-  async function handleDownloadCard() {
-    if (!player) return
-    setCardLoading(true)
-    setShowPdfMenu(false)
-    await generatePlayerCard({
-      player,
-      academyName: teamSettings?.name ?? "Metrikas",
-      evaluation: latestEval ?? undefined,
-    })
-    setCardLoading(false)
   }
 
   const [showEvalForm, setShowEvalForm] = useState(false)
@@ -557,11 +546,11 @@ export default function PlayerProfilePage() {
             <div className="relative no-print" ref={pdfMenuRef}>
               <button
                 onClick={() => setShowPdfMenu(v => !v)}
-                disabled={pdfLoading || cardLoading}
+                disabled={pdfLoading}
                 className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center text-white hover:bg-white/25 transition-colors disabled:opacity-60"
                 title={t("downloadPdf")}
               >
-                {(pdfLoading || cardLoading) ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+                {pdfLoading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
               </button>
               {showPdfMenu && (
                 <div className="absolute right-0 top-11 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50 w-52">
@@ -580,9 +569,8 @@ export default function PlayerProfilePage() {
                   </button>
                   <div className="h-px bg-slate-100 dark:bg-slate-800 mx-3" />
                   <button
-                    onClick={handleDownloadCard}
-                    disabled={cardLoading}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left disabled:opacity-60"
+                    onClick={() => { setShowPdfMenu(false); setShowCardModal(true) }}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left"
                   >
                     <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center shrink-0">
                       <Star size={14} className="text-amber-500" />
@@ -1453,6 +1441,15 @@ export default function PlayerProfilePage() {
           </div>
         )}
       </div>
+
+      {showCardModal && player && (
+        <PlayerCardModal
+          player={player}
+          academyName={teamSettings?.name ?? "Metrikas"}
+          evaluation={latestEval ?? undefined}
+          onClose={() => setShowCardModal(false)}
+        />
+      )}
     </AppShell>
   )
 }

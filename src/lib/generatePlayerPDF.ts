@@ -26,8 +26,8 @@ async function loadImg(url: string): Promise<HTMLImageElement | null> {
   })
 }
 
-// ─── Player card (canvas → PDF) ──────────────────────────────────────────────
-export async function generatePlayerCard(data: {
+// ─── Player card (canvas → PNG download) ─────────────────────────────────────
+export async function downloadPlayerCardPNG(data: {
   player: Player
   academyName: string
   evaluation?: Evaluation
@@ -278,28 +278,21 @@ export async function generatePlayerCard(data: {
   ctx.fillStyle = "rgba(255,255,255,0.22)"
   ctx.fillText(`METRIKAS · ${academyName.toUpperCase()}`, CW / 2, footerY + 12)
 
-  // ── Embed in A4 PDF ────────────────────────────────────────────────────────
-  const cardDataUrl = canvas.toDataURL("image/png")
-  const { jsPDF } = await import("jspdf")
-  const doc = new jsPDF({ unit: "mm", format: "a4" })
-  const W = 210; const H = 297
-
-  doc.setFillColor(5, 18, 47)
-  doc.rect(0, 0, W, H, "F")
-
-  const cardPdfW = 130
-  const cardPdfH = cardPdfW * (CH / CW)
-  const cardPdfX = (W - cardPdfW) / 2
-  const cardPdfY = (H - cardPdfH) / 2
-
-  doc.addImage(cardDataUrl, "PNG", cardPdfX, cardPdfY, cardPdfW, cardPdfH)
-
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(7)
-  doc.setTextColor(180, 190, 210)
-  doc.text("metrikas.pro", W / 2, H - 8, { align: "center" })
-
-  doc.save(`carta-${player.name.replace(/\s+/g, "-").toLowerCase()}.pdf`)
+  // ── Download as PNG ────────────────────────────────────────────────────────
+  await new Promise<void>((resolve) => {
+    canvas.toBlob((blob) => {
+      if (!blob) { resolve(); return }
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `carta-${player.name.replace(/\s+/g, "-").toLowerCase()}.png`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      resolve()
+    }, "image/png")
+  })
 }
 
 interface ReportData {

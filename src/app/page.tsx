@@ -159,12 +159,14 @@ export default function LandingPage() {
               </p>
 
               <div className="flex flex-wrap items-center gap-3 mb-8">
-                <Link
-                  href="/register"
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="h-12 px-7 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold flex items-center gap-2 hover:bg-blue-600 transition-all shadow-lg shadow-blue-900/50"
                 >
-                  Probar gratis 7 días <ArrowRight size={16} />
-                </Link>
+                  Quiero empezar <ArrowRight size={16} />
+                </a>
                 <Link
                   href="/login"
                   className="h-12 px-6 rounded-xl border border-white/15 text-white/80 text-sm font-semibold flex items-center hover:bg-white/5 transition-colors"
