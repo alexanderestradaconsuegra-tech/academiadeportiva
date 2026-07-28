@@ -11,8 +11,8 @@ import ProgressShowcase from "@/components/landing/ProgressShowcase"
 import FeatureShowcase from "@/components/landing/FeatureShowcase"
 
 export const metadata: Metadata = {
-  title: "Metrikas — Profesionaliza tu academia de fútbol",
-  description: "La plataforma todo-en-uno para academias de fútbol: jugadores, partidos, formaciones, evaluaciones, pagos y comunicación en un solo lugar.",
+  title: "Metrikas — La app de gestión para academias de fútbol",
+  description: "Convocatorias con confirmación, pagos automáticos, evaluaciones físicas y comunicación con jugadores — todo desde tu celular. Sin Excel ni grupos de WhatsApp.",
 }
 
 const WHATSAPP_NUMBER = "56992103974"
@@ -23,45 +23,45 @@ const PRICE_MONTHLY = 15
 const PRICE_ANNUAL = Math.round(PRICE_MONTHLY * 12 * 0.7)
 
 const PLAN_INCLUDES = [
-  "Jugadores, categorías y fichas completas ilimitadas",
-  "Partidos, convocatoria y formaciones profesionales (11, 8, 7 y 5)",
-  "Evaluaciones físicas y gráficas de progreso",
-  "Calendario de entrenamientos con asistencia y RSVP",
-  "Pagos y mensualidades generados automáticamente",
-  "Salud, biometría, lesiones y pruebas físicas",
-  "Notificaciones push a jugadores y acudientes",
-  "Un profesor por categoría, con acceso controlado",
-  "Reportes en PDF y comparativa de jugadores",
-  "Español, inglés y portugués",
+  "Jugadores y categorías ilimitadas — sin costo extra por crecer",
+  "Convocatoria con confirmación individual y formaciones (11, 8, 7 y 5)",
+  "Evaluaciones físicas con gráficas de evolución mes a mes",
+  "Calendario de entrenamientos con asistencia y RSVP del jugador",
+  "Pagos y mensualidades generados automáticamente cada mes",
+  "Salud, biometría, lesiones y pruebas físicas completas",
+  "Notificaciones push directo al celular del jugador o acudiente",
+  "Un acceso por categoría — cada profesor ve solo lo suyo",
+  "Reportes en PDF y comparativa de jugadores lado a lado",
+  "Disponible en español, inglés y portugués",
 ]
 
 const FAQS = [
-  { q: "¿Cuánto cuesta Metrikas?", a: `US$${PRICE_MONTHLY} al mes por academia, sin importar cuántos jugadores tengas. Pagando el año completo obtienes 30% de descuento: US$${PRICE_ANNUAL}/año (equivale a US$${(PRICE_ANNUAL / 12).toFixed(1)}/mes). Empezamos en pesos chilenos y ya trabajamos con academias en toda Latinoamérica y EE.UU.` },
-  { q: "¿Hay contrato o permanencia mínima?", a: "No. No hay instalación, ni contratos largos, ni letra chica. Cancelas cuando quieras y sigues teniendo acceso hasta el final del período ya pagado." },
-  { q: "¿Funciona en cualquier país?", a: "Sí. Metrikas está disponible en español, inglés y portugués, y funciona igual para una academia en Chile, Colombia, México o Estados Unidos." },
-  { q: "¿Qué tan seguros están los datos de mis jugadores?", a: "Cada academia tiene sus datos completamente aislados a nivel de base de datos — ninguna otra academia puede verlos ni acceder a ellos, ni siquiera técnicamente. Las contraseñas se manejan cifradas." },
-  { q: "¿Puedo tener un profesor por categoría?", a: "Sí. Puedes crear un acceso independiente para cada profesor, y cada uno solo ve y gestiona los jugadores de su propia categoría — nunca los pagos ni la configuración general de la academia." },
-  { q: "¿Qué pasa si un mes no puedo pagar?", a: "Tu academia se suspende temporalmente hasta que se regularice el pago, pero tus datos nunca se borran. En cuanto pagas, todo vuelve a estar disponible tal como lo dejaste." },
-  { q: "¿Cómo empiezo?", a: "Escríbenos por WhatsApp o correo, te damos un código de activación y en minutos tienes tu academia funcionando." },
+  { q: "¿Cuánto cuesta Metrikas?", a: `US$${PRICE_MONTHLY} al mes por academia, sin importar cuántos jugadores tengas. Si pagas el año completo ahorras 30%: US$${PRICE_ANNUAL}/año (US$${(PRICE_ANNUAL / 12).toFixed(1)}/mes). Es menos de lo que cuesta alquilar una cancha una hora.` },
+  { q: "¿Hay contrato o permanencia mínima?", a: "No. Sin instalación, sin contratos largos, sin letra chica. Cancelas cuando quieras y mantienes el acceso hasta el fin del período ya pagado." },
+  { q: "¿Cuánto tiempo tarda en funcionar?", a: "Menos de 20 minutos. Te damos un código de activación, creas tu academia, agregas jugadores y ya tienes la primera convocatoria lista. Sin configuraciones complicadas." },
+  { q: "¿Funciona en cualquier país?", a: "Sí. Metrikas está disponible en español, inglés y portugués y funciona igual en Chile, Colombia, México, Estados Unidos o donde estés." },
+  { q: "¿Qué tan seguros están los datos de mis jugadores?", a: "Cada academia tiene sus datos completamente aislados — ninguna otra academia puede verlos ni acceder a ellos, ni siquiera técnicamente. Las contraseñas van cifradas y nunca las vemos." },
+  { q: "¿Puedo tener un acceso por categoría?", a: "Sí. Cada profesor entra con su propia cuenta y solo ve su categoría — no los pagos, no la configuración, no las otras categorías. Tú mantienes el control total." },
+  { q: "¿Qué pasa si un mes no puedo pagar?", a: "Tu academia se suspende temporalmente, pero tus datos no se borran. En cuanto pagas, todo vuelve exactamente como lo dejaste." },
 ]
 
 
 const FEATURES = [
-  { icon: Users, title: "Jugadores y categorías", desc: "Ficha completa por jugador: datos, posición, categoría, objetivo deportivo y evolución histórica." },
-  { icon: Trophy, title: "Partidos y formaciones", desc: "Convocatoria, formaciones profesionales (11, 8, 7 y 5), resultados y estadísticas por partido." },
-  { icon: BarChart3, title: "Evaluaciones y progreso", desc: "Mide velocidad, fuerza, técnica y resistencia. Visualiza la evolución real de cada deportista." },
-  { icon: CalendarDays, title: "Entrenamientos y asistencia", desc: "Calendario de entrenos con confirmación de asistencia y RSVP directo del jugador." },
-  { icon: Heart, title: "Salud y biometría", desc: "Ritmo cardíaco, lesiones, pruebas físicas y sesiones en vivo para un seguimiento serio." },
-  { icon: CreditCard, title: "Pagos y mensualidades", desc: "Genera cuotas automáticamente cada mes y controla quién está al día, sin hojas de cálculo." },
-  { icon: Bell, title: "Notificaciones push", desc: "Avisa convocatorias, entrenamientos y pagos pendientes directo al celular del jugador." },
-  { icon: UserCog, title: "Roles por categoría", desc: "Cada profesor gestiona solo su categoría; el dueño de la academia mantiene el control total." },
-  { icon: Languages, title: "Multi-idioma", desc: "Español, inglés y portugués — lista para academias en toda la región." },
+  { icon: Users, title: "Jugadores y categorías", desc: "Un perfil completo por jugador que los padres pueden consultar desde su celular, sin que tengas que enviarles nada." },
+  { icon: Trophy, title: "Partidos y convocatoria", desc: "Arma la nómina, elige la formación (11, 8, 7 o 5) y notifica al equipo. Cada jugador confirma desde su teléfono." },
+  { icon: BarChart3, title: "Evaluaciones y progreso", desc: "Velocidad, fuerza, técnica, resistencia. Una gráfica real que muestra cómo crece cada jugador mes a mes." },
+  { icon: CalendarDays, title: "Entrenamientos y asistencia", desc: "Publica el calendario y recibe confirmación de cada jugador. Sabes quién va a venir antes de llegar al campo." },
+  { icon: Heart, title: "Salud y biometría", desc: "Lesiones, ritmo cardíaco, pruebas físicas y sesiones en vivo. Todo en un solo lugar para decisiones más seguras." },
+  { icon: CreditCard, title: "Pagos automáticos", desc: "Las cuotas mensuales se generan solas. En un vistazo ves quién está al día y quién debe — sin hojas de cálculo." },
+  { icon: Bell, title: "Notificaciones push", desc: "El jugador recibe convocatoria, recordatorio de entrenamiento o aviso de pago directo en su celular." },
+  { icon: UserCog, title: "Un acceso por categoría", desc: "Cada profesor entra con su cuenta y ve solo su categoría. Tú conservas el control completo de la academia." },
+  { icon: Languages, title: "Español, inglés y portugués", desc: "Cambia el idioma desde la configuración. Ideal para academias con jugadores o familias extranjeras." },
 ]
 
 const ROLES = [
-  { title: "Dueño / Entrenador principal", desc: "Control total de la academia: todas las categorías, pagos, suscripción y configuración.", icon: ShieldCheck },
-  { title: "Profesor de categoría", desc: "Gestiona su propia categoría — jugadores, partidos, entrenamientos — sin acceso a pagos ni configuración.", icon: UserCog },
-  { title: "Jugador / Acudiente", desc: "Ve su perfil, progreso, convocatorias y confirma asistencia desde su propio celular.", icon: Smartphone },
+  { title: "Dueño / Entrenador principal", desc: "Controla todo: categorías, pagos, suscripción y quién tiene acceso. Nadie ve más de lo que tú permites.", icon: ShieldCheck },
+  { title: "Profesor de categoría", desc: "Entra con su propia cuenta y gestiona solo su categoría — jugadores, partidos y entrenos. Sin acceso a pagos ni a otras categorías.", icon: UserCog },
+  { title: "Jugador / Acudiente", desc: "Ve su ficha, su progreso, su convocatoria y confirma asistencia desde su celular. Sin descargar nada extra.", icon: Smartphone },
 ]
 
 function PlaceholderImage({ label, aspect = "16/9" }: { label: string; aspect?: string }) {
@@ -142,11 +142,11 @@ export default function LandingPage() {
                 </div>
               </div>
               <h1 className="text-4xl md:text-5xl xl:text-6xl font-black leading-[1.05] mb-5">
-                Arma tu equipo. <span className="bg-gradient-to-r from-[#0B5CFF] via-cyan-300 to-fuchsia-400 bg-clip-text text-transparent">Mide el progreso.</span> Profesionaliza tu academia.
+                La app que reemplaza el Excel, el papel <span className="bg-gradient-to-r from-[#0B5CFF] via-cyan-300 to-fuchsia-400 bg-clip-text text-transparent">y el grupo de WhatsApp</span> de tu academia.
               </h1>
               <p className="text-blue-100/70 text-base md:text-lg leading-relaxed mb-8 max-w-lg">
-                Convocatoria con formaciones reales, evaluaciones físicas, biblioteca de ejercicios en video, pagos
-                automáticos y comunicación con jugadores — todo desde una sola plataforma.
+                Convocatoria con confirmación, pagos automáticos, evaluaciones físicas y comunicación con jugadores
+                — todo desde tu celular. Lista en menos de 20 minutos.
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <a
@@ -165,9 +165,9 @@ export default function LandingPage() {
                 </Link>
               </div>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-8 text-xs text-blue-100/50 font-medium">
-                <span className="flex items-center gap-1.5"><ShieldCheck size={14} /> Datos aislados por academia</span>
-                <span className="flex items-center gap-1.5"><Smartphone size={14} /> Funciona en el celular</span>
-                <span className="flex items-center gap-1.5"><Languages size={14} /> Español, inglés y portugués</span>
+                <span className="flex items-center gap-1.5"><ShieldCheck size={14} /> Sin contrato ni permanencia</span>
+                <span className="flex items-center gap-1.5"><Smartphone size={14} /> Funciona en cualquier celular</span>
+                <span className="flex items-center gap-1.5"><Languages size={14} /> Desde US$15/mes por academia</span>
               </div>
             </div>
             <InteractivePitchBuilder />
@@ -180,7 +180,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-6 py-16 md:py-24">
           <div className="text-center mb-12">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">El antes y el después</p>
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900">¿Por qué las academias cambian a Metrikas?</h2>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900">¿Te suena familiar alguno de estos problemas?</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             {/* Sin Metrikas */}
@@ -193,10 +193,10 @@ export default function LandingPage() {
               </div>
               <ul className="space-y-4">
                 {[
-                  "Convocatorias por grupos de WhatsApp que nadie confirma",
-                  "Hojas de Excel dispersas para pagos y asistencia",
-                  "Sin forma clara de mostrar el progreso de un jugador",
-                  "Un solo usuario compartido entre todos los profesores",
+                  "Mandas la convocatoria al grupo de WhatsApp y nunca sabes quién va a venir",
+                  "Los pagos los llevas en Excel o en un cuaderno — y siempre hay deudas perdidas",
+                  "No tienes cómo demostrarle al padre que su hijo mejoró",
+                  "Todos los profesores usan la misma contraseña y ven lo que no deben",
                 ].map(t => (
                   <li key={t} className="flex items-start gap-3">
                     <span className="w-5 h-5 rounded-full bg-red-200 text-red-500 flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">✕</span>
@@ -216,10 +216,10 @@ export default function LandingPage() {
               </div>
               <ul className="space-y-4 relative">
                 {[
-                  "Convocatoria con confirmación individual y notificación push",
-                  "Pagos y mensualidades generados y controlados automáticamente",
-                  "Evaluaciones y gráficas que demuestran la evolución real",
-                  "Un profesor por categoría, con su propio acceso controlado",
+                  "Cada jugador confirma su asistencia y recibe un aviso en el celular",
+                  "Las cuotas se generan solas — en un vistazo ves quién debe y quién está al día",
+                  "Gráficas de evolución que los padres entienden a primera vista",
+                  "Cada profesor tiene su propio acceso y solo ve su categoría",
                 ].map(t => (
                   <li key={t} className="flex items-start gap-3">
                     <CheckCircle2 size={18} className="text-[#0B5CFF] shrink-0 mt-0.5" />
@@ -237,7 +237,8 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 py-16 md:py-24">
           <div className="text-center max-w-2xl mx-auto mb-14">
             <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Todo lo que necesitas</p>
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900">Un sistema completo, no diez herramientas sueltas</h2>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900">Un sistema completo, no diez herramientas parcheadas</h2>
+            <p className="text-slate-500 mt-3 text-base">Cada módulo diseñado para el día a día de una academia — no para una empresa.</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {FEATURES.map(f => (
@@ -353,9 +354,9 @@ export default function LandingPage() {
           <div className="text-center max-w-2xl mx-auto mb-12">
             <p className="text-xs font-bold text-emerald-300 uppercase tracking-widest mb-3">Crecimiento medible</p>
             <h2 className="text-3xl md:text-5xl font-black leading-[1.05] mb-4">
-              Demuestra el <span className="bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 bg-clip-text text-transparent">progreso real</span> de cada deportista
+              Números concretos que los padres <span className="bg-gradient-to-r from-emerald-300 via-teal-300 to-cyan-300 bg-clip-text text-transparent">ven a primera vista</span>
             </h2>
-            <p className="text-blue-100/60 text-lg">Números concretos, mes a mes. Nada que los padres puedan discutir.</p>
+            <p className="text-blue-100/60 text-lg">Mes a mes. Sin hojas de cálculo. Sin interpretaciones.</p>
           </div>
           <ProgressShowcase />
         </div>
@@ -365,9 +366,9 @@ export default function LandingPage() {
       <section id="roles" className="bg-slate-50 text-slate-900">
         <div className="max-w-6xl mx-auto px-6 py-16 md:py-24">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Cómo funciona</p>
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900">Un sistema para todo tu cuerpo técnico</h2>
-            <p className="text-slate-500 mt-3">Cada persona ve exactamente lo que necesita, ni más ni menos.</p>
+            <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Roles y accesos</p>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900">Cada persona ve solo lo que necesita</h2>
+            <p className="text-slate-500 mt-3">Tú controlas quién accede a qué — sin contraseñas compartidas ni datos expuestos.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {ROLES.map(r => (
@@ -389,8 +390,8 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto px-6 py-16 md:py-24 relative z-10">
           <div className="text-center max-w-xl mx-auto mb-12">
             <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-3">Precios</p>
-            <h2 className="text-3xl md:text-4xl font-black mb-3">Un solo plan, todo incluido</h2>
-            <p className="text-blue-100/70">Sin límite de jugadores ni de módulos. Empieza en pesos chilenos, crece a donde quieras.</p>
+            <h2 className="text-3xl md:text-4xl font-black mb-3">Un solo plan. Todo incluido. Sin sorpresas.</h2>
+            <p className="text-blue-100/70">Sin límite de jugadores ni de módulos. Menos de lo que cuesta alquilar una cancha al mes.</p>
           </div>
 
           <div className="bg-white text-slate-900 rounded-3xl p-8 md:p-10 shadow-2xl">
@@ -522,9 +523,9 @@ export default function LandingPage() {
       {/* Final CTA */}
       <section id="contacto" className="bg-[#05122F] text-white">
         <div className="max-w-4xl mx-auto px-6 py-20 text-center">
-          <h2 className="text-3xl md:text-4xl font-black mb-4">¿Listo para profesionalizar tu academia?</h2>
+          <h2 className="text-3xl md:text-4xl font-black mb-4">Tu academia puede estar funcionando hoy.</h2>
           <p className="text-blue-100/70 mb-8 max-w-lg mx-auto">
-            Escríbenos y activamos tu academia en Metrikas. Sin compromisos largos, cancela cuando quieras.
+            Escríbenos, te damos un código de activación y en menos de 20 minutos tienes tu primera convocatoria lista. Sin contrato ni tarjeta.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <a
