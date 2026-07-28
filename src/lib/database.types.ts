@@ -14,180 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      attendance: {
-        Row: {
-          id: string
-          training_id: string
-          player_id: string
-          status: "present" | "absent" | "late" | "excused"
-          notes: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          training_id: string
-          player_id: string
-          status: "present" | "absent" | "late" | "excused"
-          notes?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          training_id?: string
-          player_id?: string
-          status?: "present" | "absent" | "late" | "excused"
-          notes?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "attendance_training_id_fkey"
-            columns: ["training_id"]
-            isOneToOne: false
-            referencedRelation: "trainings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "attendance_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      payments: {
-        Row: {
-          id: string
-          player_id: string
-          concept: string
-          amount: number
-          due_date: string
-          paid_date: string | null
-          status: "pending" | "paid"
-          notes: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          player_id: string
-          concept: string
-          amount: number
-          due_date: string
-          paid_date?: string | null
-          status?: "pending" | "paid"
-          notes?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          player_id?: string
-          concept?: string
-          amount?: number
-          due_date?: string
-          paid_date?: string | null
-          status?: "pending" | "paid"
-          notes?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "payments_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      injuries: {
-        Row: {
-          id: string
-          player_id: string
-          body_part: string
-          injury_type: string
-          severity: "minor" | "moderate" | "severe"
-          date_start: string
-          date_return: string | null
-          is_recovered: boolean
-          notes: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          player_id: string
-          body_part: string
-          injury_type: string
-          severity: "minor" | "moderate" | "severe"
-          date_start: string
-          date_return?: string | null
-          is_recovered?: boolean
-          notes?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          player_id?: string
-          body_part?: string
-          injury_type?: string
-          severity?: "minor" | "moderate" | "severe"
-          date_start?: string
-          date_return?: string | null
-          is_recovered?: boolean
-          notes?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "injuries_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      physical_tests: {
-        Row: {
-          id: string
-          player_id: string
-          test_type: string
-          value: number
-          unit: string
-          date: string
-          notes: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          player_id: string
-          test_type: string
-          value: number
-          unit: string
-          date: string
-          notes?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          player_id?: string
-          test_type?: string
-          value?: number
-          unit?: string
-          date?: string
-          notes?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "physical_tests_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       activities: {
         Row: {
           category: Database["public"]["Enums"]["activity_category"]
@@ -231,6 +57,159 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      app_secrets: {
+        Row: {
+          key: string
+          value: string
+        }
+        Insert: {
+          key: string
+          value: string
+        }
+        Update: {
+          key?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      attendance: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          player_id: string
+          rsvp: string | null
+          status: string
+          training_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          player_id: string
+          rsvp?: string | null
+          status: string
+          training_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          player_id?: string
+          rsvp?: string | null
+          status?: string
+          training_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_training_id_fkey"
+            columns: ["training_id"]
+            isOneToOne: false
+            referencedRelation: "trainings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      convocatoria_players: {
+        Row: {
+          confirmed: boolean | null
+          convocatoria_id: string
+          created_at: string | null
+          id: string
+          instruction: string | null
+          player_id: string
+          position_label: string | null
+          x: number | null
+          y: number | null
+        }
+        Insert: {
+          confirmed?: boolean | null
+          convocatoria_id: string
+          created_at?: string | null
+          id?: string
+          instruction?: string | null
+          player_id: string
+          position_label?: string | null
+          x?: number | null
+          y?: number | null
+        }
+        Update: {
+          confirmed?: boolean | null
+          convocatoria_id?: string
+          created_at?: string | null
+          id?: string
+          instruction?: string | null
+          player_id?: string
+          position_label?: string | null
+          x?: number | null
+          y?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "convocatoria_players_convocatoria_id_fkey"
+            columns: ["convocatoria_id"]
+            isOneToOne: false
+            referencedRelation: "convocatorias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "convocatoria_players_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      convocatorias: {
+        Row: {
+          academy_id: string | null
+          created_at: string | null
+          formation: string | null
+          id: string
+          match_id: string
+          notes: string | null
+        }
+        Insert: {
+          academy_id?: string | null
+          created_at?: string | null
+          formation?: string | null
+          id?: string
+          match_id: string
+          notes?: string | null
+        }
+        Update: {
+          academy_id?: string | null
+          created_at?: string | null
+          formation?: string | null
+          id?: string
+          match_id?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "convocatorias_academy_id_fkey"
+            columns: ["academy_id"]
+            isOneToOne: false
+            referencedRelation: "team_settings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "convocatorias_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: true
+            referencedRelation: "matches"
             referencedColumns: ["id"]
           },
         ]
@@ -284,30 +263,38 @@ export type Database = {
       }
       exercises: {
         Row: {
+          academy_id: string | null
           category: Database["public"]["Enums"]["activity_category"]
           created_at: string
           id: string
           name: string
           video_url: string | null
-          academy_id: string | null
         }
         Insert: {
+          academy_id?: string | null
           category: Database["public"]["Enums"]["activity_category"]
           created_at?: string
           id?: string
           name: string
           video_url?: string | null
-          academy_id?: string | null
         }
         Update: {
+          academy_id?: string | null
           category?: Database["public"]["Enums"]["activity_category"]
           created_at?: string
           id?: string
           name?: string
           video_url?: string | null
-          academy_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "exercises_academy_id_fkey"
+            columns: ["academy_id"]
+            isOneToOne: false
+            referencedRelation: "team_settings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       health_profiles: {
         Row: {
@@ -355,6 +342,53 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "health_profiles_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      injuries: {
+        Row: {
+          body_part: string
+          created_at: string
+          date_return: string | null
+          date_start: string
+          id: string
+          injury_type: string
+          is_recovered: boolean
+          notes: string | null
+          player_id: string
+          severity: string
+        }
+        Insert: {
+          body_part: string
+          created_at?: string
+          date_return?: string | null
+          date_start: string
+          id?: string
+          injury_type: string
+          is_recovered?: boolean
+          notes?: string | null
+          player_id: string
+          severity: string
+        }
+        Update: {
+          body_part?: string
+          created_at?: string
+          date_return?: string | null
+          date_start?: string
+          id?: string
+          injury_type?: string
+          is_recovered?: boolean
+          notes?: string | null
+          player_id?: string
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "injuries_player_id_fkey"
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
@@ -495,6 +529,7 @@ export type Database = {
       }
       matches: {
         Row: {
+          academy_id: string | null
           category: Database["public"]["Enums"]["category"] | null
           competition: string | null
           created_at: string
@@ -508,9 +543,9 @@ export type Database = {
           our_score: number | null
           time: string | null
           video_url: string | null
-          academy_id: string | null
         }
         Insert: {
+          academy_id?: string | null
           category?: Database["public"]["Enums"]["category"] | null
           competition?: string | null
           created_at?: string
@@ -524,9 +559,9 @@ export type Database = {
           our_score?: number | null
           time?: string | null
           video_url?: string | null
-          academy_id?: string | null
         }
         Update: {
+          academy_id?: string | null
           category?: Database["public"]["Enums"]["category"] | null
           competition?: string | null
           created_at?: string
@@ -540,12 +575,105 @@ export type Database = {
           our_score?: number | null
           time?: string | null
           video_url?: string | null
-          academy_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "matches_academy_id_fkey"
+            columns: ["academy_id"]
+            isOneToOne: false
+            referencedRelation: "team_settings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          concept: string
+          created_at: string
+          due_date: string
+          id: string
+          notes: string | null
+          paid_date: string | null
+          player_id: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          concept: string
+          created_at?: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          paid_date?: string | null
+          player_id: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          concept?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          paid_date?: string | null
+          player_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      physical_tests: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          player_id: string
+          test_type: string
+          unit: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          notes?: string | null
+          player_id: string
+          test_type: string
+          unit: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          player_id?: string
+          test_type?: string
+          unit?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "physical_tests_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       players: {
         Row: {
+          academy_id: string | null
           age: number
           birth_date: string
           category: Database["public"]["Enums"]["category"]
@@ -560,9 +688,9 @@ export type Database = {
           photo_url: string | null
           position: Database["public"]["Enums"]["position"]
           weight: number
-          academy_id: string | null
         }
         Insert: {
+          academy_id?: string | null
           age: number
           birth_date: string
           category: Database["public"]["Enums"]["category"]
@@ -577,9 +705,9 @@ export type Database = {
           photo_url?: string | null
           position: Database["public"]["Enums"]["position"]
           weight: number
-          academy_id?: string | null
         }
         Update: {
+          academy_id?: string | null
           age?: number
           birth_date?: string
           category?: Database["public"]["Enums"]["category"]
@@ -594,9 +722,16 @@ export type Database = {
           photo_url?: string | null
           position?: Database["public"]["Enums"]["position"]
           weight?: number
-          academy_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "players_academy_id_fkey"
+            columns: ["academy_id"]
+            isOneToOne: false
+            referencedRelation: "team_settings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       position_samples: {
         Row: {
@@ -635,30 +770,40 @@ export type Database = {
       }
       profiles: {
         Row: {
+          academy_id: string | null
+          category: Database["public"]["Enums"]["category"] | null
           created_at: string
           full_name: string | null
           id: string
           player_id: string | null
           role: string
-          academy_id: string | null
         }
         Insert: {
+          academy_id?: string | null
+          category?: Database["public"]["Enums"]["category"] | null
           created_at?: string
           full_name?: string | null
           id: string
           player_id?: string | null
           role: string
-          academy_id?: string | null
         }
         Update: {
+          academy_id?: string | null
+          category?: Database["public"]["Enums"]["category"] | null
           created_at?: string
           full_name?: string | null
           id?: string
           player_id?: string | null
           role?: string
-          academy_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_academy_id_fkey"
+            columns: ["academy_id"]
+            isOneToOne: false
+            referencedRelation: "team_settings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_player_id_fkey"
             columns: ["player_id"]
@@ -703,6 +848,41 @@ export type Database = {
           },
         ]
       }
+      tactics_plays: {
+        Row: {
+          academy_id: string | null
+          created_at: string
+          id: string
+          lines: Json
+          markers: Json
+          name: string
+        }
+        Insert: {
+          academy_id?: string | null
+          created_at?: string
+          id?: string
+          lines?: Json
+          markers?: Json
+          name: string
+        }
+        Update: {
+          academy_id?: string | null
+          created_at?: string
+          id?: string
+          lines?: Json
+          markers?: Json
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tactics_plays_academy_id_fkey"
+            columns: ["academy_id"]
+            isOneToOne: false
+            referencedRelation: "team_settings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_settings: {
         Row: {
           calib_p0_lat: number | null
@@ -717,7 +897,12 @@ export type Database = {
           id: string
           language: string
           logo_url: string | null
+          monthly_fee: number | null
           name: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_current_period_end: string | null
+          subscription_status: string
           updated_at: string
         }
         Insert: {
@@ -733,7 +918,12 @@ export type Database = {
           id?: string
           language?: string
           logo_url?: string | null
+          monthly_fee?: number | null
           name?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_current_period_end?: string | null
+          subscription_status?: string
           updated_at?: string
         }
         Update: {
@@ -749,13 +939,49 @@ export type Database = {
           id?: string
           language?: string
           logo_url?: string | null
+          monthly_fee?: number | null
           name?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_current_period_end?: string | null
+          subscription_status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      training_schedules: {
+        Row: {
+          category: string | null
+          created_at: string
+          day_of_week: number
+          id: string
+          location: string
+          notes: string
+          time: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          day_of_week: number
+          id?: string
+          location?: string
+          notes?: string
+          time?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          location?: string
+          notes?: string
+          time?: string
         }
         Relationships: []
       }
       trainings: {
         Row: {
+          academy_id: string | null
           category: Database["public"]["Enums"]["category"] | null
           created_at: string
           date: string
@@ -764,9 +990,9 @@ export type Database = {
           notes: string | null
           time: string | null
           title: string
-          academy_id: string | null
         }
         Insert: {
+          academy_id?: string | null
           category?: Database["public"]["Enums"]["category"] | null
           created_at?: string
           date: string
@@ -775,9 +1001,9 @@ export type Database = {
           notes?: string | null
           time?: string | null
           title: string
-          academy_id?: string | null
         }
         Update: {
+          academy_id?: string | null
           category?: Database["public"]["Enums"]["category"] | null
           created_at?: string
           date?: string
@@ -786,18 +1012,44 @@ export type Database = {
           notes?: string | null
           time?: string | null
           title?: string
-          academy_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "trainings_academy_id_fkey"
+            columns: ["academy_id"]
+            isOneToOne: false
+            referencedRelation: "team_settings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      create_academy_with_code: {
+        Args: {
+          p_coach_name: string
+          p_code: string
+          p_language: string
+          p_name: string
+        }
+        Returns: string
+      }
       current_player_id: { Args: never; Returns: string }
       current_role: { Args: never; Returns: string }
-      get_my_academy_id: { Args: Record<PropertyKey, never>; Returns: string }
+      get_my_academy_id: { Args: never; Returns: string }
+      get_my_category: {
+        Args: never
+        Returns: Database["public"]["Enums"]["category"]
+      }
+      get_my_player_id: { Args: never; Returns: string }
+      is_coach: { Args: never; Returns: boolean }
+      is_staff_for_category: {
+        Args: { p_category: Database["public"]["Enums"]["category"] }
+        Returns: boolean
+      }
     }
     Enums: {
       activity_category:
@@ -810,13 +1062,18 @@ export type Database = {
         | "Pliometría"
       activity_unit: "segundos" | "kg" | "repeticiones" | "metros" | "puntos"
       category:
+        | "Sub-5"
+        | "Sub-6"
+        | "Sub-7"
+        | "Sub-8"
+        | "Sub-9"
         | "Sub-10"
+        | "Sub-11"
         | "Sub-12"
+        | "Sub-13"
         | "Sub-14"
-        | "Sub-16"
-        | "Sub-18"
-        | "Juvenil"
-        | "Senior"
+        | "Sub-15"
+        | "Otra"
       device_type:
         | "polar_h10"
         | "wahoo_tickr"
@@ -845,7 +1102,6 @@ export type Database = {
 }
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
@@ -964,47 +1220,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      activity_category: [
-        "Velocidad",
-        "Fuerza",
-        "Técnica",
-        "Resistencia",
-        "Potencia",
-        "Agilidad",
-        "Pliometría",
-      ],
+      activity_category: ["Velocidad","Fuerza","Técnica","Resistencia","Potencia","Agilidad","Pliometría"],
       activity_unit: ["segundos", "kg", "repeticiones", "metros", "puntos"],
-      category: [
-        "Sub-10",
-        "Sub-12",
-        "Sub-14",
-        "Sub-16",
-        "Sub-18",
-        "Juvenil",
-        "Senior",
-      ],
-      device_type: [
-        "polar_h10",
-        "wahoo_tickr",
-        "garmin_hrm",
-        "generic_ble",
-        "manual",
-      ],
+      category: ["Sub-5","Sub-6","Sub-7","Sub-8","Sub-9","Sub-10","Sub-11","Sub-12","Sub-13","Sub-14","Sub-15","Otra"],
+      device_type: ["polar_h10","wahoo_tickr","garmin_hrm","generic_ble","manual"],
       dominant_foot: ["Derecha", "Izquierda", "Ambidiestro"],
       intensity: ["Baja", "Media", "Alta"],
-      position: [
-        "Portero",
-        "Defensa Central",
-        "Lateral Derecho",
-        "Lateral Izquierdo",
-        "Mediocampista Defensivo",
-        "Mediocampista Central",
-        "Mediocampista Ofensivo",
-        "Extremo Derecho",
-        "Extremo Izquierdo",
-        "Delantero Centro",
-        "Segundo Delantero",
-      ],
+      position: ["Portero","Defensa Central","Lateral Derecho","Lateral Izquierdo","Mediocampista Defensivo","Mediocampista Central","Mediocampista Ofensivo","Extremo Derecho","Extremo Izquierdo","Delantero Centro","Segundo Delantero"],
     },
   },
 } as const

@@ -17,16 +17,17 @@ import { players as playersDict } from "@/lib/i18n/dictionaries/players"
 import { useEnumT } from "@/lib/i18n/enums"
 
 const POSITIONS: Position[] = ["Portero","Defensa Central","Lateral Derecho","Lateral Izquierdo","Mediocampista Defensivo","Mediocampista Central","Mediocampista Ofensivo","Extremo Derecho","Extremo Izquierdo","Delantero Centro","Segundo Delantero"]
-const CATEGORIES: Category[] = ["Sub-10","Sub-12","Sub-14","Sub-16","Sub-18","Juvenil","Senior"]
+const CATEGORIES: Category[] = ["Sub-5","Sub-6","Sub-7","Sub-8","Sub-9","Sub-10","Sub-11","Sub-12","Sub-13","Sub-14","Sub-15","Otra"]
 const FEET: DominantFoot[] = ["Derecha","Izquierda","Ambidiestro"]
 
 export default function EditPlayerPage() {
   const { id } = useParams<{ id: string }>()
-  const { getPlayer, updatePlayer, deletePlayer } = useApp()
+  const { getPlayer, updatePlayer, deletePlayer, currentUser } = useApp()
   const router = useRouter()
   const t = useT(playersDict)
   const e = useEnumT()
   const player = getPlayer(id)
+  const isAssistant = currentUser?.role === "assistant"
 
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -116,7 +117,7 @@ export default function EditPlayerPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Select label={t("positionLabel")} value={form.position} onChange={ev => set("position", ev.target.value)} required options={POSITIONS.map(p => ({ value: p, label: e.position(p) }))} />
                   <Select label={t("dominantFootLabel")} value={form.dominant_foot} onChange={ev => set("dominant_foot", ev.target.value)} required options={FEET.map(f => ({ value: f, label: e.dominantFoot(f) }))} />
-                  <Select label={t("categoryLabel")} value={form.category} onChange={ev => set("category", ev.target.value)} required options={CATEGORIES.map(c => ({ value: c, label: e.category(c) }))} />
+                  <Select label={t("categoryLabel")} value={form.category} onChange={ev => set("category", ev.target.value)} required disabled={isAssistant} options={CATEGORIES.map(c => ({ value: c, label: e.category(c) }))} />
                   <Input label={t("clubLabel")} value={form.club} onChange={ev => set("club", ev.target.value)} />
                 </div>
               </div>

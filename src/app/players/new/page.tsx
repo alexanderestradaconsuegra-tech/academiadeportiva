@@ -18,19 +18,20 @@ import { players as playersDict } from "@/lib/i18n/dictionaries/players"
 import { useEnumT } from "@/lib/i18n/enums"
 
 const POSITIONS: Position[] = ["Portero","Defensa Central","Lateral Derecho","Lateral Izquierdo","Mediocampista Defensivo","Mediocampista Central","Mediocampista Ofensivo","Extremo Derecho","Extremo Izquierdo","Delantero Centro","Segundo Delantero"]
-const CATEGORIES: Category[] = ["Sub-10","Sub-12","Sub-14","Sub-16","Sub-18","Juvenil","Senior"]
+const CATEGORIES: Category[] = ["Sub-5","Sub-6","Sub-7","Sub-8","Sub-9","Sub-10","Sub-11","Sub-12","Sub-13","Sub-14","Sub-15","Otra"]
 const FEET: DominantFoot[] = ["Derecha","Izquierda","Ambidiestro"]
 
 export default function NewPlayerPage() {
-  const { addPlayer } = useApp()
+  const { addPlayer, currentUser } = useApp()
   const router = useRouter()
   const t = useT(playersDict)
   const e = useEnumT()
+  const isAssistant = currentUser?.role === "assistant"
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     name: "", age: "", birth_date: "", position: "" as Position | "",
     dominant_foot: "" as DominantFoot | "", height: "", weight: "",
-    club: "Academia FutbolMetrics", category: "" as Category | "",
+    club: "Academia Metrikas", category: (currentUser?.category ?? "") as Category | "",
     objective: "", notes: "", photo_url: "",
   })
 
@@ -128,10 +129,10 @@ export default function NewPlayerPage() {
                   <Select
                     label={t("categoryLabel")}
                     value={form.category} onChange={ev => set("category", ev.target.value)}
-                    placeholder={t("selectPlaceholder")} required
+                    placeholder={t("selectPlaceholder")} required disabled={isAssistant}
                     options={CATEGORIES.map(c => ({ value: c, label: e.category(c) }))}
                   />
-                  <Input label={t("clubLabel")} placeholder="Academia FutbolMetrics" value={form.club} onChange={ev => set("club", ev.target.value)} />
+                  <Input label={t("clubLabel")} placeholder="Academia Metrikas" value={form.club} onChange={ev => set("club", ev.target.value)} />
                 </div>
               </div>
 

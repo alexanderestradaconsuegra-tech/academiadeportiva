@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, RsvpStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer, TrainingSchedule } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
@@ -22,6 +22,7 @@ interface AppState {
   injuries: Injury[]
   payments: Payment[]
   convocatorias: Convocatoria[]
+  trainingSchedules: TrainingSchedule[]
   isAuthenticated: boolean
   isOnboarding: boolean
   authReady: boolean
@@ -32,7 +33,7 @@ interface AppState {
 interface AppContextType extends AppState {
   language: Language
   login: (email: string, password: string) => Promise<string | null>
-  createAcademy: (academyName: string, lang: Language, coachName: string) => Promise<string | null>
+  createAcademy: (academyName: string, lang: Language, coachName: string, activationCode: string) => Promise<string | null>
   logout: () => void
   addPlayer: (player: Omit<Player, "id" | "created_at">) => Player
   updatePlayer: (id: string, data: Partial<Player>) => void
@@ -70,6 +71,10 @@ interface AppContextType extends AppState {
   deletePositionSession: (playerId: string, sessionLabel: string) => void
   getPlayerPositionSamples: (playerId: string) => PositionSample[]
   upsertAttendance: (trainingId: string, playerId: string, status: AttendanceStatus) => void
+  upsertRsvp: (trainingId: string, playerId: string, rsvp: RsvpStatus) => void
+  upsertTrainingSchedule: (schedule: Omit<TrainingSchedule, "id" | "created_at">) => Promise<void>
+  deleteTrainingSchedule: (id: string) => void
+  generateMonthTrainings: (year: number, month: number) => Promise<{ created: number; skipped: number }>
   getTrainingAttendance: (trainingId: string) => Attendance[]
   getPlayerAttendance: (playerId: string) => Attendance[]
   addPhysicalTest: (data: Omit<PhysicalTest, "id" | "created_at">) => PhysicalTest
@@ -84,6 +89,7 @@ interface AppContextType extends AppState {
   deletePayment: (id: string) => void
   getPlayerPayments: (playerId: string) => Payment[]
   getConvocatoria: (matchId: string) => Convocatoria | undefined
+  refreshConvocatoria: (matchId: string) => Promise<void>
   saveConvocatoria: (matchId: string, formation: string, notes: string, players: ConvocatoriaPlayer[]) => Promise<string | null>
   respondConvocatoria: (convocatoriaPlayerId: string, confirmed: boolean) => Promise<string | null>
   getPlayerConvocatoria: (playerId: string) => { convocatoria: Convocatoria; match: Match } | null
@@ -214,6 +220,14 @@ function mapTeamSettings(row: Tables<"team_settings">): TeamSettings {
     calib_p1_lng: row.calib_p1_lng,
     calib_p2_lat: row.calib_p2_lat,
     calib_p2_lng: row.calib_p2_lng,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    subscription_status: ((row as any).subscription_status ?? "active") as TeamSettings["subscription_status"],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    subscription_current_period_end: (row as any).subscription_current_period_end ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    stripe_customer_id: (row as any).stripe_customer_id ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    stripe_subscription_id: (row as any).stripe_subscription_id ?? null,
   }
 }
 
@@ -236,6 +250,7 @@ function mapAttendance(row: Tables<"attendance">): Attendance {
     training_id: row.training_id,
     player_id: row.player_id,
     status: row.status as AttendanceStatus,
+    rsvp: (row.rsvp ?? "pending") as RsvpStatus,
     notes: row.notes ?? null,
     created_at: row.created_at,
   }
@@ -347,6 +362,8 @@ function mapProfile(row: Tables<"profiles">): Profile {
     player_id: row.player_id,
     full_name: row.full_name || "",
     academy_id: row.academy_id ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    category: (row as any).category ?? null,
   }
 }
 
@@ -368,6 +385,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     injuries: [],
     payments: [],
     convocatorias: [],
+    trainingSchedules: [],
     isAuthenticated: false,
     isOnboarding: false,
     authReady: false,
@@ -417,6 +435,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from("injuries").select("*"),
       supabase.from("payments").select("*"),
     ])
+    const { data: schedulesData } = await supabase.from("training_schedules").select("*")
     // Fetch convocatorias with players joined
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: convData } = await (supabase as any).from("convocatorias").select("*, convocatoria_players(*)")
@@ -458,6 +477,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       injuries: (injuriesRes.data ?? []).map(mapInjury),
       payments: (paymentsRes.data ?? []).map(mapPayment),
       convocatorias,
+      trainingSchedules: (schedulesData ?? []).map(r => ({
+        id: r.id, day_of_week: r.day_of_week, time: r.time ?? "",
+        category: r.category ?? null, location: r.location ?? "", notes: r.notes ?? "", created_at: r.created_at,
+      })),
     }))
   }, [])
 
@@ -506,6 +529,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           injuries: [],
           payments: [],
           convocatorias: [],
+          trainingSchedules: [],
         }))
       }
     })
@@ -526,27 +550,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return null
   }, [loadProfileFor, loadTeamSettings, loadPlayerData, state.teamSettings?.language])
 
-  const createAcademy = useCallback(async (academyName: string, lang: Language, coachName: string): Promise<string | null> => {
+  const createAcademy = useCallback(async (academyName: string, lang: Language, coachName: string, activationCode: string): Promise<string | null> => {
     const { data: sessionData } = await supabase.auth.getSession()
     const userId = sessionData.session?.user.id
     if (!userId) return "No autenticado"
 
-    const { data: academy, error: academyErr } = await supabase
-      .from("team_settings")
-      .insert({ name: academyName, language: lang, updated_at: new Date().toISOString() })
-      .select()
-      .single()
-    if (academyErr || !academy) return academyErr?.message ?? "Error al crear la academia"
+    const { error: rpcError } = await supabase.rpc("create_academy_with_code", {
+      p_code: activationCode,
+      p_name: academyName,
+      p_language: lang,
+      p_coach_name: coachName,
+    })
+    if (rpcError) return rpcError.message ?? "Error al crear la academia"
 
-    const { data: profileRow, error: profileErr } = await supabase
-      .from("profiles")
-      .insert({ id: userId, role: "coach", full_name: coachName, academy_id: academy.id })
-      .select()
-      .single()
-    if (profileErr || !profileRow) return profileErr?.message ?? "Error al crear el perfil"
+    const { data: profileRow } = await supabase.from("profiles").select("*").eq("id", userId).single()
+    if (!profileRow || !profileRow.academy_id) return "Error al cargar el perfil"
+
+    const { data: settingsRow } = await supabase.from("team_settings").select("*").eq("id", profileRow.academy_id).single()
+    if (!settingsRow) return "Error al cargar la academia"
 
     const profile = mapProfile(profileRow)
-    const settings = mapTeamSettings(academy)
+    const settings = mapTeamSettings(settingsRow)
     setState(s => ({ ...s, isOnboarding: false, currentUser: profile, teamSettings: settings }))
     await loadPlayerData()
     return null
@@ -977,11 +1001,80 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (existing) {
         return { ...s, attendance: s.attendance.map(a => a.training_id === trainingId && a.player_id === playerId ? { ...a, status } : a) }
       }
-      const record: Attendance = { id: crypto.randomUUID(), training_id: trainingId, player_id: playerId, status, notes: null, created_at: new Date().toISOString() }
+      const record: Attendance = { id: crypto.randomUUID(), training_id: trainingId, player_id: playerId, status, rsvp: "pending", notes: null, created_at: new Date().toISOString() }
       return { ...s, attendance: [...s.attendance, record] }
     })
     supabase.from("attendance").upsert({ training_id: trainingId, player_id: playerId, status }, { onConflict: "training_id,player_id" })
       .then(({ error }) => { if (error) dbg("upsertAttendance:", error) })
+  }, [])
+
+  const upsertRsvp = useCallback((trainingId: string, playerId: string, rsvp: RsvpStatus) => {
+    setState(s => {
+      const existing = s.attendance.find(a => a.training_id === trainingId && a.player_id === playerId)
+      if (existing) {
+        return { ...s, attendance: s.attendance.map(a => a.training_id === trainingId && a.player_id === playerId ? { ...a, rsvp } : a) }
+      }
+      const record: Attendance = { id: crypto.randomUUID(), training_id: trainingId, player_id: playerId, status: "present", rsvp, notes: null, created_at: new Date().toISOString() }
+      return { ...s, attendance: [...s.attendance, record] }
+    })
+    supabase.from("attendance").upsert({ training_id: trainingId, player_id: playerId, rsvp, status: "present" as const }, { onConflict: "training_id,player_id" })
+      .then(({ error }) => { if (error) dbg("upsertRsvp:", error) })
+  }, [])
+
+  const upsertTrainingSchedule = useCallback(async (schedule: Omit<TrainingSchedule, "id" | "created_at">) => {
+    const { data, error } = await supabase.from("training_schedules")
+      .upsert({ ...schedule }, { onConflict: "day_of_week" })
+      .select().single()
+    if (error) { dbg("upsertTrainingSchedule:", error); return }
+    setState(s => {
+      const exists = s.trainingSchedules.find(sc => sc.day_of_week === schedule.day_of_week)
+      const updated = exists
+        ? s.trainingSchedules.map(sc => sc.day_of_week === schedule.day_of_week ? { ...sc, ...schedule, id: data.id } : sc)
+        : [...s.trainingSchedules, { ...schedule, id: data.id, created_at: data.created_at }]
+      return { ...s, trainingSchedules: updated }
+    })
+  }, [])
+
+  const deleteTrainingSchedule = useCallback((id: string) => {
+    setState(s => ({ ...s, trainingSchedules: s.trainingSchedules.filter(sc => sc.id !== id) }))
+    supabase.from("training_schedules").delete().eq("id", id)
+      .then(({ error }) => { if (error) dbg("deleteTrainingSchedule:", error) })
+  }, [])
+
+  const generateMonthTrainings = useCallback(async (year: number, month: number): Promise<{ created: number; skipped: number }> => {
+    const schedules = (await supabase.from("training_schedules").select("*")).data ?? []
+    if (schedules.length === 0) return { created: 0, skipped: 0 }
+
+    // Gather all days in the month that match a scheduled day_of_week
+    const candidates: { date: string; time: string; category: string | null; location: string; notes: string }[] = []
+    const daysInMonth = new Date(year, month, 0).getDate()
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dt = new Date(year, month - 1, d)
+      const dow = dt.getDay() // 0=Sun … 6=Sat
+      const match = schedules.find(sc => sc.day_of_week === dow)
+      if (!match) continue
+      const dateStr = dt.toISOString().split("T")[0]
+      candidates.push({ date: dateStr, time: match.time ?? "", category: match.category ?? null, location: match.location ?? "", notes: match.notes ?? "" })
+    }
+
+    // Skip dates that already have a training
+    const { data: existingRaw } = await supabase.from("trainings").select("date")
+      .gte("date", `${year}-${String(month).padStart(2, "0")}-01`)
+      .lte("date", `${year}-${String(month).padStart(2, "0")}-${String(daysInMonth).padStart(2, "0")}`)
+    const existingDates = new Set((existingRaw ?? []).map(r => r.date))
+
+    const toInsert = candidates.filter(c => !existingDates.has(c.date))
+    if (toInsert.length === 0) return { created: 0, skipped: candidates.length }
+
+    const rows = toInsert.map(c => ({
+      title: "Entrenamiento", date: c.date, time: c.time,
+      category: c.category as Category | null, location: c.location, notes: c.notes,
+    }))
+    const { data: inserted, error } = await supabase.from("trainings").insert(rows).select()
+    if (error) { dbg("generateMonthTrainings:", error); return { created: 0, skipped: candidates.length } }
+
+    setState(s => ({ ...s, trainings: [...s.trainings, ...(inserted ?? []).map(mapTraining)] }))
+    return { created: (inserted ?? []).length, skipped: candidates.length - (inserted ?? []).length }
   }, [])
 
   const getTrainingAttendance = useCallback(
@@ -1153,6 +1246,43 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return null
   }, [state.teamSettings])
 
+  const refreshConvocatoria = useCallback(async (matchId: string): Promise<void> => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = supabase as any
+    const { data: convData } = await sb
+      .from("convocatorias")
+      .select("*, convocatoria_players(*)")
+      .eq("match_id", matchId)
+      .maybeSingle()
+    if (!convData) return
+    const refreshed: Convocatoria = {
+      id: convData.id,
+      match_id: convData.match_id,
+      academy_id: convData.academy_id ?? null,
+      formation: convData.formation ?? "",
+      notes: convData.notes ?? "",
+      created_at: convData.created_at,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      players: (convData.convocatoria_players ?? []).map((p: any): ConvocatoriaPlayer => ({
+        id: p.id,
+        convocatoria_id: p.convocatoria_id,
+        player_id: p.player_id,
+        position_label: p.position_label ?? "",
+        x: p.x ?? 50,
+        y: p.y ?? 50,
+        instruction: p.instruction ?? "",
+        confirmed: p.confirmed ?? null,
+        created_at: p.created_at,
+      })),
+    }
+    setState(s => ({
+      ...s,
+      convocatorias: s.convocatorias.some(c => c.match_id === matchId)
+        ? s.convocatorias.map(c => c.match_id === matchId ? refreshed : c)
+        : [...s.convocatorias, refreshed],
+    }))
+  }, [])
+
   const respondConvocatoria = useCallback(async (convocatoriaPlayerId: string, confirmed: boolean): Promise<string | null> => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sb = supabase as any
@@ -1266,6 +1396,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         deletePositionSession,
         getPlayerPositionSamples,
         upsertAttendance,
+        upsertRsvp,
+        upsertTrainingSchedule,
+        deleteTrainingSchedule,
+        generateMonthTrainings,
         getTrainingAttendance,
         getPlayerAttendance,
         addPhysicalTest,
@@ -1280,6 +1414,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         deletePayment,
         getPlayerPayments,
         getConvocatoria,
+        refreshConvocatoria,
         saveConvocatoria,
         respondConvocatoria,
         getPlayerConvocatoria,

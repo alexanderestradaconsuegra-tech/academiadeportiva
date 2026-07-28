@@ -1,22 +1,25 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
+import ConvocatoriaPitch from "@/components/ConvocatoriaPitch"
 import { ArrowLeft, MapPin, Clock, Trophy, MessageSquare, Check, X, Loader2 } from "lucide-react"
 import { avatarUrl, formatDate } from "@/lib/utils"
 import { cn } from "@/lib/utils"
 
 export default function ConvocatoriaViewPage() {
   const { id } = useParams<{ id: string }>()
-  const { matches, players, currentUser, getConvocatoria, respondConvocatoria } = useApp()
+  const { matches, players, currentUser, getConvocatoria, refreshConvocatoria, respondConvocatoria } = useApp()
 
   const [responding, setResponding] = useState<"confirm" | "decline" | null>(null)
 
   const match = matches.find(m => m.id === id)
   const convocatoria = getConvocatoria(id)
   const myPlayerId = currentUser?.player_id ?? null
+
+  useEffect(() => { refreshConvocatoria(id) }, [id, refreshConvocatoria])
 
   async function handleRespond(confirmed: boolean) {
     if (!myPlayerId || !convocatoria) return
@@ -150,6 +153,17 @@ export default function ConvocatoriaViewPage() {
                 No puedo ir
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Formation pitch */}
+        {isConvocated && convocatoria.players.length > 0 && (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4">
+            <p className="text-sm font-bold text-slate-900 dark:text-white mb-1">Formación</p>
+            {convocatoria.formation && convocatoria.formation !== "custom" && (
+              <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">{convocatoria.formation}</p>
+            )}
+            <ConvocatoriaPitch pitchPlayers={convocatoria.players} players={players} highlightPlayerId={myPlayerId} />
           </div>
         )}
 

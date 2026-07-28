@@ -1,6 +1,6 @@
 {
-  "name": "FutbolMetrics",
-  "short_name": "FutbolMetrics",
+  "name": "Metrikas",
+  "short_name": "Metrikas",
   "description": "Sistema premium para academias de fútbol",
   "start_url": "/dashboard",
   "display": "standalone",

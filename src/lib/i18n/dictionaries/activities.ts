@@ -30,6 +30,7 @@ export const activities = {
   pasteYoutubeLink: { es: "Pega el link de YouTube...", en: "Paste the YouTube link...", pt: "Cole o link do YouTube..." },
   deleteExercise: { es: "Eliminar ejercicio", en: "Delete exercise", pt: "Excluir exercício" },
   viewVideo: { es: "Ver video", en: "View video", pt: "Ver vídeo" },
+  hideVideo: { es: "Ocultar video", en: "Hide video", pt: "Ocultar vídeo" },
   noVideoYet: { es: "Sin video todavía", en: "No video yet", pt: "Sem vídeo ainda" },
   newExercisePlaceholder: { es: "Nuevo ejercicio...", en: "New exercise...", pt: "Novo exercício..." },
   add: { es: "Agregar", en: "Add", pt: "Adicionar" },

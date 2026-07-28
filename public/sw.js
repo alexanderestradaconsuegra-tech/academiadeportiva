@@ -1,12 +1,12 @@
 self.addEventListener("push", (event) => {
-  let data = { title: "FutbolMetrics", body: "" }
+  let data = { title: "Metrikas", body: "" }
   try {
     if (event.data) data = event.data.json()
   } catch {
-    data = { title: "FutbolMetrics", body: event.data ? event.data.text() : "" }
+    data = { title: "Metrikas", body: event.data ? event.data.text() : "" }
   }
 
-  const title = data.title || "FutbolMetrics"
+  const title = data.title || "Metrikas"
   const options = {
     body: data.body || "",
     icon: "/icon-192.png",

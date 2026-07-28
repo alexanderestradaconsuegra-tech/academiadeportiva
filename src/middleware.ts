@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextRequest, NextResponse } from "next/server"
 
-const PUBLIC_PATHS = new Set(["/", "/onboarding", "/forgot-password", "/reset-password"])
+const PUBLIC_PATHS = new Set(["/", "/login", "/onboarding", "/forgot-password", "/reset-password", "/legal/privacy", "/legal/terms"])
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -41,7 +41,7 @@ export async function middleware(req: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session) {
-    return NextResponse.redirect(new URL("/", req.url))
+    return NextResponse.redirect(new URL("/login", req.url))
   }
 
   return res

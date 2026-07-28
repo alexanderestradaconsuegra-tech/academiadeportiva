@@ -34,7 +34,7 @@ export default function ResetPasswordPage() {
       setError("No se pudo actualizar la contraseña. El enlace puede haber expirado.")
     } else {
       setDone(true)
-      setTimeout(() => router.replace("/"), 3000)
+      setTimeout(() => router.replace("/login"), 3000)
     }
   }
 
@@ -45,7 +45,7 @@ export default function ResetPasswordPage() {
           <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur mx-auto flex items-center justify-center mb-4">
             <Trophy className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-black text-white mb-1">FutbolMetrics</h1>
+          <h1 className="text-2xl font-black text-white mb-1">Metrikas</h1>
           <p className="text-blue-200/70 text-sm">Nueva contraseña</p>
         </div>
 

@@ -67,3 +67,9 @@ export function avatarUrl(name: string, id: string): string {
   const seed = encodeURIComponent(name + id)
   return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}&backgroundColor=0B5CFF`
 }
+
+export function getYoutubeEmbedUrl(url: string): string | null {
+  if (!url) return null
+  const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  return match ? `https://www.youtube.com/embed/${match[1]}` : null
+}

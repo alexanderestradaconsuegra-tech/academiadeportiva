@@ -2,7 +2,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useApp } from "@/context/AppContext"
-import { Trophy, UserCircle, LogOut, Sun, Moon } from "lucide-react"
+import { Trophy, UserCircle, LogOut, Sun, Moon, CalendarDays, Film, Clapperboard } from "lucide-react"
 import { cn } from "@/lib/utils"
 import PushToggle from "@/components/PushToggle"
 
@@ -14,6 +14,9 @@ export default function PlayerNav() {
   const NAV = [
     { href: profilePath ?? "#", icon: UserCircle, label: "Mi perfil" },
     { href: "/matches", icon: Trophy, label: "Partidos" },
+    { href: "/calendar", icon: CalendarDays, label: "Entrenos" },
+    { href: "/activities/exercises", icon: Film, label: "Ejercicios" },
+    { href: "/tactics", icon: Clapperboard, label: "Tácticas" },
   ]
 
   return (
@@ -52,7 +55,7 @@ export default function PlayerNav() {
               }
             </div>
             <div className="min-w-0">
-              <span className="text-[14px] font-bold text-slate-900 dark:text-white truncate block">{teamSettings?.name || "FutbolMetrics"}</span>
+              <span className="text-[14px] font-bold text-slate-900 dark:text-white truncate block">{teamSettings?.name || "Metrikas"}</span>
               <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Jugador</p>
             </div>
           </div>
