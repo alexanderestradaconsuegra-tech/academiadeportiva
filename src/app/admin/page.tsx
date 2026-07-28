@@ -76,6 +76,9 @@ export default function AdminPage() {
             <h1 className="text-lg font-bold text-slate-900">Panel de administración — Academias</h1>
           </div>
           <div className="flex items-center gap-2">
+            <a href="/admin/codes" className="h-9 px-3 rounded-xl border border-slate-200 bg-white flex items-center gap-1.5 text-slate-600 hover:bg-slate-50 text-xs font-semibold">
+              🔑 Códigos
+            </a>
             <button onClick={load} className="w-9 h-9 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-slate-500 hover:bg-slate-50">
               <RefreshCw size={15} />
             </button>
