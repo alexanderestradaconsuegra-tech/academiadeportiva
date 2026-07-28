@@ -6,7 +6,7 @@ const THIAGO = {
   name: "Thiago E.",
   position: "EI",
   category: "SUB-16",
-  photoUrl: null as string | null,
+  photoUrl: "https://lh3.googleusercontent.com/d/1Ht2izdMUdsY1j1SzKDLuFFiHeZnXMNdW" as string | null,
   jerseyColor: "from-blue-500 via-blue-600 to-indigo-700",
   stats: [
     { label: "Velocidad", key: "VEL", value: 93 },
