@@ -13,8 +13,6 @@ import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler
 import { parseTrackFile, summarizeTrack, extractBiometrics, buildTransform, type TrackSummary, type BiometricSummary } from "@/lib/gps"
 import { supabase } from "@/lib/supabase"
 import { generatePlayerPDF } from "@/lib/generatePlayerPDF"
-import PlayerCardModal from "@/components/ui/PlayerCardModal"
-import PlayerForm from "@/components/ui/PlayerForm"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
 import type { Evaluation, PhysicalTest, InjurySeverity } from "@/lib/types"
 import { useMemo } from "react"
@@ -370,23 +368,26 @@ export default function PlayerProfilePage() {
   const upcomingConvocatoria = getPlayerConvocatoria(id)
 
   const [pdfLoading, setPdfLoading] = useState(false)
-  const [showPdfMenu, setShowPdfMenu] = useState(false)
-  const [showCardModal, setShowCardModal] = useState(false)
-  const pdfMenuRef = useRef<HTMLDivElement>(null)
+  const cardRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (!showPdfMenu) return
-    function onClickOutside(e: MouseEvent) {
-      if (!pdfMenuRef.current?.contains(e.target as Node)) setShowPdfMenu(false)
-    }
-    document.addEventListener("mousedown", onClickOutside)
-    return () => document.removeEventListener("mousedown", onClickOutside)
-  }, [showPdfMenu])
+  async function downloadCard() {
+    if (!cardRef.current) return
+    const h2c = (await import("html2canvas")).default
+    const canvas = await h2c(cardRef.current, { scale: 2, useCORS: true })
+    canvas.toBlob((blob) => {
+      if (!blob) return
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `carta-${player?.name.replace(/ /g, "-").toLowerCase() ?? "jugador"}.png`
+      a.click()
+      URL.revokeObjectURL(url)
+    }, "image/png")
+  }
 
   async function handleDownloadPDF() {
     if (!player) return
     setPdfLoading(true)
-    setShowPdfMenu(false)
     await generatePlayerPDF({
       player,
       academyName: teamSettings?.name ?? "Metrikas",
@@ -543,46 +544,14 @@ export default function PlayerProfilePage() {
             <div className="flex-1">
               <p className="text-blue-200/70 text-xs font-medium">{t("playerProfile")}</p>
             </div>
-            <div className="relative no-print" ref={pdfMenuRef}>
-              <button
-                onClick={() => setShowPdfMenu(v => !v)}
-                disabled={pdfLoading}
-                className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center text-white hover:bg-white/25 transition-colors disabled:opacity-60"
-                title={t("downloadPdf")}
-              >
-                {pdfLoading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
-              </button>
-              {showPdfMenu && (
-                <div className="absolute right-0 top-11 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden z-50 w-52">
-                  <button
-                    onClick={handleDownloadPDF}
-                    disabled={pdfLoading}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left disabled:opacity-60"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
-                      <Download size={14} className="text-[#0B5CFF]" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">Reporte completo</p>
-                      <p className="text-xs text-slate-400">Historial y estadísticas</p>
-                    </div>
-                  </button>
-                  <div className="h-px bg-slate-100 dark:bg-slate-800 mx-3" />
-                  <button
-                    onClick={() => { setShowPdfMenu(false); setShowCardModal(true) }}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-left"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center shrink-0">
-                      <Star size={14} className="text-amber-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">Carta de perfil</p>
-                      <p className="text-xs text-slate-400">Tarjeta estilo FIFA</p>
-                    </div>
-                  </button>
-                </div>
-              )}
-            </div>
+            <button
+              onClick={handleDownloadPDF}
+              disabled={pdfLoading}
+              className="no-print w-9 h-9 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center text-white hover:bg-white/25 transition-colors disabled:opacity-60"
+              title={t("downloadPdf")}
+            >
+              {pdfLoading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+            </button>
             {isCoach && (
               <Link href={`/players/${id}/edit`}>
                 <Button variant="outline" size="sm" className="no-print bg-white/10 border-white/20 text-white hover:bg-white/20">
@@ -736,8 +705,85 @@ export default function PlayerProfilePage() {
                 </div>
               )}
 
-              {/* Forma actual — auto score */}
-              <PlayerForm baseEval={latestEval ?? undefined} activities={activities} attendances={playerAttendance} />
+              {/* Inline FIFA player card */}
+              {latestEval && player && (() => {
+                const stats = [
+                  { key: "VEL", value: Math.round(latestEval.speed_score * 10) },
+                  { key: "FUE", value: Math.round(latestEval.strength_score * 10) },
+                  { key: "TEC", value: Math.round(latestEval.technique_score * 10) },
+                  { key: "RES", value: Math.round(latestEval.resistance_score * 10) },
+                  { key: "POT", value: Math.round(latestEval.power_score * 10) },
+                  { key: "AGI", value: Math.round(latestEval.agility_score * 10) },
+                ]
+                const ovr = Math.round(stats.reduce((s, x) => s + x.value, 0) / stats.length)
+                const badge = ovr >= 88 ? "ELITE" : ovr >= 75 ? "TOP" : "PRO"
+                return (
+                  <div className="flex flex-col items-center gap-4 py-2">
+                    <div
+                      ref={cardRef}
+                      style={{
+                        width: 280,
+                        height: 420,
+                        borderRadius: 16,
+                        background: "linear-gradient(175deg, #0f1f60 0%, #080d2e 40%, #030812 100%)",
+                        boxShadow: "inset 0 0 0 1px rgba(251,191,36,0.2), 0 20px 60px rgba(0,0,0,0.5)",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        padding: "18px 20px 14px",
+                        fontFamily: "system-ui, sans-serif",
+                        position: "relative",
+                      }}
+                    >
+                      {/* Top row: OVR + badge + academy */}
+                      <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                        <div>
+                          <div style={{ fontSize: 42, fontWeight: 900, color: "#facc15", lineHeight: 1 }}>{ovr}</div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: "#facc15", letterSpacing: 2 }}>{badge}</div>
+                          <div style={{ fontSize: 9, color: "rgba(251,191,36,0.65)", marginTop: 2 }}>{player.position}</div>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{ fontSize: 8, color: "rgba(251,191,36,0.45)", textTransform: "uppercase", letterSpacing: 1, maxWidth: 90 }}>{teamSettings?.name ?? "Metrikas"}</div>
+                        </div>
+                      </div>
+                      {/* Photo */}
+                      {player.photo_url ? (
+                        <img
+                          src={player.photo_url}
+                          alt={player.name}
+                          crossOrigin="anonymous"
+                          style={{ width: 130, height: 130, objectFit: "cover", borderRadius: "50%", border: "3px solid rgba(251,191,36,0.35)", marginBottom: 10 }}
+                        />
+                      ) : (
+                        <div style={{ width: 130, height: 130, borderRadius: "50%", background: "rgba(251,191,36,0.08)", border: "3px solid rgba(251,191,36,0.35)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10, fontSize: 44, color: "rgba(251,191,36,0.4)", fontWeight: 900 }}>
+                          {player.name.charAt(0)}
+                        </div>
+                      )}
+                      {/* Name + category */}
+                      <div style={{ textAlign: "center", marginBottom: 14 }}>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: 1, textTransform: "uppercase" }}>{player.name}</div>
+                        <div style={{ fontSize: 9, color: "rgba(251,191,36,0.55)", marginTop: 3 }}>{player.category}</div>
+                      </div>
+                      {/* Stats grid */}
+                      <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "7px 20px" }}>
+                        {stats.map(({ key, value }) => (
+                          <div key={key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.45)", letterSpacing: 1 }}>{key}</span>
+                            <span style={{ fontSize: 15, fontWeight: 900, color: value >= 80 ? "#facc15" : value >= 65 ? "#34d399" : "#38bdf8" }}>{value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <button
+                      onClick={downloadCard}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold text-sm transition-colors"
+                    >
+                      <Download size={14} />
+                      Descargar PNG
+                    </button>
+                  </div>
+                )
+              })()}
 
               {/* Before/after comparison */}
               {evaluations.length > 1 && <EvaluationComparison evaluations={evaluations} />}
@@ -1442,14 +1488,6 @@ export default function PlayerProfilePage() {
         )}
       </div>
 
-      {showCardModal && player && (
-        <PlayerCardModal
-          player={player}
-          academyName={teamSettings?.name ?? "Metrikas"}
-          evaluation={latestEval ?? undefined}
-          onClose={() => setShowCardModal(false)}
-        />
-      )}
     </AppShell>
   )
 }
