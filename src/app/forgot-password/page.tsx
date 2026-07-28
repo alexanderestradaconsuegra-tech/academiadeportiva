@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
           <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur mx-auto flex items-center justify-center mb-4">
             <Trophy className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-2xl font-black text-white mb-1">FutbolMetrics</h1>
+          <h1 className="text-2xl font-black text-white mb-1">Metrikas</h1>
           <p className="text-blue-200/70 text-sm">Recuperar contraseña</p>
         </div>
 

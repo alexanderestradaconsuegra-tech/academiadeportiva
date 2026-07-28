@@ -84,7 +84,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#05122F]/80 border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center -ml-4">
-            <img src="/logo-metrikas.png" alt="Metrikas" className="h-28 w-auto max-w-[240px] object-contain object-left mt-4 md:mt-0" />
+            <img src="/logo-metrikas.png" alt="Metrikas" className="h-32 w-auto max-w-[260px] object-contain object-left mt-5 md:mt-0" />
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-blue-100/70">
             <a href="#caracteristicas" className="hover:text-white transition-colors">Características</a>
@@ -125,50 +125,77 @@ export default function LandingPage() {
         </svg>
       </a>
 
-      {/* Hero — with interactive pitch */}
-      <section className="relative">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-fuchsia-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        {/* Background depth layers */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#071B4D] via-[#05122F] to-[#020818]" />
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-600/8 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+        {/* Subtle grid lines */}
+        <div className="absolute inset-0 opacity-[0.025] pointer-events-none"
+          style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.8) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.8) 1px,transparent 1px)", backgroundSize: "60px 60px" }} />
+
         <div className="max-w-7xl mx-auto px-6 pt-12 pb-16 md:pt-20 md:pb-24 relative z-10">
-          <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-10 lg:gap-16 items-center">
+          <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] gap-12 lg:gap-16 items-center">
             <div>
-              <div className="flex flex-wrap gap-2 mb-6">
-                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-4 py-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-slow" />
-                  <span className="text-white/80 text-xs font-medium">Interactivo · pruébalo ahora →</span>
-                </div>
-                <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-400/30 backdrop-blur rounded-full px-4 py-1.5">
-                  <span className="text-emerald-300 text-xs font-bold">🎁 7 días gratis · sin tarjeta</span>
-                </div>
+              {/* Tag */}
+              <div className="inline-flex items-center gap-2 bg-white/8 border border-white/12 backdrop-blur rounded-full px-4 py-1.5 mb-7">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-white/70 text-xs font-semibold tracking-wide">Para entrenadores y directores técnicos</span>
               </div>
-              <h1 className="text-4xl md:text-5xl xl:text-6xl font-black leading-[1.05] mb-5">
-                La app que reemplaza el Excel, el papel <span className="bg-gradient-to-r from-[#0B5CFF] via-cyan-300 to-fuchsia-400 bg-clip-text text-transparent">y el grupo de WhatsApp</span> de tu academia.
+
+              {/* Headline */}
+              <h1 className="text-4xl md:text-5xl xl:text-[3.6rem] font-black leading-[1.08] mb-6">
+                <span className="text-white">Las academias que forman </span>
+                <span className="text-cyan-300">campeones</span>
+                <br />
+                <span className="text-white">miden cada jugador.</span>
+                <br />
+                <span className="text-white/45 text-3xl md:text-4xl xl:text-5xl">¿La tuya lo hace?</span>
               </h1>
-              <p className="text-blue-100/70 text-base md:text-lg leading-relaxed mb-8 max-w-lg">
-                Convocatoria con confirmación, pagos automáticos, evaluaciones físicas y comunicación con jugadores
-                — todo desde tu celular. Lista en menos de 20 minutos.
+
+              <p className="text-blue-100/60 text-base md:text-lg leading-relaxed mb-8 max-w-lg">
+                Convocatoria con confirmación, pagos automáticos, evaluaciones físicas y comunicación con jugadores — todo desde tu celular.
               </p>
-              <div className="flex flex-wrap items-center gap-3">
+
+              <div className="flex flex-wrap items-center gap-3 mb-8">
                 <Link
                   href="/register"
-                  className="h-12 px-6 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-900/40"
+                  className="h-12 px-7 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold flex items-center gap-2 hover:bg-blue-600 transition-all shadow-lg shadow-blue-900/50"
                 >
                   Probar gratis 7 días <ArrowRight size={16} />
                 </Link>
                 <Link
                   href="/login"
-                  className="h-12 px-6 rounded-xl border border-white/20 text-white text-sm font-bold flex items-center hover:bg-white/5 transition-colors"
+                  className="h-12 px-6 rounded-xl border border-white/15 text-white/80 text-sm font-semibold flex items-center hover:bg-white/5 transition-colors"
                 >
                   Ya tengo cuenta
                 </Link>
               </div>
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-8 text-xs text-blue-100/50 font-medium">
-                <span className="flex items-center gap-1.5"><ShieldCheck size={14} /> Sin contrato ni permanencia</span>
-                <span className="flex items-center gap-1.5"><Smartphone size={14} /> Funciona en cualquier celular</span>
-                <span className="flex items-center gap-1.5"><Languages size={14} /> Desde US$15/mes por academia</span>
+
+              {/* Trust pills */}
+              <div className="flex flex-wrap gap-2">
+                {["Sin contrato ni permanencia", "Funciona en cualquier celular", "Desde US$15/mes"].map(t => (
+                  <span key={t} className="text-xs text-white/40 bg-white/5 border border-white/8 rounded-full px-3 py-1 font-medium">{t}</span>
+                ))}
               </div>
             </div>
+
             <InteractivePitchBuilder />
+          </div>
+
+          {/* Stats strip */}
+          <div className="grid grid-cols-3 gap-4 mt-14 pt-10 border-t border-white/8">
+            {[
+              { value: "+200", label: "Jugadores activos" },
+              { value: "3", label: "Idiomas disponibles" },
+              { value: "100%", label: "Datos seguros" },
+            ].map(s => (
+              <div key={s.label} className="text-center">
+                <p className="text-2xl md:text-3xl font-black text-white">{s.value}</p>
+                <p className="text-xs text-blue-100/40 font-medium mt-0.5">{s.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -383,68 +410,76 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section id="precios" className="bg-[#071B4D] text-white relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="max-w-4xl mx-auto px-6 py-16 md:py-24 relative z-10">
-          <div className="text-center max-w-xl mx-auto mb-12">
-            <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-3">Precios</p>
-            <h2 className="text-3xl md:text-4xl font-black mb-3">Un solo plan. Todo incluido. Sin sorpresas.</h2>
-            <p className="text-blue-100/70">Sin límite de jugadores ni de módulos. Menos de lo que cuesta alquilar una cancha al mes.</p>
+      <section id="precios" className="bg-[#05122F] text-white relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-blue-600/8 rounded-full blur-3xl pointer-events-none" />
+        <div className="max-w-5xl mx-auto px-6 py-16 md:py-24 relative z-10">
+          <div className="text-center max-w-xl mx-auto mb-14">
+            <p className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-3">Precios</p>
+            <h2 className="text-3xl md:text-4xl font-black mb-3">Todo incluido. Sin sorpresas.</h2>
+            <p className="text-blue-100/50 text-base">Sin límite de jugadores ni de módulos. Menos de lo que cuesta alquilar una cancha.</p>
           </div>
 
-          <div className="bg-white text-slate-900 rounded-3xl p-8 md:p-10 shadow-2xl">
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <div className="inline-flex items-center gap-1.5 bg-blue-50 text-[#0B5CFF] text-xs font-bold px-3 py-1 rounded-full mb-4">
-                  <Sparkles size={12} /> Plan único
+          <div className="grid md:grid-cols-2 gap-5 mb-10">
+            {/* Monthly */}
+            <div className="rounded-3xl border border-white/10 bg-white/[0.05] backdrop-blur p-8 flex flex-col">
+              <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-5">Plan mensual</p>
+              <div className="flex items-end gap-1 mb-1">
+                <span className="text-6xl font-black text-white">US${PRICE_MONTHLY}</span>
+                <span className="text-white/40 text-lg mb-2">/mes</span>
+              </div>
+              <p className="text-white/30 text-sm mb-8">por academia · acceso por 30 días</p>
+              <ul className="space-y-2.5 mb-8 flex-1">
+                {PLAN_INCLUDES.slice(0, 5).map(item => (
+                  <li key={item} className="flex items-start gap-2.5 text-sm text-white/60">
+                    <CheckCircle2 size={15} className="text-emerald-400 mt-0.5 shrink-0" /> {item}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/register?plan=monthly"
+                className="w-full h-12 rounded-xl bg-white/10 border border-white/15 text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-white/15 transition-all"
+              >
+                Empezar mensual <ArrowRight size={15} />
+              </Link>
+            </div>
+
+            {/* Annual — recommended */}
+            <div className="rounded-3xl bg-[#0B5CFF] p-8 flex flex-col relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
+              <div className="relative">
+                <div className="flex items-center gap-2 mb-5">
+                  <p className="text-xs font-bold text-blue-200 uppercase tracking-widest">Plan anual</p>
+                  <span className="text-[10px] font-black bg-white text-[#0B5CFF] px-2.5 py-0.5 rounded-full">AHORRA 30%</span>
                 </div>
                 <div className="flex items-end gap-1 mb-1">
-                  <span className="text-5xl font-black">US${PRICE_MONTHLY}</span>
-                  <span className="text-slate-400 font-medium mb-1.5">/mes</span>
+                  <span className="text-6xl font-black text-white">US${(PRICE_ANNUAL / 12).toFixed(0)}</span>
+                  <span className="text-blue-200/60 text-lg mb-2">/mes</span>
                 </div>
-                <p className="text-sm text-slate-500 mb-6">por academia, sin importar el número de jugadores</p>
-
-                <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 mb-6">
-                  <p className="text-sm font-bold text-emerald-700">Paga el año completo y ahorra 30%</p>
-                  <p className="text-xs text-emerald-600/80 mt-1">
-                    US${PRICE_ANNUAL}/año — equivale a US${(PRICE_ANNUAL / 12).toFixed(1)}/mes
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <Link
-                    href="/register?plan=annual"
-                    className="w-full h-12 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all"
-                  >
-                    <Sparkles size={16} /> Pagar anual — US${PRICE_ANNUAL}/año
-                  </Link>
-                  <Link
-                    href="/register?plan=monthly"
-                    className="w-full h-11 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-slate-50 transition-all"
-                  >
-                    Pagar mensual — US${PRICE_MONTHLY}/mes
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="w-full h-10 rounded-xl text-slate-400 text-xs font-medium flex items-center justify-center hover:text-slate-600 transition-colors"
-                  >
-                    Probar 7 días gratis primero →
-                  </Link>
-                </div>
-                <p className="text-xs text-slate-400 text-center">Sin permanencia mínima · Cancela cuando quieras</p>
-              </div>
-
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Qué incluye la mensualidad</p>
-                <ul className="space-y-2.5">
-                  {PLAN_INCLUDES.map(item => (
-                    <li key={item} className="flex items-start gap-2.5 text-sm text-slate-700">
-                      <CheckCircle2 size={16} className="text-emerald-500 mt-0.5 shrink-0" /> {item}
+                <p className="text-blue-200/60 text-sm mb-1">US${PRICE_ANNUAL}/año · equivale a 2 meses gratis</p>
+                <p className="text-blue-300/50 text-xs mb-8">Acceso garantizado por 12 meses completos</p>
+                <ul className="space-y-2.5 mb-8">
+                  {PLAN_INCLUDES.slice(0, 5).map(item => (
+                    <li key={item} className="flex items-start gap-2.5 text-sm text-blue-100/80">
+                      <CheckCircle2 size={15} className="text-white mt-0.5 shrink-0" /> {item}
                     </li>
                   ))}
                 </ul>
+                <Link
+                  href="/register?plan=annual"
+                  className="w-full h-12 rounded-xl bg-white text-[#0B5CFF] text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-50 transition-all shadow-xl shadow-blue-900/30"
+                >
+                  <Sparkles size={15} /> Empezar anual — el mejor valor
+                </Link>
               </div>
             </div>
+          </div>
+
+          {/* Trial CTA */}
+          <div className="text-center">
+            <Link href="/register" className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors font-medium">
+              ¿No estás seguro? Prueba 7 días gratis primero — sin tarjeta <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
       </section>
