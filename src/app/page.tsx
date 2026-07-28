@@ -149,14 +149,12 @@ export default function LandingPage() {
                 — todo desde tu celular. Lista en menos de 20 minutos.
               </p>
               <div className="flex flex-wrap items-center gap-3">
-                <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href="/register"
                   className="h-12 px-6 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-900/40"
                 >
                   Probar gratis 7 días <ArrowRight size={16} />
-                </a>
+                </Link>
                 <Link
                   href="/login"
                   className="h-12 px-6 rounded-xl border border-white/20 text-white text-sm font-bold flex items-center hover:bg-white/5 transition-colors"
@@ -413,15 +411,27 @@ export default function LandingPage() {
                   </p>
                 </div>
 
-                <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full h-12 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all"
-                >
-                  <MessageCircle size={16} /> Solicitar acceso por WhatsApp
-                </a>
-                <p className="text-xs text-slate-400 text-center mt-3">Sin permanencia mínima · Cancela cuando quieras</p>
+                <div className="flex flex-col gap-2">
+                  <Link
+                    href="/register?plan=annual"
+                    className="w-full h-12 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all"
+                  >
+                    <Sparkles size={16} /> Pagar anual — US${PRICE_ANNUAL}/año
+                  </Link>
+                  <Link
+                    href="/register?plan=monthly"
+                    className="w-full h-11 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold flex items-center justify-center gap-2 hover:bg-slate-50 transition-all"
+                  >
+                    Pagar mensual — US${PRICE_MONTHLY}/mes
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="w-full h-10 rounded-xl text-slate-400 text-xs font-medium flex items-center justify-center hover:text-slate-600 transition-colors"
+                  >
+                    Probar 7 días gratis primero →
+                  </Link>
+                </div>
+                <p className="text-xs text-slate-400 text-center">Sin permanencia mínima · Cancela cuando quieras</p>
               </div>
 
               <div>
