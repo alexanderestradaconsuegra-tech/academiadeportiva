@@ -533,7 +533,7 @@ export default function PlayerProfilePage() {
 
   return (
     <AppShell>
-      <div className="animate-fade-in">
+      <div className="animate-fade-in overflow-x-hidden">
         {/* Hero header */}
         <div className="bg-gradient-to-r from-[#071B4D] via-[#0A2E8A] to-[#0B5CFF] px-4 md:px-6 xl:px-8 pt-4 md:pt-6 pb-20 md:pb-24 relative overflow-hidden">
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
@@ -689,7 +689,7 @@ export default function PlayerProfilePage() {
 
               {/* Progress line chart */}
               {progressData.length > 1 && (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 overflow-hidden">
                   <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("scoreEvolution")}</h2>
                   <ResponsiveContainer width="100%" height={180}>
                     <AreaChart data={progressData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
