@@ -191,8 +191,8 @@ export default function ActivitiesPage() {
                         {a.notes && <><span className="text-slate-200">·</span><span className="text-xs text-slate-400 dark:text-slate-500 truncate max-w-32">{a.notes}</span></>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <Badge variant={catBadgeMap[a.category] ?? "default"}>{enumT.activityCategory(a.category)}</Badge>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Badge variant={catBadgeMap[a.category] ?? "default"} className="hidden sm:inline-flex">{enumT.activityCategory(a.category)}</Badge>
                       <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-md", getIntensityColor(a.intensity))}>{enumT.intensity(a.intensity)}</span>
                       <div className="text-right min-w-16">
                         <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{a.value}</p>
