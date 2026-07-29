@@ -708,12 +708,12 @@ export default function PlayerProfilePage() {
               {/* Inline FIFA player card */}
               {latestEval && player && (() => {
                 const stats = [
-                  { key: "VEL", value: Math.round(latestEval.speed_score * 10) },
-                  { key: "FUE", value: Math.round(latestEval.strength_score * 10) },
-                  { key: "TEC", value: Math.round(latestEval.technique_score * 10) },
-                  { key: "RES", value: Math.round(latestEval.resistance_score * 10) },
-                  { key: "POT", value: Math.round(latestEval.power_score * 10) },
-                  { key: "AGI", value: Math.round(latestEval.agility_score * 10) },
+                  { key: "VEL", value: Math.round(latestEval.speed_score) },
+                  { key: "FUE", value: Math.round(latestEval.strength_score) },
+                  { key: "TEC", value: Math.round(latestEval.technique_score) },
+                  { key: "RES", value: Math.round(latestEval.resistance_score) },
+                  { key: "POT", value: Math.round(latestEval.power_score) },
+                  { key: "AGI", value: Math.round(latestEval.agility_score) },
                 ]
                 const ovr = Math.round(stats.reduce((s, x) => s + x.value, 0) / stats.length)
                 const badge = ovr >= 88 ? "ELITE" : ovr >= 75 ? "TOP" : "PRO"

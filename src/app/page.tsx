@@ -145,17 +145,18 @@ export default function LandingPage() {
               </div>
 
               {/* Headline */}
-              <h1 className="text-4xl md:text-5xl xl:text-[3.6rem] font-black leading-[1.08] mb-6">
-                <span className="text-white">Las academias que forman </span>
-                <span className="text-cyan-300">campeones</span>
+              <h1 className="text-4xl md:text-5xl xl:text-[3.6rem] font-black leading-[1.08] mb-4">
+                <span className="text-white">Los campeones no se improvisan.</span>
                 <br />
-                <span className="text-white">miden cada jugador.</span>
-                <br />
-                <span className="text-white/45 text-3xl md:text-4xl xl:text-5xl">¿La tuya lo hace?</span>
+                <span className="text-cyan-300">Se construyen con datos.</span>
               </h1>
 
-              <p className="text-blue-100/60 text-base md:text-lg leading-relaxed mb-8 max-w-lg">
-                Convocatoria con confirmación, pagos automáticos, evaluaciones físicas y comunicación con jugadores — todo desde tu celular.
+              <p className="text-white/70 text-lg md:text-xl font-semibold mb-4">
+                Cada entrenamiento. Cada jugador. Cada decisión.
+              </p>
+
+              <p className="text-blue-100/55 text-base md:text-lg leading-relaxed mb-8 max-w-lg">
+                Convocatorias con confirmación, tácticas, evaluaciones, asistencia, pagos y comunicación. Todo desde una sola plataforma diseñada para academias de fútbol.
               </p>
 
               <div className="flex flex-wrap items-center gap-3 mb-8">
@@ -165,7 +166,7 @@ export default function LandingPage() {
                   rel="noopener noreferrer"
                   className="h-12 px-7 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold flex items-center gap-2 hover:bg-blue-600 transition-all shadow-lg shadow-blue-900/50"
                 >
-                  Quiero empezar <ArrowRight size={16} />
+                  Solicitar una demo <ArrowRight size={16} />
                 </a>
                 <Link
                   href="/login"
@@ -418,12 +419,14 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href="/register?plan=monthly"
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-full h-12 rounded-xl bg-white/10 border border-white/15 text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-white/15 transition-all"
               >
-                Empezar mensual <ArrowRight size={15} />
-              </Link>
+                Solicitar plan mensual <ArrowRight size={15} />
+              </a>
             </div>
 
             {/* Annual — recommended */}
@@ -448,21 +451,28 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href="/register?plan=annual"
+                <a
+                  href={WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-full h-12 rounded-xl bg-white text-[#0B5CFF] text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-50 transition-all shadow-xl shadow-blue-900/30"
                 >
-                  <Sparkles size={15} /> Empezar anual — el mejor valor
-                </Link>
+                  <Sparkles size={15} /> Solicitar plan anual — el mejor valor
+                </a>
               </div>
             </div>
           </div>
 
           {/* Trial CTA */}
           <div className="text-center">
-            <Link href="/register" className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors font-medium">
-              ¿No estás seguro? Prueba 7 días gratis primero — sin tarjeta <ArrowRight size={14} />
-            </Link>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors font-medium"
+            >
+              ¿Tienes preguntas? Escríbenos por WhatsApp <ArrowRight size={14} />
+            </a>
           </div>
         </div>
       </section>
