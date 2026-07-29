@@ -533,7 +533,7 @@ export default function PlayerProfilePage() {
 
   return (
     <AppShell>
-      <div className="animate-fade-in overflow-x-hidden">
+      <div className="animate-fade-in">
         {/* Hero header */}
         <div className="bg-gradient-to-r from-[#071B4D] via-[#0A2E8A] to-[#0B5CFF] px-4 md:px-6 xl:px-8 pt-4 md:pt-6 pb-20 md:pb-24 relative overflow-hidden">
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />

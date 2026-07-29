@@ -72,12 +72,10 @@ export default function PlayerCard({ player, evaluation, isInjured, hasOverduePa
 
         {/* Info */}
         <div className="mb-2">
-          <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-white leading-tight">{player.name}</h3>
-          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+          <h3 className="text-xs md:text-sm font-bold text-slate-900 dark:text-white leading-tight truncate">{player.name}</h3>
+          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
             <Badge variant={posColor}>{getPositionShort(player.position)}</Badge>
             <span className="text-xs text-slate-400 dark:text-slate-500">{player.age} {t("yearsOld")}</span>
-            <span className="text-xs text-slate-300 dark:text-slate-600">•</span>
-            <span className="text-xs text-slate-400 dark:text-slate-500">{e.dominantFoot(player.dominant_foot as DominantFoot)}</span>
           </div>
         </div>
 

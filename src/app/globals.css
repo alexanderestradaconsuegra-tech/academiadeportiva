@@ -130,6 +130,12 @@ body {
   .card-hover:hover { transform: none; }
 }
 
+/* Prevent Recharts SVG labels from bleeding outside their containers */
+.recharts-wrapper {
+  max-width: 100%;
+  overflow: hidden;
+}
+
 /* Glassmorphism for mobile header */
 @supports (backdrop-filter: blur(12px)) {
   .backdrop-blur-xl { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
