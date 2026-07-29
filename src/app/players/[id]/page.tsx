@@ -9,7 +9,7 @@ import Badge from "@/components/ui/Badge"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import NotificationToggle from "@/components/ui/NotificationToggle"
-import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck, CreditCard, Loader2, Upload, CheckCircle2, AlertCircle } from "lucide-react"
+import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck, CreditCard, Loader2, Upload, CheckCircle2, AlertCircle, Heart, Zap, Wind, Activity as ActivityIcon } from "lucide-react"
 import { parseTrackFile, summarizeTrack, extractBiometrics, buildTransform, type TrackSummary, type BiometricSummary } from "@/lib/gps"
 import { supabase } from "@/lib/supabase"
 import { generatePlayerPDF } from "@/lib/generatePlayerPDF"
@@ -20,7 +20,6 @@ import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area, Legend
 } from "recharts"
-import { Heart, Zap, Wind, Activity as ActivityIcon } from "lucide-react"
 import { useT } from "@/lib/i18n/useT"
 import { players as playersDict } from "@/lib/i18n/dictionaries/players"
 import { payments as paymentsDict } from "@/lib/i18n/dictionaries/payments"

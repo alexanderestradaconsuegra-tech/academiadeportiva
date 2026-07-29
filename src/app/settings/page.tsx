@@ -89,7 +89,7 @@ function NotificationBroadcast() {
 
 function AccessManager() {
   const t = useT(settings)
-  const { players } = useApp()
+  const { players, currentUser } = useApp()
   // Map player_id → { user_id, email }
   const [accessMap, setAccessMap] = useState<Record<string, { user_id: string; email: string }>>({})
   const [loadingList, setLoadingList] = useState(true)
@@ -101,7 +101,7 @@ function AccessManager() {
   const [form, setForm] = useState({ email: "", password: "" })
 
   useEffect(() => {
-    supabase.from("profiles").select("id, player_id").eq("role", "player").not("player_id", "is", null)
+    supabase.from("profiles").select("id, player_id").eq("role", "player").eq("academy_id", currentUser?.academy_id ?? "").not("player_id", "is", null)
       .then(async ({ data: profileRows }) => {
         if (!profileRows?.length) { setLoadingList(false); return }
         // Fetch emails via admin list (server-side only) — we only have client here,
@@ -263,6 +263,7 @@ function AccessManager() {
 }
 
 function CoachManager() {
+  const { currentUser } = useApp()
   const [coaches, setCoaches] = useState<{ id: string; full_name: string; category: string | null }[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
@@ -271,7 +272,7 @@ function CoachManager() {
   const [form, setForm] = useState({ email: "", password: "", full_name: "", category: CATEGORIES[0] as Category })
 
   useEffect(() => {
-    supabase.from("profiles").select("id, full_name, category").eq("role", "assistant")
+    supabase.from("profiles").select("id, full_name, category").eq("role", "assistant").eq("academy_id", currentUser?.academy_id ?? "")
       .then(({ data }) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setCoaches((data ?? []).map((r: any) => ({ id: r.id, full_name: r.full_name, category: r.category })))
