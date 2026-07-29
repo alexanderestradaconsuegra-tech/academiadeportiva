@@ -142,20 +142,20 @@ export default function ActivitiesPage() {
         )}
 
         {/* Filters */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 mb-6 flex flex-wrap gap-3">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-3 md:p-4 border border-slate-100 dark:border-slate-800 mb-5 flex flex-col sm:flex-row sm:flex-wrap gap-2 md:gap-3 sm:items-center">
           {!isPlayer && (
             <select value={filterPlayer} onChange={e => setFilterPlayer(e.target.value)}
-              className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
+              className="w-full sm:w-auto min-w-0 h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
               <option value="all">{t("allPlayers")}</option>
               {players.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           )}
           <select value={filterCat} onChange={e => setFilterCat(e.target.value)}
-            className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
+            className="w-full sm:w-auto min-w-0 h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
             <option value="all">{t("allCategories")}</option>
             {CATEGORIES.map(c => <option key={c} value={c}>{enumT.activityCategory(c)}</option>)}
           </select>
-          <span className="text-xs text-slate-400 dark:text-slate-500 font-medium ml-auto self-center">{filtered.length} {filtered.length !== 1 ? t("resultsCountPlural") : t("resultsCount")}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 font-medium sm:ml-auto">{filtered.length} {filtered.length !== 1 ? t("resultsCountPlural") : t("resultsCount")}</span>
         </div>
 
         {/* List */}

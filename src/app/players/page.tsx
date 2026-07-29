@@ -50,8 +50,8 @@ export default function PlayersPage() {
         </PageHeader>
 
         {/* Filters */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-3 md:p-4 border border-slate-100 dark:border-slate-800 mb-5 flex flex-wrap gap-2 md:gap-3 items-center">
-          <div className="relative flex-1 min-w-40">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-3 md:p-4 border border-slate-100 dark:border-slate-800 mb-5 flex flex-col sm:flex-row sm:flex-wrap gap-2 md:gap-3 sm:items-center">
+          <div className="relative w-full sm:flex-1 sm:min-w-40">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
             <input
               type="text" placeholder={t("searchPlaceholder")} value={search}
@@ -60,21 +60,21 @@ export default function PlayersPage() {
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <SlidersHorizontal size={14} className="text-slate-400 dark:text-slate-500" />
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <SlidersHorizontal size={14} className="text-slate-400 dark:text-slate-500 shrink-0" />
             <select value={catFilter} onChange={ev => setCatFilter(ev.target.value)}
-              className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
+              className="flex-1 sm:flex-none min-w-0 h-9 px-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
               <option value="all">{t("allCategories")}</option>
               {CATEGORIES.map(c => <option key={c} value={c}>{e.category(c)}</option>)}
             </select>
             <select value={posFilter} onChange={ev => setPosFilter(ev.target.value)}
-              className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
+              className="flex-1 sm:flex-none min-w-0 h-9 px-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
               <option value="all">{t("allPositions")}</option>
               {POSITIONS.map(p => <option key={p} value={p}>{e.position(p)}</option>)}
             </select>
           </div>
 
-          <span className="text-xs text-slate-400 dark:text-slate-500 font-medium ml-auto">
+          <span className="text-xs text-slate-400 dark:text-slate-500 font-medium sm:ml-auto">
             {filtered.length} {filtered.length !== 1 ? t("results") : t("result")}
           </span>
         </div>

@@ -201,7 +201,7 @@ function AccessManager() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{p.name}</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">
+                    <p className="text-xs text-slate-400 dark:text-slate-500 truncate">
                       {has && access.email ? access.email : p.position}
                     </p>
                   </div>
@@ -404,7 +404,7 @@ export default function SettingsPage() {
 
   return (
     <AppShell>
-      <div className="p-4 md:p-6 xl:p-8 animate-fade-in max-w-3xl">
+      <div className="p-4 md:p-6 xl:p-8 animate-fade-in max-w-3xl overflow-x-hidden">
         <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 mb-6 flex items-center justify-between flex-wrap gap-3">
