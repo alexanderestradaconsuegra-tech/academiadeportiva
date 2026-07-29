@@ -419,14 +419,12 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/subscribe?plan=monthly"
                 className="w-full h-12 rounded-xl bg-white/10 border border-white/15 text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-white/15 transition-all"
               >
-                Solicitar plan mensual <ArrowRight size={15} />
-              </a>
+                Pagar plan mensual <ArrowRight size={15} />
+              </Link>
             </div>
 
             {/* Annual — recommended */}
@@ -451,14 +449,12 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <a
-                  href={WHATSAPP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href="/subscribe?plan=annual"
                   className="w-full h-12 rounded-xl bg-white text-[#0B5CFF] text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-50 transition-all shadow-xl shadow-blue-900/30"
                 >
-                  <Sparkles size={15} /> Solicitar plan anual — el mejor valor
-                </a>
+                  <Sparkles size={15} /> Pagar plan anual — el mejor valor
+                </Link>
               </div>
             </div>
           </div>
@@ -474,6 +470,7 @@ export default function LandingPage() {
               ¿Tienes preguntas? Escríbenos por WhatsApp <ArrowRight size={14} />
             </a>
           </div>
+          <p className="text-center text-xs text-white/20 mt-3">Pago seguro vía MercadoPago · Sin contratos · Cancela cuando quieras</p>
         </div>
       </section>
 

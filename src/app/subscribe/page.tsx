@@ -1,7 +1,9 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
+import Link from "next/link"
 import { useApp } from "@/context/AppContext"
-import { CheckCircle2, Sparkles, ArrowRight, MessageCircle } from "lucide-react"
+import { CheckCircle2, Sparkles, ArrowRight, MessageCircle, LogIn } from "lucide-react"
 import { MP_PRICES } from "@/lib/mercadopago"
 
 const WHATSAPP_URL = "https://wa.me/56992103974?text=" + encodeURIComponent("Hola, necesito ayuda con el pago de Metrikas")
@@ -17,7 +19,8 @@ const PLAN_FEATURES = [
 ]
 
 export default function SubscribePage() {
-  const { teamSettings } = useApp()
+  const { teamSettings, isAuthenticated, authReady } = useApp()
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState<"monthly" | "annual" | null>(null)
   const [error, setError] = useState("")
 
@@ -27,7 +30,7 @@ export default function SubscribePage() {
 
   async function handleSubscribe(plan: "monthly" | "annual") {
     if (!teamSettings?.id) {
-      setError("No se encontró la academia. Recarga la página.")
+      setError("Debes iniciar sesión primero para suscribirte.")
       return
     }
     setLoading(plan)
@@ -53,6 +56,38 @@ export default function SubscribePage() {
 
   const isBlocked = teamSettings?.subscription_status === "suspended" ||
     teamSettings?.subscription_status === "canceled"
+
+  if (authReady && !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#05122F] flex items-center justify-center p-6">
+        <div className="w-full max-w-md text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#0B5CFF] mb-6 mx-auto">
+            <LogIn size={28} className="text-white" />
+          </div>
+          <h1 className="text-2xl font-black text-white mb-3">Inicia sesión para suscribirte</h1>
+          <p className="text-blue-100/60 text-sm mb-8">
+            Necesitas una cuenta de Metrikas para completar el pago. Si aún no tienes una, escríbenos por WhatsApp.
+          </p>
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/login"
+              className="w-full h-12 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-600 transition-all"
+            >
+              Iniciar sesión <ArrowRight size={16} />
+            </Link>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full h-12 rounded-xl bg-white/10 border border-white/15 text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-white/15 transition-all"
+            >
+              <MessageCircle size={16} /> Crear cuenta por WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[#05122F] flex items-center justify-center p-6">
@@ -93,7 +128,7 @@ export default function SubscribePage() {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
               ) : <ArrowRight size={16} />}
-              Pagar mes
+              Pagar con MercadoPago
             </button>
           </div>
 
@@ -141,7 +176,14 @@ export default function SubscribePage() {
         </div>
 
         {error && (
-          <p className="text-red-400 text-sm bg-red-500/10 rounded-xl px-4 py-3 mb-4 text-center">{error}</p>
+          <div className="bg-red-500/10 rounded-xl px-4 py-3 mb-4 flex flex-col gap-2">
+            <p className="text-red-400 text-sm text-center">{error}</p>
+            {!isAuthenticated && (
+              <Link href="/login" className="text-xs text-center text-[#0B5CFF] font-bold underline">
+                Ir al inicio de sesión →
+              </Link>
+            )}
+          </div>
         )}
 
         {/* Help */}

@@ -407,7 +407,7 @@ export default function SettingsPage() {
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in max-w-3xl">
         <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 mb-6 flex items-center justify-between">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 mb-6 flex items-center justify-between flex-wrap gap-3">
           <div>
             <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{t("appearanceTitle")}</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">{t("appearanceSubtitle")}</p>
