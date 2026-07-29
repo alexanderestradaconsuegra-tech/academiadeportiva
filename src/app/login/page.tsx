@@ -120,7 +120,7 @@ export default function LoginPage() {
         <div className="w-full max-w-md animate-fade-in">
           {/* Mobile logo */}
           <div className="flex lg:hidden items-center justify-center mb-10">
-            <img src="/logo-metrikas.png" alt="Metrikas" className="h-20 w-auto object-contain" />
+            <img src="https://drive.google.com/uc?export=view&id=1a8ulGevle8oj9-5Zx0qLu_LL9b9cMhm4" alt="Metrikas" className="h-20 w-auto object-contain" />
           </div>
 
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 dark:border-slate-800">

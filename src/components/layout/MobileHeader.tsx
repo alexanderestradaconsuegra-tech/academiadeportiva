@@ -1,7 +1,7 @@
 "use client"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Trophy, Settings, LogOut, Sun, Moon } from "lucide-react"
+import { Trophy, Settings, LogOut, Sun, Moon, CreditCard } from "lucide-react"
 import { useApp } from "@/context/AppContext"
 import { useT } from "@/lib/i18n/useT"
 import { nav } from "@/lib/i18n/dictionaries/nav"
@@ -55,9 +55,17 @@ export default function MobileHeader() {
             <LogOut size={16} />
           </button>
         ) : (
-          <Link href="/settings" className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-            <Settings size={16} />
-          </Link>
+          <>
+            <Link href="/payments" className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" title="Pagos">
+              <CreditCard size={16} />
+            </Link>
+            <Link href="/settings" className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+              <Settings size={16} />
+            </Link>
+            <button onClick={logout} className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors" title={tCommon("logout")}>
+              <LogOut size={16} />
+            </button>
+          </>
         )}
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0B5CFF] to-[#071B4D] flex items-center justify-center text-white text-xs font-bold">
           {currentUser?.full_name.charAt(0) ?? "E"}
