@@ -118,18 +118,18 @@ function EvaluationComparison({ evaluations }: { evaluations: Evaluation[] }) {
   const selectClass = "h-8 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer"
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
-      <div className="flex items-center justify-between mb-5 gap-4 flex-wrap">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800">
+      <div className="flex flex-col gap-3 mb-5">
         <div>
           <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("beforeAfterComparison")}</h2>
           <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t("evolutionBetweenEvals")}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <select value={beforeId} onChange={ev => setBeforeId(ev.target.value)} className={selectClass}>
+        <div className="flex items-center gap-2 w-full">
+          <select value={beforeId} onChange={ev => setBeforeId(ev.target.value)} className={selectClass + " flex-1 min-w-0"}>
             {sorted.map(ev => <option key={ev.id} value={ev.id}>{formatDate(ev.date)}</option>)}
           </select>
           <ArrowRight size={13} className="text-slate-400 dark:text-slate-500 shrink-0" />
-          <select value={afterId} onChange={ev => setAfterId(ev.target.value)} className={selectClass}>
+          <select value={afterId} onChange={ev => setAfterId(ev.target.value)} className={selectClass + " flex-1 min-w-0"}>
             {sorted.map(ev => <option key={ev.id} value={ev.id}>{formatDate(ev.date)}</option>)}
           </select>
         </div>
@@ -533,7 +533,7 @@ export default function PlayerProfilePage() {
 
   return (
     <AppShell>
-      <div className="animate-fade-in overflow-x-hidden">
+      <div className="animate-fade-in w-full min-w-0 max-w-full overflow-x-hidden">
         {/* Hero header */}
         <div className="bg-gradient-to-r from-[#071B4D] via-[#0A2E8A] to-[#0B5CFF] px-4 md:px-6 xl:px-8 pt-4 md:pt-6 pb-20 md:pb-24 relative overflow-hidden">
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
@@ -639,7 +639,7 @@ export default function PlayerProfilePage() {
             <div className="xl:col-span-2 space-y-6">
               {/* Attribute scores */}
               {latestEval ? (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
                     <div>
                       <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("physicalTechnicalAttributes")}</h2>
@@ -678,7 +678,7 @@ export default function PlayerProfilePage() {
                   </div>
                 </div>
               ) : isCoach ? (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 text-center">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 text-center">
                   <Target size={28} className="mx-auto mb-2 text-slate-300 dark:text-slate-600" />
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">{t("noAttributeEvaluationsYet")}</p>
                   <Button size="sm" onClick={openNewEval}>
@@ -689,7 +689,7 @@ export default function PlayerProfilePage() {
 
               {/* Progress line chart */}
               {progressData.length > 1 && (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 overflow-hidden">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 overflow-hidden">
                   <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("scoreEvolution")}</h2>
                   <ResponsiveContainer width="100%" height={180}>
                     <AreaChart data={progressData} margin={{ top: 4, right: 20, left: -20, bottom: 0 }}>
@@ -726,7 +726,7 @@ export default function PlayerProfilePage() {
                     <div
                       ref={cardRef}
                       style={{
-                        width: 280,
+                        width: "min(280px, 100%)",
                         height: 420,
                         borderRadius: 16,
                         background: "linear-gradient(175deg, #0f1f60 0%, #080d2e 40%, #030812 100%)",
@@ -793,7 +793,7 @@ export default function PlayerProfilePage() {
               {evaluations.length > 1 && <EvaluationComparison evaluations={evaluations} />}
 
               {/* Activities */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("trainingHistory")}</h2>
                   <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">{activities.length} {t("records")}</span>
@@ -825,7 +825,7 @@ export default function PlayerProfilePage() {
               </div>
 
               {/* Matches */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("matchHistory")}</h2>
                   <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">{playerMatches.length} {t("matches")}</span>
@@ -858,7 +858,7 @@ export default function PlayerProfilePage() {
               </div>
 
               {/* Physical Tests */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <FlaskConical size={15} className="text-[#0B5CFF]" />
@@ -928,7 +928,7 @@ export default function PlayerProfilePage() {
 
               {/* Radar chart */}
               {radarData.length > 0 && (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 overflow-hidden">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 overflow-hidden">
                   <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("attributeRadar")}</h2>
                   <ResponsiveContainer width="100%" height={220}>
                     <RadarChart data={radarData} margin={{ top: 15, right: 30, bottom: 15, left: 30 }}>
@@ -941,7 +941,7 @@ export default function PlayerProfilePage() {
               )}
 
               {/* Info */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 space-y-4">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 space-y-4">
                 {player.objective && (
                   <div>
                     <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">{t("sportingObjective")}</p>

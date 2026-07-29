@@ -35,7 +35,7 @@ export default function PlayersPage() {
 
   return (
     <AppShell>
-      <div className="p-4 md:p-6 xl:p-8 animate-fade-in overflow-x-hidden">
+      <div className="p-4 md:p-6 xl:p-8 animate-fade-in overflow-x-hidden max-w-6xl mx-auto w-full">
         <PageHeader title={t("playersTitle")} subtitle={`${players.length} ${t("playersSubtitle")}`}>
           <Link href="/players/compare">
             <Button size="md" variant="outline">
