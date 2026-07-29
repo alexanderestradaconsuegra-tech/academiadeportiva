@@ -132,8 +132,11 @@ body {
 
 /* Prevent Recharts SVG labels from bleeding outside their containers */
 .recharts-wrapper {
-  max-width: 100%;
-  overflow: hidden;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+.recharts-surface {
+  overflow: hidden !important;
 }
 
 /* Glassmorphism for mobile header */

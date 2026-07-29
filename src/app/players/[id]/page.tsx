@@ -155,9 +155,9 @@ function EvaluationComparison({ evaluations }: { evaluations: Evaluation[] }) {
 
       <div className="overflow-hidden">
         <ResponsiveContainer width="100%" height={220}>
-          <RadarChart data={radarData}>
+          <RadarChart data={radarData} margin={{ top: 15, right: 30, bottom: 15, left: 30 }}>
             <PolarGrid stroke="#E2E8F0" />
-            <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "#64748B" }} />
+            <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: "#64748B" }} />
             <Radar name={t("beforeLabel")} dataKey="before" stroke="#94A3B8" fill="#94A3B8" fillOpacity={0.12} strokeWidth={2} dot={{ r: 3, fill: "#94A3B8", strokeWidth: 0 }} />
             <Radar name={t("afterLabel")} dataKey="after" stroke="#0B5CFF" fill="#0B5CFF" fillOpacity={0.15} strokeWidth={2} dot={{ r: 3, fill: "#0B5CFF", strokeWidth: 0 }} />
             <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
@@ -533,7 +533,7 @@ export default function PlayerProfilePage() {
 
   return (
     <AppShell>
-      <div className="animate-fade-in">
+      <div className="animate-fade-in overflow-x-hidden">
         {/* Hero header */}
         <div className="bg-gradient-to-r from-[#071B4D] via-[#0A2E8A] to-[#0B5CFF] px-4 md:px-6 xl:px-8 pt-4 md:pt-6 pb-20 md:pb-24 relative overflow-hidden">
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
@@ -596,13 +596,13 @@ export default function PlayerProfilePage() {
               { icon: Calendar, label: t("birth"), value: player.birth_date ? formatDate(player.birth_date) : "—" },
               { icon: Star, label: t("dominantLeg"), value: e.dominantFoot(player.dominant_foot) },
             ].map(({ icon: Icon, label, value }) => (
-              <div key={label} className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
-                  <Icon size={16} className="text-[#0B5CFF]" />
+              <div key={label} className="bg-white dark:bg-slate-900 rounded-2xl p-2.5 md:p-4 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-2 md:gap-3">
+                <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
+                  <Icon size={14} className="text-[#0B5CFF]" />
                 </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide">{label}</p>
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{value}</p>
+                <div className="min-w-0">
+                  <p className="text-[9px] md:text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide truncate">{label}</p>
+                  <p className="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{value}</p>
                 </div>
               </div>
             ))}
@@ -692,7 +692,7 @@ export default function PlayerProfilePage() {
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 overflow-hidden">
                   <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("scoreEvolution")}</h2>
                   <ResponsiveContainer width="100%" height={180}>
-                    <AreaChart data={progressData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                    <AreaChart data={progressData} margin={{ top: 4, right: 20, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#0B5CFF" stopOpacity={0.15} />
@@ -700,7 +700,7 @@ export default function PlayerProfilePage() {
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                      <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
+                      <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
                       <YAxis domain={[60, 100]} tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
                       <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12 }} formatter={(v: number) => [`${v} pts`]} />
                       <Area type="monotone" dataKey="score" stroke="#0B5CFF" strokeWidth={2.5} fill="url(#pg)" dot={{ fill: "#0B5CFF", r: 4, strokeWidth: 0 }} name={t("generalScore")} />
@@ -931,9 +931,9 @@ export default function PlayerProfilePage() {
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 overflow-hidden">
                   <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("attributeRadar")}</h2>
                   <ResponsiveContainer width="100%" height={220}>
-                    <RadarChart data={radarData}>
+                    <RadarChart data={radarData} margin={{ top: 15, right: 30, bottom: 15, left: 30 }}>
                       <PolarGrid stroke="#E2E8F0" />
-                      <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "#64748B" }} />
+                      <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: "#64748B" }} />
                       <Radar name="Score" dataKey="value" stroke="#0B5CFF" fill="#0B5CFF" fillOpacity={0.15} strokeWidth={2} dot={{ r: 4, fill: "#0B5CFF", strokeWidth: 0 }} />
                     </RadarChart>
                   </ResponsiveContainer>
