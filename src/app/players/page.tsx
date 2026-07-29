@@ -35,7 +35,7 @@ export default function PlayersPage() {
 
   return (
     <AppShell>
-      <div className="p-4 md:p-6 xl:p-8 animate-fade-in overflow-x-hidden">
+      <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
         <PageHeader title={t("playersTitle")} subtitle={`${players.length} ${t("playersSubtitle")}`}>
           <Link href="/players/compare">
             <Button size="md" variant="outline">
@@ -87,7 +87,7 @@ export default function PlayersPage() {
             <p className="text-sm mt-1">{t("adjustFiltersOrAdd")}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-5">
             {filtered.map(player => (
               <PlayerCard
                 key={player.id}
