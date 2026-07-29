@@ -52,10 +52,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (isPlayer && !isOnAllowedPlayerPath) return null
 
   return (
-    <div className="flex min-h-screen bg-[#F5F7FB] dark:bg-[#0B1120]">
+    <div className="flex min-h-screen bg-[#F5F7FB] dark:bg-[#0B1120] overflow-x-hidden">
       {isPlayer ? <PlayerNav /> : <Sidebar />}
 
-      <div className={isPlayer ? "flex-1 flex flex-col min-h-screen md:ml-56" : "flex-1 flex flex-col min-h-screen md:ml-64 print:ml-0"}>
+      <div className={isPlayer ? "flex-1 flex flex-col min-h-screen md:ml-56 min-w-0 w-full" : "flex-1 flex flex-col min-h-screen md:ml-64 print:ml-0 min-w-0 w-full"}>
         {!isPlayer && <MobileHeader />}
 
         {/* Demo mode banner */}
