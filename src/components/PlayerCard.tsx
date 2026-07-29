@@ -40,7 +40,7 @@ export default function PlayerCard({ player, evaluation, isInjured, hasOverduePa
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden card-hover animate-fade-in">
       {/* Header gradient */}
-      <div className="h-20 bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] relative">
+      <div className="h-14 md:h-20 bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] relative">
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='white' fill-opacity='0.3'%3E%3Ccircle cx='20' cy='20' r='1'/%3E%3C/g%3E%3C/svg%3E\")" }} />
         <div className="absolute top-3 right-3 flex items-center gap-1.5">
           {hasOverduePayment && (
@@ -60,14 +60,14 @@ export default function PlayerCard({ player, evaluation, isInjured, hasOverduePa
       <div className="px-3 md:px-5 pb-4 md:pb-5">
         {/* Avatar */}
         <div className="-mt-4 mb-3 flex items-end justify-between relative z-10">
-          <div className="w-16 h-16 rounded-2xl border-4 border-white shadow-md bg-slate-100 dark:bg-slate-800 overflow-hidden ring-2 ring-slate-100">
+          <div className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl border-2 md:border-4 border-white shadow-md bg-slate-100 dark:bg-slate-800 overflow-hidden ring-1 md:ring-2 ring-slate-100">
             <img
               src={player.photo_url || avatarUrl(player.name, player.id)}
               alt={player.name}
               className="w-full h-full object-cover"
             />
           </div>
-          {evaluation && <ScoreRing score={score} size={52} strokeWidth={5} />}
+          {evaluation && <ScoreRing score={score} size={44} strokeWidth={4} />}
         </div>
 
         {/* Info */}
@@ -81,7 +81,7 @@ export default function PlayerCard({ player, evaluation, isInjured, hasOverduePa
 
         {/* Stats row */}
         {evaluation && (
-          <div className="grid grid-cols-3 gap-2 mb-4 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl">
+          <div className="grid grid-cols-3 gap-1 md:gap-2 mb-3 md:mb-4 p-2 md:p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl">
             {[
               { label: t("velLabel"), value: evaluation.speed_score },
               { label: t("tecLabel"), value: evaluation.technique_score },
