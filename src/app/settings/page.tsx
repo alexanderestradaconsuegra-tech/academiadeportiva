@@ -207,16 +207,16 @@ function AccessManager() {
                   </div>
                   {has ? (
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg">
-                        <UserCheck size={12} /> {t("withAccess")}
-                      </span>
+                      <UserCheck size={15} className="text-emerald-500 shrink-0" />
                       <Button variant="outline" size="sm" type="button" onClick={() => isOpen ? closePanel() : openEdit(p.id)}>
-                        <KeyRound size={13} /> Editar
+                        <KeyRound size={13} />
+                        <span className="hidden sm:inline">Editar</span>
                       </Button>
                     </div>
                   ) : (
                     <Button variant="outline" size="sm" type="button" onClick={() => isOpen ? closePanel() : openCreate(p.id)}>
-                      <KeyRound size={13} /> {t("createAccess")}
+                      <KeyRound size={13} />
+                      <span className="hidden sm:inline">{t("createAccess")}</span>
                     </Button>
                   )}
                 </div>
@@ -320,14 +320,14 @@ function CoachManager() {
         <div className="space-y-2 mb-5">
           {coaches.map(c => (
             <div key={c.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
                 {c.full_name.charAt(0)}
               </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">{c.full_name}</p>
-                <p className="text-xs text-slate-400">{c.category ?? "Sin categoría"}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{c.full_name}</p>
+                <p className="text-xs text-slate-400 truncate">{c.category ?? "Sin categoría"}</p>
               </div>
-              <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400">
+              <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400">
                 Asistente
               </span>
             </div>
