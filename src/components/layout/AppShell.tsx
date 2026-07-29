@@ -67,18 +67,26 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Trial banner — coach only, while trial is active */}
         {!isPlayer && trialDaysLeft !== null && trialDaysLeft > 0 && (
-          <div className="no-print bg-amber-50 dark:bg-amber-500/10 border-b border-amber-200 dark:border-amber-500/20 px-4 py-2 flex items-center justify-between gap-3">
+          <div className="no-print bg-amber-50 dark:bg-amber-500/10 border-b border-amber-200 dark:border-amber-500/20 px-4 py-2 flex items-center justify-between gap-3 flex-wrap">
             <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
-              ⏳ Prueba gratuita — te {trialDaysLeft === 1 ? "queda 1 día" : `quedan ${trialDaysLeft} días`}. Escríbenos para activar tu academia.
+              ⏳ Prueba gratuita — te {trialDaysLeft === 1 ? "queda 1 día" : `quedan ${trialDaysLeft} días`}.
             </p>
-            <a
-              href={`https://wa.me/56992103974?text=${encodeURIComponent("Hola, quiero activar mi academia en Metrikas.")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 text-xs font-bold text-amber-700 dark:text-amber-400 underline underline-offset-2"
-            >
-              Activar →
-            </a>
+            <div className="flex items-center gap-3 shrink-0">
+              <a
+                href="/subscribe"
+                className="text-xs font-bold text-[#0B5CFF] underline underline-offset-2"
+              >
+                Pagar con MercadoPago →
+              </a>
+              <a
+                href={`https://wa.me/56992103974?text=${encodeURIComponent("Hola, quiero activar mi academia en Metrikas.")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-bold text-amber-700 dark:text-amber-400 underline underline-offset-2"
+              >
+                WhatsApp
+              </a>
+            </div>
           </div>
         )}
 

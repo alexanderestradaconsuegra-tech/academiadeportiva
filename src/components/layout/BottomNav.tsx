@@ -23,18 +23,18 @@ export default function BottomNav() {
   ]
   return (
     <nav className="no-print fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200/80 dark:border-slate-800/80 safe-area-bottom">
-      <div className="flex items-end justify-around px-1 pt-2 pb-safe">
+      <div className="flex items-end pt-1.5 pb-safe overflow-x-auto" style={{ scrollbarWidth: "none" }}>
         {NAV.map(({ href, icon: Icon, label, live }) => {
           const active = pathname.startsWith(href)
           return (
             <Link key={href} href={href}
-              className="flex flex-col items-center gap-1 px-3 py-1.5 min-w-0 flex-1 relative"
+              className="flex flex-col items-center gap-0.5 px-2 py-1 shrink-0 flex-1 min-w-[56px] max-w-[72px] relative"
             >
               {live && !active && (
-                <span className="absolute top-0 right-3 w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="absolute top-0.5 right-2 w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
               )}
               <div className={cn(
-                "w-10 h-10 rounded-2xl flex items-center justify-center transition-all duration-200",
+                "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200",
                 live
                   ? active
                     ? "bg-gradient-to-br from-red-500 to-pink-500 shadow-lg shadow-red-200"
@@ -44,7 +44,7 @@ export default function BottomNav() {
                     : "bg-transparent"
               )}>
                 <Icon
-                  size={live ? 22 : 20}
+                  size={live ? 19 : 17}
                   className={cn(
                     "transition-colors",
                     live
@@ -55,7 +55,7 @@ export default function BottomNav() {
                 />
               </div>
               <span className={cn(
-                "text-[10px] font-semibold transition-colors leading-none",
+                "text-[9px] font-semibold transition-colors leading-none truncate w-full text-center",
                 active
                   ? live ? "text-red-500" : "text-[#0B5CFF]"
                   : "text-slate-400 dark:text-slate-500"
