@@ -7,7 +7,7 @@ import BottomNav from "./BottomNav"
 import MobileHeader from "./MobileHeader"
 import PlayerNav from "./PlayerNav"
 
-const PLAYER_ALLOWED_PREFIXES = ["/matches", "/players", "/activities", "/tactics", "/health"]
+const PLAYER_ALLOWED_PREFIXES = ["/matches", "/activities", "/tactics", "/health"]
 const ASSISTANT_BLOCKED_PREFIXES = ["/payments", "/settings", "/reports", "/charts"]
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -20,7 +20,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const ownPlayerPath = currentUser?.player_id ? `/players/${currentUser.player_id}` : null
 
   const isOnAllowedPlayerPath = isPlayer && (
-    PLAYER_ALLOWED_PREFIXES.some(prefix => pathname.startsWith(prefix))
+    PLAYER_ALLOWED_PREFIXES.some(prefix => pathname.startsWith(prefix)) ||
+    (ownPlayerPath !== null && pathname.startsWith(ownPlayerPath))
   )
 
   useEffect(() => {

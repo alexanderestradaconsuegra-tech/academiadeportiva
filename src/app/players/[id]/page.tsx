@@ -153,15 +153,17 @@ function EvaluationComparison({ evaluations }: { evaluations: Evaluation[] }) {
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={220}>
-        <RadarChart data={radarData}>
-          <PolarGrid stroke="#E2E8F0" />
-          <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "#64748B" }} />
-          <Radar name={t("beforeLabel")} dataKey="before" stroke="#94A3B8" fill="#94A3B8" fillOpacity={0.12} strokeWidth={2} dot={{ r: 3, fill: "#94A3B8", strokeWidth: 0 }} />
-          <Radar name={t("afterLabel")} dataKey="after" stroke="#0B5CFF" fill="#0B5CFF" fillOpacity={0.15} strokeWidth={2} dot={{ r: 3, fill: "#0B5CFF", strokeWidth: 0 }} />
-          <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-        </RadarChart>
-      </ResponsiveContainer>
+      <div className="overflow-hidden">
+        <ResponsiveContainer width="100%" height={220}>
+          <RadarChart data={radarData}>
+            <PolarGrid stroke="#E2E8F0" />
+            <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "#64748B" }} />
+            <Radar name={t("beforeLabel")} dataKey="before" stroke="#94A3B8" fill="#94A3B8" fillOpacity={0.12} strokeWidth={2} dot={{ r: 3, fill: "#94A3B8", strokeWidth: 0 }} />
+            <Radar name={t("afterLabel")} dataKey="after" stroke="#0B5CFF" fill="#0B5CFF" fillOpacity={0.15} strokeWidth={2} dot={{ r: 3, fill: "#0B5CFF", strokeWidth: 0 }} />
+            <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5">
         {rows.map(r => (
@@ -538,9 +540,11 @@ export default function PlayerProfilePage() {
           <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#F5F7FB]/30 to-transparent" />
 
           <div className="flex items-center gap-3 mb-6 relative z-10">
-            <Link href="/players" className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center text-white hover:bg-white/25 transition-colors">
-              <ArrowLeft size={16} />
-            </Link>
+            {isCoach && (
+              <Link href="/players" className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center text-white hover:bg-white/25 transition-colors">
+                <ArrowLeft size={16} />
+              </Link>
+            )}
             <div className="flex-1">
               <p className="text-blue-200/70 text-xs font-medium">{t("playerProfile")}</p>
             </div>
@@ -924,7 +928,7 @@ export default function PlayerProfilePage() {
 
               {/* Radar chart */}
               {radarData.length > 0 && (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 overflow-hidden">
                   <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("attributeRadar")}</h2>
                   <ResponsiveContainer width="100%" height={220}>
                     <RadarChart data={radarData}>
