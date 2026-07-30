@@ -4,12 +4,6 @@ import { sendEmail, trialReminderEmail } from "@/lib/email"
 
 export const dynamic = "force-dynamic"
 
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
-)
-
 export async function POST(req: NextRequest) {
   // Verify cron secret
   const secret = req.headers.get("authorization")
@@ -18,6 +12,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const admin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    )
+
     const now = new Date()
     const results = { sent: 0, failed: 0 }
 

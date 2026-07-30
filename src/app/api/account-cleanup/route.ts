@@ -4,14 +4,14 @@ import { sendEmail, trialReminderEmail, accountDeletedEmail } from "@/lib/email"
 
 export const dynamic = "force-dynamic"
 
-const admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
-)
-
 export async function POST(req: NextRequest) {
   try {
+    const admin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    )
+
     const now = new Date()
 
     // Get all academies with active trials (no subscription)
