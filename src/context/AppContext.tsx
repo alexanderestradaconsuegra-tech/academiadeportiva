@@ -680,6 +680,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       healthProfiles: s.healthProfiles.filter(h => h.player_id !== id),
       liveSessions: s.liveSessions.filter(ls => ls.player_id !== id),
       positionSamples: s.positionSamples.filter(p => p.player_id !== id),
+      injuries: s.injuries.filter(i => i.player_id !== id),
+      payments: s.payments.filter(pay => pay.player_id !== id),
+      physicalTests: s.physicalTests.filter(pt => pt.player_id !== id),
+      attendance: s.attendance.filter(a => a.player_id !== id),
     }))
     supabase.from("players").delete().eq("id", id).then(({ error }) => { if (error) dbg("deletePlayer:", error) })
   }, [])

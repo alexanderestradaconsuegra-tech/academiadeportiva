@@ -196,7 +196,7 @@ const EMPTY_EVAL_FORM = {
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, getPlayerConvocatoria, currentUser, language, teamSettings, trainings, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, updatePayment, addPositionSamples, getPlayerPositionSamples, addLiveSession } = useApp()
+  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, getPlayerConvocatoria, currentUser, language, teamSettings, trainings, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, updatePayment, addPositionSamples, getPlayerPositionSamples, addLiveSession, deletePlayer } = useApp()
   const isCoach = currentUser?.role === "coach"
   const isOwnProfile = currentUser?.role === "player" && currentUser.player_id === id
 
@@ -556,11 +556,24 @@ export default function PlayerProfilePage() {
               {pdfLoading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
             </button>
             {isCoach && (
-              <Link href={`/players/${id}/edit`}>
-                <Button variant="outline" size="sm" className="no-print bg-white/10 border-white/20 text-white hover:bg-white/20">
-                  <Edit size={14} /> {t("edit")}
-                </Button>
-              </Link>
+              <>
+                <Link href={`/players/${id}/edit`}>
+                  <Button variant="outline" size="sm" className="no-print bg-white/10 border-white/20 text-white hover:bg-white/20">
+                    <Edit size={14} /> {t("edit")}
+                  </Button>
+                </Link>
+                <button
+                  onClick={() => {
+                    if (!confirm(`¿Eliminar a ${player.name}? Esta acción no se puede deshacer.`)) return
+                    deletePlayer(id)
+                    router.replace("/players")
+                  }}
+                  className="no-print w-9 h-9 rounded-xl bg-red-500/20 backdrop-blur flex items-center justify-center text-red-200 hover:bg-red-500/40 transition-colors"
+                  title="Eliminar jugador"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </>
             )}
           </div>
 
