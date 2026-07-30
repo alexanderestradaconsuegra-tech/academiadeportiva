@@ -37,13 +37,6 @@ export default function HeroImpactante() {
         {/* Stadium lights effect */}
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-        {/* Field pattern */}
-        <div className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: "linear-gradient(rgba(255,255,255,0.8) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.8) 1px,transparent 1px)",
-            backgroundSize: "60px 60px"
-          }}
-        />
       </div>
 
       <div className="relative h-full max-w-7xl mx-auto px-6 flex items-center">
@@ -93,7 +86,7 @@ export default function HeroImpactante() {
             {/* Player Image */}
             <div className="relative z-10">
               <img
-                src="https://drive.google.com/uc?export=view&id=1FYP44P-UqQE2Eu2MWi5srAzmpWxP7BJL"
+                src="/images/jugador-metrikas.png"
                 alt="Jugador Metrikas"
                 className="h-[600px] md:h-[700px] w-auto object-contain drop-shadow-2xl"
               />
@@ -209,17 +202,22 @@ export default function HeroImpactante() {
                 <p className="text-xs font-bold text-lime-400 uppercase tracking-widest mb-3">Análisis Táctico</p>
                 <div className="relative w-full aspect-square bg-white/5 rounded-lg border border-white/10 p-2">
                   <svg className="w-full h-full" viewBox="0 0 200 200">
-                    {/* Field lines */}
-                    <line x1="100" y1="0" x2="100" y2="200" stroke="rgba(163, 230, 53, 0.2)" strokeWidth="1" />
-                    <rect x="10" y="10" width="180" height="180" fill="none" stroke="rgba(163, 230, 53, 0.1)" strokeWidth="2" />
-                    {/* Player positions */}
-                    {[
-                      { x: 100, y: 50 },
-                      { x: 80, y: 100 },
-                      { x: 120, y: 100 },
-                      { x: 100, y: 150 },
-                    ].map((p, i) => (
-                      <circle key={i} cx={p.x} cy={p.y} r="6" fill="#a3e635" opacity="0.8" />
+                    {/* Field outline */}
+                    <rect x="15" y="15" width="170" height="170" fill="none" stroke="rgba(163, 230, 53, 0.2)" strokeWidth="2" />
+                    {/* Center line */}
+                    <line x1="100" y1="15" x2="100" y2="185" stroke="rgba(163, 230, 53, 0.15)" strokeWidth="1" />
+                    {/* Formation 4-4-2 */}
+                    {/* 4 Defensas (atrás) */}
+                    {[40, 70, 130, 160].map((x, i) => (
+                      <circle key={`def-${i}`} cx={x} cy={50} r="5" fill="#a3e635" opacity="0.9" />
+                    ))}
+                    {/* 4 Mediocampistas */}
+                    {[40, 70, 130, 160].map((x, i) => (
+                      <circle key={`mid-${i}`} cx={x} cy={100} r="5" fill="#a3e635" opacity="0.8" />
+                    ))}
+                    {/* 2 Delanteros (al frente) */}
+                    {[70, 130].map((x, i) => (
+                      <circle key={`fwd-${i}`} cx={x} cy={155} r="5" fill="#a3e635" opacity="0.9" />
                     ))}
                   </svg>
                 </div>
