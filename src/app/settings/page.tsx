@@ -8,7 +8,7 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
 import PhotoUpload from "@/components/ui/PhotoUpload"
-import { Trophy, Check, KeyRound, UserCheck, Sun, Moon, Send, Languages, UserPlus, GraduationCap } from "lucide-react"
+import { Trophy, Check, KeyRound, UserCheck, Sun, Moon, Send, Languages, UserPlus, GraduationCap, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Category, Language } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
@@ -99,6 +99,7 @@ function AccessManager() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [form, setForm] = useState({ email: "", password: "" })
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   useEffect(() => {
     supabase.from("profiles").select("id, player_id").eq("role", "player").eq("academy_id", currentUser?.academy_id ?? "").not("player_id", "is", null)
@@ -153,6 +154,23 @@ function AccessManager() {
     setSaving(false)
     if (!res.ok) { setError(data.error || t("accessCreateError")); return }
     setAccessMap(m => ({ ...m, [playerId]: { user_id: data.user?.id ?? "", email: form.email } }))
+    closePanel()
+  }
+
+  async function handleDelete(playerId: string) {
+    if (!confirm("¿Eliminar el acceso de este jugador? Podrás crear uno nuevo después.")) return
+    setDeleting(playerId)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const userId = accessMap[playerId]?.user_id
+    const res = await fetch("/api/admin/delete-account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ user_id: userId }),
+    })
+    setDeleting(null)
+    if (!res.ok) { const d = await res.json(); setError(d.error || "Error al eliminar acceso"); return }
+    setAccessMap(m => { const n = { ...m }; delete n[playerId]; return n })
     closePanel()
   }
 
@@ -212,6 +230,14 @@ function AccessManager() {
                         <KeyRound size={13} />
                         <span className="hidden sm:inline">Editar</span>
                       </Button>
+                      <button
+                        onClick={() => handleDelete(p.id)}
+                        disabled={deleting === p.id}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0 disabled:opacity-50"
+                        title="Eliminar acceso"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   ) : (
                     <Button variant="outline" size="sm" type="button" onClick={() => isOpen ? closePanel() : openCreate(p.id)}>
