@@ -1306,6 +1306,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const isSubscriptionBlocked = (() => {
     const ts = state.teamSettings
     if (!ts) return false
+
+    // Check if on trial and it expired
+    if (!ts.subscription_status && ts.trial_expires_at) {
+      const trialEnd = new Date(ts.trial_expires_at).getTime()
+      if (trialEnd < Date.now()) return true
+    }
+
     const status = ts.subscription_status
     if (!status) return false
     if (status === "suspended" || status === "canceled" || status === "cancelled") return true
