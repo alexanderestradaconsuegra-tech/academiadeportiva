@@ -24,31 +24,21 @@ export default function HeroImpactante() {
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl md:text-5xl xl:text-[3.6rem] font-black leading-[1.08] mb-4">
-              <span className="text-white">Los campeones no se</span>
-              <br />
-              <span className="text-lime-400">improvisan.</span>
-              <br />
-              <span className="text-white">Se construyen con datos.</span>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-black leading-[1.1] mb-4 text-white">
+              Dirige tu academia como un club profesional.
             </h1>
 
-            <p className="text-white/70 text-lg md:text-xl font-semibold mb-4">
-              Cada entrenamiento. Cada jugador. Cada decisión.
-            </p>
-
-            <p className="text-blue-100/55 text-base md:text-lg leading-relaxed mb-8 max-w-lg">
-              Convocatorias con confirmación, tácticas, evaluaciones, asistencia, pagos y comunicación. Todo desde una sola plataforma diseñada para academias de fútbol.
+            <p className="text-white/70 text-sm sm:text-base md:text-lg leading-relaxed mb-8 max-w-lg">
+              Dedica más tiempo a formar jugadores y menos tiempo a la administración. Metrikas reúne convocatorias, tácticas, evaluaciones, asistencia, pagos, comunicación y métricas de rendimiento en una única plataforma.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 mb-8">
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/login"
                 className="h-12 px-7 rounded-xl bg-lime-400 text-[#05122F] text-sm font-bold flex items-center gap-2 hover:bg-lime-300 transition-all shadow-lg shadow-lime-900/50"
               >
-                Solicitar una demo <ArrowRight size={16} />
-              </a>
+                Empieza gratis <ArrowRight size={16} />
+              </Link>
               <Link
                 href="/login"
                 className="h-12 px-6 rounded-xl border border-white/15 text-white/80 text-sm font-semibold flex items-center hover:bg-white/5 transition-colors"
