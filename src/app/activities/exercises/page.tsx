@@ -33,7 +33,7 @@ export default function ExerciseLibraryPage() {
         <Link href="/activities" className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-[#0B5CFF] mb-4">
           <ArrowLeft size={15} /> {t("backToActivities")}
         </Link>
-        <PageHeader title={t("exerciseVideos")} subtitle={t("exerciseVideosSubtitle")} />
+        <PageHeader title="Biblioteca de ejercicios" subtitle="Agrega, edita o elimina ejercicios por categoría. Cada academia tiene su propia lista." />
 
         <div className="space-y-6">
           {CATEGORIES.map(category => {
@@ -63,7 +63,15 @@ export default function ExerciseLibraryPage() {
                   {items.map(ex => (
                     <div key={ex.id} className="flex items-center gap-3 px-5 py-3">
                       <Film size={14} className="text-slate-300 dark:text-slate-600 shrink-0" />
-                      <p className="text-sm font-medium text-slate-800 dark:text-slate-200 w-44 shrink-0 truncate">{ex.name}</p>
+                      {isCoach ? (
+                        <input
+                          defaultValue={ex.name}
+                          onBlur={e => { const v = e.target.value.trim(); if (v && v !== ex.name) updateExercise(ex.id, { name: v }) }}
+                          className="w-44 shrink-0 h-8 px-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none text-slate-800 dark:text-slate-200"
+                        />
+                      ) : (
+                        <p className="text-sm font-medium text-slate-800 dark:text-slate-200 w-44 shrink-0 truncate">{ex.name}</p>
+                      )}
                       {isCoach ? (
                         <>
                           <input
