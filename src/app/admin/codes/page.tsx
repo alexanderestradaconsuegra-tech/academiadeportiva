@@ -10,6 +10,7 @@ interface ActivationCode {
   id: string
   code: string
   label: string | null
+  code_type: 'demo' | 'payment'
   created_at: string
   used_at: string | null
   used_by_academy_id: string | null
@@ -28,6 +29,7 @@ export default function CodesAdminPage() {
   const [codes, setCodes] = useState<ActivationCode[]>([])
   const [loading, setLoading] = useState(true)
   const [newLabel, setNewLabel] = useState("")
+  const [newCodeType, setNewCodeType] = useState<'demo' | 'payment'>('demo')
   const [creating, setCreating] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
   const [error, setError] = useState("")
@@ -72,7 +74,7 @@ export default function CodesAdminPage() {
     const sb = supabase as any
     const { error: err } = await sb
       .from("activation_codes")
-      .insert({ code, label: newLabel.trim() || null })
+      .insert({ code, label: newLabel.trim() || null, code_type: newCodeType })
     if (err) {
       setError("Error al crear código. Intenta de nuevo.")
     } else {
@@ -113,23 +115,33 @@ export default function CodesAdminPage() {
           <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
             <Plus size={16} className="text-[#0B5CFF]" /> Generar nuevo código
           </h3>
-          <div className="flex items-center gap-3 flex-wrap">
-            <input
-              type="text"
-              value={newLabel}
-              onChange={e => setNewLabel(e.target.value)}
-              placeholder="Nombre academia / cliente (opcional)"
-              className="h-10 flex-1 min-w-[200px] px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-800 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none"
-              onKeyDown={e => e.key === "Enter" && !creating && createCode()}
-            />
-            <button
-              onClick={createCode}
-              disabled={creating}
-              className="h-10 px-5 bg-[#0B5CFF] text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all disabled:opacity-60 flex items-center gap-2"
-            >
-              {creating ? <RefreshCw size={14} className="animate-spin" /> : <KeyRound size={14} />}
-              Crear código
-            </button>
+          <div className="space-y-3 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <input
+                type="text"
+                value={newLabel}
+                onChange={e => setNewLabel(e.target.value)}
+                placeholder="Nombre academia / cliente (opcional)"
+                className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-800 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none"
+                onKeyDown={e => e.key === "Enter" && !creating && createCode()}
+              />
+              <select
+                value={newCodeType}
+                onChange={e => setNewCodeType(e.target.value as 'demo' | 'payment')}
+                className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-800 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none"
+              >
+                <option value="demo">🎁 Demo (14 días gratis)</option>
+                <option value="payment">💳 Código de Pago</option>
+              </select>
+              <button
+                onClick={createCode}
+                disabled={creating}
+                className="h-10 px-5 bg-[#0B5CFF] text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {creating ? <RefreshCw size={14} className="animate-spin" /> : <KeyRound size={14} />}
+                Crear
+              </button>
+            </div>
           </div>
           {error && <p className="text-red-500 text-xs mt-2">{error}</p>}
         </div>
@@ -156,6 +168,9 @@ export default function CodesAdminPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <code className="text-sm font-mono font-bold text-slate-900 dark:text-white tracking-wider bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg">{c.code}</code>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                        {c.code_type === 'demo' ? '🎁 Demo' : '💳 Pago'}
+                      </span>
                       {c.label && <span className="text-xs text-slate-500 dark:text-slate-400">{c.label}</span>}
                     </div>
                     <p className="text-[10px] text-slate-400 mt-0.5">Creado {new Date(c.created_at).toLocaleDateString("es-CL")}</p>

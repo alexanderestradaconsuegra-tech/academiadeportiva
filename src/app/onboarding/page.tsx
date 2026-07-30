@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useApp } from "@/context/AppContext"
+import { supabase } from "@/lib/supabase"
 import { Trophy, Building2, User, AlertCircle, KeyRound } from "lucide-react"
 import type { Language } from "@/lib/types"
 
@@ -45,6 +46,13 @@ export default function OnboardingPage() {
     if (err) {
       setError(err)
       setLoading(false)
+      return
+    }
+
+    // Check code type to determine next step
+    const { data: codeData } = await (supabase as any).from("activation_codes").select("code_type").eq("code", activationCode.trim()).single()
+    if (codeData?.code_type === 'payment') {
+      router.replace("/subscribe")
     } else {
       router.replace("/dashboard")
     }

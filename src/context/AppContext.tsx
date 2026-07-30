@@ -586,6 +586,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const { data: academy } = await (supabase as any).from("team_settings").select("*").eq("id", academyId).single()
     if (!profileRow || !academy) return "Error al cargar el perfil creado."
 
+    // Check code type and set trial if demo
+    const { data: codeData } = await (supabase as any).from("activation_codes").select("code_type").eq("code", code.trim()).single()
+    if (codeData?.code_type === 'demo') {
+      const trialEnd = new Date()
+      trialEnd.setDate(trialEnd.getDate() + 14)
+      await supabase.from("team_settings").update({ trial_expires_at: trialEnd.toISOString() }).eq("id", academyId)
+    }
+
     // Seed demo players
     const demoPlayers: { name: string; position: import("@/lib/types").Position; category: import("@/lib/types").Category; age: number; dominant_foot: import("@/lib/types").DominantFoot }[] = [
       { name: "Carlos Rodríguez", position: "Portero",              category: "Sub-16", age: 16, dominant_foot: "Derecha" },
