@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
 import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
-import { checkAndCleanupAccounts } from "@/lib/account-cleanup"
 import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
 
@@ -568,7 +567,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, isAuthenticated: true, currentUser: profile }))
     await Promise.all([loadTeamSettings(), loadPlayerData()])
     // Check and cleanup expired accounts silently in background
-    checkAndCleanupAccounts().catch(err => console.error("Cleanup error:", err))
+    fetch("/api/account-cleanup", { method: "POST" }).catch(err => console.error("Cleanup error:", err))
     return null
   }, [loadProfileFor, loadTeamSettings, loadPlayerData, state.teamSettings?.language])
 

@@ -1,5 +1,6 @@
+import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
-import { sendEmail, trialReminderEmail, accountDeletedEmail } from "./email"
+import { sendEmail, trialReminderEmail, accountDeletedEmail } from "@/lib/email"
 
 const admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -7,7 +8,7 @@ const admin = createClient(
   { auth: { persistSession: false } }
 )
 
-export async function checkAndCleanupAccounts() {
+export async function POST(req: NextRequest) {
   try {
     const now = new Date()
 
@@ -19,8 +20,7 @@ export async function checkAndCleanupAccounts() {
       .eq("subscription_status", null)
 
     if (fetchError || !academies) {
-      console.error("Cleanup: fetch error", fetchError)
-      return
+      return NextResponse.json({ ok: true, results: { remindersSent: 0, accountsDeleted: 0 } })
     }
 
     let remindersSent = 0
@@ -104,10 +104,9 @@ export async function checkAndCleanupAccounts() {
       }
     }
 
-    if (remindersSent > 0 || accountsDeleted > 0) {
-      console.log(`Cleanup: ${remindersSent} reminders sent, ${accountsDeleted} accounts deleted`)
-    }
+    return NextResponse.json({ ok: true, results: { remindersSent, accountsDeleted } })
   } catch (err) {
     console.error("Account cleanup error:", err)
+    return NextResponse.json({ ok: true, results: { remindersSent: 0, accountsDeleted: 0 } })
   }
 }
