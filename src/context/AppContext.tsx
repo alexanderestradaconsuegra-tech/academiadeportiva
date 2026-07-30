@@ -591,7 +591,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (codeData?.code_type === 'demo') {
       const trialEnd = new Date()
       trialEnd.setDate(trialEnd.getDate() + 14)
-      await supabase.from("team_settings").update({ trial_expires_at: trialEnd.toISOString() }).eq("id", academyId)
+      await (supabase as any).from("team_settings").update({ trial_expires_at: trialEnd.toISOString() }).eq("id", academyId)
     }
 
     // Seed demo players
