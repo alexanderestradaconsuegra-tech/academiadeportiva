@@ -24,9 +24,9 @@ export default function SubscribePage() {
   const [loading, setLoading] = useState<"monthly" | "annual" | null>(null)
   const [error, setError] = useState("")
 
-  const monthlyPrice = 15
-  const annualPrice = 126
-  const annualMonthly = (annualPrice / 12).toFixed(1)
+  const monthlyPrice = 14250 // ~$15 USD in CLP
+  const annualPrice = 119700 // ~$126 USD in CLP
+  const annualMonthly = (annualPrice / 12).toFixed(0)
 
   async function handleSubscribe(plan: "monthly" | "annual") {
     if (!teamSettings?.id) {
@@ -113,7 +113,7 @@ export default function SubscribePage() {
           <div className="bg-white/[0.06] border border-white/10 rounded-3xl p-7 flex flex-col">
             <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-3">Plan mensual</p>
             <div className="flex items-end gap-1 mb-1">
-              <span className="text-5xl font-black text-white">US${monthlyPrice}</span>
+              <span className="text-5xl font-black text-white">${monthlyPrice.toLocaleString('es-CL')}</span>
               <span className="text-blue-100/50 mb-1.5">/mes</span>
             </div>
             <p className="text-blue-100/40 text-sm mb-6">por academia · acceso por 30 días</p>
@@ -141,10 +141,10 @@ export default function SubscribePage() {
                 <span className="text-[10px] font-black bg-white text-[#0B5CFF] px-2 py-0.5 rounded-full">AHORRA 30%</span>
               </div>
               <div className="flex items-end gap-1 mb-1">
-                <span className="text-5xl font-black text-white">US${annualMonthly}</span>
+                <span className="text-5xl font-black text-white">${parseInt(annualMonthly).toLocaleString('es-CL')}</span>
                 <span className="text-blue-200/70 mb-1.5">/mes</span>
               </div>
-              <p className="text-blue-200/70 text-sm mb-1">US${annualPrice}/año · acceso por 12 meses</p>
+              <p className="text-blue-200/70 text-sm mb-1">${annualPrice.toLocaleString('es-CL')}/año · acceso por 12 meses</p>
               <p className="text-blue-300/60 text-xs mb-6">equivale a 2 meses gratis</p>
               <button
                 onClick={() => handleSubscribe("annual")}

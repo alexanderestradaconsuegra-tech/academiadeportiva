@@ -19,8 +19,8 @@ const WHATSAPP_NUMBER = "56992103974"
 const WHATSAPP_MSG = encodeURIComponent("Hola, quiero información sobre Metrikas para mi academia")
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MSG}`
 
-const PRICE_MONTHLY = 15
-const PRICE_ANNUAL = Math.round(PRICE_MONTHLY * 12 * 0.7)
+const PRICE_MONTHLY = 14250 // ~$15 USD in CLP
+const PRICE_ANNUAL = 119700 // ~$126 USD in CLP (~$9,975/mes avg)
 
 const PLAN_INCLUDES = [
   "Jugadores y categorías ilimitadas — sin costo extra por crecer",
@@ -36,7 +36,7 @@ const PLAN_INCLUDES = [
 ]
 
 const FAQS = [
-  { q: "¿Cuánto cuesta Metrikas?", a: `US$${PRICE_MONTHLY} al mes por academia, sin importar cuántos jugadores tengas. Si pagas el año completo ahorras 30%: US$${PRICE_ANNUAL}/año (US$${(PRICE_ANNUAL / 12).toFixed(1)}/mes). Es menos de lo que cuesta alquilar una cancha una hora.` },
+  { q: "¿Cuánto cuesta Metrikas?", a: `$${PRICE_MONTHLY.toLocaleString('es-CL')} al mes por academia, sin importar cuántos jugadores tengas. Si pagas el año completo ahorras 30%: $${PRICE_ANNUAL.toLocaleString('es-CL')}/año ($${Math.round(PRICE_ANNUAL / 12).toLocaleString('es-CL')}/mes promedio). Es menos de lo que cuesta alquilar una cancha una hora.` },
   { q: "¿Hay contrato o permanencia mínima?", a: "No. Sin instalación, sin contratos largos, sin letra chica. Cancelas cuando quieras y mantienes el acceso hasta el fin del período ya pagado." },
   { q: "¿Cuánto tiempo tarda en funcionar?", a: "Menos de 20 minutos. Te damos un código de activación, creas tu academia, agregas jugadores y ya tienes la primera convocatoria lista. Sin configuraciones complicadas." },
   { q: "¿Funciona en cualquier país?", a: "Sí. Metrikas está disponible en español, inglés y portugués y funciona igual en Chile, Colombia, México, Estados Unidos o donde estés." },
@@ -408,7 +408,7 @@ export default function LandingPage() {
             <div className="rounded-3xl border border-white/10 bg-white/[0.05] backdrop-blur p-8 flex flex-col">
               <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-5">Plan mensual</p>
               <div className="flex items-end gap-1 mb-1">
-                <span className="text-6xl font-black text-white">US${PRICE_MONTHLY}</span>
+                <span className="text-6xl font-black text-white">${PRICE_MONTHLY.toLocaleString('es-CL')}</span>
                 <span className="text-white/40 text-lg mb-2">/mes</span>
               </div>
               <p className="text-white/30 text-sm mb-8">por academia · acceso por 30 días</p>
@@ -437,10 +437,10 @@ export default function LandingPage() {
                   <span className="text-[10px] font-black bg-white text-[#0B5CFF] px-2.5 py-0.5 rounded-full">AHORRA 30%</span>
                 </div>
                 <div className="flex items-end gap-1 mb-1">
-                  <span className="text-6xl font-black text-white">US${(PRICE_ANNUAL / 12).toFixed(0)}</span>
+                  <span className="text-6xl font-black text-white">${Math.round(PRICE_ANNUAL / 12).toLocaleString('es-CL')}</span>
                   <span className="text-blue-200/60 text-lg mb-2">/mes</span>
                 </div>
-                <p className="text-blue-200/60 text-sm mb-1">US${PRICE_ANNUAL}/año · equivale a 2 meses gratis</p>
+                <p className="text-blue-200/60 text-sm mb-1">${PRICE_ANNUAL.toLocaleString('es-CL')}/año · equivale a 2 meses gratis</p>
                 <p className="text-blue-300/50 text-xs mb-8">Acceso garantizado por 12 meses completos</p>
                 <ul className="space-y-2 mb-8">
                   {PLAN_INCLUDES.map(item => (

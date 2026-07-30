@@ -6,12 +6,14 @@ function accessToken() {
   return t
 }
 
+const USD_TO_CLP = 950 // Approximate exchange rate
+
 export const MP_PRICES = {
-  monthly: Number(process.env.MP_MONTHLY_PRICE ?? 15),
-  annual: Number(process.env.MP_ANNUAL_PRICE ?? 126),
+  monthly: Number(process.env.MP_MONTHLY_PRICE ?? Math.round(15 * USD_TO_CLP)),
+  annual: Number(process.env.MP_ANNUAL_PRICE ?? Math.round(126 * USD_TO_CLP)),
 }
 
-export const MP_CURRENCY = process.env.MP_CURRENCY ?? "USD"
+export const MP_CURRENCY = process.env.MP_CURRENCY ?? "CLP"
 
 /** Creates an automatic recurring subscription (Preapproval API). */
 export async function createPreapproval(
