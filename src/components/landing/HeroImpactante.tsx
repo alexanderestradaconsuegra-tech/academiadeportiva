@@ -1,12 +1,16 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 import InteractivePitchBuilder from "@/components/landing/InteractivePitchBuilder"
+import DemoRequestModal from "@/components/landing/DemoRequestModal"
 
 const WHATSAPP_URL = "https://wa.me/56992103974?text=" + encodeURIComponent("Hola, quiero información sobre Metrikas para mi academia")
 
 export default function HeroImpactante() {
+  const [demoModalOpen, setDemoModalOpen] = useState(false)
+
   return (
     <section className="relative overflow-hidden bg-[#05122F] text-white">
       {/* Background */}
@@ -33,12 +37,12 @@ export default function HeroImpactante() {
             </p>
 
             <div className="flex flex-wrap items-center gap-3 mb-8">
-              <Link
-                href="/login"
+              <button
+                onClick={() => setDemoModalOpen(true)}
                 className="h-12 px-7 rounded-xl bg-lime-400 text-[#05122F] text-sm font-bold flex items-center gap-2 hover:bg-lime-300 transition-all shadow-lg shadow-lime-900/50"
               >
-                Empieza gratis <ArrowRight size={16} />
-              </Link>
+                🎁 Solicitar Demo <ArrowRight size={16} />
+              </button>
               <Link
                 href="/login"
                 className="h-12 px-6 rounded-xl border border-white/15 text-white/80 text-sm font-semibold flex items-center hover:bg-white/5 transition-colors"
@@ -46,6 +50,8 @@ export default function HeroImpactante() {
                 Ya tengo cuenta
               </Link>
             </div>
+
+            <DemoRequestModal open={demoModalOpen} onClose={() => setDemoModalOpen(false)} />
           </div>
 
           <InteractivePitchBuilder />
