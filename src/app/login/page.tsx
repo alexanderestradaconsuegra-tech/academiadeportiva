@@ -52,15 +52,23 @@ export default function LoginPage() {
     e.preventDefault()
     setError("")
     setLoading(true)
-    // Use Supabase's built-in signUp — no admin endpoint needed
+    // Try signup first; if email exists, try login with same password
     const { error: signUpError } = await supabase.auth.signUp({ email, password })
     if (signUpError) {
-      // Generic message — never expose internal Supabase errors to UI
-      setError("No se pudo crear la cuenta. Verifica los datos e intenta de nuevo.")
-      setLoading(false)
-      return
+      // If email exists, try logging in instead
+      if (signUpError.message?.includes("already registered")) {
+        const loginError = await login(email, password)
+        if (loginError) {
+          setError(loginError)
+          setLoading(false)
+          return
+        }
+      } else {
+        setError("No se pudo crear la cuenta. Verifica los datos e intenta de nuevo.")
+        setLoading(false)
+        return
+      }
     }
-    // After signUp the user is authenticated; createAcademy will be called from /onboarding
     // Store pending setup data so onboarding page can pre-fill it
     sessionStorage.setItem("pendingAcademy", JSON.stringify({ academyName, fullName, language, activationCode }))
     const loginError = await login(email, password)
