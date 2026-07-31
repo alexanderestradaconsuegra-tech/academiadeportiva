@@ -50,42 +50,25 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Create user in Auth (or use existing)
-    let authData: any = null
-    let authError: any = null
-
-    // Try to create new user
-    const { data: newAuthData, error: newAuthError } = await admin.auth.admin.createUser({
+    // Create user in Auth
+    const { data: authData, error: authError } = await admin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
     })
 
-    if (newAuthError) {
-      // If user already exists, try to get their ID
-      if (newAuthError.message?.includes("already exists")) {
-        const { data: existingUser } = await admin.auth.admin.getUserByEmail(email)
-        if (existingUser?.user) {
-          authData = { user: existingUser.user }
-        } else {
-          console.error("Auth error:", newAuthError)
-          return NextResponse.json(
-            { error: "Error de autenticación. Intenta con otro email." },
-            { status: 500 }
-          )
-        }
-      } else {
-        console.error("Auth creation error:", newAuthError)
+    if (authError) {
+      // If user already exists, continue anyway (they might be trying to add an academy to existing account)
+      if (!authError.message?.includes("already exists")) {
+        console.error("Auth creation error:", authError)
         return NextResponse.json(
-          { error: newAuthError?.message || "Error al crear usuario" },
+          { error: authError?.message || "Error al crear usuario" },
           { status: 500 }
         )
       }
-    } else {
-      authData = newAuthData
     }
 
-    if (!authData?.user) {
+    if (!authData?.user && !authError?.message?.includes("already exists")) {
       return NextResponse.json(
         { error: "Error al crear usuario" },
         { status: 500 }
