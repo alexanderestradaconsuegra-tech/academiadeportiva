@@ -29,7 +29,7 @@ export default function HeroImpactante() {
 
             {/* Headline */}
             <h1 className="text-3xl sm:text-4xl md:text-5xl xl:text-6xl font-black leading-[1.1] mb-4 text-white">
-              Dirige tu <span className="text-emerald-400">academia</span> como un club <span className="text-emerald-400">profesional</span>.
+              Dirige tu <span className="text-green-400">academia</span> como un club <span className="text-green-400">profesional</span>.
             </h1>
 
             <p className="text-white/70 text-sm sm:text-base md:text-lg leading-relaxed mb-8 max-w-lg">
@@ -39,7 +39,7 @@ export default function HeroImpactante() {
             <div className="flex flex-wrap items-center gap-3 mb-8">
               <button
                 onClick={() => setDemoModalOpen(true)}
-                className="h-12 px-7 rounded-xl bg-emerald-400 text-[#05122F] text-sm font-bold flex items-center gap-2 hover:bg-emerald-300 transition-all shadow-lg shadow-emerald-900/50"
+                className="h-12 px-7 rounded-xl bg-green-400 text-[#05122F] text-sm font-bold flex items-center gap-2 hover:bg-green-300 transition-all shadow-lg shadow-green-900/50"
               >
                 🎁 Solicitar Demo <ArrowRight size={16} />
               </button>
