@@ -582,7 +582,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       p_language: lang,
       p_code: code.trim(),
     })
-    if (rpcErr || !academyId) return rpcErr?.message ?? "Código de activación inválido o ya utilizado."
+    if (rpcErr || !academyId) {
+      console.error("RPC error:", rpcErr)
+      return rpcErr?.message ?? "Código de activación inválido, expirado, o ya utilizado. Verifica que sea correcto."
+    }
 
     const { data: profileRow } = await supabase.from("profiles").select("*").eq("id", userId).single()
     const { data: academy } = await (supabase as any).from("team_settings").select("*").eq("id", academyId).single()
