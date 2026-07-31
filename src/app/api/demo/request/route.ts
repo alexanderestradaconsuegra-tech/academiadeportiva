@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     if (insertError) {
       console.error("Error inserting code:", insertError)
       return NextResponse.json(
-        { error: "Error al generar código" },
+        { error: `Error al generar código: ${insertError.message}` },
         { status: 500 }
       )
     }
