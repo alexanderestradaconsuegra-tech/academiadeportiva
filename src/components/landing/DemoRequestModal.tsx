@@ -54,10 +54,10 @@ export default function DemoRequestModal({ open, onClose }: DemoRequestModalProp
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
         {/* Header */}
-        <div className="relative bg-gradient-to-r from-lime-400 to-lime-300 p-6 text-[#05122F]">
+        <div className="relative bg-gradient-to-r from-green-400 to-green-300 p-6 text-[#05122F]">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-[#05122F] hover:bg-lime-200 p-1 rounded-full transition"
+            className="absolute top-4 right-4 text-[#05122F] hover:bg-green-200 p-1 rounded-full transition"
           >
             <X size={20} />
           </button>
@@ -69,7 +69,7 @@ export default function DemoRequestModal({ open, onClose }: DemoRequestModalProp
         <div className="p-6">
           {success ? (
             <div className="text-center py-8">
-              <CheckCircle2 size={48} className="text-lime-400 mx-auto mb-4" />
+              <CheckCircle2 size={48} className="text-green-400 mx-auto mb-4" />
               <h3 className="text-lg font-bold text-[#05122F] mb-2">¡Listo!</h3>
               <p className="text-gray-600 text-sm">
                 Revisa tu email <strong>{email}</strong> para obtener tu código de demo.
@@ -89,7 +89,7 @@ export default function DemoRequestModal({ open, onClose }: DemoRequestModalProp
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@email.com"
                   required
-                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-lime-400 focus:outline-none text-sm text-gray-900"
+                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-green-400 focus:outline-none text-sm text-gray-900"
                 />
               </div>
 
@@ -105,7 +105,7 @@ export default function DemoRequestModal({ open, onClose }: DemoRequestModalProp
                   onChange={(e) => setAcademyName(e.target.value)}
                   placeholder="Mi Academia Deportiva"
                   required
-                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-lime-400 focus:outline-none text-sm text-gray-900"
+                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-green-400 focus:outline-none text-sm text-gray-900"
                 />
               </div>
 
@@ -117,7 +117,7 @@ export default function DemoRequestModal({ open, onClose }: DemoRequestModalProp
               )}
 
               {/* Features */}
-              <div className="bg-lime-50 rounded-lg p-4 mt-6">
+              <div className="bg-green-50 rounded-lg p-4 mt-6">
                 <p className="text-xs font-semibold text-[#05122F] mb-2">Tu demo incluye:</p>
                 <ul className="text-xs text-gray-600 space-y-1">
                   <li>✅ Jugadores ilimitados</li>
@@ -132,7 +132,7 @@ export default function DemoRequestModal({ open, onClose }: DemoRequestModalProp
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-lime-400 to-lime-300 text-[#05122F] font-bold py-3 rounded-lg hover:from-lime-300 hover:to-lime-200 transition-all disabled:opacity-50 mt-6 flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-green-400 to-green-300 text-[#05122F] font-bold py-3 rounded-lg hover:from-green-300 hover:to-green-200 transition-all disabled:opacity-50 mt-6 flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
