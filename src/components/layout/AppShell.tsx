@@ -6,6 +6,7 @@ import Sidebar from "./Sidebar"
 import BottomNav from "./BottomNav"
 import MobileHeader from "./MobileHeader"
 import PlayerNav from "./PlayerNav"
+import DemoBanner from "./DemoBanner"
 
 const PLAYER_ALLOWED_PREFIXES = ["/matches", "/activities", "/tactics", "/health"]
 const ASSISTANT_BLOCKED_PREFIXES = ["/payments", "/settings", "/reports", "/charts"]
@@ -66,30 +67,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        {/* Trial banner — coach only, while trial is active */}
-        {!isPlayer && trialDaysLeft !== null && trialDaysLeft > 0 && (
-          <div className="no-print bg-amber-50 dark:bg-amber-500/10 border-b border-amber-200 dark:border-amber-500/20 px-4 py-2 flex items-center justify-between gap-3 flex-wrap">
-            <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
-              ⏳ Prueba gratuita — te {trialDaysLeft === 1 ? "queda 1 día" : `quedan ${trialDaysLeft} días`}.
-            </p>
-            <div className="flex items-center gap-3 shrink-0">
-              <a
-                href="/subscribe"
-                className="text-xs font-bold text-[#0B5CFF] underline underline-offset-2"
-              >
-                Pagar con MercadoPago →
-              </a>
-              <a
-                href={`https://wa.me/56992103974?text=${encodeURIComponent("Hola, quiero activar mi academia en Metrikas.")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs font-bold text-amber-700 dark:text-amber-400 underline underline-offset-2"
-              >
-                WhatsApp
-              </a>
-            </div>
-          </div>
-        )}
+        {/* Demo banner — coach only, while trial is active */}
+        {!isPlayer && <DemoBanner daysLeft={trialDaysLeft} />}
 
         <main className="flex-1 pb-24 md:pb-0 overflow-x-hidden w-full min-w-0 max-w-full">
           {children}
