@@ -89,7 +89,7 @@ export default function DemoRequestModal({ open, onClose }: DemoRequestModalProp
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@email.com"
                   required
-                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-lime-400 focus:outline-none text-sm"
+                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-lime-400 focus:outline-none text-sm text-gray-900"
                 />
               </div>
 
@@ -105,7 +105,7 @@ export default function DemoRequestModal({ open, onClose }: DemoRequestModalProp
                   onChange={(e) => setAcademyName(e.target.value)}
                   placeholder="Mi Academia Deportiva"
                   required
-                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-lime-400 focus:outline-none text-sm"
+                  className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:border-lime-400 focus:outline-none text-sm text-gray-900"
                 />
               </div>
 
