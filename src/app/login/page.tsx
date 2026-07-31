@@ -55,8 +55,9 @@ export default function LoginPage() {
     // Try signup first; if email exists, try login with same password
     const { error: signUpError } = await supabase.auth.signUp({ email, password })
     if (signUpError) {
+      console.error("SignUp error:", signUpError)
       // If email exists, try logging in instead
-      if (signUpError.message?.includes("already registered")) {
+      if (signUpError.message?.includes("already registered") || signUpError.message?.includes("User already exists")) {
         const loginError = await login(email, password)
         if (loginError) {
           setError(loginError)
@@ -64,7 +65,7 @@ export default function LoginPage() {
           return
         }
       } else {
-        setError("No se pudo crear la cuenta. Verifica los datos e intenta de nuevo.")
+        setError(`Error: ${signUpError.message || "No se pudo crear la cuenta. Verifica los datos e intenta de nuevo."}`)
         setLoading(false)
         return
       }
