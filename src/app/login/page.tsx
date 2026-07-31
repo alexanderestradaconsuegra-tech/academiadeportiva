@@ -52,29 +52,39 @@ export default function LoginPage() {
     e.preventDefault()
     setError("")
     setLoading(true)
-    // Try signup first; if email exists, try login with same password
-    const { error: signUpError } = await supabase.auth.signUp({ email, password })
-    if (signUpError) {
-      console.error("SignUp error:", signUpError)
-      // If email exists, try logging in instead
-      if (signUpError.message?.includes("already registered") || signUpError.message?.includes("User already exists")) {
-        const loginError = await login(email, password)
-        if (loginError) {
-          setError(loginError)
-          setLoading(false)
-          return
-        }
-      } else {
-        setError(`Error: ${signUpError.message || "No se pudo crear la cuenta. Verifica los datos e intenta de nuevo."}`)
+
+    // Use admin-side endpoint to create account + academy
+    try {
+      const res = await fetch("/api/auth/create-academy-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          academyName,
+          coachName: fullName,
+          language,
+          activationCode: activationCode.trim(),
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || "Error al crear la cuenta")
         setLoading(false)
         return
       }
-    }
-    // Store pending setup data so onboarding page can pre-fill it
-    sessionStorage.setItem("pendingAcademy", JSON.stringify({ academyName, fullName, language, activationCode }))
-    const loginError = await login(email, password)
-    if (loginError) {
-      setError(loginError)
+
+      // Now login to trigger auth state update
+      const loginError = await login(email, password)
+      if (loginError) {
+        setError(loginError)
+        setLoading(false)
+      }
+    } catch (err) {
+      console.error("Register error:", err)
+      setError("Error de conexión. Intenta de nuevo.")
       setLoading(false)
     }
   }
