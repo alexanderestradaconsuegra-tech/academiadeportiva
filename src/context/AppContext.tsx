@@ -576,7 +576,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const userId = sessionData.session?.user.id
     if (!userId) return "No autenticado"
 
-    const { data: academyId, error: rpcErr } = await (supabase as any).rpc("create_academy_with_code", {
+    const { data: academyId, error: rpcErr } = await (supabase as any).rpc("crear_academia_con_código", {
       p_name: academyName,
       p_coach_name: coachName,
       p_language: lang,
