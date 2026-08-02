@@ -1,18 +1,21 @@
 "use client"
-import { useState, useRef, useCallback, useEffect } from "react"
+import { useState, useRef, useCallback, useEffect, useMemo } from "react"
 import AppShell from "@/components/layout/AppShell"
+import { useApp } from "@/context/AppContext"
+import { supabase } from "@/lib/supabase"
+import type { Category, Position } from "@/lib/types"
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 type Team = "home" | "away" | "ball"
-interface Marker { id: string; x: number; y: number; team: Team; label?: string }
+type Format = "7" | "11"
+interface Marker { id: string; x: number; y: number; team: Team; label?: string; player_id?: string }
 interface TLine  { id: string; type: "run" | "pass"; pts: [number,number][] }
-interface Play   { id: string; name: string; markers: Marker[]; lines: TLine[] }
+interface Play   { id: string; name: string; format: Format; category: Category | null; markers: Marker[]; lines: TLine[] }
 type Tool = "move" | "run" | "pass" | "home" | "away" | "ball" | "erase"
 
 const SEG_MS  = 1200  // ms per pass segment
 const RUN_MS  = 1800  // ms for all player runs
 const HIT_R   = 4.5   // SVG units for hit detection
-const KEY      = "tactics_v3"
 
 function uid()  { return Math.random().toString(36).slice(2, 9) }
 
@@ -32,18 +35,39 @@ function pathAt(pts: [number,number][], t: number): [number,number] {
   return pts[pts.length-1]
 }
 
-const FMTS: Record<string,{x:number;y:number}[]> = {
+// ── Formations ─────────────────────────────────────────────────────────────────
+const DIMS: Record<Format, { w: number; h: number }> = {
+  "11": { w: 105, h: 68 },
+  "7":  { w: 64,  h: 42 },
+}
+
+const FMTS11: Record<string,{x:number;y:number}[]> = {
   "4-3-3":   [{x:5,y:34},{x:20,y:9},{x:20,y:24},{x:20,y:44},{x:20,y:59},{x:40,y:17},{x:40,y:34},{x:40,y:51},{x:60,y:12},{x:60,y:34},{x:60,y:56}],
   "4-4-2":   [{x:5,y:34},{x:20,y:9},{x:20,y:24},{x:20,y:44},{x:20,y:59},{x:44,y:9},{x:44,y:27},{x:44,y:41},{x:44,y:59},{x:66,y:24},{x:66,y:44}],
   "3-5-2":   [{x:5,y:34},{x:20,y:17},{x:20,y:34},{x:20,y:51},{x:36,y:5},{x:40,y:20},{x:40,y:34},{x:40,y:48},{x:36,y:63},{x:64,y:24},{x:64,y:44}],
   "4-2-3-1": [{x:5,y:34},{x:19,y:9},{x:19,y:24},{x:19,y:44},{x:19,y:59},{x:36,y:24},{x:36,y:44},{x:52,y:12},{x:52,y:34},{x:52,y:56},{x:68,y:34}],
 }
 
-function loadPlays(): Play[] { try { return JSON.parse(localStorage.getItem(KEY)??"[]") } catch { return [] } }
-function savePlays(p: Play[]) { localStorage.setItem(KEY, JSON.stringify(p)) }
+// Fútbol 7: GK + 6 outfield players, common youth-academy shapes
+const FMTS7: Record<string,{x:number;y:number}[]> = {
+  "3-2-1": [{x:6,y:21},{x:18,y:7},{x:18,y:21},{x:18,y:35},{x:36,y:13},{x:36,y:29},{x:50,y:21}],
+  "2-3-1": [{x:6,y:21},{x:18,y:12},{x:18,y:30},{x:34,y:6},{x:34,y:21},{x:34,y:36},{x:50,y:21}],
+  "2-2-2": [{x:6,y:21},{x:18,y:12},{x:18,y:30},{x:34,y:12},{x:34,y:30},{x:48,y:12},{x:48,y:30}],
+  "3-1-2": [{x:6,y:21},{x:18,y:7},{x:18,y:21},{x:18,y:35},{x:34,y:21},{x:48,y:10},{x:48,y:32}],
+}
+
+const CATEGORIES: Category[] = ["Sub-10","Sub-12","Sub-14","Sub-16","Sub-18","Juvenil","Senior"]
+
+// Defensive→attacking rank used to auto-fill real players into formation slots
+const POS_RANK: Partial<Record<Position, number>> = {
+  "Defensa Central": 1, "Lateral Derecho": 1, "Lateral Izquierdo": 1,
+  "Mediocampista Defensivo": 2, "Mediocampista Central": 2,
+  "Mediocampista Ofensivo": 3, "Extremo Derecho": 3, "Extremo Izquierdo": 3,
+  "Delantero Centro": 4, "Segundo Delantero": 4,
+}
 
 // ── Pitch lines ────────────────────────────────────────────────────────────────
-function PitchSVG() {
+function Pitch11SVG() {
   const s="rgba(255,255,255,0.5)", w=0.35
   return (
     <g stroke={s} strokeWidth={w} fill="none">
@@ -69,8 +93,30 @@ function PitchSVG() {
   )
 }
 
+function Pitch7SVG() {
+  const s="rgba(255,255,255,0.5)", w=0.3
+  return (
+    <g stroke={s} strokeWidth={w} fill="none">
+      <rect x="2" y="2" width="60" height="38"/>
+      <line x1="32" y1="2" x2="32" y2="40"/>
+      <circle cx="32" cy="21" r="6"/>
+      <circle cx="32" cy="21" r="0.5" fill={s}/>
+      <rect x="2" y="9" width="10" height="24"/>
+      <circle cx="9" cy="21" r="0.4" fill={s}/>
+      <path d="M12,15.5 A6,6 0 0 1 12,26.5" strokeDasharray="1.5 0.8"/>
+      <rect x="52" y="9" width="10" height="24"/>
+      <circle cx="55" cy="21" r="0.4" fill={s}/>
+      <path d="M52,15.5 A6,6 0 0 0 52,26.5" strokeDasharray="1.5 0.8"/>
+    </g>
+  )
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function TacticsPage() {
+  const { players, teamSettings, currentUser } = useApp()
+  const isCoach = currentUser?.role === "coach"
+  const academyId = teamSettings?.id ?? null
+
   // ── Edit state (source of truth — never modified during animation)
   const [markers, setMarkers] = useState<Marker[]>([])
   const [lines,   setLines]   = useState<TLine[]>([])
@@ -80,6 +126,13 @@ export default function TacticsPage() {
   const [playName,setPlayName]= useState("Nueva jugada")
   const [plays,   setPlays]   = useState<Play[]>([])
   const [activeId,setActiveId]= useState<string|null>(null)
+  const [format,  setFormat]  = useState<Format>("11")
+  const [category,setCategory]= useState<Category | null>(null)
+  const [formationKey, setFormationKey] = useState<string>("4-3-3")
+  const [error, setError] = useState("")
+  const [saving, setSaving] = useState(false)
+
+  const roster = useMemo(() => category ? players.filter(p => p.category === category) : players, [players, category])
 
   // ── Undo history ─────────────────────────────────────────────────────────
   const histRef = useRef<{markers:Marker[];lines:TLine[]}[]>([])
@@ -97,7 +150,23 @@ export default function TacticsPage() {
   const [passStep, setPassStep] = useState(-1)
   const rafRef = useRef(0)
 
-  useEffect(()=>{ setPlays(loadPlays()) },[])
+  const dims = DIMS[format]
+
+  // ── DB load/save ──────────────────────────────────────────────────────────
+  const loadPlays = useCallback(async () => {
+    if (!academyId) return
+    const { data, error: err } = await (supabase as any)
+      .from("tactic_plays")
+      .select("*")
+      .eq("academy_id", academyId)
+      .order("updated_at", { ascending: false })
+    if (err) { setError("No se pudieron cargar las jugadas guardadas."); return }
+    if (data) setPlays(data.map((r: any): Play => ({
+      id: r.id, name: r.name, format: r.format, category: r.category, markers: r.markers ?? [], lines: r.lines ?? [],
+    })))
+  }, [academyId])
+
+  useEffect(() => { loadPlays() }, [loadPlays])
 
   // ── SVG coords ────────────────────────────────────────────────────────────
   const svgRef = useRef<SVGSVGElement>(null)
@@ -105,8 +174,8 @@ export default function TacticsPage() {
     const s=svgRef.current; if(!s) return [0,0]
     const p=s.createSVGPoint(); p.x=cx; p.y=cy
     const {x,y}=p.matrixTransform(s.getScreenCTM()!.inverse())
-    return [Math.max(0,Math.min(105,x)), Math.max(0,Math.min(68,y))]
-  },[])
+    return [Math.max(0,Math.min(dims.w,x)), Math.max(0,Math.min(dims.h,y))]
+  },[dims.w, dims.h])
 
   // ── Stop & reset animation completely ────────────────────────────────────
   const resetAnim = useCallback(()=>{
@@ -129,7 +198,7 @@ export default function TacticsPage() {
     for (const m of markers) origPos[m.id]=[m.x,m.y]
 
     const ball = markers.find(m=>m.team==="ball")
-    const origBall:[number,number] = ball ? [ball.x,ball.y] : [52.5,34]
+    const origBall:[number,number] = ball ? [ball.x,ball.y] : [dims.w/2, dims.h/2]
 
     // run assignments: closest player within 9 units
     const runMap: {id:string; pts:[number,number][]}[] = []
@@ -238,24 +307,80 @@ export default function TacticsPage() {
 
   // ── Formation ──────────────────────────────────────────────────────────────
   function applyFmt(key:string){
-    const f=FMTS[key]; if(!f) return
+    const dict = format==="11" ? FMTS11 : FMTS7
+    const f=dict[key]; if(!f) return
     resetAnim()
+    setFormationKey(key)
     const ball=markers.find(m=>m.team==="ball")
     const nm:Marker[]=f.map((p,i)=>({id:uid(),x:p.x,y:p.y,team:"home",label:i===0?"P":String(i)}))
     if(ball) nm.push({...ball,id:uid()})
     setMarkers(nm); setLines([])
   }
 
-  // ── Save/load ──────────────────────────────────────────────────────────────
-  function save(){
-    const p:Play={id:activeId??uid(),name:playName,markers,lines}
-    const u=[...plays.filter(x=>x.id!==p.id),p]
-    setPlays(u); setActiveId(p.id); savePlays(u)
+  // Auto-fill the current formation slots with real players from the roster,
+  // mapping defensive→attacking position rank onto defensive→attacking slot order.
+  function autoFillFromRoster(){
+    const dict = format==="11" ? FMTS11 : FMTS7
+    const slots = dict[formationKey]; if(!slots) return
+    resetAnim()
+    pushHistory(markers,lines)
+
+    const gk = roster.find(p=>p.position==="Portero")
+    const outfield = roster
+      .filter(p=>p.position!=="Portero")
+      .sort((a,b)=>(POS_RANK[a.position]??3)-(POS_RANK[b.position]??3))
+    const outfieldSlots = slots.slice(1).sort((a,b)=>a.x-b.x)
+
+    const nm: Marker[] = [{ id: uid(), x: slots[0].x, y: slots[0].y, team: "home", label: "P", player_id: gk?.id }]
+    outfieldSlots.forEach((slot, i) => {
+      nm.push({ id: uid(), x: slot.x, y: slot.y, team: "home", label: String(i+1), player_id: outfield[i]?.id })
+    })
+
+    const ball=markers.find(m=>m.team==="ball")
+    if(ball) nm.push({...ball,id:uid()})
+    setMarkers(nm); setLines([])
   }
-  function load(p:Play){ resetAnim(); setMarkers(p.markers); setLines(p.lines); setPlayName(p.name); setActiveId(p.id) }
-  function del(id:string){
-    const u=plays.filter(p=>p.id!==id); setPlays(u); savePlays(u)
+
+  function assignPlayer(markerId: string, playerId: string | null) {
+    setMarkers(ms => ms.map(m => m.id === markerId ? { ...m, player_id: playerId ?? undefined } : m))
+  }
+
+  function switchFormat(f: Format) {
+    if (f === format) return
+    resetAnim()
+    setFormat(f)
+    setMarkers([]); setLines([])
+    const firstKey = Object.keys(f==="11"?FMTS11:FMTS7)[0]
+    setFormationKey(firstKey)
+  }
+
+  // ── Save/load ──────────────────────────────────────────────────────────────
+  async function save(){
+    if (!academyId) return
+    setSaving(true); setError("")
+    const payload = { name: playName, format, category, markers, lines, academy_id: academyId }
+    if (activeId) {
+      const { error: err } = await (supabase as any).from("tactic_plays")
+        .update({ ...payload, updated_at: new Date().toISOString() }).eq("id", activeId)
+      if (err) setError("No se pudo guardar la jugada.")
+    } else {
+      const { data, error: err } = await (supabase as any).from("tactic_plays").insert(payload).select().single()
+      if (err) setError("No se pudo guardar la jugada.")
+      else if (data) setActiveId(data.id)
+    }
+    await loadPlays()
+    setSaving(false)
+  }
+  function load(p:Play){
+    resetAnim()
+    setFormat(p.format); setCategory(p.category)
+    setMarkers(p.markers); setLines(p.lines); setPlayName(p.name); setActiveId(p.id)
+  }
+  async function del(id:string){
+    const { error: err } = await (supabase as any).from("tactic_plays").delete().eq("id", id)
+    if (err) { setError("No se pudo eliminar la jugada."); return }
     if(activeId===id){ resetAnim(); setMarkers([]); setLines([]); setActiveId(null) }
+    await loadPlays()
   }
   function newPlay(){ resetAnim(); setMarkers([]); setLines([]); setPlayName("Nueva jugada"); setActiveId(null) }
 
@@ -264,6 +389,7 @@ export default function TacticsPage() {
   const ballM       = dispMarkers.find(m=>m.team==="ball")
   const ballPos:[number,number]|null = animBall ?? (ballM?[ballM.x,ballM.y]:null)
   const passLines   = lines.filter(l=>l.type==="pass")
+  const homeMarkers = markers.filter(m=>m.team==="home")
 
   // ── Tools config ──────────────────────────────────────────────────────────
   const TOOLS:{id:Tool;label:string;color:string}[]=[
@@ -284,9 +410,34 @@ export default function TacticsPage() {
           <p className="text-xs text-slate-500 mt-0.5">Dibuja jugadas y anima los movimientos</p>
         </div>
 
+        {error && (
+          <div className="text-xs text-red-600 bg-red-50 dark:bg-red-500/10 rounded-xl px-3 py-2">{error}</div>
+        )}
+
         <div className="flex flex-col xl:flex-row gap-4">
           {/* ── Pitch panel ── */}
           <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+
+            {/* Format + category */}
+            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 flex flex-wrap items-center gap-2">
+              <div className="flex rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden">
+                {(["7","11"] as Format[]).map(f=>(
+                  <button key={f} onClick={()=>switchFormat(f)}
+                    className={`px-3 py-1.5 text-xs font-bold transition-colors ${format===f ? "bg-emerald-600 text-white" : "bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-300"}`}>
+                    ⚽ Fútbol {f}
+                  </button>
+                ))}
+              </div>
+              <select value={category ?? ""} onChange={e=>setCategory((e.target.value || null) as Category | null)}
+                className="text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+                {isCoach && <option value="">Todas las categorías</option>}
+                {CATEGORIES.map(c=><option key={c} value={c}>{c}</option>)}
+              </select>
+              <button onClick={autoFillFromRoster} disabled={roster.length===0}
+                className="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 transition-colors">
+                🧠 Cargar plantilla real
+              </button>
+            </div>
 
             {/* Toolbar */}
             <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
@@ -302,10 +453,9 @@ export default function TacticsPage() {
                   </button>
                 ))}
                 <div className="ml-auto flex items-center gap-2">
-                  <select onChange={e=>{applyFmt(e.target.value);e.target.value=""}} defaultValue=""
+                  <select value={formationKey} onChange={e=>applyFmt(e.target.value)}
                     className="text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200">
-                    <option value="" disabled>Formación…</option>
-                    {Object.keys(FMTS).map(f=><option key={f} value={f}>{f}</option>)}
+                    {Object.keys(format==="11"?FMTS11:FMTS7).map(f=><option key={f} value={f}>{f}</option>)}
                   </select>
                   <button onClick={()=>{ resetAnim(); setMarkers([]); setLines([]) }}
                     className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 text-slate-500 hover:text-red-500 hover:border-red-300">
@@ -327,12 +477,12 @@ export default function TacticsPage() {
             {/* Pitch */}
             <div className="p-4">
               <div className="relative mx-auto rounded-xl overflow-hidden shadow-lg"
-                style={{maxWidth:720,aspectRatio:"105/68",background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}}>
+                style={{maxWidth:720,aspectRatio:`${dims.w}/${dims.h}`,background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}}>
                 {/* grass stripes */}
                 <div className="absolute inset-0 opacity-[0.12]"
                   style={{backgroundImage:"repeating-linear-gradient(90deg,transparent,transparent 55px,rgba(0,0,0,1) 55px,rgba(0,0,0,1) 110px)"}}/>
 
-                <svg ref={svgRef} viewBox="0 0 105 68" className="absolute inset-0 w-full h-full"
+                <svg ref={svgRef} viewBox={`0 0 ${dims.w} ${dims.h}`} className="absolute inset-0 w-full h-full"
                   style={{cursor:tool==="move"?"grab":tool==="erase"?"crosshair":"crosshair",touchAction:"none"}}
                   onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}>
 
@@ -345,7 +495,7 @@ export default function TacticsPage() {
                     </marker>
                   </defs>
 
-                  <PitchSVG/>
+                  {format==="11" ? <Pitch11SVG/> : <Pitch7SVG/>}
 
                   {/* Lines */}
                   {lines.map((l,li)=>(
@@ -464,9 +614,9 @@ export default function TacticsPage() {
                 placeholder="Nombre de la jugada"
                 className="w-full text-sm border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 mb-3 bg-white dark:bg-slate-800 dark:text-white focus:outline-none focus:border-blue-400"/>
               <div className="flex gap-2">
-                <button onClick={save}
-                  className="flex-1 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors">
-                  Guardar
+                <button onClick={save} disabled={saving}
+                  className="flex-1 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                  {saving ? "Guardando…" : "Guardar"}
                 </button>
                 <button onClick={newPlay}
                   className="flex-1 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
@@ -474,6 +624,26 @@ export default function TacticsPage() {
                 </button>
               </div>
             </div>
+
+            {/* Roster assignment */}
+            {homeMarkers.length>0 && (
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
+                <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-3">👤 Jugadores en cancha</h2>
+                {roster.length===0 && <p className="text-[11px] text-slate-400 mb-2">No hay jugadores en esta categoría todavía.</p>}
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {homeMarkers.map(m=>(
+                    <div key={m.id} className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-blue-700 text-white text-[10px] font-bold flex items-center justify-center shrink-0">{m.label}</span>
+                      <select value={m.player_id ?? ""} onChange={e=>assignPlayer(m.id, e.target.value || null)}
+                        className="flex-1 text-xs border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 dark:text-white">
+                        <option value="">Sin asignar</option>
+                        {roster.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Stats */}
             {(markers.length>0||lines.length>0)&&(
@@ -508,7 +678,11 @@ export default function TacticsPage() {
                           : "border-slate-100 dark:border-slate-700 hover:border-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
                       }`}>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-slate-800 dark:text-white truncate">{p.name}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="text-xs font-bold text-slate-800 dark:text-white truncate">{p.name}</p>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600">⚽{p.format}</span>
+                          {p.category && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500">{p.category}</span>}
+                        </div>
                         <p className="text-[10px] text-slate-400 mt-0.5">
                           {p.markers.filter(m=>m.team==="home").length} loc · {p.markers.filter(m=>m.team==="away").length} riv · {p.lines.filter(l=>l.type==="pass").length} pases
                         </p>
