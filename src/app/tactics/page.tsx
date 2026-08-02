@@ -13,9 +13,14 @@ interface TLine  { id: string; type: "run" | "pass"; pts: [number,number][] }
 interface Play   { id: string; name: string; format: Format; category: Category | null; markers: Marker[]; lines: TLine[] }
 type Tool = "move" | "run" | "pass" | "home" | "away" | "ball" | "erase"
 
-const SEG_MS  = 1200  // ms per pass segment
-const RUN_MS  = 1800  // ms for all player runs
-const HIT_R   = 4.5   // SVG units for hit detection
+const BALL_SPEED = 0.09   // pitch-units per ms — a struck pass
+const RUN_SPEED  = 0.035  // pitch-units per ms — a player run (slower than the ball)
+const MIN_SEG_MS = 300    // floor so very short taps/runs are still visible
+const HIT_R      = 4.5    // SVG units for hit detection
+
+function pathLength(pts: [number,number][]): number {
+  return pts.slice(1).reduce((s,p,i) => s + Math.hypot(p[0]-pts[i][0], p[1]-pts[i][1]), 0)
+}
 
 function uid()  { return Math.random().toString(36).slice(2, 9) }
 
@@ -244,8 +249,10 @@ export default function TacticsPage() {
   },[dims.w, dims.h])
 
   // ── Stop & reset animation completely ────────────────────────────────────
+  const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const resetAnim = useCallback(()=>{
     cancelAnimationFrame(rafRef.current)
+    clearTimeout(holdTimeoutRef.current)
     setPlaying(false)
     setPassStep(-1)
     setAnimPos(null)
@@ -253,6 +260,8 @@ export default function TacticsPage() {
   },[])
 
   // ── Play animation ────────────────────────────────────────────────────────
+  // Each pass segment and each run gets its own duration proportional to its
+  // real drawn distance, so a short lay-off is quick and a long ball takes longer.
   function startPlay() {
     resetAnim()
 
@@ -266,8 +275,8 @@ export default function TacticsPage() {
     const ball = markers.find(m=>m.team==="ball")
     const origBall:[number,number] = ball ? [ball.x,ball.y] : [dims.w/2, dims.h/2]
 
-    // run assignments: closest player within 9 units
-    const runMap: {id:string; pts:[number,number][]}[] = []
+    // run assignments: closest player within 9 units, each moving at its own pace
+    const runMap: {id:string; pts:[number,number][]; dur:number}[] = []
     for (const rl of runLines) {
       let best:Marker|null=null, bestD=9
       for (const m of markers) {
@@ -275,50 +284,61 @@ export default function TacticsPage() {
         const d=Math.hypot(m.x-rl.pts[0][0],m.y-rl.pts[0][1])
         if(d<bestD){bestD=d;best=m}
       }
-      if(best) runMap.push({id:best.id, pts:rl.pts})
+      if(best) runMap.push({id:best.id, pts:rl.pts, dur:Math.max(MIN_SEG_MS, pathLength(rl.pts)/RUN_SPEED)})
     }
 
-    // pass chain: cursor starts at ball, follows each pass line in order
+    // pass chain: cursor starts at ball, follows each pass line in the order
+    // shown in the "Secuencia de la jugada" panel — each hop's duration scales
+    // with its real distance instead of a fixed tick.
     let cursor:[number,number]=[...origBall]
-    const passSegs:[number,number][][] = passLines.map(pl=>{
+    let segStart=0
+    const passSegs:{pts:[number,number][]; start:number; dur:number}[] = passLines.map(pl=>{
       const seg:[number,number][]=[cursor,...pl.pts]
       cursor=[...pl.pts[pl.pts.length-1]]
-      return seg
+      const dur=Math.max(MIN_SEG_MS, pathLength(seg)/BALL_SPEED)
+      const entry={pts:seg, start:segStart, dur}
+      segStart += dur
+      return entry
     })
 
-    const totalMs = passSegs.length>0 ? passSegs.length*SEG_MS : RUN_MS
+    const totalPassMs = passSegs.reduce((s,p)=>s+p.dur,0)
+    const maxRunMs = runMap.reduce((m,r)=>Math.max(m,r.dur),0)
+    const totalMs = Math.max(totalPassMs, maxRunMs, 600)
+
     if(passSegs.length>0) setPassStep(0)
     setPlaying(true)
 
     const t0=performance.now()
     function frame(now:number){
       const el=now-t0
-      const gt=Math.min(el/totalMs,1)
 
-      // ball position
+      // ball position — locate the current segment by cumulative start time
       let bp:[number,number]=[...origBall]
       if(passSegs.length>0){
-        const si=Math.min(Math.floor(el/SEG_MS),passSegs.length-1)
-        const st=Math.min((el-si*SEG_MS)/SEG_MS,1)
-        bp=pathAt(passSegs[si],st)
+        let si=0
+        while(si<passSegs.length-1 && el>=passSegs[si].start+passSegs[si].dur) si++
+        const seg=passSegs[si]
+        const st=seg.dur>0 ? Math.min((el-seg.start)/seg.dur,1) : 1
+        bp=pathAt(seg.pts,st)
         setPassStep(si)
       }
 
-      // player positions
+      // player positions — each run holds at its final point once it finishes
       const np:Record<string,[number,number]>={}
       for(const [id,pos] of Object.entries(origPos)){
         const ra=runMap.find(r=>r.id===id)
-        np[id] = ra ? pathAt(ra.pts,gt) : pos
+        np[id] = ra ? pathAt(ra.pts, ra.dur>0 ? Math.min(el/ra.dur,1) : 1) : pos
       }
 
       setAnimPos(np)
       setAnimBall(bp)
 
-      if(gt<1){
+      if(el<totalMs){
         rafRef.current=requestAnimationFrame(frame)
       } else {
-        // animation done: hold 800ms then reset
-        setTimeout(()=>{ resetAnim() },800)
+        // animation done: hold 800ms then reset (timeout is cleared by resetAnim
+        // if a new play starts before it fires, so it can't cut a later replay short)
+        holdTimeoutRef.current = setTimeout(()=>{ resetAnim() },800)
       }
     }
     rafRef.current=requestAnimationFrame(frame)
@@ -409,6 +429,25 @@ export default function TacticsPage() {
 
   function assignPlayer(markerId: string, playerId: string | null) {
     setMarkers(ms => ms.map(m => m.id === markerId ? { ...m, player_id: playerId ?? undefined } : m))
+  }
+
+  // Reorder a step in the play sequence — this is the actual chaining order used
+  // by startPlay(), so moving a step here changes what "Ver jugada" will do.
+  function moveLine(id: string, dir: -1 | 1) {
+    if (playing) return
+    setLines(ls => {
+      const idx = ls.findIndex(l => l.id === id)
+      const swapIdx = idx + dir
+      if (idx < 0 || swapIdx < 0 || swapIdx >= ls.length) return ls
+      const copy = [...ls]
+      ;[copy[idx], copy[swapIdx]] = [copy[swapIdx], copy[idx]]
+      return copy
+    })
+  }
+  function deleteLine(id: string) {
+    if (playing) return
+    pushHistory(markers, lines)
+    setLines(ls => ls.filter(l => l.id !== id))
   }
 
   function switchFormat(f: Format) {
@@ -736,15 +775,28 @@ export default function TacticsPage() {
               </div>
             )}
 
-            {/* Zone analysis */}
+            {/* Play sequence — this order is exactly what "Ver jugada" will follow */}
             {lines.length>0 && (
               <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
-                <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-3">📊 Análisis por zonas</h2>
+                <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-1">🎬 Secuencia de la jugada</h2>
+                <p className="text-[10px] text-slate-400 mb-3">Este es el orden exacto que sigue la animación. Reordena con ↑↓.</p>
                 <div className="space-y-1.5 mb-3">
                   {zoneAnalysis.map((z,i)=>(
-                    <p key={z.id} className="text-[11px] text-slate-600 dark:text-slate-300">
-                      {z.type==="pass" ? "⚡" : "→"} {i+1}: <span className="font-semibold">{z.start.channel}</span> ({z.start.third}) → <span className="font-semibold">{z.end.channel}</span> ({z.end.third})
-                    </p>
+                    <div key={z.id} className="flex items-center gap-1.5">
+                      <div className="flex flex-col shrink-0">
+                        <button onClick={()=>moveLine(z.id,-1)} disabled={i===0}
+                          className="text-slate-400 hover:text-blue-600 disabled:opacity-20 leading-none text-[10px]">▲</button>
+                        <button onClick={()=>moveLine(z.id,1)} disabled={i===zoneAnalysis.length-1}
+                          className="text-slate-400 hover:text-blue-600 disabled:opacity-20 leading-none text-[10px]">▼</button>
+                      </div>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 flex-1 min-w-0">
+                        {z.type==="pass" ? "⚡" : "→"} {i+1}: <span className="font-semibold">{z.start.channel}</span> ({z.start.third}) → <span className="font-semibold">{z.end.channel}</span> ({z.end.third})
+                      </p>
+                      <button onClick={()=>deleteLine(z.id)}
+                        className="w-6 h-6 shrink-0 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors text-xs">
+                        ✕
+                      </button>
+                    </div>
                   ))}
                 </div>
                 {zoneInsights.length>0 && (
