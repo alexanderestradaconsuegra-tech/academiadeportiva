@@ -13,10 +13,14 @@ interface TLine  { id: string; type: "run" | "pass"; pts: [number,number][] }
 interface Play   { id: string; name: string; format: Format; category: Category | null; markers: Marker[]; lines: TLine[] }
 type Tool = "move" | "run" | "pass" | "home" | "away" | "ball" | "erase"
 
-const BALL_SPEED = 0.09   // pitch-units per ms — a struck pass
-const RUN_SPEED  = 0.035  // pitch-units per ms — a player run (slower than the ball)
+const BALL_SPEED = 0.09   // pitch-units per ms — a struck pass, at "Rápida" (1x)
+const RUN_SPEED  = 0.035  // pitch-units per ms — a player run (slower than the ball), at "Rápida" (1x)
 const MIN_SEG_MS = 300    // floor so very short taps/runs are still visible
-const HIT_R      = 4.5    // SVG units for hit detection
+const HIT_R      = 4.5    // SVG units for hit detection, at fútbol-11 scale
+
+type SpeedTier = "lenta" | "media" | "rapida"
+const SPEED_MULT: Record<SpeedTier, number> = { lenta: 0.45, media: 0.7, rapida: 1 }
+const SPEED_LABEL: Record<SpeedTier, string> = { lenta: "🐢 Lenta", media: "🚶 Media", rapida: "🐇 Rápida" }
 
 function pathLength(pts: [number,number][]): number {
   return pts.slice(1).reduce((s,p,i) => s + Math.hypot(p[0]-pts[i][0], p[1]-pts[i][1]), 0)
@@ -171,6 +175,7 @@ export default function TacticsPage() {
   const [error, setError] = useState("")
   const [saving, setSaving] = useState(false)
   const [showZones, setShowZones] = useState(false)
+  const [speedTier, setSpeedTier] = useState<SpeedTier>("media")
 
   const roster = useMemo(() => category ? players.filter(p => p.category === category) : players, [players, category])
 
@@ -191,6 +196,11 @@ export default function TacticsPage() {
   const rafRef = useRef(0)
 
   const dims = DIMS[format]
+  // Fútbol 7's pitch is drawn in a smaller viewBox (64 vs 105 units wide), so
+  // marker/ball sizes and hit-testing radius scale down with it — otherwise
+  // discs sized for the 11-a-side pitch look oversized on the smaller one.
+  const scale = dims.w / 105
+  const hitR = HIT_R * scale
 
   // ── Zone analysis ─────────────────────────────────────────────────────────
   const zoneAnalysis = useMemo(() => lines.map(l => ({
@@ -275,16 +285,18 @@ export default function TacticsPage() {
     const ball = markers.find(m=>m.team==="ball")
     const origBall:[number,number] = ball ? [ball.x,ball.y] : [dims.w/2, dims.h/2]
 
-    // run assignments: closest player within 9 units, each moving at its own pace
+    const speedMult = SPEED_MULT[speedTier]
+
+    // run assignments: closest player within 9 units (scaled to the pitch), each moving at its own pace
     const runMap: {id:string; pts:[number,number][]; dur:number}[] = []
     for (const rl of runLines) {
-      let best:Marker|null=null, bestD=9
+      let best:Marker|null=null, bestD=9*scale
       for (const m of markers) {
         if(m.team==="ball") continue
         const d=Math.hypot(m.x-rl.pts[0][0],m.y-rl.pts[0][1])
         if(d<bestD){bestD=d;best=m}
       }
-      if(best) runMap.push({id:best.id, pts:rl.pts, dur:Math.max(MIN_SEG_MS, pathLength(rl.pts)/RUN_SPEED)})
+      if(best) runMap.push({id:best.id, pts:rl.pts, dur:Math.max(MIN_SEG_MS, pathLength(rl.pts)/(RUN_SPEED*speedMult))})
     }
 
     // pass chain: cursor starts at ball, follows each pass line in the order
@@ -295,7 +307,7 @@ export default function TacticsPage() {
     const passSegs:{pts:[number,number][]; start:number; dur:number}[] = passLines.map(pl=>{
       const seg:[number,number][]=[cursor,...pl.pts]
       cursor=[...pl.pts[pl.pts.length-1]]
-      const dur=Math.max(MIN_SEG_MS, pathLength(seg)/BALL_SPEED)
+      const dur=Math.max(MIN_SEG_MS, pathLength(seg)/(BALL_SPEED*speedMult))
       const entry={pts:seg, start:segStart, dur}
       segStart += dur
       return entry
@@ -351,7 +363,7 @@ export default function TacticsPage() {
     e.currentTarget.setPointerCapture(e.pointerId)
 
     if(tool==="move"){
-      const hit=markers.find(m=>Math.hypot(m.x-pos[0],m.y-pos[1])<HIT_R)
+      const hit=markers.find(m=>Math.hypot(m.x-pos[0],m.y-pos[1])<hitR)
       if(hit){ pushHistory(markers,lines); setDragging(hit.id) }
     } else if(tool==="run"||tool==="pass"){
       setDrawing([pos])
@@ -365,11 +377,11 @@ export default function TacticsPage() {
       pushHistory(markers,lines)
       setMarkers(ms=>[...ms.filter(m=>m.team!=="ball"),{id:uid(),x:pos[0],y:pos[1],team:"ball"}])
     } else if(tool==="erase"){
-      const hm=markers.find(m=>Math.hypot(m.x-pos[0],m.y-pos[1])<HIT_R)
+      const hm=markers.find(m=>Math.hypot(m.x-pos[0],m.y-pos[1])<hitR)
       if(hm){ pushHistory(markers,lines); setMarkers(ms=>ms.filter(m=>m.id!==hm.id)); return }
       const hl=lines.find(l=>{
         const a=l.pts[0], b=l.pts[l.pts.length-1]
-        return Math.hypot(a[0]-pos[0],a[1]-pos[1])<HIT_R||Math.hypot(b[0]-pos[0],b[1]-pos[1])<HIT_R
+        return Math.hypot(a[0]-pos[0],a[1]-pos[1])<hitR||Math.hypot(b[0]-pos[0],b[1]-pos[1])<hitR
       })
       if(hl){ pushHistory(markers,lines); setLines(ls=>ls.filter(l=>l.id!==hl.id)) }
     }
@@ -546,6 +558,14 @@ export default function TacticsPage() {
                 className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${showZones ? "bg-violet-600 text-white border-violet-600" : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600"}`}>
                 🗺️ Zonas
               </button>
+              <div className="ml-auto flex rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden">
+                {(["lenta","media","rapida"] as SpeedTier[]).map(t=>(
+                  <button key={t} onClick={()=>setSpeedTier(t)}
+                    className={`px-2.5 py-1.5 text-xs font-bold transition-colors ${speedTier===t ? "bg-slate-700 text-white" : "bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-300"}`}>
+                    {SPEED_LABEL[t]}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Toolbar */}
@@ -611,7 +631,7 @@ export default function TacticsPage() {
                   {lines.map((l,li)=>(
                     <g key={l.id}>
                       <polyline points={l.pts.map(p=>p.join(",")).join(" ")}
-                        stroke={l.type==="pass"?"#fbbf24":"#38bdf8"} strokeWidth={l.type==="pass"?0.9:0.75}
+                        stroke={l.type==="pass"?"#fbbf24":"#38bdf8"} strokeWidth={(l.type==="pass"?0.9:0.75)*scale}
                         fill="none" strokeLinecap="round" strokeLinejoin="round"
                         markerEnd={l.type==="pass"?"url(#ap)":"url(#ar)"} opacity={0.9}/>
                       {l.type==="pass" && (()=>{
@@ -620,11 +640,11 @@ export default function TacticsPage() {
                         const active=playing&&passStep===idx
                         return (
                           <g>
-                            <circle cx={mid[0]} cy={mid[1]-3} r={2.3}
+                            <circle cx={mid[0]} cy={mid[1]-3*scale} r={2.3*scale}
                               fill={active?"#fbbf24":"rgba(251,191,36,0.25)"}
-                              stroke={active?"#f59e0b":"rgba(251,191,36,0.5)"} strokeWidth={0.3}/>
-                            <text x={mid[0]} y={mid[1]-3} textAnchor="middle" dominantBaseline="middle"
-                              fontSize={1.8} fontWeight="bold" fill={active?"#1e293b":"rgba(251,191,36,0.9)"}>
+                              stroke={active?"#f59e0b":"rgba(251,191,36,0.5)"} strokeWidth={0.3*scale}/>
+                            <text x={mid[0]} y={mid[1]-3*scale} textAnchor="middle" dominantBaseline="middle"
+                              fontSize={1.8*scale} fontWeight="bold" fill={active?"#1e293b":"rgba(251,191,36,0.9)"}>
                               {idx+1}
                             </text>
                           </g>
@@ -636,28 +656,28 @@ export default function TacticsPage() {
                   {/* Drawing preview */}
                   {drawing&&drawing.length>=2&&(
                     <polyline points={drawing.map(p=>p.join(",")).join(" ")}
-                      stroke={tool==="pass"?"#fbbf24":"#38bdf8"} strokeWidth={0.8}
+                      stroke={tool==="pass"?"#fbbf24":"#38bdf8"} strokeWidth={0.8*scale}
                       fill="none" strokeLinecap="round" strokeDasharray="2 1.5" opacity={0.65}/>
                   )}
 
                   {/* Players */}
                   {dispMarkers.filter(m=>m.team!=="ball").map(m=>(
                     <g key={m.id}>
-                      <ellipse cx={m.x} cy={m.y+3.8} rx={2.5} ry={0.7} fill="rgba(0,0,0,0.18)"/>
-                      <circle cx={m.x} cy={m.y} r={3.4}
-                        fill={m.team==="home"?"#1d4ed8":"#dc2626"} stroke="white" strokeWidth={0.6}/>
-                      {m.label&&<text x={m.x} y={m.y+0.9} textAnchor="middle" dominantBaseline="middle"
-                        fontSize={2.2} fontWeight="bold" fill="white" style={{userSelect:"none"}}>{m.label}</text>}
+                      <ellipse cx={m.x} cy={m.y+3.8*scale} rx={2.5*scale} ry={0.7*scale} fill="rgba(0,0,0,0.18)"/>
+                      <circle cx={m.x} cy={m.y} r={3.4*scale}
+                        fill={m.team==="home"?"#1d4ed8":"#dc2626"} stroke="white" strokeWidth={0.6*scale}/>
+                      {m.label&&<text x={m.x} y={m.y+0.9*scale} textAnchor="middle" dominantBaseline="middle"
+                        fontSize={2.2*scale} fontWeight="bold" fill="white" style={{userSelect:"none"}}>{m.label}</text>}
                     </g>
                   ))}
 
                   {/* Ball */}
                   {ballPos&&(
                     <g>
-                      <ellipse cx={ballPos[0]} cy={ballPos[1]+2.5} rx={1.8} ry={0.55} fill="rgba(0,0,0,0.18)"/>
-                      <circle cx={ballPos[0]} cy={ballPos[1]} r={2.4} fill="white" stroke="#cbd5e1" strokeWidth={0.4}/>
-                      <circle cx={ballPos[0]} cy={ballPos[1]} r={2.4} fill="none" stroke="#94a3b8" strokeWidth={0.25} strokeDasharray="1.2 1.1"/>
-                      <circle cx={ballPos[0]} cy={ballPos[1]} r={0.7} fill="#94a3b8"/>
+                      <ellipse cx={ballPos[0]} cy={ballPos[1]+2.5*scale} rx={1.8*scale} ry={0.55*scale} fill="rgba(0,0,0,0.18)"/>
+                      <circle cx={ballPos[0]} cy={ballPos[1]} r={2.4*scale} fill="white" stroke="#cbd5e1" strokeWidth={0.4*scale}/>
+                      <circle cx={ballPos[0]} cy={ballPos[1]} r={2.4*scale} fill="none" stroke="#94a3b8" strokeWidth={0.25*scale} strokeDasharray="1.2 1.1"/>
+                      <circle cx={ballPos[0]} cy={ballPos[1]} r={0.7*scale} fill="#94a3b8"/>
                     </g>
                   )}
                 </svg>
