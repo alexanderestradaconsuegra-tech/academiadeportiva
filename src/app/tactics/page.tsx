@@ -58,6 +58,18 @@ const FMTS7: Record<string,{x:number;y:number}[]> = {
 
 const CATEGORIES: Category[] = ["Sub-10","Sub-12","Sub-14","Sub-16","Sub-18","Juvenil","Senior"]
 
+// ── Zones: thirds (defensive→attacking) and channels (wing→half-space→center) ──
+const THIRDS   = ["Defensiva","Media","Ofensiva"] as const
+const CHANNELS = ["Banda Izq","Medio Izq","Centro","Medio Der","Banda Der"] as const
+type Third = typeof THIRDS[number]
+type Channel = typeof CHANNELS[number]
+
+function zoneOf(x:number, y:number, dims:{w:number;h:number}): { third: Third; channel: Channel } {
+  const third = THIRDS[Math.min(2, Math.floor((x/dims.w)*3))]
+  const channel = CHANNELS[Math.min(4, Math.floor((y/dims.h)*5))]
+  return { third, channel }
+}
+
 // Defensive→attacking rank used to auto-fill real players into formation slots
 const POS_RANK: Partial<Record<Position, number>> = {
   "Defensa Central": 1, "Lateral Derecho": 1, "Lateral Izquierdo": 1,
@@ -111,6 +123,28 @@ function Pitch7SVG() {
   )
 }
 
+function ZoneGrid({ dims }: { dims: { w: number; h: number } }) {
+  const { w, h } = dims
+  const s = "rgba(167,139,250,0.55)"
+  return (
+    <g>
+      <g stroke={s} strokeWidth={0.25} strokeDasharray="1.4 1.2">
+        <line x1={w/3}   y1={0} x2={w/3}   y2={h} />
+        <line x1={2*w/3} y1={0} x2={2*w/3} y2={h} />
+        <line x1={0} y1={h/5}   x2={w} y2={h/5} />
+        <line x1={0} y1={2*h/5} x2={w} y2={2*h/5} />
+        <line x1={0} y1={3*h/5} x2={w} y2={3*h/5} />
+        <line x1={0} y1={4*h/5} x2={w} y2={4*h/5} />
+      </g>
+      <g fill={s} fontSize={h*0.045} fontWeight="bold" textAnchor="middle">
+        <text x={w/6}     y={h-1}>Defensiva</text>
+        <text x={w/2}     y={h-1}>Media</text>
+        <text x={5*w/6}   y={h-1}>Ofensiva</text>
+      </g>
+    </g>
+  )
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function TacticsPage() {
   const { players, teamSettings, currentUser } = useApp()
@@ -131,6 +165,7 @@ export default function TacticsPage() {
   const [formationKey, setFormationKey] = useState<string>("4-3-3")
   const [error, setError] = useState("")
   const [saving, setSaving] = useState(false)
+  const [showZones, setShowZones] = useState(false)
 
   const roster = useMemo(() => category ? players.filter(p => p.category === category) : players, [players, category])
 
@@ -151,6 +186,37 @@ export default function TacticsPage() {
   const rafRef = useRef(0)
 
   const dims = DIMS[format]
+
+  // ── Zone analysis ─────────────────────────────────────────────────────────
+  const zoneAnalysis = useMemo(() => lines.map(l => ({
+    id: l.id,
+    type: l.type,
+    start: zoneOf(l.pts[0][0], l.pts[0][1], dims),
+    end: zoneOf(l.pts[l.pts.length-1][0], l.pts[l.pts.length-1][1], dims),
+  })), [lines, dims])
+
+  const zoneInsights = useMemo(() => {
+    if (zoneAnalysis.length === 0) return []
+    const msgs: string[] = []
+    const touched = new Set(zoneAnalysis.flatMap(z => [z.start.channel, z.end.channel]))
+    if (!touched.has("Banda Izq") && !touched.has("Banda Der")) {
+      msgs.push("⚠️ La jugada no usa las bandas — todo pasa por el medio.")
+    }
+    const channelCounts: Record<string, number> = {}
+    zoneAnalysis.forEach(z => {
+      channelCounts[z.start.channel] = (channelCounts[z.start.channel] ?? 0) + 1
+      channelCounts[z.end.channel]   = (channelCounts[z.end.channel]   ?? 0) + 1
+    })
+    const total = zoneAnalysis.length * 2
+    const top = Object.entries(channelCounts).sort((a,b)=>b[1]-a[1])[0]
+    if (top && top[1] / total >= 0.6) {
+      msgs.push(`📍 La jugada se concentra en el carril "${top[0]}".`)
+    }
+    if (zoneAnalysis.some(z => z.start.third === "Defensiva" && z.end.third === "Ofensiva")) {
+      msgs.push("🚀 Progresión directa: de zona defensiva a ofensiva.")
+    }
+    return msgs
+  }, [zoneAnalysis])
 
   // ── DB load/save ──────────────────────────────────────────────────────────
   const loadPlays = useCallback(async () => {
@@ -437,6 +503,10 @@ export default function TacticsPage() {
                 className="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 transition-colors">
                 🧠 Cargar plantilla real
               </button>
+              <button onClick={()=>setShowZones(z=>!z)}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${showZones ? "bg-violet-600 text-white border-violet-600" : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600"}`}>
+                🗺️ Zonas
+              </button>
             </div>
 
             {/* Toolbar */}
@@ -496,6 +566,7 @@ export default function TacticsPage() {
                   </defs>
 
                   {format==="11" ? <Pitch11SVG/> : <Pitch7SVG/>}
+                  {showZones && <ZoneGrid dims={dims}/>}
 
                   {/* Lines */}
                   {lines.map((l,li)=>(
@@ -662,6 +733,25 @@ export default function TacticsPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Zone analysis */}
+            {lines.length>0 && (
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
+                <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-3">📊 Análisis por zonas</h2>
+                <div className="space-y-1.5 mb-3">
+                  {zoneAnalysis.map((z,i)=>(
+                    <p key={z.id} className="text-[11px] text-slate-600 dark:text-slate-300">
+                      {z.type==="pass" ? "⚡" : "→"} {i+1}: <span className="font-semibold">{z.start.channel}</span> ({z.start.third}) → <span className="font-semibold">{z.end.channel}</span> ({z.end.third})
+                    </p>
+                  ))}
+                </div>
+                {zoneInsights.length>0 && (
+                  <div className="space-y-1.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+                    {zoneInsights.map((m,i)=><p key={i} className="text-[11px] text-slate-500 dark:text-slate-400">{m}</p>)}
+                  </div>
+                )}
               </div>
             )}
 
