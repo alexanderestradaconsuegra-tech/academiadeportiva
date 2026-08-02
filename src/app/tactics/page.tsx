@@ -18,9 +18,8 @@ const RUN_SPEED  = 0.035  // pitch-units per ms — a player run (slower than th
 const MIN_SEG_MS = 300    // floor so very short taps/runs are still visible
 const HIT_R      = 4.5    // SVG units for hit detection, at fútbol-11 scale
 
-type SpeedTier = "lenta" | "media" | "rapida"
-const SPEED_MULT: Record<SpeedTier, number> = { lenta: 0.45, media: 0.7, rapida: 1 }
-const SPEED_LABEL: Record<SpeedTier, string> = { lenta: "🐢 Lenta", media: "🚶 Media", rapida: "🐇 Rápida" }
+type SpeedTier = "1x" | "2x" | "3x"
+const SPEED_MULT: Record<SpeedTier, number> = { "1x": 0.35, "2x": 0.7, "3x": 1.05 }
 
 function pathLength(pts: [number,number][]): number {
   return pts.slice(1).reduce((s,p,i) => s + Math.hypot(p[0]-pts[i][0], p[1]-pts[i][1]), 0)
@@ -175,7 +174,7 @@ export default function TacticsPage() {
   const [error, setError] = useState("")
   const [saving, setSaving] = useState(false)
   const [showZones, setShowZones] = useState(false)
-  const [speedTier, setSpeedTier] = useState<SpeedTier>("media")
+  const [speedTier, setSpeedTier] = useState<SpeedTier>("1x")
 
   const roster = useMemo(() => category ? players.filter(p => p.category === category) : players, [players, category])
 
@@ -558,14 +557,6 @@ export default function TacticsPage() {
                 className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${showZones ? "bg-violet-600 text-white border-violet-600" : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600"}`}>
                 🗺️ Zonas
               </button>
-              <div className="ml-auto flex rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden">
-                {(["lenta","media","rapida"] as SpeedTier[]).map(t=>(
-                  <button key={t} onClick={()=>setSpeedTier(t)}
-                    className={`px-2.5 py-1.5 text-xs font-bold transition-colors ${speedTier===t ? "bg-slate-700 text-white" : "bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-300"}`}>
-                    {SPEED_LABEL[t]}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* Toolbar */}
@@ -706,6 +697,14 @@ export default function TacticsPage() {
                       className="px-7 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold shadow-lg hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
                       ▶ Ver jugada
                     </button>
+                    <div className="flex rounded-xl border-2 border-slate-200 dark:border-slate-600 overflow-hidden">
+                      {(["1x","2x","3x"] as SpeedTier[]).map(t=>(
+                        <button key={t} onClick={()=>setSpeedTier(t)} title="Velocidad de reproducción"
+                          className={`px-3 py-2.5 text-xs font-bold transition-colors ${speedTier===t ? "bg-slate-700 text-white" : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300"}`}>
+                          {t}
+                        </button>
+                      ))}
+                    </div>
                     <button onClick={undo}
                       disabled={histRef.current.length===0}
                       className="px-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 disabled:opacity-30 transition-colors">
