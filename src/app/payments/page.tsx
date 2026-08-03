@@ -73,13 +73,15 @@ export default function PaymentsPage() {
 
   const stats = useMemo(() => {
     const overdue = enriched.filter(p => p.effectiveStatus === "overdue")
-    const pending = enriched.filter(p => p.effectiveStatus === "pending")
+    // "Pendiente" is the total not-yet-collected: it includes overdue payments too
+    // (an overdue payment is still pending, just late) — "Vencido" is the subset alert.
+    const unpaid = enriched.filter(p => p.effectiveStatus !== "paid")
     const collectedThisMonth = enriched.filter(p => p.status === "paid" && p.paid_date && p.paid_date >= currentMonthStart)
     return {
       overdueCount: new Set(overdue.map(p => p.player_id)).size,
       overdueAmount: overdue.reduce((s, p) => s + p.amount, 0),
-      pendingCount: new Set(pending.map(p => p.player_id)).size,
-      pendingAmount: pending.reduce((s, p) => s + p.amount, 0),
+      pendingCount: new Set(unpaid.map(p => p.player_id)).size,
+      pendingAmount: unpaid.reduce((s, p) => s + p.amount, 0),
       collectedAmount: collectedThisMonth.reduce((s, p) => s + p.amount, 0),
     }
   }, [enriched, currentMonthStart])
