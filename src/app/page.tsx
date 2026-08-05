@@ -518,7 +518,7 @@ export default function LandingPage() {
               <MessageCircle size={16} /> WhatsApp
             </a>
             <a
-              href="mailto:alexanderestradaconsuegra@gmail.com?subject=Quiero%20usar%20Metrikas%20en%20mi%20academia"
+              href="mailto:info@metrikas.pro?subject=Quiero%20usar%20Metrikas%20en%20mi%20academia"
               className="inline-flex items-center gap-2 h-12 px-7 rounded-xl border border-white/20 text-white text-sm font-bold hover:bg-white/5 transition-all"
             >
               Escribir por correo <ArrowRight size={16} />
@@ -533,7 +533,7 @@ export default function LandingPage() {
           <div className="flex items-center">
             <img src="/logo-metrikas.png" alt="Metrikas" className="h-36 w-auto max-w-[240px] object-contain" />
           </div>
-          <p className="text-xs text-blue-100/40">© {new Date().getFullYear()} Metrikas · Gestión deportiva</p>
+          <p className="text-xs text-blue-100/40">© {new Date().getFullYear()} Metrikas · Un producto de Autix</p>
           <div className="flex items-center gap-4 text-xs text-blue-100/50">
             <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">WhatsApp</a>
             <Link href="/legal/privacy" className="hover:text-white transition-colors">Privacidad</Link>
