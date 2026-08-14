@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, HRSample, SpeedSample, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
@@ -182,7 +182,14 @@ function mapHealthProfile(row: Tables<"health_profiles">): HealthProfile {
   }
 }
 
-function mapLiveSession(row: Tables<"live_sessions">): LiveSession {
+// Deliberately excludes hr_samples/speed_samples: those raw JSONB sample arrays
+// are never read back from a fetched LiveSession anywhere in the app (only
+// written when a new session is saved, from local in-memory state), so the
+// eager app-wide load fetches every other column and leaves them empty here
+// to avoid downloading potentially large per-session time series for nothing.
+type LiveSessionListRow = Omit<Tables<"live_sessions">, "hr_samples" | "speed_samples">
+
+function mapLiveSession(row: LiveSessionListRow): LiveSession {
   return {
     id: row.id,
     player_id: row.player_id,
@@ -190,8 +197,8 @@ function mapLiveSession(row: Tables<"live_sessions">): LiveSession {
     ended_at: row.ended_at ?? undefined,
     device_name: row.device_name ?? undefined,
     device_type: row.device_type,
-    hr_samples: (row.hr_samples as unknown as HRSample[]) ?? [],
-    speed_samples: (row.speed_samples as unknown as SpeedSample[]) ?? [],
+    hr_samples: [],
+    speed_samples: [],
     avg_hr: row.avg_hr ?? 0,
     max_hr_session: row.max_hr_session ?? 0,
     min_hr_session: row.min_hr_session ?? 0,
@@ -430,7 +437,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from("activities").select("*"),
       supabase.from("evaluations").select("*"),
       supabase.from("health_profiles").select("*"),
-      supabase.from("live_sessions").select("*"),
+      supabase.from("live_sessions").select("id, player_id, started_at, ended_at, device_name, device_type, avg_hr, max_hr_session, min_hr_session, avg_speed_kmh, max_speed_kmh, distance_m, duration_s, calories_est, notes"),
       supabase.from("trainings").select("*"),
       supabase.from("position_samples").select("*"),
       supabase.from("matches").select("*"),
