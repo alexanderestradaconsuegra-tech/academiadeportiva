@@ -22,6 +22,7 @@ export const payments = {
   statusPending: { es: "Pendiente", en: "Pending", pt: "Pendente" },
   statusPaid: { es: "Pagado", en: "Paid", pt: "Pago" },
   statusOverdue: { es: "Vencido", en: "Overdue", pt: "Vencido" },
+  statusEnRevision: { es: "En revisión", en: "Under review", pt: "Em revisão" },
 
   // Concepts
   monthlyFee: { es: "Mensualidad", en: "Monthly fee", pt: "Mensalidade" },

@@ -64,9 +64,13 @@ export type Database = {
           amount: number
           due_date: string
           paid_date: string | null
-          status: "pending" | "paid"
+          status: "pending" | "paid" | "en_revision"
           notes: string | null
           created_at: string
+          receipt_path: string | null
+          receipt_note: string | null
+          receipt_uploaded_at: string | null
+          rejection_note: string | null
         }
         Insert: {
           id?: string
@@ -75,9 +79,13 @@ export type Database = {
           amount: number
           due_date: string
           paid_date?: string | null
-          status?: "pending" | "paid"
+          status?: "pending" | "paid" | "en_revision"
           notes?: string | null
           created_at?: string
+          receipt_path?: string | null
+          receipt_note?: string | null
+          receipt_uploaded_at?: string | null
+          rejection_note?: string | null
         }
         Update: {
           id?: string
@@ -86,9 +94,13 @@ export type Database = {
           amount?: number
           due_date?: string
           paid_date?: string | null
-          status?: "pending" | "paid"
+          status?: "pending" | "paid" | "en_revision"
           notes?: string | null
           created_at?: string
+          receipt_path?: string | null
+          receipt_note?: string | null
+          receipt_uploaded_at?: string | null
+          rejection_note?: string | null
         }
         Relationships: [
           {

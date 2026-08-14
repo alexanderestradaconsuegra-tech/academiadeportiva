@@ -83,6 +83,10 @@ interface AppContextType extends AppState {
   updatePayment: (id: string, data: Partial<Omit<Payment, "id" | "created_at" | "player_id">>) => void
   deletePayment: (id: string) => void
   getPlayerPayments: (playerId: string) => Payment[]
+  submitPaymentReceipt: (paymentId: string, file: File, note: string) => Promise<{ error: string | null }>
+  approvePaymentReceipt: (paymentId: string) => void
+  rejectPaymentReceipt: (paymentId: string, note: string) => void
+  getReceiptSignedUrl: (path: string) => Promise<string | null>
   getConvocatoria: (matchId: string) => Convocatoria | undefined
   saveConvocatoria: (matchId: string, formation: string, notes: string, players: ConvocatoriaPlayer[]) => Promise<string | null>
   respondConvocatoria: (convocatoriaPlayerId: string, confirmed: boolean) => Promise<string | null>
@@ -1163,6 +1167,46 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     supabase.from("payments").delete().eq("id", id).then(({ error }) => { if (error) dbg("deletePayment:", error) })
   }, [])
 
+  const submitPaymentReceipt = useCallback(async (paymentId: string, file: File, note: string): Promise<{ error: string | null }> => {
+    const academyId = state.teamSettings?.id
+    if (!academyId) return { error: "No se pudo identificar la academia." }
+    const path = `${academyId}/${paymentId}/${Date.now()}-${file.name}`
+    const { error: uploadError } = await supabase.storage.from("payment-receipts").upload(path, file)
+    if (uploadError) { dbg("submitPaymentReceipt upload:", uploadError); return { error: "No se pudo subir el comprobante." } }
+
+    const uploadedAt = new Date().toISOString()
+    const { error: updateError } = await supabase.from("payments").update({
+      status: "en_revision",
+      receipt_path: path,
+      receipt_note: note || null,
+      receipt_uploaded_at: uploadedAt,
+      rejection_note: null,
+    }).eq("id", paymentId)
+    if (updateError) { dbg("submitPaymentReceipt update:", updateError); return { error: "No se pudo registrar el comprobante." } }
+
+    setState(s => ({
+      ...s,
+      payments: s.payments.map(p => p.id === paymentId
+        ? { ...p, status: "en_revision", receipt_path: path, receipt_note: note || null, receipt_uploaded_at: uploadedAt, rejection_note: null }
+        : p),
+    }))
+    return { error: null }
+  }, [state.teamSettings?.id])
+
+  const approvePaymentReceipt = useCallback((paymentId: string) => {
+    updatePayment(paymentId, { status: "paid", paid_date: new Date().toISOString().split("T")[0] })
+  }, [updatePayment])
+
+  const rejectPaymentReceipt = useCallback((paymentId: string, note: string) => {
+    updatePayment(paymentId, { status: "pending", rejection_note: note || null, receipt_path: null, receipt_note: null })
+  }, [updatePayment])
+
+  const getReceiptSignedUrl = useCallback(async (path: string): Promise<string | null> => {
+    const { data, error } = await supabase.storage.from("payment-receipts").createSignedUrl(path, 3600)
+    if (error) { dbg("getReceiptSignedUrl:", error); return null }
+    return data?.signedUrl ?? null
+  }, [])
+
   const getPlayerPayments = useCallback(
     (playerId: string) => state.payments.filter(p => p.player_id === playerId).sort((a, b) => b.due_date.localeCompare(a.due_date)),
     [state.payments]
@@ -1411,6 +1455,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addPayment,
         updatePayment,
         deletePayment,
+        submitPaymentReceipt,
+        approvePaymentReceipt,
+        rejectPaymentReceipt,
+        getReceiptSignedUrl,
         getPlayerPayments,
         getConvocatoria,
         saveConvocatoria,

@@ -7,7 +7,7 @@ import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/ui/PageHeader"
 import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
-import { Plus, X, Trash2, Check, CreditCard, AlertTriangle, Clock, ChevronRight, Search, Bell, RefreshCw, Settings2 } from "lucide-react"
+import { Plus, X, Trash2, Check, CreditCard, AlertTriangle, Clock, ChevronRight, Search, Bell, RefreshCw, Settings2, Upload, FileCheck, XCircle } from "lucide-react"
 import { cn, formatDate, avatarUrl } from "@/lib/utils"
 import type { Payment } from "@/lib/types"
 import { effectivePaymentStatus } from "@/lib/types"
@@ -26,15 +26,20 @@ const CONCEPT_KEYS: Record<Concept, keyof typeof paymentsDict> = {
 }
 
 const STATUS_CFG = {
-  overdue: { label: "statusOverdue", color: "text-red-600", bg: "bg-red-50 dark:bg-red-500/10", border: "border-red-200 dark:border-red-500/20" },
-  pending: { label: "statusPending", color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-500/10", border: "border-amber-200 dark:border-amber-500/20" },
-  paid:    { label: "statusPaid",    color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-500/10", border: "border-emerald-200 dark:border-emerald-500/20" },
+  overdue:     { label: "statusOverdue",    color: "text-red-600",    bg: "bg-red-50 dark:bg-red-500/10",    border: "border-red-200 dark:border-red-500/20" },
+  pending:     { label: "statusPending",    color: "text-amber-600",  bg: "bg-amber-50 dark:bg-amber-500/10", border: "border-amber-200 dark:border-amber-500/20" },
+  en_revision: { label: "statusEnRevision", color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-500/10", border: "border-violet-200 dark:border-violet-500/20" },
+  paid:        { label: "statusPaid",       color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-500/10", border: "border-emerald-200 dark:border-emerald-500/20" },
 } as const
 
 const EMPTY_FORM = { player_id: "", concept: "monthly_fee" as Concept, amount: "", due_date: "", paid_date: "", notes: "" }
 
 export default function PaymentsPage() {
-  const { players, payments, addPayment, updatePayment, deletePayment, teamSettings, updateTeamSettings, autoGenerateMonthlyPayments, currentUser } = useApp()
+  const {
+    players, payments, addPayment, updatePayment, deletePayment, teamSettings, updateTeamSettings,
+    autoGenerateMonthlyPayments, currentUser, submitPaymentReceipt, approvePaymentReceipt, rejectPaymentReceipt,
+    getReceiptSignedUrl,
+  } = useApp()
   const t = useT(paymentsDict)
   const searchParams = useSearchParams()
   const isCoach = currentUser?.role === "coach"
@@ -51,6 +56,18 @@ export default function PaymentsPage() {
   const [showFeeSettings, setShowFeeSettings] = useState(false)
   const [feeInput, setFeeInput] = useState("")
   const autoGenDone = useRef(false)
+
+  // Receipt upload modal (manual cash/transfer payments)
+  const [receiptTarget, setReceiptTarget] = useState<Payment | null>(null)
+  const [receiptFile, setReceiptFile] = useState<File | null>(null)
+  const [receiptNote, setReceiptNote] = useState("")
+  const [receiptSaving, setReceiptSaving] = useState(false)
+  const [receiptError, setReceiptError] = useState("")
+
+  // Receipt review (coach approving/rejecting)
+  const [reviewingId, setReviewingId] = useState<string | null>(null)
+  const [reviewUrls, setReviewUrls] = useState<Record<string, string>>({})
+  const [rejectDrafts, setRejectDrafts] = useState<Record<string, string>>({})
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], [])
   const currentMonthStart = today.slice(0, 7) + "-01"
@@ -119,12 +136,60 @@ export default function PaymentsPage() {
         return true
       })
       .sort((a, b) => {
-        const order = { overdue: 0, pending: 1, paid: 2 }
+        const order = { overdue: 0, en_revision: 1, pending: 2, paid: 3 }
         const diff = order[a.effectiveStatus] - order[b.effectiveStatus]
         if (diff !== 0) return diff
         return a.due_date.localeCompare(b.due_date)
       })
   }, [enriched, statusFilter, playerFilter, conceptFilter, search])
+
+  // Receipts awaiting coach approval
+  const pendingReview = useMemo(() => enriched.filter(p => p.effectiveStatus === "en_revision"), [enriched])
+
+  useEffect(() => {
+    if (!isCoach || pendingReview.length === 0) return
+    let cancelled = false
+    Promise.all(pendingReview.map(async p => {
+      if (!p.receipt_path || reviewUrls[p.id]) return null
+      const url = await getReceiptSignedUrl(p.receipt_path)
+      return url ? { id: p.id, url } : null
+    })).then(results => {
+      if (cancelled) return
+      const next: Record<string, string> = {}
+      results.forEach(r => { if (r) next[r.id] = r.url })
+      if (Object.keys(next).length > 0) setReviewUrls(u => ({ ...u, ...next }))
+    })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCoach, pendingReview])
+
+  function openReceiptModal(p: Payment) {
+    setReceiptTarget(p)
+    setReceiptFile(null)
+    setReceiptNote("")
+    setReceiptError("")
+  }
+
+  async function handleUploadReceipt() {
+    if (!receiptTarget || !receiptFile) return
+    setReceiptSaving(true)
+    setReceiptError("")
+    const { error } = await submitPaymentReceipt(receiptTarget.id, receiptFile, receiptNote)
+    setReceiptSaving(false)
+    if (error) { setReceiptError(error); return }
+    setReceiptTarget(null)
+  }
+
+  function handleApprove(id: string) {
+    approvePaymentReceipt(id)
+    setReviewUrls(u => { const n = { ...u }; delete n[id]; return n })
+  }
+
+  function handleReject(id: string) {
+    rejectPaymentReceipt(id, rejectDrafts[id] ?? "")
+    setReviewUrls(u => { const n = { ...u }; delete n[id]; return n })
+    setRejectDrafts(d => { const n = { ...d }; delete n[id]; return n })
+  }
 
   function handleSubmit(ev: React.FormEvent) {
     ev.preventDefault()
@@ -248,6 +313,66 @@ export default function PaymentsPage() {
           </div>
         )}
 
+        {/* Receipts awaiting review */}
+        {isCoach && pendingReview.length > 0 && (
+          <div className="bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 rounded-2xl p-4 mb-5">
+            <div className="flex items-center gap-2 mb-3">
+              <FileCheck size={16} className="text-violet-600 shrink-0" />
+              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                {pendingReview.length} comprobante{pendingReview.length === 1 ? "" : "s"} por revisar
+              </p>
+            </div>
+            <div className="space-y-3">
+              {pendingReview.map(p => (
+                <div key={p.id} className="bg-white dark:bg-slate-900 rounded-xl p-3 flex flex-col sm:flex-row gap-3 border border-violet-100 dark:border-violet-500/10">
+                  {reviewUrls[p.id] && (
+                    <a href={reviewUrls[p.id]} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                      <img src={reviewUrls[p.id]} alt="Comprobante" className="w-full sm:w-24 h-24 object-cover rounded-lg border border-slate-200 dark:border-slate-700" />
+                    </a>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{p.player?.name ?? "—"}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">${p.amount.toLocaleString()} · {formatDate(p.due_date)}</p>
+                    {p.receipt_note && <p className="text-xs text-slate-400 dark:text-slate-500 italic mt-0.5">"{p.receipt_note}"</p>}
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <button
+                        onClick={() => handleApprove(p.id)}
+                        className="flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                      >
+                        <Check size={12} /> Aprobar
+                      </button>
+                      {reviewingId === p.id ? (
+                        <>
+                          <input
+                            type="text"
+                            placeholder="Motivo del rechazo (opcional)"
+                            value={rejectDrafts[p.id] ?? ""}
+                            onChange={e => setRejectDrafts(d => ({ ...d, [p.id]: e.target.value }))}
+                            className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 outline-none focus:border-[#0B5CFF] flex-1 min-w-32"
+                          />
+                          <button
+                            onClick={() => handleReject(p.id)}
+                            className="flex items-center gap-1 text-xs font-semibold text-red-600 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                          >
+                            <XCircle size={12} /> Confirmar rechazo
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => setReviewingId(p.id)}
+                          className="flex items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 px-2.5 py-1.5 rounded-lg transition-colors"
+                        >
+                          <XCircle size={12} /> Rechazar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 mb-5">
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-red-100 dark:border-red-500/20">
@@ -337,6 +462,11 @@ export default function PaymentsPage() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs text-slate-400 dark:text-slate-500">{t(conceptKey)}</span>
                         {p.notes && <span className="text-[10px] text-slate-300 dark:text-slate-600 italic truncate max-w-32">{p.notes}</span>}
+                        {p.rejection_note && p.effectiveStatus !== "paid" && (
+                          <span className="text-[10px] text-red-500 italic truncate max-w-40" title={p.rejection_note}>
+                            Comprobante rechazado: {p.rejection_note}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </Link>
@@ -360,6 +490,14 @@ export default function PaymentsPage() {
                   {/* Actions */}
                   {isCoach && (
                     <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {(p.effectiveStatus === "pending" || p.effectiveStatus === "overdue") && (
+                        <button
+                          onClick={() => openReceiptModal(p)}
+                          className="flex items-center gap-1 text-xs font-semibold text-violet-600 bg-violet-50 dark:bg-violet-500/10 hover:bg-violet-100 dark:hover:bg-violet-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                        >
+                          <Upload size={12} /> Comprobante
+                        </button>
+                      )}
                       {p.effectiveStatus !== "paid" && (
                         <button
                           onClick={() => markPaid(p)}
@@ -412,6 +550,48 @@ export default function PaymentsPage() {
               <div className="flex gap-3 justify-end">
                 <Button variant="secondary" type="button" onClick={() => setShowFeeSettings(false)}>Cancelar</Button>
                 <Button type="button" onClick={saveFeeSettings}>Guardar</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Receipt upload modal */}
+      {receiptTarget && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm animate-scale-in">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Subir comprobante de pago</h2>
+              <button onClick={() => setReceiptTarget(null)} className="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {players.find(pl => pl.id === receiptTarget.player_id)?.name} · ${receiptTarget.amount.toLocaleString()} · {t(CONCEPT_KEYS[receiptTarget.concept as Concept] ?? "otherConcept")}
+              </p>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Foto o PDF del comprobante</label>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={e => setReceiptFile(e.target.files?.[0] ?? null)}
+                  className="w-full text-xs text-slate-600 dark:text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 dark:file:bg-slate-800 file:text-slate-700 dark:file:text-slate-300"
+                />
+              </div>
+              <Input
+                label="Nota (opcional)"
+                placeholder="Ej: transferencia del 5 de agosto"
+                value={receiptNote}
+                onChange={e => setReceiptNote(e.target.value)}
+              />
+              {receiptError && <p className="text-xs text-red-600">{receiptError}</p>}
+              <p className="text-xs text-slate-400 dark:text-slate-500">
+                El pago quedará "En revisión" hasta que se confirme que el dinero llegó.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <Button variant="secondary" type="button" onClick={() => setReceiptTarget(null)}>Cancelar</Button>
+                <Button type="button" loading={receiptSaving} disabled={!receiptFile} onClick={handleUploadReceipt}>Subir</Button>
               </div>
             </div>
           </div>

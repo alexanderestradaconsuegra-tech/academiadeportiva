@@ -99,7 +99,7 @@ export interface PlayerWithStats extends Player {
   progress_trend?: number
 }
 
-export type PaymentStatus = "pending" | "paid" | "overdue"
+export type PaymentStatus = "pending" | "paid" | "overdue" | "en_revision"
 
 export interface Payment {
   id: string
@@ -108,13 +108,18 @@ export interface Payment {
   amount: number
   due_date: string
   paid_date: string | null
-  status: "pending" | "paid"
+  status: "pending" | "paid" | "en_revision"
   notes: string | null
   created_at: string
+  receipt_path?: string | null
+  receipt_note?: string | null
+  receipt_uploaded_at?: string | null
+  rejection_note?: string | null
 }
 
 export function effectivePaymentStatus(payment: Payment, today: string): PaymentStatus {
   if (payment.status === "paid") return "paid"
+  if (payment.status === "en_revision") return "en_revision"
   return payment.due_date < today ? "overdue" : "pending"
 }
 
