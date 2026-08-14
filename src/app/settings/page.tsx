@@ -8,7 +8,7 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
 import PhotoUpload from "@/components/ui/PhotoUpload"
-import { Trophy, Check, KeyRound, UserCheck, Sun, Moon, Send, Languages, UserPlus, GraduationCap, Trash2 } from "lucide-react"
+import { Trophy, Check, KeyRound, UserCheck, Sun, Moon, Send, Languages, UserPlus, GraduationCap, Trash2, CreditCard, ExternalLink, Unlink } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Category, Language } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
@@ -393,6 +393,130 @@ function CoachManager() {
   )
 }
 
+function MercadoPagoConnect() {
+  const [loading, setLoading] = useState(true)
+  const [connected, setConnected] = useState(false)
+  const [accountEmail, setAccountEmail] = useState<string | null>(null)
+  const [tokenInput, setTokenInput] = useState("")
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState("")
+  const [showForm, setShowForm] = useState(false)
+
+  async function loadStatus() {
+    setLoading(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const res = await fetch("/api/settings/mercadopago/status", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const data = await res.json()
+    setConnected(!!data.connected)
+    setAccountEmail(data.accountEmail ?? null)
+    setLoading(false)
+  }
+
+  useEffect(() => { loadStatus() }, [])
+
+  async function handleConnect() {
+    setError("")
+    setSaving(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const res = await fetch("/api/settings/mercadopago/connect", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ access_token: tokenInput.trim() }),
+    })
+    const data = await res.json()
+    setSaving(false)
+    if (!res.ok) { setError(data.error || "No se pudo conectar."); return }
+    setTokenInput("")
+    setShowForm(false)
+    setConnected(true)
+    setAccountEmail(data.accountEmail ?? null)
+  }
+
+  async function handleDisconnect() {
+    if (!confirm("¿Desconectar MercadoPago? Los jugadores dejarán de poder pagar en línea hasta que vuelvas a conectar una cuenta.")) return
+    setSaving(true)
+    const { data: sessionData } = await supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    await fetch("/api/settings/mercadopago/disconnect", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    setSaving(false)
+    setConnected(false)
+    setAccountEmail(null)
+  }
+
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
+      <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-1.5">
+        <CreditCard size={15} className="text-[#0B5CFF]" /> Cobro de mensualidades con MercadoPago
+      </h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+        Conecta tu propia cuenta de MercadoPago para que jugadores y apoderados puedan pagar sus mensualidades
+        en línea. El dinero cae directo en tu cuenta — nunca pasa por Metrikas.
+      </p>
+
+      {loading ? (
+        <p className="text-xs text-slate-400">Cargando...</p>
+      ) : connected ? (
+        <div className="flex items-center justify-between flex-wrap gap-3 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20">
+          <div className="flex items-center gap-2">
+            <Check size={15} className="text-emerald-600 shrink-0" />
+            <p className="text-sm text-emerald-700 dark:text-emerald-400">
+              Conectado{accountEmail ? <> como <strong>{accountEmail}</strong></> : ""}
+            </p>
+          </div>
+          <Button variant="outline" size="sm" type="button" loading={saving} onClick={handleDisconnect}>
+            <Unlink size={13} /> Desconectar
+          </Button>
+        </div>
+      ) : showForm ? (
+        <div className="space-y-3">
+          <ol className="text-xs text-slate-500 dark:text-slate-400 space-y-1.5 list-decimal pl-4">
+            <li>Crea o entra a tu cuenta en <strong>mercadopago.cl</strong> (u otra según tu país).</li>
+            <li>Ve a <strong>Desarrolladores → Tus integraciones → Crear aplicación</strong>.</li>
+            <li>Copia tu <strong>Access Token de producción</strong> y pégalo aquí abajo.</li>
+          </ol>
+          <a
+            href="https://www.mercadopago.cl/developers/panel/app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-[#0B5CFF] hover:underline"
+          >
+            Abrir panel de desarrolladores de MercadoPago <ExternalLink size={12} />
+          </a>
+          <Input
+            label="Access Token"
+            type="password"
+            placeholder="APP_USR-..."
+            value={tokenInput}
+            onChange={e => setTokenInput(e.target.value)}
+          />
+          {error && <p className="text-xs text-red-600">{error}</p>}
+          <div className="flex items-center gap-2 justify-end">
+            <Button variant="outline" size="sm" type="button" onClick={() => { setShowForm(false); setError("") }}>
+              Cancelar
+            </Button>
+            <Button size="sm" type="button" loading={saving} disabled={!tokenInput.trim()} onClick={handleConnect}>
+              Conectar
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex justify-end">
+          <Button size="sm" type="button" onClick={() => setShowForm(true)}>
+            <CreditCard size={13} /> Conectar MercadoPago
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function SettingsPage() {
   const { teamSettings, updateTeamSettings, currentUser, darkMode, toggleDarkMode, language } = useApp()
   const isCoach = currentUser?.role === "coach"
@@ -546,6 +670,7 @@ export default function SettingsPage() {
         {isCoach && (
           <div className="mt-6 space-y-6">
             <NotificationBroadcast />
+            <MercadoPagoConnect />
             <AccessManager />
             <CoachManager />
           </div>

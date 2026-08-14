@@ -790,6 +790,33 @@ export type Database = {
         }
         Relationships: []
       }
+      academy_payment_credentials: {
+        Row: {
+          academy_id: string
+          mp_access_token: string
+          mp_account_email: string | null
+          mp_account_id: string | null
+          connected_at: string
+          updated_at: string
+        }
+        Insert: {
+          academy_id: string
+          mp_access_token: string
+          mp_account_email?: string | null
+          mp_account_id?: string | null
+          connected_at?: string
+          updated_at?: string
+        }
+        Update: {
+          academy_id?: string
+          mp_access_token?: string
+          mp_account_email?: string | null
+          mp_account_id?: string | null
+          connected_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
