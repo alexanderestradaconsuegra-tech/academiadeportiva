@@ -287,7 +287,14 @@ export default function PlayerProfilePage() {
   async function downloadCard() {
     if (!cardRef.current) return
     const h2c = (await import("html2canvas")).default
-    const canvas = await h2c(cardRef.current, { scale: 2, useCORS: true })
+    const canvas = await h2c(cardRef.current, {
+      scale: 2,
+      useCORS: true,
+      width: 280,
+      height: 420,
+      windowWidth: 280,
+      windowHeight: 420,
+    })
     canvas.toBlob((blob) => {
       if (!blob) return
       const url = URL.createObjectURL(blob)
@@ -633,11 +640,12 @@ export default function PlayerProfilePage() {
                 const ovr = Math.round(stats.reduce((s, x) => s + x.value, 0) / stats.length)
                 const badge = ovr >= 88 ? "ELITE" : ovr >= 75 ? "TOP" : "PRO"
                 return (
-                  <div className="flex flex-col items-center gap-4 py-2">
+                  <div className="flex flex-col items-center gap-4 py-2" style={{ maxWidth: "100%" }}>
                     <div
                       ref={cardRef}
                       style={{
-                        width: "min(280px, 100%)",
+                        width: 280,
+                        maxWidth: "100%",
                         height: 420,
                         borderRadius: 16,
                         background: "linear-gradient(175deg, #0f1f60 0%, #080d2e 40%, #030812 100%)",
