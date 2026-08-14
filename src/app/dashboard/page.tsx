@@ -1,21 +1,28 @@
 "use client"
 import { useMemo } from "react"
+import dynamic from "next/dynamic"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
 import StatCard from "@/components/ui/StatCard"
+import ChartSkeleton from "@/components/ui/ChartSkeleton"
 import { Users, TrendingUp, AlertTriangle, Activity, ChevronRight, Star, CreditCard } from "lucide-react"
 import type { ActivityCategory, Evaluation } from "@/lib/types"
 import { effectivePaymentStatus } from "@/lib/types"
 import { payments as paymentsDict } from "@/lib/i18n/dictionaries/payments"
 import { cn, formatDate, getCategoryColor } from "@/lib/utils"
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Cell
-} from "recharts"
 import { useT } from "@/lib/i18n/useT"
 import { dashboard } from "@/lib/i18n/dictionaries/dashboard"
 import { useEnumT } from "@/lib/i18n/enums"
+
+const ProgressChartCard = dynamic(() => import("@/components/dashboard/ProgressChartCard"), {
+  ssr: false,
+  loading: () => <div className="xl:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800"><ChartSkeleton /></div>,
+})
+const CategoryChartCard = dynamic(() => import("@/components/dashboard/CategoryChartCard"), {
+  ssr: false,
+  loading: () => <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800"><ChartSkeleton /></div>,
+})
 
 export default function DashboardPage() {
   const { players, activities, evaluations, payments, getLatestEvaluation, language } = useApp()
@@ -148,57 +155,21 @@ export default function DashboardPage() {
         )}
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-5">
-          {/* Progress chart */}
-          <div className="xl:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("teamProgress")}</h2>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t("averageScoreLast6Months")}</p>
-              </div>
-              {progressTrend !== null && (
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${progressTrend >= 0 ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10" : "text-red-500 bg-red-50 dark:bg-red-500/10"}`}>
-                  {progressTrend >= 0 ? "↑" : "↓"} {progressTrend >= 0 ? "+" : ""}{progressTrend} pts
-                </span>
-              )}
-            </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={progressData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0B5CFF" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#0B5CFF" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <YAxis domain={[60, 100]} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12, boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}
-                  formatter={(v: number) => [`${v} ${t("points")}`, t("score")]}
-                />
-                <Area type="monotone" dataKey="score" stroke="#0B5CFF" strokeWidth={2.5} fill="url(#colorScore)" dot={{ fill: "#0B5CFF", strokeWidth: 0, r: 4 }} activeDot={{ r: 6, fill: "#0B5CFF" }} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Category bar chart */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-1">{t("byCategory")}</h2>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mb-4">{t("teamAverageScore")}</p>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={categoryScores.map(c => ({ ...c, name: e.activityCategory(c.key) }))} layout="vertical" margin={{ top: 0, right: 8, left: -8, bottom: 0 }}>
-                <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "#64748B" }} axisLine={false} tickLine={false} width={70} />
-                <Tooltip
-                  contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12 }}
-                  formatter={(v: number) => [`${v} ${t("points")}`, t("score")]}
-                />
-                <Bar dataKey="score" radius={[0, 6, 6, 0]} barSize={16}>
-                  {categoryScores.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <ProgressChartCard
+            title={t("teamProgress")}
+            subtitle={t("averageScoreLast6Months")}
+            progressTrend={progressTrend}
+            progressData={progressData}
+            pointsLabel={t("points")}
+            scoreLabel={t("score")}
+          />
+          <CategoryChartCard
+            title={t("byCategory")}
+            subtitle={t("teamAverageScore")}
+            data={categoryScores.map(c => ({ ...c, name: e.activityCategory(c.key) }))}
+            pointsLabel={t("points")}
+            scoreLabel={t("score")}
+          />
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">

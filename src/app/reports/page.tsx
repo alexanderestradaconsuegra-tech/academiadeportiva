@@ -1,20 +1,25 @@
 "use client"
 import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
 import { useSearchParams } from "next/navigation"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/ui/PageHeader"
 import Button from "@/components/ui/Button"
 import ScoreRing from "@/components/ui/ScoreRing"
+import ChartSkeleton from "@/components/ui/ChartSkeleton"
 import { Download, TrendingUp, TrendingDown, Target, ChevronDown } from "lucide-react"
 import { cn, formatDate, getScoreColor, getCategoryColor } from "@/lib/utils"
-import {
-  RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell
-} from "recharts"
 import { useT } from "@/lib/i18n/useT"
 import { reports } from "@/lib/i18n/dictionaries/reports"
 import { useEnumT } from "@/lib/i18n/enums"
+
+const SkillsRadarChart = dynamic(() => import("@/components/reports/PlayerReportCharts").then(m => m.SkillsRadarChart), {
+  ssr: false, loading: () => <ChartSkeleton height={220} />,
+})
+const AttrsBarChart = dynamic(() => import("@/components/reports/PlayerReportCharts").then(m => m.AttrsBarChart), {
+  ssr: false, loading: () => <ChartSkeleton height={180} />,
+})
 
 export default function ReportsPage() {
   const { players, getLatestEvaluation, getPlayerActivities } = useApp()
@@ -228,32 +233,12 @@ export default function ReportsPage() {
               <div className="space-y-6">
                 {/* Radar */}
                 {radarData.length > 0 && (
-                  <div>
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4 text-center">{t("skillsProfile")}</h2>
-                    <ResponsiveContainer width="100%" height={220}>
-                      <RadarChart data={radarData}>
-                        <PolarGrid stroke="#E2E8F0" />
-                        <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "#64748B" }} />
-                        <Radar dataKey="value" stroke="#0B5CFF" fill="#0B5CFF" fillOpacity={0.15} strokeWidth={2} dot={{ r: 3, fill: "#0B5CFF", strokeWidth: 0 }} />
-                      </RadarChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <SkillsRadarChart title={t("skillsProfile")} data={radarData} />
                 )}
 
                 {/* Bar */}
                 {attrs.length > 0 && (
-                  <div>
-                    <ResponsiveContainer width="100%" height={180}>
-                      <BarChart data={attrs} layout="vertical" margin={{ top: 0, right: 8, left: -8, bottom: 0 }}>
-                        <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                        <YAxis type="category" dataKey="label" tick={{ fontSize: 11, fill: "#64748B" }} axisLine={false} tickLine={false} width={65} />
-                        <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12 }} formatter={(v: number) => [`${v} ${t("points")}`]} />
-                        <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={14}>
-                          {attrs.map((a, i) => <Cell key={i} fill={a.fill} />)}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <AttrsBarChart data={attrs} pointsLabel={t("points")} />
                 )}
 
                 {/* Stats summary */}

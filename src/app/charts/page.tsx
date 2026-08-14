@@ -1,17 +1,20 @@
 "use client"
 import { useState } from "react"
+import dynamic from "next/dynamic"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/ui/PageHeader"
+import ChartSkeleton from "@/components/ui/ChartSkeleton"
 import { CATEGORY_SCORES, PROGRESS_DATA } from "@/lib/mock-data"
 import { cn, formatDate } from "@/lib/utils"
-import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, Cell,
-  LineChart, Line
-} from "recharts"
 import { useT } from "@/lib/i18n/useT"
 import { charts } from "@/lib/i18n/dictionaries/charts"
+
+const ProgressAreaChart = dynamic(() => import("@/components/charts/ChartsPageCharts").then(m => m.ProgressAreaChart), { ssr: false, loading: () => <ChartSkeleton height={220} /> })
+const CategoryBarChart = dynamic(() => import("@/components/charts/ChartsPageCharts").then(m => m.CategoryBarChart), { ssr: false, loading: () => <ChartSkeleton height={220} /> })
+const MonthlyEvolutionChart = dynamic(() => import("@/components/charts/ChartsPageCharts").then(m => m.MonthlyEvolutionChart), { ssr: false, loading: () => <ChartSkeleton height={220} /> })
+const ComparisonBarChart = dynamic(() => import("@/components/charts/ChartsPageCharts").then(m => m.ComparisonBarChart), { ssr: false, loading: () => <ChartSkeleton height={220} /> })
+const AttrRadarChart = dynamic(() => import("@/components/charts/ChartsPageCharts").then(m => m.AttrRadarChart), { ssr: false, loading: () => <ChartSkeleton height={220} /> })
 
 const COLORS = ["#0B5CFF","#10B981","#F59E0B","#EF4444","#8B5CF6","#F97316"]
 
@@ -75,21 +78,7 @@ export default function ChartsPage() {
               </div>
               <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg">+12 pts ↑</span>
             </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={PROGRESS_DATA} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0B5CFF" stopOpacity={0.18} />
-                    <stop offset="95%" stopColor="#0B5CFF" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <YAxis domain={[65, 95]} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12 }} formatter={(v: number) => [`${v} ${t("points")}`, t("score")]} />
-                <Area type="monotone" dataKey="score" stroke="#0B5CFF" strokeWidth={2.5} fill="url(#cg)" dot={{ r: 4, fill: "#0B5CFF", strokeWidth: 0 }} activeDot={{ r: 6 }} />
-              </AreaChart>
-            </ResponsiveContainer>
+            <ProgressAreaChart data={PROGRESS_DATA} pointsLabel={t("points")} scoreLabel={t("score")} />
           </div>
 
           {/* Category bar */}
@@ -98,17 +87,7 @@ export default function ChartsPage() {
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("scoreByCategory")}</h2>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t("fullTeamAverage")}</p>
             </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={CATEGORY_SCORES} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12 }} formatter={(v: number) => [`${v} ${t("points")}`]} />
-                <Bar dataKey="score" radius={[6, 6, 0, 0]} barSize={32}>
-                  {CATEGORY_SCORES.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <CategoryBarChart data={CATEGORY_SCORES} pointsLabel={t("points")} />
           </div>
 
           {/* Evolution multi-line */}
@@ -117,18 +96,7 @@ export default function ChartsPage() {
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("monthlyEvolutionByPlayer")}</h2>
               <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{t("top3Players")}</p>
             </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={monthlyData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <YAxis domain={[60, 100]} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12 }} />
-                <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-                {top3.map((p, i) => (
-                  <Line key={p.id} type="monotone" dataKey={p.name.split(" ")[0]} stroke={COLORS[i]} strokeWidth={2} dot={{ r: 3, strokeWidth: 0, fill: COLORS[i] }} activeDot={{ r: 5 }} />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
+            <MonthlyEvolutionChart data={monthlyData} players={top3} colors={COLORS} />
           </div>
 
           {/* Comparison bars */}
@@ -150,17 +118,7 @@ export default function ChartsPage() {
                 </select>
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={compareData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                <XAxis dataKey="attr" tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12 }} />
-                <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
-                {playerA && <Bar dataKey={playerA.name.split(" ")[0]} fill="#0B5CFF" radius={[4,4,0,0]} barSize={16} />}
-                {playerB && <Bar dataKey={playerB.name.split(" ")[0]} fill="#10B981" radius={[4,4,0,0]} barSize={16} />}
-              </BarChart>
-            </ResponsiveContainer>
+            <ComparisonBarChart data={compareData} playerAName={playerA?.name} playerBName={playerB?.name} />
           </div>
         </div>
 
@@ -175,13 +133,7 @@ export default function ChartsPage() {
             ].map(({ name, data, color }) => (
               <div key={name}>
                 <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 text-center mb-3">{name}</p>
-                <ResponsiveContainer width="100%" height={220}>
-                  <RadarChart data={data}>
-                    <PolarGrid stroke="#E2E8F0" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "#64748B" }} />
-                    <Radar dataKey="value" stroke={color} fill={color} fillOpacity={0.15} strokeWidth={2} dot={{ r: 3, fill: color, strokeWidth: 0 }} />
-                  </RadarChart>
-                </ResponsiveContainer>
+                <AttrRadarChart data={data} color={color} />
               </div>
             ))}
           </div>

@@ -1,18 +1,21 @@
 "use client"
 import { useState, useMemo } from "react"
+import dynamic from "next/dynamic"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/ui/PageHeader"
+import ChartSkeleton from "@/components/ui/ChartSkeleton"
 import { ArrowLeft, ArrowLeftRight, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import type { Player, Evaluation, DominantFoot, Position, Category } from "@/lib/types"
 import { cn, avatarUrl, getScoreColor } from "@/lib/utils"
-import {
-  RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer, Legend
-} from "recharts"
 import { useT } from "@/lib/i18n/useT"
 import { players as playersDict } from "@/lib/i18n/dictionaries/players"
 import { useEnumT } from "@/lib/i18n/enums"
+
+const CompareRadarChart = dynamic(() => import("@/components/players/CompareRadarChart"), {
+  ssr: false, loading: () => <ChartSkeleton height={300} />,
+})
 
 const ATTR_KEYS = [
   { key: "speed_score",      labelKey: "speed"      as const },
@@ -175,15 +178,7 @@ export default function ComparePage() {
             <div className="xl:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("radarOverlay")}</h2>
               {radarData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <RadarChart data={radarData} margin={{ top: 10, right: 30, left: 30, bottom: 10 }}>
-                    <PolarGrid stroke="#E2E8F0" className="dark:stroke-slate-700" />
-                    <PolarAngleAxis dataKey="attr" tick={{ fontSize: 11, fill: "#94A3B8" }} />
-                    <Radar name={playerA.name} dataKey="A" stroke="#0B5CFF" fill="#0B5CFF" fillOpacity={0.15} strokeWidth={2} dot={{ r: 3, fill: "#0B5CFF" }} />
-                    <Radar name={playerB.name} dataKey="B" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.15} strokeWidth={2} dot={{ r: 3, fill: "#8B5CF6" }} />
-                    <Legend wrapperStyle={{ fontSize: 11 }} />
-                  </RadarChart>
-                </ResponsiveContainer>
+                <CompareRadarChart data={radarData} nameA={playerA.name} nameB={playerB.name} />
               ) : (
                 <p className="text-sm text-slate-400 text-center py-16">{t("noEvaluation")}</p>
               )}
