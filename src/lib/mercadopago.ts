@@ -77,6 +77,50 @@ export async function getPayment(paymentId: string | number) {
   return res.json()
 }
 
+/** Same as getPayment, but using a specific academy's own MercadoPago token instead of the global one. */
+export async function getPaymentWithToken(paymentId: string | number, academyAccessToken: string) {
+  const res = await fetch(`${MP_BASE}/v1/payments/${paymentId}`, {
+    headers: { Authorization: `Bearer ${academyAccessToken}` },
+  })
+  return res.json()
+}
+
+/**
+ * Creates a one-off Checkout Pro preference for a single player payment (mensualidad, matrícula, etc.),
+ * using the ACADEMY's own MercadoPago token so the money lands directly in their account.
+ */
+export async function createPlayerPaymentPreference(
+  academyAccessToken: string,
+  payment: { id: string; concept: string; amount: number },
+  academyId: string,
+) {
+  const appUrl = (process.env.NEXT_PUBLIC_URL ?? "https://metrikas.pro").replace(/\/$/, "")
+
+  const body = {
+    items: [{ title: payment.concept, quantity: 1, unit_price: payment.amount, currency_id: MP_CURRENCY }],
+    external_reference: payment.id,
+    back_url: `${appUrl}/payments?paid=${payment.id}`,
+    auto_return: "approved",
+    notification_url: `${appUrl}/api/webhooks/mercadopago/player-payment?payment_id=${payment.id}&academy_id=${academyId}`,
+  }
+
+  const res = await fetch(`${MP_BASE}/checkout/preferences`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${academyAccessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`MercadoPago error: ${err}`)
+  }
+
+  return res.json() as Promise<{ id: string; init_point: string }>
+}
+
 export function periodEndFromPlan(plan: string): Date {
   const d = new Date()
   if (plan === "annual") {

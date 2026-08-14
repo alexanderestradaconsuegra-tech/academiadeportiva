@@ -43,6 +43,8 @@ export default function PaymentsPage() {
   const t = useT(paymentsDict)
   const searchParams = useSearchParams()
   const isCoach = currentUser?.role === "coach"
+  const isPlayer = currentUser?.role === "player"
+  const ownPlayerId = currentUser?.player_id ?? null
 
   const [statusFilter, setStatusFilter] = useState<"all" | "overdue" | "pending" | "paid">("all")
   const [playerFilter, setPlayerFilter] = useState(searchParams.get("player") ?? "all")
@@ -68,6 +70,22 @@ export default function PaymentsPage() {
   const [reviewingId, setReviewingId] = useState<string | null>(null)
   const [reviewUrls, setReviewUrls] = useState<Record<string, string>>({})
   const [rejectDrafts, setRejectDrafts] = useState<Record<string, string>>({})
+
+  // Player/apoderado self-serve payment
+  const [mpConnected, setMpConnected] = useState<boolean | null>(null)
+  const [checkoutLoadingId, setCheckoutLoadingId] = useState<string | null>(null)
+  const [checkoutError, setCheckoutError] = useState("")
+
+  useEffect(() => {
+    if (!isPlayer) return
+    (async () => {
+      const { data: sessionData } = await (await import("@/lib/supabase")).supabase.auth.getSession()
+      const token = sessionData.session?.access_token
+      const res = await fetch("/api/settings/mercadopago/status", { headers: { Authorization: `Bearer ${token}` } })
+      const data = await res.json()
+      setMpConnected(!!data.connected)
+    })()
+  }, [isPlayer])
 
   const today = useMemo(() => new Date().toISOString().split("T")[0], [])
   const currentMonthStart = today.slice(0, 7) + "-01"
@@ -252,6 +270,142 @@ export default function PaymentsPage() {
   }
 
   const selectCls = "h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer"
+
+  const ownPayments = useMemo(() => {
+    if (!ownPlayerId) return []
+    return enriched
+      .filter(p => p.player_id === ownPlayerId)
+      .sort((a, b) => {
+        const order = { overdue: 0, en_revision: 1, pending: 2, paid: 3 }
+        const diff = order[a.effectiveStatus] - order[b.effectiveStatus]
+        if (diff !== 0) return diff
+        return a.due_date.localeCompare(b.due_date)
+      })
+  }, [enriched, ownPlayerId])
+
+  async function handlePayWithMercadoPago(paymentId: string) {
+    setCheckoutError("")
+    setCheckoutLoadingId(paymentId)
+    const { data: sessionData } = await (await import("@/lib/supabase")).supabase.auth.getSession()
+    const token = sessionData.session?.access_token
+    const res = await fetch("/api/payments/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ payment_id: paymentId }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      setCheckoutLoadingId(null)
+      setCheckoutError(data.error || "No se pudo iniciar el pago.")
+      return
+    }
+    window.location.href = data.checkout_url
+  }
+
+  const receiptModal = receiptTarget && (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm animate-scale-in">
+        <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white">Subir comprobante de pago</h2>
+          <button onClick={() => setReceiptTarget(null)} className="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+        <div className="p-5 space-y-4">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {players.find(pl => pl.id === receiptTarget.player_id)?.name} · ${receiptTarget.amount.toLocaleString()} · {t(CONCEPT_KEYS[receiptTarget.concept as Concept] ?? "otherConcept")}
+          </p>
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Foto o PDF del comprobante</label>
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={e => setReceiptFile(e.target.files?.[0] ?? null)}
+              className="w-full text-xs text-slate-600 dark:text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 dark:file:bg-slate-800 file:text-slate-700 dark:file:text-slate-300"
+            />
+          </div>
+          <Input
+            label="Nota (opcional)"
+            placeholder="Ej: transferencia del 5 de agosto"
+            value={receiptNote}
+            onChange={e => setReceiptNote(e.target.value)}
+          />
+          {receiptError && <p className="text-xs text-red-600">{receiptError}</p>}
+          <p className="text-xs text-slate-400 dark:text-slate-500">
+            El pago quedará "En revisión" hasta que se confirme que el dinero llegó.
+          </p>
+          <div className="flex gap-3 justify-end">
+            <Button variant="secondary" type="button" onClick={() => setReceiptTarget(null)}>Cancelar</Button>
+            <Button type="button" loading={receiptSaving} disabled={!receiptFile} onClick={handleUploadReceipt}>Subir</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  if (isPlayer) {
+    return (
+      <AppShell>
+        <div className="p-4 md:p-6 xl:p-8 animate-fade-in max-w-2xl">
+          <PageHeader title="Mis pagos" subtitle={`${ownPayments.length} registrados`} />
+
+          {checkoutError && (
+            <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-2xl p-4 mb-5">
+              <p className="text-xs text-red-600">{checkoutError}</p>
+            </div>
+          )}
+
+          {ownPayments.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400 dark:text-slate-500">
+              <CreditCard size={40} className="mb-3 opacity-30" />
+              <p className="font-semibold">Todavía no tienes pagos registrados</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {ownPayments.map(p => {
+                const cfg = STATUS_CFG[p.effectiveStatus]
+                const conceptKey = CONCEPT_KEYS[p.concept as Concept] ?? "otherConcept"
+                const canPay = p.effectiveStatus === "pending" || p.effectiveStatus === "overdue"
+                return (
+                  <div key={p.id} className={cn("bg-white dark:bg-slate-900 rounded-2xl p-4 border", cfg.border)}>
+                    <div className="flex items-center justify-between gap-3 mb-1">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{t(conceptKey)}</p>
+                      <span className={cn("text-xs font-bold px-2.5 py-1 rounded-lg shrink-0", cfg.color, cfg.bg)}>
+                        {t(cfg.label as keyof typeof paymentsDict)}
+                      </span>
+                    </div>
+                    <p className="text-xl font-black text-slate-900 dark:text-white mb-1">${p.amount.toLocaleString()}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Vence {formatDate(p.due_date)}</p>
+                    {p.paid_date && <p className="text-xs text-emerald-600 mb-1">✓ Pagado el {formatDate(p.paid_date)}</p>}
+                    {p.effectiveStatus === "en_revision" && (
+                      <p className="text-xs text-violet-600 mb-1">Tu comprobante está en revisión — te avisaremos cuando se confirme.</p>
+                    )}
+                    {p.rejection_note && p.effectiveStatus !== "paid" && (
+                      <p className="text-xs text-red-500 mb-1">Comprobante rechazado: {p.rejection_note}</p>
+                    )}
+                    {canPay && (
+                      <div className="flex items-center gap-2 flex-wrap mt-3">
+                        {mpConnected && (
+                          <Button size="sm" type="button" loading={checkoutLoadingId === p.id} onClick={() => handlePayWithMercadoPago(p.id)}>
+                            <CreditCard size={13} /> Pagar con MercadoPago
+                          </Button>
+                        )}
+                        <Button size="sm" variant="outline" type="button" onClick={() => openReceiptModal(p)}>
+                          <Upload size={13} /> Ya pagué (subir comprobante)
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {receiptModal}
+      </AppShell>
+    )
+  }
 
   return (
     <AppShell>
@@ -557,46 +711,7 @@ export default function PaymentsPage() {
       )}
 
       {/* Receipt upload modal */}
-      {receiptTarget && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm animate-scale-in">
-            <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">Subir comprobante de pago</h2>
-              <button onClick={() => setReceiptTarget(null)} className="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
-                <X size={16} />
-              </button>
-            </div>
-            <div className="p-5 space-y-4">
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {players.find(pl => pl.id === receiptTarget.player_id)?.name} · ${receiptTarget.amount.toLocaleString()} · {t(CONCEPT_KEYS[receiptTarget.concept as Concept] ?? "otherConcept")}
-              </p>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Foto o PDF del comprobante</label>
-                <input
-                  type="file"
-                  accept="image/*,application/pdf"
-                  onChange={e => setReceiptFile(e.target.files?.[0] ?? null)}
-                  className="w-full text-xs text-slate-600 dark:text-slate-400 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 dark:file:bg-slate-800 file:text-slate-700 dark:file:text-slate-300"
-                />
-              </div>
-              <Input
-                label="Nota (opcional)"
-                placeholder="Ej: transferencia del 5 de agosto"
-                value={receiptNote}
-                onChange={e => setReceiptNote(e.target.value)}
-              />
-              {receiptError && <p className="text-xs text-red-600">{receiptError}</p>}
-              <p className="text-xs text-slate-400 dark:text-slate-500">
-                El pago quedará "En revisión" hasta que se confirme que el dinero llegó.
-              </p>
-              <div className="flex gap-3 justify-end">
-                <Button variant="secondary" type="button" onClick={() => setReceiptTarget(null)}>Cancelar</Button>
-                <Button type="button" loading={receiptSaving} disabled={!receiptFile} onClick={handleUploadReceipt}>Subir</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {receiptModal}
 
       {/* New payment modal */}
       {showForm && (

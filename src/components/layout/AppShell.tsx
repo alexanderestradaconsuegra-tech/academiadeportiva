@@ -8,7 +8,7 @@ import MobileHeader from "./MobileHeader"
 import PlayerNav from "./PlayerNav"
 import DemoBanner from "./DemoBanner"
 
-const PLAYER_ALLOWED_PREFIXES = ["/matches", "/activities", "/tactics", "/health"]
+const PLAYER_ALLOWED_PREFIXES = ["/matches", "/activities", "/tactics", "/health", "/payments"]
 const ASSISTANT_BLOCKED_PREFIXES = ["/payments", "/settings", "/reports", "/charts"]
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
