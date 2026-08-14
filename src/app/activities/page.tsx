@@ -171,12 +171,12 @@ export default function ActivitiesPage() {
                 const player = players.find(p => p.id === a.player_id)
                 const videoUrl = findExerciseVideo(a.category, a.exercise)
                 return (
-                  <div key={a.id} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
+                  <div key={a.id} className="flex flex-wrap items-center gap-3 px-4 sm:px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
                     <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0", getCategoryColor(a.category))}>
                       {a.category.substring(0, 1)}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 dark:text-white">{a.exercise}</p>
+                    <div className="flex-1 min-w-0 basis-40">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{a.exercise}</p>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         {!isPlayer && <><span className="text-xs text-slate-400 dark:text-slate-500">{player?.name ?? "?"}</span><span className="text-slate-200">·</span></>}
                         <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(a.date)}</span>
@@ -191,7 +191,7 @@ export default function ActivitiesPage() {
                         {a.notes && <><span className="text-slate-200">·</span><span className="text-xs text-slate-400 dark:text-slate-500 truncate max-w-32">{a.notes}</span></>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2 flex-wrap shrink-0">
                       <Badge variant={catBadgeMap[a.category] ?? "default"} className="hidden sm:inline-flex">{enumT.activityCategory(a.category)}</Badge>
                       <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-md", getIntensityColor(a.intensity))}>{enumT.intensity(a.intensity)}</span>
                       <div className="text-right min-w-16">

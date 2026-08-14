@@ -604,7 +604,7 @@ export default function PaymentsPage() {
               const cfg = STATUS_CFG[p.effectiveStatus]
               const conceptKey = CONCEPT_KEYS[p.concept as Concept] ?? "otherConcept"
               return (
-                <div key={p.id} className={cn("bg-white dark:bg-slate-900 rounded-2xl p-4 border flex items-center gap-4 group", cfg.border)}>
+                <div key={p.id} className={cn("bg-white dark:bg-slate-900 rounded-2xl p-4 border flex flex-wrap items-center gap-3 group", cfg.border)}>
                   {/* Player */}
                   <Link href={`/players/${p.player_id}`} className="flex items-center gap-3 flex-1 min-w-0">
                     <img
@@ -650,7 +650,7 @@ export default function PaymentsPage() {
                           onClick={() => openReceiptModal(p)}
                           className="flex items-center gap-1 text-xs font-semibold text-violet-600 bg-violet-50 dark:bg-violet-500/10 hover:bg-violet-100 dark:hover:bg-violet-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
                         >
-                          <Upload size={12} /> Comprobante
+                          <Upload size={12} /> <span className="hidden sm:inline">Comprobante</span>
                         </button>
                       )}
                       {p.effectiveStatus !== "paid" && (
@@ -658,7 +658,7 @@ export default function PaymentsPage() {
                           onClick={() => markPaid(p)}
                           className="flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
                         >
-                          <Check size={12} /> {t("markPaid")}
+                          <Check size={12} /> <span className="hidden sm:inline">{t("markPaid")}</span>
                         </button>
                       )}
                       <button
