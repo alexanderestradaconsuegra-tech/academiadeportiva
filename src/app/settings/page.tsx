@@ -233,8 +233,9 @@ function AccessManager() {
                       <button
                         onClick={() => handleDelete(p.id)}
                         disabled={deleting === p.id}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0 disabled:opacity-50"
+                        className="w-11 h-11 rounded-lg flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0 disabled:opacity-50"
                         title="Eliminar acceso"
+                        aria-label="Eliminar acceso"
                       >
                         <Trash2 size={14} />
                       </button>

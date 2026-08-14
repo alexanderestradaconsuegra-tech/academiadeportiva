@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import type { Metadata } from "next"
 import {
   Trophy, Users, CalendarDays, CreditCard, Heart, Bell, Languages,
@@ -65,19 +66,6 @@ const ROLES = [
   { title: "Jugador / Acudiente", desc: "Ve su ficha, su progreso, su convocatoria y confirma asistencia desde su celular. Sin descargar nada extra.", icon: Smartphone },
 ]
 
-function PlaceholderImage({ label, aspect = "16/9" }: { label: string; aspect?: string }) {
-  return (
-    <div
-      className="relative w-full rounded-2xl border-2 border-dashed border-white/25 bg-white/5 flex flex-col items-center justify-center gap-2 text-center px-6"
-      style={{ aspectRatio: aspect }}
-    >
-      <Video className="w-8 h-8 text-white/30" />
-      <p className="text-xs font-medium text-white/50 max-w-xs">{label}</p>
-    </div>
-  )
-}
-
-
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#05122F] text-white overflow-x-hidden">
@@ -85,7 +73,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#05122F]/80 border-b border-white/10">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center -ml-4">
-            <img src="/logo-metrikas.png" alt="Metrikas" className="h-32 w-auto max-w-[260px] object-contain object-left mt-5 md:mt-0" />
+            <Image src="/logo-metrikas.png" alt="Metrikas" width={1536} height={1024} priority className="h-32 w-auto max-w-[260px] object-contain object-left mt-5 md:mt-0" />
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-blue-100/70">
             <a href="#caracteristicas" className="hover:text-white transition-colors">Características</a>
@@ -240,13 +228,13 @@ export default function LandingPage() {
               </p>
               <div className="grid sm:grid-cols-2 gap-4">
                 {[
-                  { emoji: "🎬", title: "Video por ejercicio", desc: "YouTube o Vimeo embebido. El jugador lo ve directo en su app." },
-                  { emoji: "📊", title: "Registro de intentos", desc: "Guarda el resultado de cada serie. Compara sesión a sesión." },
+                  { icon: Video, title: "Video por ejercicio", desc: "YouTube o Vimeo embebido. El jugador lo ve directo en su app." },
+                  { icon: BarChart3, title: "Registro de intentos", desc: "Guarda el resultado de cada serie. Compara sesión a sesión." },
                 ].map(item => (
                   <div key={item.title} className="bg-white/[0.04] border border-white/8 rounded-2xl p-4">
-                    <p className="text-xl mb-2">{item.emoji}</p>
+                    <item.icon size={20} className="text-amber-400 mb-2" />
                     <p className="text-sm font-bold text-white mb-1">{item.title}</p>
-                    <p className="text-xs text-white/40 leading-relaxed">{item.desc}</p>
+                    <p className="text-xs text-white/70 leading-relaxed">{item.desc}</p>
                   </div>
                 ))}
               </div>
@@ -346,7 +334,7 @@ export default function LandingPage() {
           <div className="text-center max-w-xl mx-auto mb-14">
             <p className="text-xs font-bold text-cyan-400 uppercase tracking-widest mb-3">Precios</p>
             <h2 className="text-3xl md:text-4xl font-black mb-3">Todo incluido. Sin sorpresas.</h2>
-            <p className="text-blue-100/50 text-base">Sin límite de jugadores ni de módulos. Menos de lo que cuesta alquilar una cancha.</p>
+            <p className="text-blue-100/60 text-base">Sin límite de jugadores ni de módulos. Menos de lo que cuesta alquilar una cancha.</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-5 mb-10">
@@ -355,9 +343,9 @@ export default function LandingPage() {
               <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-5">Plan mensual</p>
               <div className="flex items-end gap-1 mb-1">
                 <span className="text-6xl font-black text-white">${PRICE_MONTHLY.toLocaleString('es-CL')}</span>
-                <span className="text-white/40 text-lg mb-2">/mes</span>
+                <span className="text-white/70 text-lg mb-2">/mes</span>
               </div>
-              <p className="text-white/30 text-sm mb-8">por academia · acceso por 30 días</p>
+              <p className="text-white/60 text-sm mb-8">por academia · acceso por 30 días</p>
               <ul className="space-y-2 mb-8 flex-1">
                 {PLAN_INCLUDES.map(item => (
                   <li key={item} className="flex items-start gap-2 text-xs text-white/60">
@@ -379,18 +367,18 @@ export default function LandingPage() {
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
               <div className="relative">
                 <div className="flex items-center gap-2 mb-5">
-                  <p className="text-xs font-bold text-blue-200 uppercase tracking-widest">Plan anual</p>
+                  <p className="text-xs font-bold text-white uppercase tracking-widest">Plan anual</p>
                   <span className="text-[10px] font-black bg-white text-[#0B5CFF] px-2.5 py-0.5 rounded-full">AHORRA 30%</span>
                 </div>
                 <div className="flex items-end gap-1 mb-1">
                   <span className="text-6xl font-black text-white">${Math.round(PRICE_ANNUAL / 12).toLocaleString('es-CL')}</span>
-                  <span className="text-blue-200/60 text-lg mb-2">/mes</span>
+                  <span className="text-white/90 text-lg mb-2">/mes</span>
                 </div>
-                <p className="text-blue-200/60 text-sm mb-1">${PRICE_ANNUAL.toLocaleString('es-CL')}/año · equivale a 2 meses gratis</p>
-                <p className="text-blue-300/50 text-xs mb-8">Acceso garantizado por 12 meses completos</p>
+                <p className="text-white/90 text-sm mb-1">${PRICE_ANNUAL.toLocaleString('es-CL')}/año · equivale a 2 meses gratis</p>
+                <p className="text-white/90 text-xs mb-8">Acceso garantizado por 12 meses completos</p>
                 <ul className="space-y-2 mb-8">
                   {PLAN_INCLUDES.map(item => (
-                    <li key={item} className="flex items-start gap-2 text-xs text-blue-100/80">
+                    <li key={item} className="flex items-start gap-2 text-xs text-white/90">
                       <CheckCircle2 size={13} className="text-white mt-0.5 shrink-0" /> {item}
                     </li>
                   ))}
@@ -411,12 +399,12 @@ export default function LandingPage() {
               href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors font-medium"
+              className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white transition-colors font-medium"
             >
               ¿Tienes preguntas? Escríbenos por WhatsApp <ArrowRight size={14} />
             </a>
           </div>
-          <p className="text-center text-xs text-white/20 mt-3">Pago seguro vía MercadoPago · Sin contratos · Cancela cuando quieras</p>
+          <p className="text-center text-xs text-white/60 mt-3">Pago seguro vía MercadoPago · Sin contratos · Cancela cuando quieras</p>
         </div>
       </section>
 
@@ -531,10 +519,10 @@ export default function LandingPage() {
       <footer className="bg-[#05122F] border-t border-white/10">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center">
-            <img src="/logo-metrikas.png" alt="Metrikas" className="h-36 w-auto max-w-[240px] object-contain" />
+            <Image src="/logo-metrikas.png" alt="Metrikas" width={1536} height={1024} className="h-36 w-auto max-w-[240px] object-contain" />
           </div>
-          <p className="text-xs text-blue-100/40">© {new Date().getFullYear()} Metrikas · Un producto de Autix</p>
-          <div className="flex items-center gap-4 text-xs text-blue-100/50">
+          <p className="text-xs text-blue-100/60">© {new Date().getFullYear()} Metrikas · Un producto de Autix</p>
+          <div className="flex items-center gap-4 text-xs text-blue-100/60">
             <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">WhatsApp</a>
             <Link href="/legal/privacy" className="hover:text-white transition-colors">Privacidad</Link>
             <Link href="/legal/terms" className="hover:text-white transition-colors">Términos</Link>

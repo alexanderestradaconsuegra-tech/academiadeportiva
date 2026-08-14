@@ -307,7 +307,7 @@ export default function PaymentsPage() {
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm animate-scale-in">
         <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
           <h2 className="text-sm font-bold text-slate-900 dark:text-white">Subir comprobante de pago</h2>
-          <button onClick={() => setReceiptTarget(null)} className="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
+          <button onClick={() => setReceiptTarget(null)} aria-label="Cerrar" className="w-11 h-11 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -500,6 +500,7 @@ export default function PaymentsPage() {
                           <input
                             type="text"
                             placeholder="Motivo del rechazo (opcional)"
+                            aria-label="Motivo del rechazo"
                             value={rejectDrafts[p.id] ?? ""}
                             onChange={e => setRejectDrafts(d => ({ ...d, [p.id]: e.target.value }))}
                             className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 outline-none focus:border-[#0B5CFF] flex-1 min-w-32"
@@ -559,7 +560,7 @@ export default function PaymentsPage() {
           <div className="relative flex-1 min-w-36">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
             <input
-              type="text" placeholder="Buscar alumno..." value={search}
+              type="text" placeholder="Buscar alumno..." aria-label="Buscar alumno" value={search}
               onChange={ev => setSearch(ev.target.value)}
               className="w-full h-9 pl-9 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none"
             />
@@ -643,7 +644,7 @@ export default function PaymentsPage() {
 
                   {/* Actions */}
                   {isCoach && (
-                    <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1.5 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                       {(p.effectiveStatus === "pending" || p.effectiveStatus === "overdue") && (
                         <button
                           onClick={() => openReceiptModal(p)}
@@ -662,11 +663,12 @@ export default function PaymentsPage() {
                       )}
                       <button
                         onClick={() => { if (confirm(t("confirmDelete"))) deletePayment(p.id) }}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                        aria-label={t("confirmDelete")}
+                        className="w-11 h-11 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                       >
                         <Trash2 size={13} />
                       </button>
-                      <Link href={`/players/${p.player_id}`} className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-[#0B5CFF] hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors">
+                      <Link href={`/players/${p.player_id}`} aria-label="Ver jugador" className="w-11 h-11 rounded-lg flex items-center justify-center text-slate-400 hover:text-[#0B5CFF] hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors">
                         <ChevronRight size={13} />
                       </Link>
                     </div>
@@ -684,7 +686,7 @@ export default function PaymentsPage() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm animate-scale-in">
             <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">Configurar mensualidad</h2>
-              <button onClick={() => setShowFeeSettings(false)} className="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
+              <button onClick={() => setShowFeeSettings(false)} aria-label="Cerrar" className="w-11 h-11 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
                 <X size={16} />
               </button>
             </div>
@@ -719,7 +721,7 @@ export default function PaymentsPage() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md animate-scale-in">
             <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("newPaymentTitle")}</h2>
-              <button onClick={() => setShowForm(false)} className="w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
+              <button onClick={() => setShowForm(false)} aria-label="Cerrar" className="w-11 h-11 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
                 <X size={16} />
               </button>
             </div>
