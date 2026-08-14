@@ -425,7 +425,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const loadPlayerData = useCallback(async (categoryFilter?: string | null) => {
-    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes, positionSamplesRes, matchesRes, matchStatsRes, exercisesRes, attendanceRes, physicalTestsRes, injuriesRes, paymentsRes] = await Promise.all([
+    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes, positionSamplesRes, matchesRes, matchStatsRes, exercisesRes, attendanceRes, physicalTestsRes, injuriesRes, paymentsRes, convRes] = await Promise.all([
       supabase.from("players").select("*"),
       supabase.from("activities").select("*"),
       supabase.from("evaluations").select("*"),
@@ -440,10 +440,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from("physical_tests").select("*"),
       supabase.from("injuries").select("*"),
       categoryFilter ? supabase.from("payments").select("*").limit(0) : supabase.from("payments").select("*"),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase as any).from("convocatorias").select("*, convocatoria_players(*)"),
     ])
-    // Fetch convocatorias with players joined
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: convData } = await (supabase as any).from("convocatorias").select("*, convocatoria_players(*)")
+    const convData = convRes.data
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const convocatorias: Convocatoria[] = (convData ?? []).map((c: any) => ({
       id: c.id,
