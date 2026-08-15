@@ -19,7 +19,8 @@ export type Database = {
           id: string
           training_id: string
           player_id: string
-          status: "present" | "absent" | "late" | "excused"
+          status: "present" | "absent" | "late" | "excused" | null
+          rsvp: "confirmed" | "declined" | "pending" | null
           notes: string | null
           created_at: string
         }
@@ -27,7 +28,8 @@ export type Database = {
           id?: string
           training_id: string
           player_id: string
-          status: "present" | "absent" | "late" | "excused"
+          status?: "present" | "absent" | "late" | "excused" | null
+          rsvp?: "confirmed" | "declined" | "pending" | null
           notes?: string | null
           created_at?: string
         }
@@ -35,7 +37,8 @@ export type Database = {
           id?: string
           training_id?: string
           player_id?: string
-          status?: "present" | "absent" | "late" | "excused"
+          status?: "present" | "absent" | "late" | "excused" | null
+          rsvp?: "confirmed" | "declined" | "pending" | null
           notes?: string | null
           created_at?: string
         }

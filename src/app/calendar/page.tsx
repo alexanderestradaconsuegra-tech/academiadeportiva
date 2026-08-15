@@ -9,9 +9,9 @@ import Select from "@/components/ui/Select"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
 import Badge from "@/components/ui/Badge"
-import { Plus, X, CalendarDays, MapPin, Clock, Pencil, Trash2, ClipboardList, Check } from "lucide-react"
+import { Plus, X, CalendarDays, MapPin, Clock, Pencil, Trash2, ClipboardList, Check, ThumbsUp, ThumbsDown } from "lucide-react"
 import { cn, formatDate, avatarUrl } from "@/lib/utils"
-import type { Category, Training, AttendanceStatus } from "@/lib/types"
+import type { Category, Training, AttendanceStatus, RsvpStatus } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
 import { calendar } from "@/lib/i18n/dictionaries/calendar"
 import { useEnumT } from "@/lib/i18n/enums"
@@ -43,7 +43,10 @@ async function notifyNewTraining(data: { title: string; date: string; time: stri
 }
 
 export default function CalendarPage() {
-  const { trainings, players, addTraining, updateTraining, deleteTraining, upsertAttendance, getTrainingAttendance } = useApp()
+  const {
+    trainings, players, addTraining, updateTraining, deleteTraining,
+    upsertAttendance, setTrainingRsvp, getTrainingAttendance, getPlayerAttendance, currentUser,
+  } = useApp()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -52,10 +55,17 @@ export default function CalendarPage() {
   const t = useT(calendar)
   const e = useEnumT()
 
+  const isPlayer = currentUser?.role === "player"
+  const ownPlayerId = currentUser?.player_id ?? null
+  const ownPlayer = players.find(p => p.id === ownPlayerId)
+
   const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))
 
   const today = new Date().toISOString().split("T")[0]
-  const sorted = [...trainings].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
+  const visibleTrainings = isPlayer
+    ? trainings.filter(tr => !tr.category || tr.category === ownPlayer?.category)
+    : trainings
+  const sorted = [...visibleTrainings].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
   const upcoming = sorted.filter(t => t.date >= today)
   const past = sorted.filter(t => t.date < today).reverse()
 
@@ -98,6 +108,62 @@ export default function CalendarPage() {
 
   function handleDelete(id: string) {
     if (confirm(t("confirmDeleteTraining"))) deleteTraining(id)
+  }
+
+  if (isPlayer) {
+    const myAttendance = ownPlayerId ? getPlayerAttendance(ownPlayerId) : []
+    const rsvpFor = (trainingId: string): RsvpStatus => myAttendance.find(a => a.training_id === trainingId)?.rsvp ?? "pending"
+
+    return (
+      <AppShell>
+        <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
+          <PageHeader title={t("pageTitle")} subtitle={`${upcoming.length} ${t("trainingsScheduled")}`} />
+
+          <div className="space-y-8">
+            <div>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">{t("upcoming")}</h2>
+              {upcoming.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <CalendarDays size={36} className="mb-3 opacity-30" />
+                  <p className="font-semibold text-sm">{t("noTrainingsScheduled")}</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {upcoming.map(tr => (
+                    <PlayerTrainingRow key={tr.id} training={tr} rsvp={rsvpFor(tr.id)}
+                      onRsvp={rsvp => ownPlayerId && setTrainingRsvp(tr.id, ownPlayerId, rsvp)} />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {past.length > 0 && (
+              <div>
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">{t("past")}</h2>
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+                  <div className="divide-y divide-slate-50 dark:divide-slate-800">
+                    {past.map(tr => (
+                      <div key={tr.id} className="flex items-center gap-4 px-5 py-4 opacity-75">
+                        <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF] flex items-center justify-center shrink-0">
+                          <CalendarDays size={18} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white">{tr.title}</p>
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(tr.date)}</span>
+                            {tr.location && <><span className="text-slate-200">·</span><span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1"><MapPin size={11} /> {tr.location}</span></>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </AppShell>
+    )
   }
 
   return (
@@ -196,6 +262,8 @@ function TrainingRow({ t: training, isPast, attendance, onEdit, onDelete, onAtte
   const e = useEnumT()
   const presentCount = attendance.filter(a => a.status === "present" || a.status === "late").length
   const hasAttendance = attendance.length > 0
+  const confirmedCount = attendance.filter(a => a.rsvp === "confirmed").length
+  const declinedCount = attendance.filter(a => a.rsvp === "declined").length
   return (
     <div className={cn("flex items-center gap-4 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors", isPast && "opacity-75")}>
       <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF] flex items-center justify-center shrink-0">
@@ -215,6 +283,12 @@ function TrainingRow({ t: training, isPast, attendance, onEdit, onDelete, onAtte
             <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">{presentCount} {t("presentCount")} · {attendance.length} {t("of")} total</span>
           </div>
         )}
+        {!isPast && (confirmedCount > 0 || declinedCount > 0) && (
+          <div className="flex items-center gap-2 mt-1.5">
+            {confirmedCount > 0 && <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">{confirmedCount} confirmados</span>}
+            {declinedCount > 0 && <span className="text-xs text-red-500 dark:text-red-400 font-medium">{declinedCount} no van</span>}
+          </div>
+        )}
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {training.category && <Badge variant="blue">{e.category(training.category)}</Badge>}
@@ -232,6 +306,53 @@ function TrainingRow({ t: training, isPast, attendance, onEdit, onDelete, onAtte
   )
 }
 
+function PlayerTrainingRow({ training, rsvp, onRsvp }: {
+  training: Training; rsvp: RsvpStatus; onRsvp: (rsvp: RsvpStatus) => void
+}) {
+  const e = useEnumT()
+  return (
+    <div className={cn(
+      "bg-white dark:bg-slate-900 rounded-2xl p-4 border flex items-center gap-4",
+      rsvp === "confirmed" ? "border-emerald-200 dark:border-emerald-500/20" :
+      rsvp === "declined" ? "border-red-200 dark:border-red-500/20" :
+      "border-slate-100 dark:border-slate-800"
+    )}>
+      <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF] flex items-center justify-center shrink-0">
+        <CalendarDays size={18} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-slate-900 dark:text-white">{training.title}</p>
+        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+          <span className="text-xs text-slate-400 dark:text-slate-500">{formatDate(training.date)}</span>
+          {training.time && <><span className="text-slate-200">·</span><span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1"><Clock size={11} /> {training.time}</span></>}
+          {training.location && <><span className="text-slate-200">·</span><span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1"><MapPin size={11} /> {training.location}</span></>}
+        </div>
+        {training.category && <Badge variant="blue" className="mt-1.5">{e.category(training.category)}</Badge>}
+      </div>
+      <div className="flex items-center gap-1.5 shrink-0">
+        <button
+          onClick={() => onRsvp("confirmed")}
+          className={cn(
+            "flex items-center gap-1 h-9 px-3 rounded-lg text-xs font-semibold transition-colors",
+            rsvp === "confirmed" ? "bg-emerald-500 text-white" : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
+          )}
+        >
+          <ThumbsUp size={13} /> Voy
+        </button>
+        <button
+          onClick={() => onRsvp("declined")}
+          className={cn(
+            "flex items-center gap-1 h-9 px-3 rounded-lg text-xs font-semibold transition-colors",
+            rsvp === "declined" ? "bg-red-500 text-white" : "bg-red-50 dark:bg-red-500/10 text-red-600 hover:bg-red-100 dark:hover:bg-red-500/20"
+          )}
+        >
+          <ThumbsDown size={13} /> No voy
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const STATUS_CONFIG: Record<AttendanceStatus, { label: string; bg: string; text: string }> = {
   present:  { label: "present",  bg: "bg-emerald-100 dark:bg-emerald-500/20", text: "text-emerald-700 dark:text-emerald-400" },
   late:     { label: "late",     bg: "bg-amber-100 dark:bg-amber-500/20",     text: "text-amber-700 dark:text-amber-400" },
@@ -243,7 +364,7 @@ const STATUS_CYCLE: AttendanceStatus[] = ["present", "late", "excused", "absent"
 function AttendanceModal({ training, players, attendance, onUpsert, onClose }: {
   training: Training
   players: { id: string; name: string; photo_url: string }[]
-  attendance: { player_id: string; status: AttendanceStatus }[]
+  attendance: { player_id: string; status: AttendanceStatus | null }[]
   onUpsert: (playerId: string, status: AttendanceStatus) => void
   onClose: () => void
 }) {
