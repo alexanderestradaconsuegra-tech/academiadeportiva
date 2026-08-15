@@ -18,18 +18,10 @@ const HR_ZONE_LABEL_KEY: Record<HRZone, "zoneReposo" | "zoneCalentamiento" | "zo
   máxima: "zoneMaxima",
 }
 
-const HR_ZONE_DESC_KEY: Record<HRZone, "zoneDescReposo" | "zoneDescCalentamiento" | "zoneDescAerobica" | "zoneDescAnaerobica" | "zoneDescMaxima"> = {
-  reposo: "zoneDescReposo",
-  calentamiento: "zoneDescCalentamiento",
-  aeróbica: "zoneDescAerobica",
-  anaeróbica: "zoneDescAnaerobica",
-  máxima: "zoneDescMaxima",
-}
-
 export default function LivePanel({
   player, health, sessionState, elapsed, currentHR, currentSpeed,
   currentZone, zoneConfig, avgHR, maxHR, minHR, calories,
-  hrSamples, liveChartData, zoneDist, totalSamples,
+  hrSamples, liveChartData, totalSamples,
   selectedDevice, btStatus, gpsEnabled, manualHR, onManualHR, onSubmitManualHR,
   onPause, onResume, onFinish,
 }: any) {
@@ -187,83 +179,50 @@ export default function LivePanel({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
-        {/* Live HR chart */}
-        <div className="xl:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("heartRateRealtime")}</h2>
-            <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
-              <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-              {t("live")}
+      {/* Live HR chart */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("heartRateRealtime")}</h2>
+          <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
+            <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+            {t("live")}
+          </div>
+        </div>
+        {liveChartData.length < 2 ? (
+          <div className="h-48 flex items-center justify-center text-slate-400 dark:text-slate-500">
+            <div className="text-center">
+              <Heart size={28} className="mx-auto mb-2 opacity-30" />
+              <p className="text-sm">{t("waitingHrData")}</p>
             </div>
           </div>
-          {liveChartData.length < 2 ? (
-            <div className="h-48 flex items-center justify-center text-slate-400 dark:text-slate-500">
-              <div className="text-center">
-                <Heart size={28} className="mx-auto mb-2 opacity-30" />
-                <p className="text-sm">{t("waitingHrData")}</p>
-              </div>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <AreaChart data={liveChartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="hrGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#EF4444" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                <XAxis dataKey="t" tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                <YAxis domain={[40, 210]} tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12 }}
-                  formatter={(v: number, name: string) => [name === "hr" ? `${v} bpm` : `${v} km/h`, name === "hr" ? t("frequency") : t("speed")]}
-                />
-                <Area type="monotone" dataKey="hr" stroke="#EF4444" strokeWidth={2} fill="url(#hrGrad)" dot={false} activeDot={{ r: 4, fill: "#EF4444" }} />
-                <Line type="monotone" dataKey="speed" stroke="#0B5CFF" strokeWidth={1.5} dot={false} strokeDasharray="3 3" />
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        {/* Zone distribution */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
-          <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("zoneDistribution")}</h2>
-          <div className="space-y-2.5">
-            {zoneKeys.map(z => {
-              const zc = HR_ZONES[z]
-              const count = zoneDist[z] ?? 0
-              const pct = totalSamples > 0 ? Math.round((count / totalSamples) * 100) : 0
-              return (
-                <div key={z} className={cn("rounded-xl p-3 transition-all", currentZone === z ? "ring-2" : "")}
-                  style={{ background: `${zc.color}10`, outline: currentZone === z ? `2px solid ${zc.color}` : "none" }}>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full" style={{ background: zc.color }} />
-                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t(HR_ZONE_LABEL_KEY[z])}</span>
-                      {currentZone === z && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${zc.color}25`, color: zc.color }}>{t("active")}</span>}
-                    </div>
-                    <span className="text-xs font-bold" style={{ color: zc.color }}>{pct}%</span>
-                  </div>
-                  <div className="h-1.5 bg-white dark:bg-slate-900 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: zc.color }} />
-                  </div>
-                  <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-1">{t(HR_ZONE_DESC_KEY[z])}</p>
-                </div>
-              )
-            })}
+        ) : (
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={liveChartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="hrGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#EF4444" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+              <XAxis dataKey="t" tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+              <YAxis domain={[40, 210]} tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
+              <Tooltip
+                contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12 }}
+                formatter={(v: number, name: string) => [name === "hr" ? `${v} bpm` : `${v} km/h`, name === "hr" ? t("frequency") : t("speed")]}
+              />
+              <Area type="monotone" dataKey="hr" stroke="#EF4444" strokeWidth={2} fill="url(#hrGrad)" dot={false} activeDot={{ r: 4, fill: "#EF4444" }} />
+              <Line type="monotone" dataKey="speed" stroke="#0B5CFF" strokeWidth={1.5} dot={false} strokeDasharray="3 3" />
+            </AreaChart>
+          </ResponsiveContainer>
+        )}
+        {totalSamples > 0 && (
+          <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
+            <div><p className="text-sm font-bold text-slate-800 dark:text-slate-100">{avgHR}</p><p className="text-[10px] text-slate-400 dark:text-slate-500">{t("avg")}</p></div>
+            <div><p className="text-sm font-bold text-red-500">{maxHR}</p><p className="text-[10px] text-slate-400 dark:text-slate-500">{t("max")}</p></div>
+            <div><p className="text-sm font-bold text-blue-500">{minHR}</p><p className="text-[10px] text-slate-400 dark:text-slate-500">{t("min")}</p></div>
           </div>
-          {totalSamples > 0 && (
-            <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div><p className="text-sm font-bold text-slate-800 dark:text-slate-100">{avgHR}</p><p className="text-[10px] text-slate-400 dark:text-slate-500">{t("avg")}</p></div>
-                <div><p className="text-sm font-bold text-red-500">{maxHR}</p><p className="text-[10px] text-slate-400 dark:text-slate-500">{t("max")}</p></div>
-                <div><p className="text-sm font-bold text-blue-500">{minHR}</p><p className="text-[10px] text-slate-400 dark:text-slate-500">{t("min")}</p></div>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   )

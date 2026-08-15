@@ -13,8 +13,8 @@ import type { HRSample, SpeedSample, HRZone, LiveSession } from "@/lib/types"
 import { HR_ZONES, getZone, calcCalories, formatDuration } from "@/lib/health-zones"
 import {
   Heart, Bluetooth, BluetoothConnected, BluetoothOff,
-  Zap, Timer, MapPin, Play,
-  Activity, AlertCircle, CheckCircle, Wind
+  Timer, MapPin, Play, PenLine, Flame,
+  Activity, CheckCircle
 } from "lucide-react"
 import { useT } from "@/lib/i18n/useT"
 import { health as healthDict } from "@/lib/i18n/dictionaries/health"
@@ -28,11 +28,11 @@ type ConnectionStatus = "disconnected" | "connecting" | "connected" | "error"
 type SessionState = "idle" | "running" | "paused" | "finished"
 
 const DEVICE_TYPES = [
-  { id: "polar_h10", icon: "🫀", nameKey: "devicePolarName", descKey: "devicePolarDesc" },
-  { id: "wahoo_tickr", icon: "💓", nameKey: "deviceWahooName", descKey: "deviceWahooDesc" },
-  { id: "garmin_hrm", icon: "⌚", nameKey: "deviceGarminName", descKey: "deviceGarminDesc" },
-  { id: "generic_ble", icon: "📡", nameKey: "deviceGenericName", descKey: "deviceGenericDesc" },
-  { id: "manual", icon: "✍️", nameKey: "deviceManualName", descKey: "deviceManualDesc" },
+  { id: "polar_h10", nameKey: "devicePolarName", descKey: "devicePolarDesc" },
+  { id: "wahoo_tickr", nameKey: "deviceWahooName", descKey: "deviceWahooDesc" },
+  { id: "garmin_hrm", nameKey: "deviceGarminName", descKey: "deviceGarminDesc" },
+  { id: "generic_ble", nameKey: "deviceGenericName", descKey: "deviceGenericDesc" },
+  { id: "manual", nameKey: "deviceManualName", descKey: "deviceManualDesc" },
 ] as const
 
 export default function HealthPage() {
@@ -95,12 +95,6 @@ export default function HealthPage() {
   const currentZone = currentHR > 0 ? getZone(currentHR, health?.max_hr ?? 200) : null
   const zoneConfig = currentZone ? HR_ZONES[currentZone] : null
   const calories = avgHR > 0 ? calcCalories(avgHR, elapsed / 60, player?.weight ?? 70) : 0
-
-  // Zone distribution
-  const zoneDist = Object.keys(HR_ZONES).reduce((acc, z) => {
-    acc[z as HRZone] = hrSamples.filter(s => s.zone === z).length
-    return acc
-  }, {} as Record<HRZone, number>)
 
   // Recent samples for live chart (last 60)
   const liveChartData = hrSamples.slice(-60).map((s, i, arr) => ({
@@ -376,7 +370,6 @@ export default function HealthPage() {
             calories={calories}
             hrSamples={hrSamples}
             liveChartData={liveChartData}
-            zoneDist={zoneDist}
             totalSamples={hrSamples.length}
             selectedDevice={selectedDevice}
             btStatus={btStatus}
@@ -451,23 +444,21 @@ function SetupPanel({
             <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-500/15 text-[#0B5CFF] text-xs font-black flex items-center justify-center">{isPlayer ? 1 : 2}</span>
             {t("deviceTypeStep")}
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4">
             {DEVICE_TYPES.map(d => (
               <button
                 key={d.id}
                 onClick={() => onDeviceChange(d.id)}
+                title={t(d.descKey)}
                 className={cn(
-                  "flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all",
+                  "flex flex-col items-center gap-1.5 p-2.5 rounded-xl border text-center transition-all",
                   selectedDevice === d.id
                     ? "border-[#0B5CFF] bg-blue-50 dark:bg-blue-500/10 ring-2 ring-blue-100"
                     : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
                 )}
               >
-                <span className="text-2xl">{d.icon}</span>
-                <div>
-                  <p className="text-xs font-bold text-slate-900 dark:text-white">{t(d.nameKey)}</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500">{t(d.descKey)}</p>
-                </div>
+                {d.id === "manual" ? <PenLine size={18} className="text-slate-500 dark:text-slate-400" /> : <Bluetooth size={18} className="text-slate-500 dark:text-slate-400" />}
+                <p className="text-[10px] font-bold text-slate-900 dark:text-white leading-tight">{t(d.nameKey)}</p>
               </button>
             ))}
           </div>
@@ -540,7 +531,7 @@ function SetupPanel({
             className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
           >
             <div className="flex items-center gap-2">
-              <span className="text-base">✍️</span>
+              <PenLine size={15} className="text-slate-500 dark:text-slate-400" />
               <span className="text-sm font-bold text-slate-900 dark:text-white">Agregar datos manualmente</span>
             </div>
             <span className="text-slate-400 text-lg">{showManualForm ? "−" : "+"}</span>
@@ -623,28 +614,6 @@ function SetupPanel({
             </div>
           )}
         </div>
-
-        {/* Device guide */}
-        <div className="bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] rounded-2xl p-5 text-white">
-          <div className="flex items-center gap-2 mb-3">
-            <Zap size={15} className="text-blue-200" />
-            <span className="text-xs font-bold text-blue-100 uppercase tracking-wide">{t("recommendedDevicesTitle")}</span>
-          </div>
-          {[
-            { name: "Polar H10", detail: t("recDevicePolarDetail"), highlight: true },
-            { name: "Wahoo TICKR X", detail: t("recDeviceWahooXDetail") },
-            { name: "Garmin HRM-Pro+", detail: t("recDeviceGarminProDetail") },
-            { name: "STATSports Apex", detail: t("recDeviceStatsportsDetail") },
-          ].map(d => (
-            <div key={d.name} className={cn("flex items-center justify-between py-2 border-b border-white/10 last:border-0", d.highlight && "")}>
-              <div>
-                <p className={cn("text-xs font-semibold", d.highlight ? "text-white" : "text-blue-100")}>{d.name}</p>
-                <p className="text-[10px] text-blue-200/60">{d.detail}</p>
-              </div>
-              {d.highlight && <span className="text-[9px] font-bold bg-white/15 text-white px-2 py-0.5 rounded">{t("topBadge")}</span>}
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   )
@@ -653,9 +622,6 @@ function SetupPanel({
 // ── Live Panel ───────────────────────────────────────────────────────────
 // ── Session History Card ─────────────────────────────────────────────────
 function SessionHistoryCard({ session }: { session: LiveSession }) {
-  const deviceIcons: Record<string, string> = {
-    polar_h10: "🫀", wahoo_tickr: "💓", garmin_hrm: "⌚", generic_ble: "📡", manual: "📁"
-  }
   const dur = session.duration_s ?? 0
   const h = Math.floor(dur / 3600), m = Math.floor((dur % 3600) / 60), s = dur % 60
   const durStr = h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`
@@ -663,21 +629,18 @@ function SessionHistoryCard({ session }: { session: LiveSession }) {
   const hasDistance = session.distance_m != null && session.distance_m > 0
   const hasSpeed = session.avg_speed_kmh != null && session.avg_speed_kmh > 0
 
-  // Build stats grid — always show what we have
+  // The 3-4 stats that matter at a glance — avg HR already has its own spot in the header
   const stats = [
-    hasDistance && { icon: "📍", label: "Distancia", value: `${(session.distance_m! / 1000).toFixed(2)} km` },
-    { icon: "⏱", label: "Duración", value: durStr },
-    hasSpeed && { icon: "⚡", label: "Vel. media", value: `${session.avg_speed_kmh!.toFixed(1)} km/h` },
-    session.max_speed_kmh && session.max_speed_kmh > 0 && { icon: "🚀", label: "Vel. máx", value: `${session.max_speed_kmh.toFixed(1)} km/h` },
-    hasHr && { icon: "❤️", label: "FC media", value: `${session.avg_hr} bpm` },
-    hasHr && session.max_hr_session && { icon: "📈", label: "FC máx", value: `${session.max_hr_session} bpm` },
-    session.calories_est && { icon: "🔥", label: "Calorías", value: `${session.calories_est} kcal` },
-  ].filter(Boolean) as { icon: string; label: string; value: string }[]
+    hasDistance && { icon: MapPin, label: "Distancia", value: `${(session.distance_m! / 1000).toFixed(2)} km` },
+    { icon: Timer, label: "Duración", value: durStr },
+    hasSpeed && { icon: Activity, label: "Vel. media", value: `${session.avg_speed_kmh!.toFixed(1)} km/h` },
+    session.calories_est && { icon: Flame, label: "Calorías", value: `${session.calories_est} kcal` },
+  ].filter(Boolean) as { icon: typeof MapPin; label: string; value: string }[]
 
   return (
     <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-lg">{deviceIcons[session.device_type] ?? "📁"}</span>
+        {session.device_type === "manual" ? <PenLine size={16} className="text-slate-400 shrink-0" /> : <Bluetooth size={16} className="text-slate-400 shrink-0" />}
         <div className="flex-1 min-w-0">
           <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{session.device_name ?? session.device_type}</p>
           <p className="text-[10px] text-slate-400 dark:text-slate-500">{formatDate(session.started_at.split("T")[0])}</p>
@@ -693,10 +656,10 @@ function SessionHistoryCard({ session }: { session: LiveSession }) {
         <p className="text-[10px] text-emerald-600 dark:text-emerald-400 mb-2 font-medium">{session.notes}</p>
       )}
       {stats.length > 0 ? (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {stats.map(s => (
             <div key={s.label} className="bg-white dark:bg-slate-900 rounded-lg p-2 text-center border border-slate-100 dark:border-slate-800">
-              <p className="text-[9px] text-slate-400 dark:text-slate-500">{s.icon} {s.label}</p>
+              <p className="text-[9px] text-slate-400 dark:text-slate-500 flex items-center justify-center gap-1"><s.icon size={10} /> {s.label}</p>
               <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{s.value}</p>
             </div>
           ))}
