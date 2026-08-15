@@ -192,6 +192,7 @@ export default function TacticsPage() {
   const [animBall, setAnimBall] = useState<[number,number]|null>(null)
   const [playing,  setPlaying]  = useState(false)
   const [passStep, setPassStep] = useState(-1)
+  const [activeStep, setActiveStep] = useState(-1) // index into `lines` of whatever step (pass OR run) is currently playing
   const rafRef = useRef(0)
 
   const dims = DIMS[format]
@@ -264,18 +265,19 @@ export default function TacticsPage() {
     clearTimeout(holdTimeoutRef.current)
     setPlaying(false)
     setPassStep(-1)
+    setActiveStep(-1)
     setAnimPos(null)
     setAnimBall(null)
   },[])
 
   // ── Play animation ────────────────────────────────────────────────────────
-  // Each pass segment and each run gets its own duration proportional to its
-  // real drawn distance, so a short lay-off is quick and a long ball takes longer.
+  // One shared clock drives everything, in the exact order shown (and
+  // reorderable) in the "Secuencia de la jugada" panel — a run and a pass
+  // can be freely interleaved: step 2 never starts until step 1 finishes,
+  // whether both are passes, both are runs, or a mix. Each step's duration
+  // still scales with its real drawn distance.
   function startPlay() {
     resetAnim()
-
-    const passLines = lines.filter(l=>l.type==="pass")
-    const runLines  = lines.filter(l=>l.type==="run")
 
     // snapshot original positions from edit state
     const origPos: Record<string,[number,number]> = {}
@@ -286,59 +288,81 @@ export default function TacticsPage() {
 
     const speedMult = SPEED_MULT[speedTier]
 
-    // run assignments: closest player within 9 units (scaled to the pitch), each moving at its own pace
-    const runMap: {id:string; pts:[number,number][]; dur:number}[] = []
-    for (const rl of runLines) {
-      let best:Marker|null=null, bestD=9*scale
-      for (const m of markers) {
-        if(m.team==="ball") continue
-        const d=Math.hypot(m.x-rl.pts[0][0],m.y-rl.pts[0][1])
-        if(d<bestD){bestD=d;best=m}
-      }
-      if(best) runMap.push({id:best.id, pts:rl.pts, dur:Math.max(MIN_SEG_MS, pathLength(rl.pts)/(RUN_SPEED*speedMult))})
-    }
+    let ballCursor:[number,number] = [...origBall]
+    const playerCursor: Record<string,[number,number]> = { ...origPos }
+    let clock = 0
 
-    // pass chain: cursor starts at ball, follows each pass line in the order
-    // shown in the "Secuencia de la jugada" panel — each hop's duration scales
-    // with its real distance instead of a fixed tick.
-    let cursor:[number,number]=[...origBall]
-    let segStart=0
-    const passSegs:{pts:[number,number][]; start:number; dur:number}[] = passLines.map(pl=>{
-      const seg:[number,number][]=[cursor,...pl.pts]
-      cursor=[...pl.pts[pl.pts.length-1]]
-      const dur=Math.max(MIN_SEG_MS, pathLength(seg)/(BALL_SPEED*speedMult))
-      const entry={pts:seg, start:segStart, dur}
-      segStart += dur
-      return entry
+    const passSegs: {pts:[number,number][]; start:number; dur:number; lineIdx:number}[] = []
+    // Keyed by player id so a player can have more than one run — each new
+    // run for the same player chains from where the previous one left them.
+    const runSegsByPlayer: Record<string, {pts:[number,number][]; start:number; dur:number; lineIdx:number}[]> = {}
+
+    lines.forEach((line, lineIdx) => {
+      if (line.type === "pass") {
+        const seg:[number,number][] = [ballCursor, ...line.pts]
+        const dur = Math.max(MIN_SEG_MS, pathLength(seg)/(BALL_SPEED*speedMult))
+        passSegs.push({ pts: seg, start: clock, dur, lineIdx })
+        ballCursor = [...line.pts[line.pts.length-1]]
+        clock += dur
+      } else {
+        // closest player (by their position at THIS point in the timeline,
+        // not their original spot) within 9 units, scaled to the pitch
+        let bestId: string|null = null, bestD = 9*scale
+        for (const m of markers) {
+          if (m.team === "ball") continue
+          const pos = playerCursor[m.id]
+          const d = Math.hypot(pos[0]-line.pts[0][0], pos[1]-line.pts[0][1])
+          if (d < bestD) { bestD = d; bestId = m.id }
+        }
+        if (bestId) {
+          const dur = Math.max(MIN_SEG_MS, pathLength(line.pts)/(RUN_SPEED*speedMult))
+          ;(runSegsByPlayer[bestId] ??= []).push({ pts: line.pts, start: clock, dur, lineIdx })
+          playerCursor[bestId] = [...line.pts[line.pts.length-1]]
+          clock += dur
+        }
+      }
     })
 
-    const totalPassMs = passSegs.reduce((s,p)=>s+p.dur,0)
-    const maxRunMs = runMap.reduce((m,r)=>Math.max(m,r.dur),0)
-    const totalMs = Math.max(totalPassMs, maxRunMs, 600)
+    const totalMs = Math.max(clock, 600)
+    const stepTimeline = [...passSegs, ...Object.values(runSegsByPlayer).flat()].sort((a,b)=>a.start-b.start)
 
-    if(passSegs.length>0) setPassStep(0)
+    if (passSegs.length>0) setPassStep(0)
+    if (stepTimeline.length>0) setActiveStep(stepTimeline[0].lineIdx)
     setPlaying(true)
 
     const t0=performance.now()
     function frame(now:number){
       const el=now-t0
 
-      // ball position — locate the current segment by cumulative start time
+      // ball position — locate the current/most-recent pass segment; holds
+      // at its last drop-off point while a run plays before the next pass
       let bp:[number,number]=[...origBall]
       if(passSegs.length>0){
         let si=0
         while(si<passSegs.length-1 && el>=passSegs[si].start+passSegs[si].dur) si++
         const seg=passSegs[si]
-        const st=seg.dur>0 ? Math.min((el-seg.start)/seg.dur,1) : 1
-        bp=pathAt(seg.pts,st)
+        const st=seg.dur>0 ? Math.min(Math.max((el-seg.start)/seg.dur,0),1) : 1
+        bp = el<seg.start ? seg.pts[0] : pathAt(seg.pts,st)
         setPassStep(si)
       }
 
-      // player positions — each run holds at its final point once it finishes
+      // player positions — each holds until their next run's turn comes up,
+      // moves along it, then holds at its end until any further run
       const np:Record<string,[number,number]>={}
       for(const [id,pos] of Object.entries(origPos)){
-        const ra=runMap.find(r=>r.id===id)
-        np[id] = ra ? pathAt(ra.pts, ra.dur>0 ? Math.min(el/ra.dur,1) : 1) : pos
+        const segs = runSegsByPlayer[id]
+        if(!segs || segs.length===0){ np[id]=pos; continue }
+        let cur = segs[0]
+        for (const s of segs) { if (el>=s.start) cur=s; else break }
+        const st = cur.dur>0 ? Math.min(Math.max((el-cur.start)/cur.dur,0),1) : 1
+        np[id] = pathAt(cur.pts, st)
+      }
+
+      // which step (pass or run) is currently "live", for the badges/panel
+      if (stepTimeline.length>0) {
+        let ti=0
+        while(ti<stepTimeline.length-1 && el>=stepTimeline[ti].start+stepTimeline[ti].dur) ti++
+        setActiveStep(stepTimeline[ti].lineIdx)
       }
 
       setAnimPos(np)
@@ -625,18 +649,25 @@ export default function TacticsPage() {
                         stroke={l.type==="pass"?"#fbbf24":"#38bdf8"} strokeWidth={(l.type==="pass"?0.9:0.75)*scale}
                         fill="none" strokeLinecap="round" strokeLinejoin="round"
                         markerEnd={l.type==="pass"?"url(#ap)":"url(#ar)"} opacity={0.9}/>
-                      {l.type==="pass" && (()=>{
+                      {(()=>{
+                        // Step number badge — shown on every line (pass or run) so the
+                        // shared play order is visible on the pitch, not just in the side panel.
                         const mid=l.pts[Math.floor(l.pts.length/2)]
-                        const idx=passLines.findIndex(p=>p.id===l.id)
-                        const active=playing&&passStep===idx
+                        const active=playing&&activeStep===li
+                        const passColor = l.type==="pass"
+                        const fillIdle = passColor ? "rgba(251,191,36,0.25)" : "rgba(56,189,248,0.25)"
+                        const strokeIdle = passColor ? "rgba(251,191,36,0.5)" : "rgba(56,189,248,0.5)"
+                        const fillActive = passColor ? "#fbbf24" : "#38bdf8"
+                        const strokeActive = passColor ? "#f59e0b" : "#0ea5e9"
+                        const textIdle = passColor ? "rgba(251,191,36,0.9)" : "rgba(56,189,248,0.9)"
                         return (
                           <g>
                             <circle cx={mid[0]} cy={mid[1]-3*scale} r={2.3*scale}
-                              fill={active?"#fbbf24":"rgba(251,191,36,0.25)"}
-                              stroke={active?"#f59e0b":"rgba(251,191,36,0.5)"} strokeWidth={0.3*scale}/>
+                              fill={active?fillActive:fillIdle}
+                              stroke={active?strokeActive:strokeIdle} strokeWidth={0.3*scale}/>
                             <text x={mid[0]} y={mid[1]-3*scale} textAnchor="middle" dominantBaseline="middle"
-                              fontSize={1.8*scale} fontWeight="bold" fill={active?"#1e293b":"rgba(251,191,36,0.9)"}>
-                              {idx+1}
+                              fontSize={1.8*scale} fontWeight="bold" fill={active?"#1e293b":textIdle}>
+                              {li+1}
                             </text>
                           </g>
                         )
