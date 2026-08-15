@@ -26,6 +26,7 @@ export default function MobileHeader() {
     "/charts":     t("charts"),
     "/reports":    t("reports"),
     "/settings":   t("settings"),
+    "/payments":   t("paymentsNav"),
   }
 
   const title = Object.entries(TITLES).find(([k]) => pathname.startsWith(k))?.[1] ?? (teamSettings?.name || "Metrikas")

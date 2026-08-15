@@ -57,7 +57,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {isPlayer ? <PlayerNav /> : <Sidebar />}
 
       <div className={isPlayer ? "flex-1 flex flex-col min-h-screen md:ml-56 min-w-0 w-full" : "flex-1 flex flex-col min-h-screen md:ml-64 print:ml-0 min-w-0 w-full"}>
-        {!isPlayer && <MobileHeader />}
+        <MobileHeader />
 
         {/* Demo mode banner */}
         {currentUser?.academy_id === "a0000002-0000-0000-0000-000000000000" && (
