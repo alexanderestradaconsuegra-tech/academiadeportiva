@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextRequest, NextResponse } from "next/server"
 
-const PUBLIC_PATHS = new Set(["/", "/login", "/onboarding", "/forgot-password", "/reset-password", "/expired", "/subscribe", "/subscribe/success", "/legal/privacy", "/legal/terms"])
+const PUBLIC_PATHS = new Set(["/login", "/onboarding", "/forgot-password", "/reset-password", "/expired", "/subscribe", "/subscribe/success", "/legal/privacy", "/legal/terms"])
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -13,6 +13,19 @@ export async function middleware(req: NextRequest) {
     pathname.includes(".") // static files (favicon, etc.)
   ) {
     return NextResponse.next()
+  }
+
+  // The marketing site now lives on its own domain (metrikas.pro) — this
+  // app's own "/" is no longer a landing page, just an entry point that
+  // routes straight into the system.
+  if (pathname === "/") {
+    const supabase = createServerClient(
+      (process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL)!,
+      (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY)!,
+      { cookies: { getAll: () => req.cookies.getAll(), setAll: () => {} } }
+    )
+    const { data: { session } } = await supabase.auth.getSession()
+    return NextResponse.redirect(new URL(session ? "/dashboard" : "/login", req.url))
   }
 
   if (PUBLIC_PATHS.has(pathname)) {
@@ -41,7 +54,7 @@ export async function middleware(req: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session) {
-    return NextResponse.redirect(new URL("/", req.url))
+    return NextResponse.redirect(new URL("/login", req.url))
   }
 
   return res
