@@ -93,7 +93,7 @@ export default function LandingPage() {
             </a>
             <Link
               href="/login"
-              className="h-9 px-4 rounded-xl bg-white text-[#071B4D] text-sm font-semibold flex items-center whitespace-nowrap hover:bg-blue-50 transition-colors"
+              className="h-9 px-4 rounded-xl bg-white text-[#05122F] text-sm font-semibold flex items-center whitespace-nowrap hover:bg-lime-50 transition-colors"
             >
               Iniciar sesión
             </Link>
@@ -148,13 +148,13 @@ export default function LandingPage() {
               </ul>
             </div>
             {/* Con Metrikas */}
-            <div className="rounded-3xl border-2 border-[#0B5CFF]/20 bg-[#0B5CFF]/[0.04] p-8 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-[#0B5CFF]/8 rounded-full blur-2xl pointer-events-none" />
+            <div className="rounded-3xl border-2 border-lime-600/20 bg-lime-600/[0.04] p-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-lime-600/8 rounded-full blur-2xl pointer-events-none" />
               <div className="flex items-center gap-3 mb-6 relative">
-                <div className="w-8 h-8 rounded-full bg-[#0B5CFF] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-[#05122F] flex items-center justify-center">
                   <CheckCircle2 size={14} className="text-white" />
                 </div>
-                <p className="text-sm font-black text-[#0B5CFF] uppercase tracking-widest">Con Metrikas</p>
+                <p className="text-sm font-black text-lime-700 uppercase tracking-widest">Con Metrikas</p>
               </div>
               <ul className="space-y-4 relative">
                 {[
@@ -164,7 +164,7 @@ export default function LandingPage() {
                   "Cada profesor tiene su propio acceso y solo ve su categoría",
                 ].map(t => (
                   <li key={t} className="flex items-start gap-3">
-                    <CheckCircle2 size={18} className="text-[#0B5CFF] shrink-0 mt-0.5" />
+                    <CheckCircle2 size={18} className="text-lime-700 shrink-0 mt-0.5" />
                     <span className="text-slate-700 text-sm leading-snug font-medium">{t}</span>
                   </li>
                 ))}
@@ -178,7 +178,7 @@ export default function LandingPage() {
       <section id="caracteristicas" className="bg-slate-50 text-slate-900">
         <div className="max-w-6xl mx-auto px-6 py-16 md:py-24">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Todo lo que necesitas</p>
+            <p className="text-xs font-bold text-lime-700 uppercase tracking-widest mb-3">Todo lo que necesitas</p>
             <h2 className="text-3xl md:text-4xl font-black text-slate-900">Un sistema completo, no diez herramientas parcheadas</h2>
             <p className="text-slate-500 mt-3 text-base">Cada módulo diseñado para el día a día de una academia — no para una empresa.</p>
           </div>
@@ -186,7 +186,7 @@ export default function LandingPage() {
             {FEATURES.map(f => (
               <div key={f.title} className="bg-white rounded-2xl p-6 border border-slate-100 hover:border-blue-200 hover:shadow-lg hover:shadow-blue-900/5 transition-all">
                 <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
-                  <f.icon className="w-5 h-5 text-[#0B5CFF]" />
+                  <f.icon className="w-5 h-5 text-lime-700" />
                 </div>
                 <h3 className="text-sm font-bold text-slate-900 mb-1.5">{f.title}</h3>
                 <p className="text-xs text-slate-500 leading-relaxed">{f.desc}</p>
@@ -198,13 +198,13 @@ export default function LandingPage() {
 
       {/* Feature showcase */}
       <section id="producto" className="relative bg-slate-100 text-slate-900 overflow-hidden">
-        <div className="absolute top-0 -left-60 w-[500px] h-[500px] bg-[#0B5CFF]/6 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#0B5CFF]/4 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 -left-60 w-[500px] h-[500px] bg-lime-600/6 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-lime-600/4 rounded-full blur-3xl pointer-events-none" />
         <div className="max-w-5xl mx-auto px-6 py-16 md:py-28 relative">
           <div className="text-center max-w-2xl mx-auto mb-20">
-            <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Todo en una sola plataforma</p>
+            <p className="text-xs font-bold text-lime-700 uppercase tracking-widest mb-3">Todo en una sola plataforma</p>
             <h2 className="text-3xl md:text-5xl font-black leading-[1.05] text-slate-900">
-              Cada módulo diseñado para <span className="bg-gradient-to-r from-[#0B5CFF] to-cyan-500 bg-clip-text text-transparent">simplificar tu trabajo.</span>
+              Cada módulo diseñado para <span className="bg-gradient-to-r from-lime-600 to-cyan-500 bg-clip-text text-transparent">simplificar tu trabajo.</span>
             </h2>
           </div>
           <FeatureShowcase />
@@ -261,9 +261,9 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 py-16 md:py-24 relative">
           <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-12 items-center">
             <div>
-              <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Ficha del jugador</p>
+              <p className="text-xs font-bold text-lime-700 uppercase tracking-widest mb-3">Ficha del jugador</p>
               <h2 className="text-3xl md:text-5xl font-black leading-[1.05] mb-4 text-slate-900">
-                Estadísticas <span className="text-[#0B5CFF]">estilo videojuego</span> con datos reales
+                Estadísticas <span className="text-lime-700">estilo videojuego</span> con datos reales
               </h2>
               <p className="text-slate-500 text-lg leading-relaxed mb-6">
                 Cada evaluación genera una ficha con 6 atributos, un rating general y una insignia de nivel. El jugador
@@ -309,7 +309,7 @@ export default function LandingPage() {
       <section id="roles" className="bg-slate-50 text-slate-900">
         <div className="max-w-6xl mx-auto px-6 py-16 md:py-24">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Roles y accesos</p>
+            <p className="text-xs font-bold text-lime-700 uppercase tracking-widest mb-3">Roles y accesos</p>
             <h2 className="text-3xl md:text-4xl font-black text-slate-900">Cada persona ve solo lo que necesita</h2>
             <p className="text-slate-500 mt-3">Tú controlas quién accede a qué — sin contraseñas compartidas ni datos expuestos.</p>
           </div>
@@ -317,7 +317,7 @@ export default function LandingPage() {
             {ROLES.map(r => (
               <div key={r.title} className="bg-white rounded-2xl p-6 border border-slate-100 text-center">
                 <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mx-auto mb-4">
-                  <r.icon className="w-6 h-6 text-[#0B5CFF]" />
+                  <r.icon className="w-6 h-6 text-lime-700" />
                 </div>
                 <h3 className="text-sm font-bold text-slate-900 mb-2">{r.title}</h3>
                 <p className="text-xs text-slate-500 leading-relaxed">{r.desc}</p>
@@ -362,13 +362,13 @@ export default function LandingPage() {
             </div>
 
             {/* Annual — recommended */}
-            <div className="rounded-3xl bg-[#0B5CFF] p-8 flex flex-col relative overflow-hidden">
+            <div className="rounded-3xl bg-[#05122F] p-8 flex flex-col relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />
               <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
               <div className="relative">
                 <div className="flex items-center gap-2 mb-5">
                   <p className="text-xs font-bold text-white uppercase tracking-widest">Plan anual</p>
-                  <span className="text-[10px] font-black bg-white text-[#0B5CFF] px-2.5 py-0.5 rounded-full">AHORRA 30%</span>
+                  <span className="text-[10px] font-black bg-white text-lime-700 px-2.5 py-0.5 rounded-full">AHORRA 30%</span>
                 </div>
                 <div className="flex items-end gap-1 mb-1">
                   <span className="text-6xl font-black text-white">${Math.round(PRICE_ANNUAL / 12).toLocaleString('es-CL')}</span>
@@ -385,7 +385,7 @@ export default function LandingPage() {
                 </ul>
                 <Link
                   href="/subscribe?plan=annual"
-                  className="w-full h-12 rounded-xl bg-white text-[#0B5CFF] text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-50 transition-all shadow-xl shadow-blue-900/30"
+                  className="w-full h-12 rounded-xl bg-white text-lime-700 text-sm font-bold flex items-center justify-center gap-2 hover:bg-lime-50 transition-all shadow-xl shadow-lime-900/30"
                 >
                   <Sparkles size={15} /> Pagar plan anual — el mejor valor
                 </Link>
@@ -412,7 +412,7 @@ export default function LandingPage() {
       <section id="preguntas" className="bg-white text-slate-900">
         <div className="max-w-3xl mx-auto px-6 py-16 md:py-24">
           <div className="text-center mb-12">
-            <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-3">Preguntas frecuentes</p>
+            <p className="text-xs font-bold text-lime-700 uppercase tracking-widest mb-3">Preguntas frecuentes</p>
             <h2 className="text-3xl md:text-4xl font-black text-slate-900">Todo lo que quieres saber antes de empezar</h2>
           </div>
           <div className="space-y-3">
@@ -444,7 +444,7 @@ export default function LandingPage() {
       <section className="bg-white text-slate-900">
         <div className="max-w-6xl mx-auto px-6 pb-16 md:pb-24">
           <div className="text-center mb-10">
-            <p className="text-xs font-bold text-[#0B5CFF] uppercase tracking-widest mb-2">Lo que dicen las academias</p>
+            <p className="text-xs font-bold text-lime-700 uppercase tracking-widest mb-2">Lo que dicen las academias</p>
             <h2 className="text-2xl md:text-3xl font-black text-slate-900">Resultados reales en el campo</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
@@ -457,12 +457,12 @@ export default function LandingPage() {
                 &ldquo;Desde que usamos Metrikas podemos ver el progreso de cada jugador semana a semana. Antes llevábamos todo en papel y se nos perdía información clave. Ahora el cuerpo técnico tiene todo en el celular y tomamos mejores decisiones en los entrenamientos.&rdquo;
               </p>
               <div className="flex items-center gap-3 pt-2 border-t border-slate-200">
-                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] flex items-center justify-center text-white font-black text-lg shrink-0">
+                <div className="w-11 h-11 rounded-2xl bg-[#05122F] flex items-center justify-center text-white font-black text-lg shrink-0">
                   L
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-900">Director Técnico</p>
-                  <p className="text-xs text-[#0B5CFF] font-semibold">Leones de Cartagena FC</p>
+                  <p className="text-xs text-lime-700 font-semibold">Leones de Cartagena FC</p>
                 </div>
               </div>
             </div>

@@ -16,7 +16,7 @@ export default function ScoreRing({ score, size = 80, strokeWidth = 7, className
 
   const color =
     score >= 85 ? "#10B981" :
-    score >= 70 ? "#0B5CFF" :
+    score >= 70 ? "#84cc16" :
     score >= 55 ? "#F59E0B" :
     "#EF4444"
 

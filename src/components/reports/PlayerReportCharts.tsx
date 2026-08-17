@@ -12,7 +12,7 @@ export function SkillsRadarChart({ title, data }: { title: string; data: { subje
         <RadarChart data={data}>
           <PolarGrid stroke="#E2E8F0" />
           <PolarAngleAxis dataKey="subject" tick={{ fontSize: 11, fill: "#64748B" }} />
-          <Radar dataKey="value" stroke="#0B5CFF" fill="#0B5CFF" fillOpacity={0.15} strokeWidth={2} dot={{ r: 3, fill: "#0B5CFF", strokeWidth: 0 }} />
+          <Radar dataKey="value" stroke="#84cc16" fill="#84cc16" fillOpacity={0.15} strokeWidth={2} dot={{ r: 3, fill: "#84cc16", strokeWidth: 0 }} />
         </RadarChart>
       </ResponsiveContainer>
     </div>

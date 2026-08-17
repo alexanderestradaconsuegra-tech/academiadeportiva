@@ -40,7 +40,7 @@ export default function PlayerCard({ player, evaluation, isInjured, hasOverduePa
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden card-hover animate-fade-in">
       {/* Header gradient */}
-      <div className="h-14 md:h-20 bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] relative">
+      <div className="h-14 md:h-20 bg-[#05122F] relative">
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='white' fill-opacity='0.3'%3E%3Ccircle cx='20' cy='20' r='1'/%3E%3C/g%3E%3C/svg%3E\")" }} />
         <div className="absolute top-3 right-3 flex items-center gap-1.5">
           {hasOverduePayment && (
@@ -97,7 +97,7 @@ export default function PlayerCard({ player, evaluation, isInjured, hasOverduePa
 
         <Link
           href={`/players/${player.id}`}
-          className="flex items-center justify-center gap-2 w-full h-9 rounded-xl bg-[#0B5CFF] text-white text-xs font-semibold hover:bg-blue-700 transition-colors"
+          className="flex items-center justify-center gap-2 w-full h-9 rounded-xl bg-lime-400 text-[#05122F] text-xs font-semibold hover:bg-lime-700 transition-colors"
         >
           Ver perfil <ChevronRight size={14} />
         </Link>

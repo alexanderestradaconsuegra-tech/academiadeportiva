@@ -113,7 +113,7 @@ export default function CodesAdminPage() {
         {/* Create new code */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 mb-6">
           <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <Plus size={16} className="text-[#0B5CFF]" /> Generar nuevo código
+            <Plus size={16} className="text-lime-700 dark:text-lime-400" /> Generar nuevo código
           </h3>
           <div className="space-y-3 mb-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -122,13 +122,13 @@ export default function CodesAdminPage() {
                 value={newLabel}
                 onChange={e => setNewLabel(e.target.value)}
                 placeholder="Nombre academia / cliente (opcional)"
-                className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-800 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none"
+                className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-800 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none"
                 onKeyDown={e => e.key === "Enter" && !creating && createCode()}
               />
               <select
                 value={newCodeType}
                 onChange={e => setNewCodeType(e.target.value as 'demo' | 'payment')}
-                className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-800 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none"
+                className="h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-800 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none"
               >
                 <option value="demo">🎁 Demo (14 días gratis)</option>
                 <option value="payment">💳 Código de Pago</option>
@@ -136,7 +136,7 @@ export default function CodesAdminPage() {
               <button
                 onClick={createCode}
                 disabled={creating}
-                className="h-10 px-5 bg-[#0B5CFF] text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+                className="h-10 px-5 bg-lime-400 text-[#05122F] rounded-xl text-sm font-bold hover:bg-lime-700 transition-all disabled:opacity-60 flex items-center justify-center gap-2"
               >
                 {creating ? <RefreshCw size={14} className="animate-spin" /> : <KeyRound size={14} />}
                 Crear
@@ -177,7 +177,7 @@ export default function CodesAdminPage() {
                   </div>
                   <button
                     onClick={() => copyCode(c.code)}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-[#0B5CFF] hover:border-[#0B5CFF] transition-colors"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-lime-700 dark:hover:text-lime-400 hover:border-lime-600 dark:hover:border-lime-400 transition-colors"
                     title="Copiar código"
                   >
                     {copied === c.code ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}

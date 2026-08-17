@@ -32,7 +32,7 @@ export function trialReminderEmail(academyName: string, daysLeft: number): strin
         <p>Hola,</p>
         <p>Tu academia <strong>${academyName}</strong> tiene acceso gratuito a Metrikas por solo <strong>4 días más</strong>.</p>
         <p>Para continuar usando Metrikas después del período de prueba, necesitas activar tu suscripción.</p>
-        <a href="https://metrikas.pro/subscribe" style="display: inline-block; background: #0B5CFF; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px 0;">
+        <a href="https://metrikas.pro/subscribe" style="display: inline-block; background: #a3e635; color: #05122F; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px 0;">
           Activar suscripción ahora
         </a>
         <p style="color: #666; font-size: 14px;">Si tienes dudas, responde este email o contáctanos por WhatsApp.</p>
@@ -47,7 +47,7 @@ export function trialReminderEmail(academyName: string, daysLeft: number): strin
         <p>Hola,</p>
         <p>Tu academia <strong>${academyName}</strong> completó los 14 días de prueba gratuita.</p>
         <p>Para continuar usando Metrikas, activa tu suscripción ahora.</p>
-        <a href="https://metrikas.pro/subscribe" style="display: inline-block; background: #0B5CFF; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px 0;">
+        <a href="https://metrikas.pro/subscribe" style="display: inline-block; background: #a3e635; color: #05122F; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px 0;">
           Activar suscripción
         </a>
         <p style="color: #666; font-size: 14px;">Sin suscripción, tu cuenta se eliminará en 30 días.</p>

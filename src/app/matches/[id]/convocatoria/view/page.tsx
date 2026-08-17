@@ -31,7 +31,7 @@ export default function ConvocatoriaViewPage() {
     return (
       <AppShell>
         <div className="p-6">
-          <Link href="/matches" className="text-sm text-slate-500 hover:text-[#0B5CFF] flex items-center gap-1.5">
+          <Link href="/matches" className="text-sm text-slate-500 hover:text-lime-700 dark:hover:text-lime-400 flex items-center gap-1.5">
             <ArrowLeft size={15} /> Partidos
           </Link>
           <p className="text-slate-400 mt-10 text-center">Partido no encontrado</p>
@@ -44,7 +44,7 @@ export default function ConvocatoriaViewPage() {
     return (
       <AppShell>
         <div className="p-4 md:p-6 animate-fade-in">
-          <Link href={`/matches/${id}`} className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-[#0B5CFF] mb-6">
+          <Link href={`/matches/${id}`} className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-lime-700 dark:hover:text-lime-400 mb-6">
             <ArrowLeft size={15} /> Volver al partido
           </Link>
           <div className="flex flex-col items-center justify-center py-20 text-slate-400 dark:text-slate-500">
@@ -65,12 +65,12 @@ export default function ConvocatoriaViewPage() {
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in max-w-lg mx-auto space-y-4">
-        <Link href={`/matches/${id}`} className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-[#0B5CFF]">
+        <Link href={`/matches/${id}`} className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-lime-700 dark:hover:text-lime-400">
           <ArrowLeft size={15} /> Volver al partido
         </Link>
 
         {/* Match header */}
-        <div className="bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] rounded-2xl p-5 text-white">
+        <div className="bg-gradient-to-br from-[#05122F] to-[#0a2647] rounded-2xl p-5 text-white">
           <p className="text-blue-200/70 text-xs font-semibold uppercase tracking-wide mb-2">Convocatoria oficial</p>
           <h1 className="text-xl font-black">
             {match.is_home ? "vs" : "@"} {match.opponent}
@@ -91,7 +91,7 @@ export default function ConvocatoriaViewPage() {
                 <p className="text-sm font-bold text-slate-900 dark:text-white">¡Estás convocado/a!</p>
                 {myEntry?.position_label && (
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Posición: <span className="font-semibold text-[#0B5CFF]">{myEntry.position_label}</span>
+                    Posición: <span className="font-semibold text-lime-700 dark:text-lime-400">{myEntry.position_label}</span>
                   </p>
                 )}
               </div>
@@ -106,10 +106,10 @@ export default function ConvocatoriaViewPage() {
             </div>
 
             {myEntry?.instruction && (
-              <div className="mx-4 mb-4 flex items-start gap-2 bg-blue-50 dark:bg-blue-500/10 rounded-xl px-3 py-2.5">
-                <MessageSquare size={14} className="text-[#0B5CFF] mt-0.5 shrink-0" />
+              <div className="mx-4 mb-4 flex items-start gap-2 bg-lime-50 dark:bg-lime-500/10 rounded-xl px-3 py-2.5">
+                <MessageSquare size={14} className="text-lime-700 dark:text-lime-400 mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-xs font-semibold text-[#0B5CFF] mb-0.5">Instrucción del entrenador:</p>
+                  <p className="text-xs font-semibold text-lime-700 dark:text-lime-400 mb-0.5">Instrucción del entrenador:</p>
                   <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{myEntry.instruction}</p>
                 </div>
               </div>
@@ -199,7 +199,7 @@ export default function ConvocatoriaViewPage() {
                     >
                       <div className={cn(
                         "w-7 h-7 rounded-full border-2 flex items-center justify-center text-[10px] font-black text-white shadow-md",
-                        isMe ? "bg-amber-400 border-amber-200 scale-110" : "bg-[#0B5CFF] border-blue-300"
+                        isMe ? "bg-amber-400 border-amber-200 scale-110" : "bg-[#05122F] border-lime-300"
                       )}>
                         {player?.name?.charAt(0) ?? "?"}
                       </div>
@@ -213,7 +213,7 @@ export default function ConvocatoriaViewPage() {
               <p className="text-xs text-slate-400 text-center mt-2">
                 <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-amber-400 inline-block"/>Tú</span>
                 <span className="mx-2">·</span>
-                <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-[#0B5CFF] inline-block"/>Compañeros</span>
+                <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-[#05122F] inline-block"/>Compañeros</span>
               </p>
             </div>
           </div>
@@ -231,12 +231,12 @@ export default function ConvocatoriaViewPage() {
               const player = players.find(p => p.id === pp.player_id)
               const isMe = pp.player_id === myPlayerId
               return (
-                <div key={pp.player_id} className={cn("flex items-center gap-3 px-4 py-3", isMe ? "bg-blue-50/60 dark:bg-blue-500/5" : "")}>
+                <div key={pp.player_id} className={cn("flex items-center gap-3 px-4 py-3", isMe ? "bg-lime-50/60 dark:bg-lime-500/5" : "")}>
                   <img src={player?.photo_url || avatarUrl(player?.name ?? "?", pp.player_id)} alt={player?.name ?? "?"} className="w-9 h-9 rounded-xl object-cover bg-slate-100" />
                   <div className="flex-1 min-w-0">
-                    <p className={cn("text-sm font-semibold truncate", isMe ? "text-[#0B5CFF]" : "text-slate-800 dark:text-slate-100")}>
+                    <p className={cn("text-sm font-semibold truncate", isMe ? "text-lime-700 dark:text-lime-400" : "text-slate-800 dark:text-slate-100")}>
                       {player?.name ?? "Jugador"}
-                      {isMe && <span className="ml-1.5 text-xs font-normal text-[#0B5CFF]/60">(tú)</span>}
+                      {isMe && <span className="ml-1.5 text-xs font-normal text-lime-700/60 dark:text-lime-400/60">(tú)</span>}
                     </p>
                     {pp.position_label && <p className="text-xs text-slate-400 dark:text-slate-500">{pp.position_label}</p>}
                   </div>

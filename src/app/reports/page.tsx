@@ -72,7 +72,7 @@ export default function ReportsPage() {
             <div className="relative">
               <select
                 value={selectedId} onChange={e => setSelectedId(e.target.value)}
-                className="h-9 pl-3 pr-8 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer appearance-none"
+                className="h-9 pl-3 pr-8 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 outline-none cursor-pointer appearance-none"
               >
                 {players.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
@@ -87,7 +87,7 @@ export default function ReportsPage() {
         {/* Report card */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden mb-6 print:border-none">
           {/* Header */}
-          <div className="bg-gradient-to-r from-[#071B4D] to-[#0B5CFF] px-4 py-6 md:px-8 md:py-8 relative overflow-hidden">
+          <div className="bg-gradient-to-r from-[#05122F] to-[#0a2647] px-4 py-6 md:px-8 md:py-8 relative overflow-hidden">
             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 30%, white 1px, transparent 1px)", backgroundSize: "35px 35px" }} />
             <div className="flex items-center gap-6 relative z-10">
               <img src={player.photo_url} alt={player.name} className="w-20 h-20 rounded-2xl border-2 border-white/30 shadow-xl object-cover" />
@@ -176,10 +176,10 @@ export default function ReportsPage() {
 
                 {/* Objective */}
                 {player.objective && (
-                  <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-4 border border-blue-100 dark:border-blue-500/20">
+                  <div className="bg-lime-50 dark:bg-lime-500/10 rounded-xl p-4 border border-lime-100 dark:border-lime-500/20">
                     <div className="flex items-center gap-2 mb-2">
-                      <Target size={14} className="text-[#0B5CFF]" />
-                      <h3 className="text-xs font-bold text-[#0B5CFF] uppercase tracking-wide">{t("sportsObjective")}</h3>
+                      <Target size={14} className="text-lime-700 dark:text-lime-400" />
+                      <h3 className="text-xs font-bold text-lime-700 dark:text-lime-400 uppercase tracking-wide">{t("sportsObjective")}</h3>
                     </div>
                     <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{player.objective}</p>
                   </div>
@@ -191,7 +191,7 @@ export default function ReportsPage() {
                   <div className="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-4 border border-slate-100 dark:border-slate-800 space-y-2">
                     {(weaknesses.length > 0 ? weaknesses : strengths).slice(0, 3).map((a, i) => (
                       <div key={i} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
-                        <span className="text-[#0B5CFF] font-bold mt-0.5">→</span>
+                        <span className="text-lime-700 dark:text-lime-400 font-bold mt-0.5">→</span>
                         {weaknesses.length > 0
                           ? t("reinforceRecommendation").replace("{attr}", a.label.toLowerCase()).replace("{value}", String(a.value))
                           : t("maintainRecommendation").replace("{attr}", a.label.toLowerCase()).replace("{value}", String(a.value))
@@ -200,7 +200,7 @@ export default function ReportsPage() {
                     ))}
                     {player.notes && (
                       <div className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300 pt-1 border-t border-slate-200 dark:border-slate-700">
-                        <span className="text-[#0B5CFF] font-bold mt-0.5">→</span>
+                        <span className="text-lime-700 dark:text-lime-400 font-bold mt-0.5">→</span>
                         {player.notes}
                       </div>
                     )}
@@ -242,7 +242,7 @@ export default function ReportsPage() {
                 )}
 
                 {/* Stats summary */}
-                <div className="bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] rounded-xl p-5 text-white">
+                <div className="bg-[#05122F] rounded-xl p-5 text-white">
                   <h3 className="text-xs font-semibold text-blue-200 uppercase tracking-widest mb-4">{t("summary")}</h3>
                   <div className="space-y-3">
                     {[

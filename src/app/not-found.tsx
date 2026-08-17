@@ -10,8 +10,8 @@ export default function NotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950 px-4">
       <div className="max-w-sm w-full text-center">
-        <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center mx-auto mb-5">
-          <Trophy size={28} className="text-[#0B5CFF]" />
+        <div className="w-16 h-16 rounded-2xl bg-lime-50 dark:bg-lime-500/10 flex items-center justify-center mx-auto mb-5">
+          <Trophy size={28} className="text-lime-700 dark:text-lime-400" />
         </div>
         <h1 className="text-lg font-bold text-slate-900 dark:text-white mb-1.5">{t("pageNotFound")}</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
@@ -19,7 +19,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B5CFF] text-white text-sm font-semibold hover:bg-[#0a4fe0] transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-lime-400 text-[#05122F] text-sm font-semibold hover:bg-lime-500 transition-colors"
         >
           {t("backToHome")}
         </Link>

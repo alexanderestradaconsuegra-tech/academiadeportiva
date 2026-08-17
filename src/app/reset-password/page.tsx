@@ -39,7 +39,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#071B4D] via-[#0B2E8A] to-[#0B5CFF] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[#05122F] to-[#0a2647] flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur mx-auto flex items-center justify-center mb-4">
@@ -60,7 +60,7 @@ export default function ResetPasswordPage() {
             </div>
           ) : !ready ? (
             <div className="text-center py-6">
-              <svg className="w-8 h-8 animate-spin text-[#0B5CFF] mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 animate-spin text-lime-700 dark:text-lime-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
@@ -82,7 +82,7 @@ export default function ResetPasswordPage() {
                     <input
                       type={showPass ? "text" : "password"} value={password}
                       onChange={e => setPassword(e.target.value)} required minLength={6}
-                      className="w-full h-11 pl-10 pr-11 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                      className="w-full h-11 pl-10 pr-11 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-500 focus:ring-2 focus:ring-lime-100 dark:focus:ring-lime-500/20 outline-none transition-all"
                     />
                     <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                       {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -98,7 +98,7 @@ export default function ResetPasswordPage() {
                     <input
                       type={showPass ? "text" : "password"} value={confirm}
                       onChange={e => setConfirm(e.target.value)} required
-                      className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                      className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-500 focus:ring-2 focus:ring-lime-100 dark:focus:ring-lime-500/20 outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -109,7 +109,7 @@ export default function ResetPasswordPage() {
                 )}
                 <button
                   type="submit" disabled={loading}
-                  className="w-full h-11 bg-[#0B5CFF] text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-200 disabled:opacity-60 flex items-center justify-center gap-2"
+                  className="w-full h-11 bg-lime-400 text-[#05122F] rounded-xl font-semibold text-sm hover:bg-lime-700 transition-all shadow-md shadow-lime-200 disabled:opacity-60 flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Guardando...</>

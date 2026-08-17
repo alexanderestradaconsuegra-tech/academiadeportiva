@@ -65,7 +65,7 @@ function NotificationBroadcast() {
           <select
             value={category}
             onChange={e => setCategory(e.target.value)}
-            className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 outline-none focus:border-[#0B5CFF] w-full sm:w-auto"
+            className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 outline-none focus:border-lime-600 dark:focus:border-lime-400 w-full sm:w-auto"
           >
             <option value="all">{t("allPlayersOption")}</option>
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -336,7 +336,7 @@ function CoachManager() {
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
       <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
-        <GraduationCap size={15} className="text-[#0B5CFF]" /> Entrenadores por categoría
+        <GraduationCap size={15} className="text-lime-700 dark:text-lime-400" /> Entrenadores por categoría
       </h3>
       <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
         Cada entrenador asistente solo ve jugadores, entrenamientos y partidos de su categoría.
@@ -374,7 +374,7 @@ function CoachManager() {
             <select
               value={form.category}
               onChange={e => setForm(f => ({ ...f, category: e.target.value as Category }))}
-              className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 outline-none focus:border-[#0B5CFF] w-full"
+              className="h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 outline-none focus:border-lime-600 dark:focus:border-lime-400 w-full"
             >
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -454,7 +454,7 @@ function MercadoPagoConnect() {
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
       <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-1.5">
-        <CreditCard size={15} className="text-[#0B5CFF]" /> Cobro de mensualidades con MercadoPago
+        <CreditCard size={15} className="text-lime-700 dark:text-lime-400" /> Cobro de mensualidades con MercadoPago
       </h3>
       <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
         Conecta tu propia cuenta de MercadoPago para que jugadores y apoderados puedan pagar sus mensualidades
@@ -486,7 +486,7 @@ function MercadoPagoConnect() {
             href="https://www.mercadopago.cl/developers/panel/app"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-[#0B5CFF] hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-lime-700 dark:text-lime-400 hover:underline"
           >
             Abrir panel de desarrolladores de MercadoPago <ExternalLink size={12} />
           </a>
@@ -592,7 +592,7 @@ export default function SettingsPage() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800 mb-6 flex items-center justify-between flex-wrap gap-3">
             <div>
               <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-1.5">
-                <Languages size={14} className="text-[#0B5CFF]" /> {t("languageTitle")}
+                <Languages size={14} className="text-lime-700 dark:text-lime-400" /> {t("languageTitle")}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">{t("languageSubtitle")}</p>
             </div>

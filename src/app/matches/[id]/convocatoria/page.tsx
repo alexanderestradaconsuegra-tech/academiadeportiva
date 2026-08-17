@@ -234,7 +234,7 @@ function FootballPitch({ pitchPlayers, players, onMove }: {
             style={{ left: `${pp.x}%`, top: `${pp.y}%` }}
             onPointerDown={onMove ? (e) => handlePointerDown(pp.player_id, e) : undefined}
           >
-            <div className="w-9 h-9 rounded-full bg-[#0B5CFF] border-2 border-white shadow-lg flex items-center justify-center text-white text-[9px] font-black pointer-events-none">
+            <div className="w-9 h-9 rounded-full bg-[#05122F] border-2 border-white shadow-lg flex items-center justify-center text-white text-[9px] font-black pointer-events-none">
               {pp.position_label.substring(0, 3)}
             </div>
             <span className="text-white text-[8px] font-bold bg-black/50 px-1.5 py-px rounded-full max-w-[3.5rem] truncate leading-none pointer-events-none">
@@ -414,7 +414,7 @@ export default function ConvocatoriaPage() {
     return (
       <AppShell>
         <div className="p-6">
-          <Link href="/matches" className="text-sm text-slate-500 hover:text-[#0B5CFF] flex items-center gap-1.5">
+          <Link href="/matches" className="text-sm text-slate-500 hover:text-lime-700 dark:hover:text-lime-400 flex items-center gap-1.5">
             <ArrowLeft size={15} /> Partidos
           </Link>
           <p className="text-slate-400 mt-8 text-center">Partido no encontrado</p>
@@ -443,8 +443,8 @@ export default function ConvocatoriaPage() {
             onClick={handleSave}
             disabled={saving || selectedIds.size === 0}
             className={cn(
-              "flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-50",
-              saved ? "bg-emerald-500" : "bg-[#0B5CFF] hover:bg-blue-700"
+              "flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-semibold transition-all disabled:opacity-50",
+              saved ? "bg-emerald-500 text-white" : "bg-lime-400 text-[#05122F] hover:bg-lime-700"
             )}
           >
             {saved ? <Check size={15} /> : <Send size={15} />}
@@ -503,12 +503,12 @@ export default function ConvocatoriaPage() {
             <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden mb-4">
               <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-2">
-                  <Users size={15} className="text-[#0B5CFF]" />
+                  <Users size={15} className="text-lime-700 dark:text-lime-400" />
                   <span className="text-sm font-bold text-slate-900 dark:text-white">
                     Jugadores {match.category ? `· ${match.category}` : ""}
                   </span>
                 </div>
-                <span className="text-xs font-semibold text-[#0B5CFF] bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded-lg">
+                <span className="text-xs font-semibold text-lime-700 dark:text-lime-400 bg-lime-50 dark:bg-lime-500/10 px-2 py-0.5 rounded-lg">
                   {selectedIds.size} convocados
                 </span>
               </div>
@@ -523,9 +523,9 @@ export default function ConvocatoriaPage() {
                     const confirmed = pp ? existing?.players.find(ep => ep.player_id === player.id)?.confirmed ?? null : null
 
                     return (
-                      <div key={player.id} className={cn("flex items-center gap-3 px-4 py-3 transition-colors", selected ? "bg-blue-50/50 dark:bg-blue-500/5" : "hover:bg-slate-50 dark:hover:bg-slate-800/60")}>
-                        <button onClick={() => togglePlayer(player.id)} className={cn("w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors", selected ? "bg-[#0B5CFF] border-[#0B5CFF]" : "border-slate-300 dark:border-slate-600")}>
-                          {selected && <Check size={11} className="text-white" strokeWidth={3} />}
+                      <div key={player.id} className={cn("flex items-center gap-3 px-4 py-3 transition-colors", selected ? "bg-lime-50/50 dark:bg-lime-500/5" : "hover:bg-slate-50 dark:hover:bg-slate-800/60")}>
+                        <button onClick={() => togglePlayer(player.id)} className={cn("w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors", selected ? "bg-lime-400 border-lime-400" : "border-slate-300 dark:border-slate-600")}>
+                          {selected && <Check size={11} className="text-[#05122F]" strokeWidth={3} />}
                         </button>
                         <img src={player.photo_url || avatarUrl(player.name, player.id)} alt={player.name} className="w-9 h-9 rounded-xl object-cover shrink-0 bg-slate-100" />
                         <div className="flex-1 min-w-0">
@@ -548,7 +548,7 @@ export default function ConvocatoriaPage() {
                             className={cn(
                               "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
                               pp?.instruction
-                                ? "bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF]"
+                                ? "bg-lime-50 dark:bg-lime-500/10 text-lime-700 dark:text-lime-400"
                                 : "text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
                             )}
                             title="Instrucción individual"
@@ -573,7 +573,7 @@ export default function ConvocatoriaPage() {
                 onChange={e => setNotes(e.target.value)}
                 placeholder="Instrucciones tácticas, concentración, horario de llegada…"
                 rows={3}
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-[#0B5CFF] outline-none resize-none transition-colors"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-lime-600 dark:focus:border-lime-400 outline-none resize-none transition-colors"
               />
             </div>
           </>
@@ -598,7 +598,7 @@ export default function ConvocatoriaPage() {
                       className={cn(
                         "flex-1 h-9 rounded-xl text-sm font-bold transition-colors",
                         activeFormat === fmt
-                          ? "bg-[#0B5CFF] text-white"
+                          ? "bg-lime-400 text-[#05122F]"
                           : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
                       )}
                     >
@@ -625,7 +625,7 @@ export default function ConvocatoriaPage() {
                           className={cn(
                             "w-full text-left px-4 py-3 text-sm font-semibold transition-colors",
                             selectedFormation === key
-                              ? "bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF]"
+                              ? "bg-lime-50 dark:bg-lime-500/10 text-lime-700 dark:text-lime-400"
                               : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
                           )}
                         >
@@ -653,7 +653,7 @@ export default function ConvocatoriaPage() {
                         const player = players.find(p => p.id === pp.player_id)
                         return (
                           <div key={pp.id} className="flex items-center gap-3 px-3 py-2">
-                            <span className="w-8 text-center text-[11px] font-black text-[#0B5CFF] bg-blue-50 dark:bg-blue-500/10 rounded-lg py-0.5">{pp.position_label}</span>
+                            <span className="w-8 text-center text-[11px] font-black text-lime-700 dark:text-lime-400 bg-lime-50 dark:bg-lime-500/10 rounded-lg py-0.5">{pp.position_label}</span>
                             <span className="text-sm text-slate-700 dark:text-slate-200 font-medium">{player?.name ?? "—"}</span>
                           </div>
                         )
@@ -671,8 +671,8 @@ export default function ConvocatoriaPage() {
           onClick={handleSave}
           disabled={saving || selectedIds.size === 0}
           className={cn(
-            "w-full h-11 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50",
-            saved ? "bg-emerald-500" : "bg-[#0B5CFF] hover:bg-blue-700"
+            "w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50",
+            saved ? "bg-emerald-500 text-white" : "bg-lime-400 text-[#05122F] hover:bg-lime-700"
           )}
         >
           {saved ? <Check size={16} /> : <Send size={16} />}
@@ -702,13 +702,13 @@ export default function ConvocatoriaPage() {
                 autoFocus
                 placeholder="Tarea específica para este jugador…"
                 rows={4}
-                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:border-[#0B5CFF] outline-none resize-none"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:border-lime-600 dark:focus:border-lime-400 outline-none resize-none"
               />
               <div className="flex gap-2">
                 <button onClick={() => setEditingId(null)} className="flex-1 h-9 rounded-xl border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                   Cancelar
                 </button>
-                <button onClick={saveInstruction} className="flex-1 h-9 rounded-xl bg-[#0B5CFF] text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
+                <button onClick={saveInstruction} className="flex-1 h-9 rounded-xl bg-lime-400 text-sm font-semibold text-[#05122F] hover:bg-lime-700 transition-colors">
                   Guardar
                 </button>
               </div>

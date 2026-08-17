@@ -30,7 +30,7 @@ export default function ExerciseLibraryPage() {
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
-        <Link href="/activities" className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-[#0B5CFF] mb-4">
+        <Link href="/activities" className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-lime-700 dark:hover:text-lime-400 mb-4">
           <ArrowLeft size={15} /> {t("backToActivities")}
         </Link>
         <PageHeader title="Biblioteca de ejercicios" subtitle="Agrega, edita o elimina ejercicios por categoría. Cada academia tiene su propia lista." />
@@ -67,7 +67,7 @@ export default function ExerciseLibraryPage() {
                         <input
                           defaultValue={ex.name}
                           onBlur={e => { const v = e.target.value.trim(); if (v && v !== ex.name) updateExercise(ex.id, { name: v }) }}
-                          className="w-44 shrink-0 h-8 px-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none text-slate-800 dark:text-slate-200"
+                          className="w-44 shrink-0 h-8 px-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-medium bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 outline-none text-slate-800 dark:text-slate-200"
                         />
                       ) : (
                         <p className="text-sm font-medium text-slate-800 dark:text-slate-200 w-44 shrink-0 truncate">{ex.name}</p>
@@ -79,7 +79,7 @@ export default function ExerciseLibraryPage() {
                             placeholder={t("pasteYoutubeLink")}
                             defaultValue={ex.video_url}
                             onBlur={e => { if (e.target.value.trim() !== ex.video_url) updateExercise(ex.id, { video_url: e.target.value.trim() }) }}
-                            className="flex-1 h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none"
+                            className="flex-1 h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 outline-none"
                           />
                           <button onClick={() => deleteExercise(ex.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-red-50 hover:text-red-500 transition-colors shrink-0" title={t("deleteExercise")}>
                             <Trash2 size={14} />
@@ -100,7 +100,7 @@ export default function ExerciseLibraryPage() {
                       value={newName[category] ?? ""}
                       onChange={e => setNewName(n => ({ ...n, [category]: e.target.value }))}
                       onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(category) } }}
-                      className="flex-1 h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none"
+                      className="flex-1 h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 outline-none"
                     />
                     <Button size="sm" variant="secondary" onClick={() => handleAdd(category)}>
                       <Plus size={13} /> {t("add")}

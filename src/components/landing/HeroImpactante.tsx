@@ -14,7 +14,7 @@ export default function HeroImpactante() {
   return (
     <section className="relative overflow-hidden bg-[#05122F] text-white">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#071B4D] via-[#05122F] to-[#020818]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#05122F] via-[#05122F] to-[#020818]" />
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-lime-400/8 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-lime-400/5 rounded-full blur-3xl pointer-events-none" />
 

@@ -423,7 +423,7 @@ export default function PlayerProfilePage() {
         <div className="flex items-center justify-center h-96 text-slate-400 dark:text-slate-500">
           <div className="text-center">
             <p className="text-2xl font-bold mb-2">{t("playerNotFound")}</p>
-            <Link href="/players" className="text-[#0B5CFF] text-sm">{t("backToPlayers")}</Link>
+            <Link href="/players" className="text-lime-700 dark:text-lime-400 text-sm">{t("backToPlayers")}</Link>
           </div>
         </div>
       </AppShell>
@@ -454,7 +454,7 @@ export default function PlayerProfilePage() {
     <AppShell>
       <div className="animate-fade-in w-full min-w-0 max-w-full overflow-x-hidden">
         {/* Hero header */}
-        <div className="bg-gradient-to-r from-[#071B4D] via-[#0A2E8A] to-[#0B5CFF] px-4 md:px-6 xl:px-8 pt-4 md:pt-6 pb-20 md:pb-24 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-[#05122F] via-[#081D42] to-[#0a2647] px-4 md:px-6 xl:px-8 pt-4 md:pt-6 pb-20 md:pb-24 relative overflow-hidden">
           <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
           <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-[#F5F7FB]/30 to-transparent" />
 
@@ -529,8 +529,8 @@ export default function PlayerProfilePage() {
               { icon: Star, label: t("dominantLeg"), value: e.dominantFoot(player.dominant_foot) },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="bg-white dark:bg-slate-900 rounded-2xl p-2.5 md:p-4 border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-2 md:gap-3">
-                <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
-                  <Icon size={14} className="text-[#0B5CFF]" />
+                <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-lime-50 dark:bg-lime-500/10 flex items-center justify-center shrink-0">
+                  <Icon size={14} className="text-lime-700 dark:text-lime-400" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[9px] md:text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wide truncate">{label}</p>
@@ -547,7 +547,7 @@ export default function PlayerProfilePage() {
                 href={isCoach
                   ? `/matches/${upcomingConvocatoria.match.id}/convocatoria`
                   : `/matches/${upcomingConvocatoria.match.id}/convocatoria/view`}
-                className="flex items-center gap-3 p-4 rounded-2xl bg-gradient-to-r from-[#071B4D] to-[#0B5CFF] text-white hover:opacity-95 transition-opacity"
+                className="flex items-center gap-3 p-4 rounded-2xl bg-[#05122F] text-white hover:opacity-95 transition-opacity"
               >
                 <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0 text-xl">⚽</div>
                 <div className="flex-1 min-w-0">
@@ -751,7 +751,7 @@ export default function PlayerProfilePage() {
                   <div className="space-y-2">
                     {playerMatches.map(({ match, stat }) => (
                       <Link key={stat.id} href={`/matches/${match.id}`} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
-                        <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF] flex items-center justify-center shrink-0">
+                        <div className="w-8 h-8 rounded-xl bg-lime-50 dark:bg-lime-500/10 text-lime-700 dark:text-lime-400 flex items-center justify-center shrink-0">
                           <Trophy size={14} />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -773,7 +773,7 @@ export default function PlayerProfilePage() {
               <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <FlaskConical size={15} className="text-[#0B5CFF]" />
+                    <FlaskConical size={15} className="text-lime-700 dark:text-lime-400" />
                     <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("physicalTests")}</h2>
                   </div>
                   {isCoach && (
@@ -797,7 +797,7 @@ export default function PlayerProfilePage() {
                           return (
                             <div key={cfg.key} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
                               <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide truncate">{t(cfg.labelKey)}</p>
-                              <p className="text-lg font-black text-[#0B5CFF] mt-0.5">
+                              <p className="text-lg font-black text-lime-700 dark:text-lime-400 mt-0.5">
                                 {best.value} <span className="text-xs font-normal text-slate-400 dark:text-slate-500">{cfg.unit}</span>
                               </p>
                             </div>
@@ -870,7 +870,7 @@ export default function PlayerProfilePage() {
               {upcomingTrainings.length > 0 && (
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2 mb-3">
-                    <CalendarDays size={15} className="text-[#0B5CFF]" />
+                    <CalendarDays size={15} className="text-lime-700 dark:text-lime-400" />
                     <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("upcomingTrainings")}</h2>
                   </div>
                   <div className="space-y-2">
@@ -981,7 +981,7 @@ export default function PlayerProfilePage() {
                       <CreditCard size={15} className={overduePayments.length > 0 ? "text-amber-500" : "text-emerald-500"} />
                       <h2 className="text-sm font-bold text-slate-900 dark:text-white">{tp("paymentStatus")}</h2>
                     </div>
-                    <Link href={`/payments?player=${id}`} className="text-[10px] text-[#0B5CFF] font-semibold hover:underline">{tp("viewPayments")}</Link>
+                    <Link href={`/payments?player=${id}`} className="text-[10px] text-lime-700 dark:text-lime-400 font-semibold hover:underline">{tp("viewPayments")}</Link>
                   </div>
                   {overduePayments.length === 0 ? (
                     <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20">
@@ -1041,7 +1041,7 @@ export default function PlayerProfilePage() {
 
               {/* Best mark */}
               {bestActivity && (
-                <div className="bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] rounded-2xl p-5 text-white">
+                <div className="bg-[#05122F] rounded-2xl p-5 text-white">
                   <div className="flex items-center gap-2 mb-3">
                     <TrendingUp size={16} className="text-blue-200" />
                     <span className="text-xs font-semibold text-blue-200 uppercase tracking-wide">{t("bestPersonalMark")}</span>
@@ -1090,7 +1090,7 @@ export default function PlayerProfilePage() {
               {sessions.length > 0 && (
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2 mb-3">
-                    <ActivityIcon size={15} className="text-[#0B5CFF]" />
+                    <ActivityIcon size={15} className="text-lime-700 dark:text-lime-400" />
                     <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("latestLiveSessions")}</h2>
                   </div>
                   {sessions.slice(0, 2).map(s => (
@@ -1108,7 +1108,7 @@ export default function PlayerProfilePage() {
                       </div>
                     </div>
                   ))}
-                  <Link href="/health" className="mt-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#0B5CFF] hover:underline">
+                  <Link href="/health" className="mt-3 flex items-center justify-center gap-1.5 text-xs font-semibold text-lime-700 dark:text-lime-400 hover:underline">
                     {t("viewLiveMonitor")}
                   </Link>
                 </div>
@@ -1140,12 +1140,12 @@ export default function PlayerProfilePage() {
                         </div>
                       ))}
                       {isCoach && (
-                        <Link href="/heatmap" className="mt-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#0B5CFF] hover:underline pt-1">
+                        <Link href="/heatmap" className="mt-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-lime-700 dark:text-lime-400 hover:underline pt-1">
                           Ver mapa de calor →
                         </Link>
                       )}
                       {isOwnProfile && (
-                        <Link href="/health" className="mt-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#0B5CFF] hover:underline pt-1">
+                        <Link href="/health" className="mt-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-lime-700 dark:text-lime-400 hover:underline pt-1">
                           Ver datos de salud →
                         </Link>
                       )}
@@ -1220,18 +1220,18 @@ export default function PlayerProfilePage() {
               {/* Quick actions */}
               {isCoach && (
                 <div className="space-y-2">
-                  <Link href="/activities" className="flex items-center gap-3 p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center group-hover:bg-[#0B5CFF] transition-colors">
-                      <Dumbbell size={16} className="text-[#0B5CFF] group-hover:text-white transition-colors" />
+                  <Link href="/activities" className="flex items-center gap-3 p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-lime-200 hover:bg-lime-50/50 transition-all group">
+                    <div className="w-9 h-9 rounded-xl bg-lime-50 dark:bg-lime-500/10 flex items-center justify-center group-hover:bg-lime-400 transition-colors">
+                      <Dumbbell size={16} className="text-lime-700 dark:text-lime-400 group-hover:text-[#05122F] transition-colors" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-slate-900 dark:text-white">{t("logActivity")}</p>
                       <p className="text-xs text-slate-400 dark:text-slate-500">{t("addNewTraining")}</p>
                     </div>
                   </Link>
-                  <Link href={`/reports?player=${id}`} className="flex items-center gap-3 p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center group-hover:bg-[#0B5CFF] transition-colors">
-                      <Target size={16} className="text-[#0B5CFF] group-hover:text-white transition-colors" />
+                  <Link href={`/reports?player=${id}`} className="flex items-center gap-3 p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-lime-200 hover:bg-lime-50/50 transition-all group">
+                    <div className="w-9 h-9 rounded-xl bg-lime-50 dark:bg-lime-500/10 flex items-center justify-center group-hover:bg-lime-400 transition-colors">
+                      <Target size={16} className="text-lime-700 dark:text-lime-400 group-hover:text-[#05122F] transition-colors" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-slate-900 dark:text-white">{t("viewReport")}</p>
@@ -1308,7 +1308,7 @@ export default function PlayerProfilePage() {
                   <select
                     value={injuryForm.body_part}
                     onChange={ev => setInjuryForm(f => ({ ...f, body_part: ev.target.value }))}
-                    className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-[#0B5CFF] outline-none"
+                    className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-lime-600 dark:focus:border-lime-400 outline-none"
                     required
                   >
                     {BODY_PARTS.map(b => <option key={b.key} value={b.key}>{b.label[lang]}</option>)}
@@ -1319,7 +1319,7 @@ export default function PlayerProfilePage() {
                   <select
                     value={injuryForm.injury_type}
                     onChange={ev => setInjuryForm(f => ({ ...f, injury_type: ev.target.value }))}
-                    className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-[#0B5CFF] outline-none"
+                    className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-lime-600 dark:focus:border-lime-400 outline-none"
                     required
                   >
                     {INJURY_TYPES.map(ty => <option key={ty.key} value={ty.key}>{ty.label[lang]}</option>)}
@@ -1366,7 +1366,7 @@ export default function PlayerProfilePage() {
                   <select
                     value={testForm.test_type}
                     onChange={ev => setTestForm(f => ({ ...f, test_type: ev.target.value }))}
-                    className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-[#0B5CFF] outline-none"
+                    className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-lime-600 dark:focus:border-lime-400 outline-none"
                     required
                   >
                     {TEST_CONFIGS.map(cfg => (

@@ -119,7 +119,7 @@ export default function InteractivePitchBuilder() {
               onClick={() => setFormation(k)}
               className={`h-9 px-4 rounded-xl text-sm font-black tracking-wider transition-all ${
                 formation === k
-                  ? "bg-gradient-to-br from-[#0B5CFF] to-blue-700 text-white shadow-lg shadow-blue-900/40"
+                  ? "bg-gradient-to-br from-lime-400 to-lime-700 text-[#05122F] shadow-lg shadow-lime-900/40"
                   : "bg-white/5 text-blue-100/60 hover:bg-white/10 border border-white/10"
               }`}
             >

@@ -265,8 +265,8 @@ export default function HeatmapPage() {
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
         <PageHeader title={t("pageTitle")} subtitle={t("pageSubtitle")} />
 
-        <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-2xl p-4 mb-6 flex items-start gap-3">
-          <Info size={16} className="text-[#0B5CFF] mt-0.5 shrink-0" />
+        <div className="bg-lime-50 dark:bg-lime-500/10 border border-lime-100 dark:border-lime-500/20 rounded-2xl p-4 mb-6 flex items-start gap-3">
+          <Info size={16} className="text-lime-700 dark:text-lime-400 mt-0.5 shrink-0" />
           <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
             {t("infoBanner")}
           </p>
@@ -424,7 +424,7 @@ export default function HeatmapPage() {
                   className={cn(
                     "flex items-center gap-3 p-3 rounded-xl border transition-colors",
                     viewSession === s.label
-                      ? "border-[#0B5CFF] bg-blue-50/60 dark:bg-blue-500/10"
+                      ? "border-lime-600 dark:border-lime-400 bg-lime-50/60 dark:bg-lime-500/10"
                       : "border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60"
                   )}
                 >

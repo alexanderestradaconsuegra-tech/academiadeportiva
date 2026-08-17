@@ -144,7 +144,7 @@ export default function CalendarPage() {
                   <div className="divide-y divide-slate-50 dark:divide-slate-800">
                     {past.map(tr => (
                       <div key={tr.id} className="flex items-center gap-4 px-5 py-4 opacity-75">
-                        <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF] flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-lime-50 dark:bg-lime-500/10 text-lime-700 dark:text-lime-400 flex items-center justify-center shrink-0">
                           <CalendarDays size={18} />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -266,7 +266,7 @@ function TrainingRow({ t: training, isPast, attendance, onEdit, onDelete, onAtte
   const declinedCount = attendance.filter(a => a.rsvp === "declined").length
   return (
     <div className={cn("flex items-center gap-4 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors", isPast && "opacity-75")}>
-      <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF] flex items-center justify-center shrink-0">
+      <div className="w-10 h-10 rounded-xl bg-lime-50 dark:bg-lime-500/10 text-lime-700 dark:text-lime-400 flex items-center justify-center shrink-0">
         <CalendarDays size={18} />
       </div>
       <div className="flex-1 min-w-0">
@@ -317,7 +317,7 @@ function PlayerTrainingRow({ training, rsvp, onRsvp }: {
       rsvp === "declined" ? "border-red-200 dark:border-red-500/20" :
       "border-slate-100 dark:border-slate-800"
     )}>
-      <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF] flex items-center justify-center shrink-0">
+      <div className="w-10 h-10 rounded-xl bg-lime-50 dark:bg-lime-500/10 text-lime-700 dark:text-lime-400 flex items-center justify-center shrink-0">
         <CalendarDays size={18} />
       </div>
       <div className="flex-1 min-w-0">

@@ -269,7 +269,7 @@ export default function PaymentsPage() {
     setShowFeeSettings(false)
   }
 
-  const selectCls = "h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer"
+  const selectCls = "h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 outline-none cursor-pointer"
 
   const ownPayments = useMemo(() => {
     if (!ownPlayerId) return []
@@ -429,7 +429,7 @@ export default function PaymentsPage() {
         {/* Monthly fee banner */}
         {isCoach && teamSettings?.monthly_fee && missingMonthlyFee.length > 0 && (
           <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-2xl p-4 mb-5 flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-[#0B5CFF] flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-[#05122F] flex items-center justify-center shrink-0">
               <RefreshCw size={18} className="text-white" />
             </div>
             <div className="flex-1 min-w-0">
@@ -503,7 +503,7 @@ export default function PaymentsPage() {
                             aria-label="Motivo del rechazo"
                             value={rejectDrafts[p.id] ?? ""}
                             onChange={e => setRejectDrafts(d => ({ ...d, [p.id]: e.target.value }))}
-                            className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 outline-none focus:border-[#0B5CFF] flex-1 min-w-32"
+                            className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 outline-none focus:border-lime-600 dark:focus:border-lime-400 flex-1 min-w-32"
                           />
                           <button
                             onClick={() => handleReject(p.id)}
@@ -562,7 +562,7 @@ export default function PaymentsPage() {
             <input
               type="text" placeholder="Buscar alumno..." aria-label="Buscar alumno" value={search}
               onChange={ev => setSearch(ev.target.value)}
-              className="w-full h-9 pl-9 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none"
+              className="w-full h-9 pl-9 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 outline-none"
             />
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -668,7 +668,7 @@ export default function PaymentsPage() {
                       >
                         <Trash2 size={13} />
                       </button>
-                      <Link href={`/players/${p.player_id}`} aria-label="Ver jugador" className="w-11 h-11 rounded-lg flex items-center justify-center text-slate-400 hover:text-[#0B5CFF] hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors">
+                      <Link href={`/players/${p.player_id}`} aria-label="Ver jugador" className="w-11 h-11 rounded-lg flex items-center justify-center text-slate-400 hover:text-lime-700 dark:hover:text-lime-400 hover:bg-lime-50 dark:hover:bg-lime-500/10 transition-colors">
                         <ChevronRight size={13} />
                       </Link>
                     </div>
@@ -731,7 +731,7 @@ export default function PaymentsPage() {
                 <select
                   value={form.player_id}
                   onChange={ev => setForm(f => ({ ...f, player_id: ev.target.value }))}
-                  className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-[#0B5CFF] outline-none"
+                  className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-lime-600 dark:focus:border-lime-400 outline-none"
                   required
                 >
                   <option value="">—</option>
@@ -743,7 +743,7 @@ export default function PaymentsPage() {
                 <select
                   value={form.concept}
                   onChange={ev => setForm(f => ({ ...f, concept: ev.target.value as Concept }))}
-                  className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-[#0B5CFF] outline-none"
+                  className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-lime-600 dark:focus:border-lime-400 outline-none"
                 >
                   {CONCEPTS.map(c => <option key={c} value={c}>{t(CONCEPT_KEYS[c])}</option>)}
                 </select>

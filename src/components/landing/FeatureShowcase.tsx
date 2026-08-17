@@ -45,16 +45,16 @@ function CalendarScreen() {
       </div>
       <div className="flex gap-1 px-3 py-2">
         {[{d:"L",n:"21",act:true},{d:"M",n:"22"},{d:"X",n:"23",ev:true},{d:"J",n:"24"},{d:"V",n:"25"},{d:"S",n:"26",ev:true},{d:"D",n:"27"}].map(day=>(
-          <div key={day.n} className={`flex-1 flex flex-col items-center py-1.5 rounded-xl ${day.act ? "bg-[#0B5CFF]" : ""}`}>
-            <p className={`text-[7px] font-semibold ${day.act ? "text-blue-100" : "text-slate-400"}`}>{day.d}</p>
-            <p className={`text-[10px] font-bold ${day.act ? "text-white" : "text-slate-700"}`}>{day.n}</p>
+          <div key={day.n} className={`flex-1 flex flex-col items-center py-1.5 rounded-xl ${day.act ? "bg-lime-400" : ""}`}>
+            <p className={`text-[7px] font-semibold ${day.act ? "text-[#05122F]/70" : "text-slate-400"}`}>{day.d}</p>
+            <p className={`text-[10px] font-bold ${day.act ? "text-[#05122F]" : "text-slate-700"}`}>{day.n}</p>
             {day.ev && <div className="w-1 h-1 rounded-full bg-emerald-400 mt-0.5" />}
           </div>
         ))}
       </div>
       <div className="flex-1 px-3 space-y-2 overflow-hidden">
         {[
-          { time:"16:00", title:"Sub-15 · Entrenamiento", place:"Cancha principal", color:"#0B5CFF" },
+          { time:"16:00", title:"Sub-15 · Entrenamiento", place:"Cancha principal", color:"#a3e635" },
           { time:"18:30", title:"Sub-13 · Entrenamiento", place:"Cancha 2", color:"#10b981" },
           { time:"—", title:"Sub-18 · Partido amistoso", place:"Sáb 26 · 10:00", color:"#f59e0b", muted:true },
         ].map(e=>(
@@ -71,8 +71,8 @@ function CalendarScreen() {
       <div className="flex border-t border-slate-100 py-2">
         {["Hoy","Equipo","Notif.","Perfil"].map((n,i)=>(
           <div key={n} className="flex-1 flex flex-col items-center gap-0.5">
-            <div className={`w-3.5 h-3.5 rounded ${i===0?"bg-[#0B5CFF]":"bg-slate-100"}`} />
-            <p className={`text-[6px] ${i===0?"text-[#0B5CFF] font-bold":"text-slate-400"}`}>{n}</p>
+            <div className={`w-3.5 h-3.5 rounded ${i===0?"bg-lime-400":"bg-slate-100"}`} />
+            <p className={`text-[6px] ${i===0?"text-lime-700 font-bold":"text-slate-400"}`}>{n}</p>
           </div>
         ))}
       </div>
@@ -82,7 +82,7 @@ function CalendarScreen() {
 
 function PlayersScreen() {
   const players = [
-    { name:"Mateo García", pos:"POR", cat:"Sub-15", score:88, up:true,  color:"#0B5CFF", initials:"MG" },
+    { name:"Mateo García", pos:"POR", cat:"Sub-15", score:88, up:true,  color:"#05122F", initials:"MG" },
     { name:"Lucas Pérez",  pos:"DFC", cat:"Sub-15", score:82, up:true,  color:"#10b981", initials:"LP" },
     { name:"Emma Torres",  pos:"LI",  cat:"Sub-13", score:79, up:false, color:"#f59e0b", initials:"ET" },
     { name:"Diego Ruiz",   pos:"MCD", cat:"Sub-18", score:91, up:true,  color:"#8b5cf6", initials:"DR" },
@@ -117,8 +117,8 @@ function PlayersScreen() {
       <div className="flex border-t border-slate-100 py-2">
         {["Hoy","Equipo","Notif.","Perfil"].map((n,i)=>(
           <div key={n} className="flex-1 flex flex-col items-center gap-0.5">
-            <div className={`w-3.5 h-3.5 rounded ${i===1?"bg-[#0B5CFF]":"bg-slate-100"}`} />
-            <p className={`text-[6px] ${i===1?"text-[#0B5CFF] font-bold":"text-slate-400"}`}>{n}</p>
+            <div className={`w-3.5 h-3.5 rounded ${i===1?"bg-lime-400":"bg-slate-100"}`} />
+            <p className={`text-[6px] ${i===1?"text-lime-700 font-bold":"text-slate-400"}`}>{n}</p>
           </div>
         ))}
       </div>
@@ -159,7 +159,7 @@ function ConvocatoriaScreen() {
           {/* Players */}
           {players.map(p=>(
             <div key={p.name} className="absolute -translate-x-1/2 -translate-y-1/2" style={{left:`${p.x}%`,top:`${p.y}%`}}>
-              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-[6px] font-black shadow-md ${p.confirmed ? "bg-[#0B5CFF] border-white text-white" : "bg-red-500 border-red-300 text-white"}`}>
+              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-[6px] font-black shadow-md ${p.confirmed ? "bg-[#05122F] border-white text-white" : "bg-red-500 border-red-300 text-white"}`}>
                 {p.pos.slice(0,2)}
               </div>
               <p className="text-white text-[5.5px] font-bold text-center mt-0.5 drop-shadow">{p.name}</p>
@@ -170,8 +170,8 @@ function ConvocatoriaScreen() {
       <div className="flex border-t border-slate-100 py-2">
         {["Hoy","Equipo","Notif.","Perfil"].map((n,i)=>(
           <div key={n} className="flex-1 flex flex-col items-center gap-0.5">
-            <div className={`w-3.5 h-3.5 rounded ${i===1?"bg-[#0B5CFF]":"bg-slate-100"}`} />
-            <p className={`text-[6px] ${i===1?"text-[#0B5CFF] font-bold":"text-slate-400"}`}>{n}</p>
+            <div className={`w-3.5 h-3.5 rounded ${i===1?"bg-lime-400":"bg-slate-100"}`} />
+            <p className={`text-[6px] ${i===1?"text-lime-700 font-bold":"text-slate-400"}`}>{n}</p>
           </div>
         ))}
       </div>
@@ -260,7 +260,7 @@ export default function FeatureShowcase() {
             {/* Text */}
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-5">
-                <Icon size={16} className="text-[#0B5CFF]" />
+                <Icon size={16} className="text-lime-700" />
                 <span className="text-sm font-semibold text-slate-400">{f.label}</span>
               </div>
               <h3 className="text-2xl md:text-[1.75rem] font-black text-slate-900 leading-snug mb-4">{f.title}</h3>
@@ -268,7 +268,7 @@ export default function FeatureShowcase() {
               <ul className="space-y-3.5">
                 {f.bullets.map(b => (
                   <li key={b} className="flex items-start gap-3">
-                    <CheckCircle2 size={16} className="text-[#0B5CFF] mt-0.5 shrink-0" />
+                    <CheckCircle2 size={16} className="text-lime-700 mt-0.5 shrink-0" />
                     <span className="text-sm text-slate-600 leading-snug">{b}</span>
                   </li>
                 ))}

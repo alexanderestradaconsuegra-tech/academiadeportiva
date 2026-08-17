@@ -412,7 +412,7 @@ function SetupPanel({
         {!isPlayer && (
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
           <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-500/15 text-[#0B5CFF] text-xs font-black flex items-center justify-center">1</span>
+            <span className="w-6 h-6 rounded-lg bg-lime-100 dark:bg-lime-500/15 text-lime-700 dark:text-lime-400 text-xs font-black flex items-center justify-center">1</span>
             {t("selectPlayerStep")}
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -423,7 +423,7 @@ function SetupPanel({
                 className={cn(
                   "flex items-center gap-3 p-3 rounded-xl border text-left transition-all",
                   selectedPlayer === p.id
-                    ? "border-[#0B5CFF] bg-blue-50 dark:bg-blue-500/10 ring-2 ring-blue-100"
+                    ? "border-lime-600 dark:border-lime-400 bg-lime-50 dark:bg-lime-500/10 ring-2 ring-lime-100"
                     : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/60"
                 )}
               >
@@ -441,7 +441,7 @@ function SetupPanel({
         {/* Device */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800">
           <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <span className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-500/15 text-[#0B5CFF] text-xs font-black flex items-center justify-center">{isPlayer ? 1 : 2}</span>
+            <span className="w-6 h-6 rounded-lg bg-lime-100 dark:bg-lime-500/15 text-lime-700 dark:text-lime-400 text-xs font-black flex items-center justify-center">{isPlayer ? 1 : 2}</span>
             {t("deviceTypeStep")}
           </h2>
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4">
@@ -453,7 +453,7 @@ function SetupPanel({
                 className={cn(
                   "flex flex-col items-center gap-1.5 p-2.5 rounded-xl border text-center transition-all",
                   selectedDevice === d.id
-                    ? "border-[#0B5CFF] bg-blue-50 dark:bg-blue-500/10 ring-2 ring-blue-100"
+                    ? "border-lime-600 dark:border-lime-400 bg-lime-50 dark:bg-lime-500/10 ring-2 ring-lime-100"
                     : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
                 )}
               >
@@ -516,7 +516,7 @@ function SetupPanel({
         {/* Start btn */}
         <button
           onClick={onStart}
-          className="w-full h-14 bg-gradient-to-r from-[#0B5CFF] to-[#071B4D] text-white rounded-2xl font-bold text-base hover:opacity-90 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-3"
+          className="w-full h-14 bg-[#05122F] text-white rounded-2xl font-bold text-base hover:opacity-90 transition-all shadow-lg shadow-lime-200 flex items-center justify-center gap-3"
         >
           <Play size={20} fill="white" /> {t("startLiveSession")}
         </button>
@@ -591,7 +591,7 @@ function SetupPanel({
               <button
                 onClick={onSaveManual}
                 disabled={manualSaving}
-                className="w-full py-3 bg-[#0B5CFF] text-white rounded-xl text-sm font-bold hover:opacity-90 transition-all disabled:opacity-50"
+                className="w-full py-3 bg-lime-400 text-[#05122F] rounded-xl text-sm font-bold hover:opacity-90 transition-all disabled:opacity-50"
               >
                 {manualSaving ? "Guardando..." : "Guardar sesión"}
               </button>

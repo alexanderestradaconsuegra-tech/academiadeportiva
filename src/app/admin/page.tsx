@@ -72,7 +72,7 @@ export default function AdminPage() {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-[#0B5CFF]" />
+            <Shield className="w-5 h-5 text-lime-700 dark:text-lime-400" />
             <h1 className="text-lg font-bold text-slate-900">Panel de administración — Academias</h1>
           </div>
           <div className="flex items-center gap-2">
@@ -152,7 +152,7 @@ function AcademyRow({ academy, saving, onUpdate }: {
           <button
             onClick={() => onUpdate(academy.id, status, periodEnd || null)}
             disabled={saving}
-            className="h-8 px-3 rounded-lg bg-[#0B5CFF] text-white text-xs font-semibold disabled:opacity-50"
+            className="h-8 px-3 rounded-lg bg-lime-400 text-[#05122F] text-xs font-semibold disabled:opacity-50"
           >
             {saving ? "…" : "Guardar"}
           </button>

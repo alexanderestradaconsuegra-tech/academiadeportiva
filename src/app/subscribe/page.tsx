@@ -61,8 +61,8 @@ export default function SubscribePage() {
     return (
       <div className="min-h-screen bg-[#05122F] flex items-center justify-center p-6">
         <div className="w-full max-w-md text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#0B5CFF] mb-6 mx-auto">
-            <LogIn size={28} className="text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-lime-400 mb-6 mx-auto">
+            <LogIn size={28} className="text-[#05122F]" />
           </div>
           <h1 className="text-2xl font-black text-white mb-3">Inicia sesión para suscribirte</h1>
           <p className="text-blue-100/60 text-sm mb-8">
@@ -71,7 +71,7 @@ export default function SubscribePage() {
           <div className="flex flex-col gap-3">
             <Link
               href="/login"
-              className="w-full h-12 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-blue-600 transition-all"
+              className="w-full h-12 rounded-xl bg-lime-400 text-[#05122F] text-sm font-bold flex items-center justify-center gap-2 hover:bg-lime-600 transition-all"
             >
               Iniciar sesión <ArrowRight size={16} />
             </Link>
@@ -133,23 +133,23 @@ export default function SubscribePage() {
           </div>
 
           {/* Annual — recommended */}
-          <div className="bg-[#0B5CFF] rounded-3xl p-7 flex flex-col relative overflow-hidden">
+          <div className="bg-lime-400 rounded-3xl p-7 flex flex-col relative overflow-hidden">
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
             <div className="relative">
               <div className="flex items-center gap-2 mb-3">
-                <p className="text-xs font-bold text-blue-200 uppercase tracking-widest">Plan anual</p>
-                <span className="text-[10px] font-black bg-white text-[#0B5CFF] px-2 py-0.5 rounded-full">AHORRA 30%</span>
+                <p className="text-xs font-bold text-[#05122F]/70 uppercase tracking-widest">Plan anual</p>
+                <span className="text-[10px] font-black bg-white text-lime-700 px-2 py-0.5 rounded-full">AHORRA 30%</span>
               </div>
               <div className="flex items-end gap-1 mb-1">
-                <span className="text-5xl font-black text-white">${parseInt(annualMonthly).toLocaleString('es-CL')}</span>
-                <span className="text-blue-200/70 mb-1.5">/mes</span>
+                <span className="text-5xl font-black text-[#05122F]">${parseInt(annualMonthly).toLocaleString('es-CL')}</span>
+                <span className="text-[#05122F]/70 mb-1.5">/mes</span>
               </div>
-              <p className="text-blue-200/70 text-sm mb-1">${annualPrice.toLocaleString('es-CL')}/año · acceso por 12 meses</p>
-              <p className="text-blue-300/60 text-xs mb-6">equivale a 2 meses gratis</p>
+              <p className="text-[#05122F]/70 text-sm mb-1">${annualPrice.toLocaleString('es-CL')}/año · acceso por 12 meses</p>
+              <p className="text-[#05122F]/60 text-xs mb-6">equivale a 2 meses gratis</p>
               <button
                 onClick={() => handleSubscribe("annual")}
                 disabled={loading !== null}
-                className="w-full h-12 rounded-xl bg-white text-[#0B5CFF] text-sm font-bold hover:bg-blue-50 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full h-12 rounded-xl bg-white text-lime-700 text-sm font-bold hover:bg-lime-50 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading === "annual" ? (
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -179,7 +179,7 @@ export default function SubscribePage() {
           <div className="bg-red-500/10 rounded-xl px-4 py-3 mb-4 flex flex-col gap-2">
             <p className="text-red-400 text-sm text-center">{error}</p>
             {!isAuthenticated && (
-              <Link href="/login" className="text-xs text-center text-[#0B5CFF] font-bold underline">
+              <Link href="/login" className="text-xs text-center text-lime-400 font-bold underline">
                 Ir al inicio de sesión →
               </Link>
             )}

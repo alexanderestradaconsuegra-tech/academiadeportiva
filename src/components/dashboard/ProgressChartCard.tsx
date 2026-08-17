@@ -30,8 +30,8 @@ export default function ProgressChartCard({
         <AreaChart data={progressData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
           <defs>
             <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#0B5CFF" stopOpacity={0.15} />
-              <stop offset="95%" stopColor="#0B5CFF" stopOpacity={0} />
+              <stop offset="5%" stopColor="#84cc16" stopOpacity={0.15} />
+              <stop offset="95%" stopColor="#84cc16" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
@@ -41,7 +41,7 @@ export default function ProgressChartCard({
             contentStyle={{ background: "#fff", border: "1px solid #E2E8F0", borderRadius: 12, fontSize: 12, boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}
             formatter={(v: number) => [`${v} ${pointsLabel}`, scoreLabel]}
           />
-          <Area type="monotone" dataKey="score" stroke="#0B5CFF" strokeWidth={2.5} fill="url(#colorScore)" dot={{ fill: "#0B5CFF", strokeWidth: 0, r: 4 }} activeDot={{ r: 6, fill: "#0B5CFF" }} />
+          <Area type="monotone" dataKey="score" stroke="#84cc16" strokeWidth={2.5} fill="url(#colorScore)" dot={{ fill: "#84cc16", strokeWidth: 0, r: 4 }} activeDot={{ r: 6, fill: "#84cc16" }} />
         </AreaChart>
       </ResponsiveContainer>
     </div>

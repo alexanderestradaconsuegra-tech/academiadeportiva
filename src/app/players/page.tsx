@@ -56,19 +56,19 @@ export default function PlayersPage() {
             <input
               type="text" placeholder={t("searchPlaceholder")} value={search}
               onChange={ev => setSearch(ev.target.value)}
-              className="w-full h-9 pl-9 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+              className="w-full h-9 pl-9 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-500 focus:ring-2 focus:ring-lime-100 dark:focus:ring-lime-500/20 outline-none transition-all"
             />
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <SlidersHorizontal size={14} className="text-slate-400 dark:text-slate-500 shrink-0" />
             <select value={catFilter} onChange={ev => setCatFilter(ev.target.value)}
-              className="flex-1 sm:flex-none min-w-0 h-9 px-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
+              className="flex-1 sm:flex-none min-w-0 h-9 px-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-500 outline-none cursor-pointer">
               <option value="all">{t("allCategories")}</option>
               {CATEGORIES.map(c => <option key={c} value={c}>{e.category(c)}</option>)}
             </select>
             <select value={posFilter} onChange={ev => setPosFilter(ev.target.value)}
-              className="flex-1 sm:flex-none min-w-0 h-9 px-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
+              className="flex-1 sm:flex-none min-w-0 h-9 px-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-500 outline-none cursor-pointer">
               <option value="all">{t("allPositions")}</option>
               {POSITIONS.map(p => <option key={p} value={p}>{e.position(p)}</option>)}
             </select>

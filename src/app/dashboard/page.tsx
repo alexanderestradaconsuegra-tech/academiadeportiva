@@ -97,7 +97,7 @@ export default function DashboardPage() {
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
         {/* Welcome banner */}
-        <div className="bg-gradient-to-r from-[#071B4D] to-[#0B5CFF] rounded-2xl p-5 md:p-6 mb-5 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-[#05122F] to-[#0a2647] rounded-2xl p-5 md:p-6 mb-5 relative overflow-hidden">
           <div className="absolute right-0 top-0 bottom-0 w-1/3 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 80% 50%, white 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
           <div className="relative z-10">
             <p className="text-blue-200 text-sm font-medium mb-1">{t("welcomeBack")}</p>
@@ -177,7 +177,7 @@ export default function DashboardPage() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("topPlayers")}</h2>
-              <Link href="/players" className="text-xs text-[#0B5CFF] font-semibold hover:underline flex items-center gap-1">
+              <Link href="/players" className="text-xs text-lime-700 dark:text-lime-400 font-semibold hover:underline flex items-center gap-1">
                 {t("viewAll")} <ChevronRight size={12} />
               </Link>
             </div>
@@ -197,7 +197,7 @@ export default function DashboardPage() {
                       <p className="text-xs text-slate-400 dark:text-slate-500">{e.position(player.position)} · {e.category(player.category)}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className={cn("text-sm font-bold", score >= 85 ? "text-emerald-500" : score >= 70 ? "text-[#0B5CFF]" : "text-amber-500")}>{score}</p>
+                      <p className={cn("text-sm font-bold", score >= 85 ? "text-emerald-500" : score >= 70 ? "text-lime-700 dark:text-lime-400" : "text-amber-500")}>{score}</p>
                       <p className="text-[10px] text-slate-400 dark:text-slate-500">{t("points")}</p>
                     </div>
                     {i === 0 && <Star className="w-4 h-4 text-amber-400 shrink-0" fill="currentColor" />}
@@ -211,7 +211,7 @@ export default function DashboardPage() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("latestActivities")}</h2>
-              <Link href="/activities" className="text-xs text-[#0B5CFF] font-semibold hover:underline flex items-center gap-1">
+              <Link href="/activities" className="text-xs text-lime-700 dark:text-lime-400 font-semibold hover:underline flex items-center gap-1">
                 {t("viewAllFem")} <ChevronRight size={12} />
               </Link>
             </div>

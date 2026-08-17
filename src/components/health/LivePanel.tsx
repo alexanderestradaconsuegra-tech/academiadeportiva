@@ -91,10 +91,10 @@ export default function LivePanel({
           {/* Speed */}
           <div className="bg-white/80 backdrop-blur rounded-2xl p-4 text-center border border-white/60 shadow-sm">
             <div className="flex items-center justify-center gap-1.5 mb-2">
-              <Gauge size={14} className="text-[#0B5CFF]" />
+              <Gauge size={14} className="text-lime-700 dark:text-lime-400" />
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t("speed")}</span>
             </div>
-            <div className="text-4xl font-black tabular-nums text-[#0B5CFF]">{currentSpeed || "—"}</div>
+            <div className="text-4xl font-black tabular-nums text-lime-700 dark:text-lime-400">{currentSpeed || "—"}</div>
             <div className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-1">km/h</div>
             {!gpsEnabled && selectedDevice === "manual" && (
               <div className="mt-2 text-[9px] text-slate-400 dark:text-slate-500">{t("simulated")}</div>
@@ -152,7 +152,7 @@ export default function LivePanel({
               type="number" min={30} max={250} placeholder="ej. 165"
               value={manualHR} onChange={e => onManualHR(e.target.value)}
               onKeyDown={e => e.key === "Enter" && onSubmitManualHR()}
-              className="h-8 w-24 rounded-lg border border-slate-200 dark:border-slate-700 px-3 text-sm font-bold text-center outline-none focus:border-[#0B5CFF]"
+              className="h-8 w-24 rounded-lg border border-slate-200 dark:border-slate-700 px-3 text-sm font-bold text-center outline-none focus:border-lime-600 dark:focus:border-lime-400"
             />
             <Button size="sm" onClick={onSubmitManualHR} disabled={!manualHR}>{t("register")}</Button>
             <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">{t("dataAlsoSimulated")}</span>
@@ -212,7 +212,7 @@ export default function LivePanel({
                 formatter={(v: number, name: string) => [name === "hr" ? `${v} bpm` : `${v} km/h`, name === "hr" ? t("frequency") : t("speed")]}
               />
               <Area type="monotone" dataKey="hr" stroke="#EF4444" strokeWidth={2} fill="url(#hrGrad)" dot={false} activeDot={{ r: 4, fill: "#EF4444" }} />
-              <Line type="monotone" dataKey="speed" stroke="#0B5CFF" strokeWidth={1.5} dot={false} strokeDasharray="3 3" />
+              <Line type="monotone" dataKey="speed" stroke="#84cc16" strokeWidth={1.5} dot={false} strokeDasharray="3 3" />
             </AreaChart>
           </ResponsiveContainer>
         )}

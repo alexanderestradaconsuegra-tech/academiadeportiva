@@ -26,7 +26,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
             </p>
             <button
               onClick={reset}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B5CFF] text-white text-sm font-semibold hover:bg-[#0a4fe0] transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-lime-400 text-[#05122F] text-sm font-semibold hover:bg-lime-500 transition-colors"
             >
               <RotateCcw size={15} /> {t("tryAgain")}
             </button>

@@ -16,7 +16,7 @@ const MonthlyEvolutionChart = dynamic(() => import("@/components/charts/ChartsPa
 const ComparisonBarChart = dynamic(() => import("@/components/charts/ChartsPageCharts").then(m => m.ComparisonBarChart), { ssr: false, loading: () => <ChartSkeleton height={220} /> })
 const AttrRadarChart = dynamic(() => import("@/components/charts/ChartsPageCharts").then(m => m.AttrRadarChart), { ssr: false, loading: () => <ChartSkeleton height={220} /> })
 
-const COLORS = ["#0B5CFF","#10B981","#F59E0B","#EF4444","#8B5CF6","#F97316"]
+const COLORS = ["#a3e635","#10B981","#F59E0B","#EF4444","#8B5CF6","#F97316"]
 
 export default function ChartsPage() {
   const { players, evaluations, getLatestEvaluation } = useApp()
@@ -108,12 +108,12 @@ export default function ChartsPage() {
               </div>
               <div className="flex items-center gap-2">
                 <select value={compareA} onChange={e => setCompareA(e.target.value)}
-                  className="h-8 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
+                  className="h-8 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 focus:border-lime-500 outline-none cursor-pointer">
                   {players.map(p => <option key={p.id} value={p.id}>{p.name.split(" ")[0]}</option>)}
                 </select>
                 <span className="text-xs text-slate-400 dark:text-slate-500 font-bold">{t("vs")}</span>
                 <select value={compareB} onChange={e => setCompareB(e.target.value)}
-                  className="h-8 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
+                  className="h-8 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 focus:border-lime-500 outline-none cursor-pointer">
                   {players.map(p => <option key={p.id} value={p.id}>{p.name.split(" ")[0]}</option>)}
                 </select>
               </div>
@@ -128,7 +128,7 @@ export default function ChartsPage() {
           <p className="text-xs text-slate-400 dark:text-slate-500 mb-5">{playerA?.name.split(" ")[0]} {t("vs")} {playerB?.name.split(" ")[0]}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             {[
-              { name: playerA?.name ?? "A", data: radarA, color: "#0B5CFF" },
+              { name: playerA?.name ?? "A", data: radarA, color: "#a3e635" },
               { name: playerB?.name ?? "B", data: radarB, color: "#10B981" },
             ].map(({ name, data, color }) => (
               <div key={name}>

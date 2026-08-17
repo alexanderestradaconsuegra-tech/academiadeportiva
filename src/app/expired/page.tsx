@@ -29,7 +29,7 @@ export default function ExpiredPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-[#05122F] to-[#0a2647] flex items-center justify-center p-6">
         <div className="text-center text-white">
           <div className="w-20 h-20 rounded-full bg-emerald-500 flex items-center justify-center mx-auto mb-5 shadow-lg shadow-emerald-900/40">
             <CheckCircle2 size={40} />
@@ -46,7 +46,7 @@ export default function ExpiredPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] mx-auto flex items-center justify-center mb-4 shadow-lg shadow-blue-200">
+          <div className="w-16 h-16 rounded-2xl bg-[#05122F] mx-auto flex items-center justify-center mb-4 shadow-lg shadow-lime-200">
             <Trophy size={32} className="text-white" />
           </div>
           <h1 className="text-2xl font-black text-slate-900 mb-1">Tu prueba de 7 días terminó</h1>
@@ -57,7 +57,7 @@ export default function ExpiredPage() {
 
         <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-100 overflow-hidden">
           {/* CTA WhatsApp */}
-          <div className="bg-gradient-to-br from-[#071B4D] to-[#0B5CFF] p-6 text-white text-center">
+          <div className="bg-gradient-to-br from-[#05122F] to-[#0a2647] p-6 text-white text-center">
             <p className="text-sm text-blue-200/80 mb-3">
               Escríbenos y te enviamos el código de activación
             </p>
@@ -74,7 +74,7 @@ export default function ExpiredPage() {
           {/* Code input */}
           <div className="p-6">
             <div className="flex items-center gap-2 mb-4">
-              <KeyRound size={16} className="text-[#0B5CFF]" />
+              <KeyRound size={16} className="text-lime-700 dark:text-lime-400" />
               <p className="text-sm font-semibold text-slate-700">¿Ya tienes tu código? Ingrésalo aquí</p>
             </div>
 
@@ -86,7 +86,7 @@ export default function ExpiredPage() {
                 placeholder="000000"
                 maxLength={6}
                 required
-                className="w-full h-14 rounded-xl border-2 border-slate-200 text-center text-2xl font-black tracking-[0.5em] text-slate-900 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                className="w-full h-14 rounded-xl border-2 border-slate-200 text-center text-2xl font-black tracking-[0.5em] text-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all"
               />
 
               {error && (
@@ -98,7 +98,7 @@ export default function ExpiredPage() {
               <button
                 type="submit"
                 disabled={loading || code.length < 6}
-                className="w-full h-12 bg-[#0B5CFF] text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-200 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full h-12 bg-lime-400 text-[#05122F] rounded-xl font-bold text-sm hover:bg-lime-700 transition-all shadow-md shadow-lime-200 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? <><Loader2 size={16} className="animate-spin" /> Verificando…</> : "Activar academia →"}
               </button>

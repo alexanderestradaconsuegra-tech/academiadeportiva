@@ -55,7 +55,7 @@ export default function MatchDetailPage() {
     return (
       <AppShell>
         <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
-          <Link href="/matches" className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-[#0B5CFF] mb-4">
+          <Link href="/matches" className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-lime-700 dark:hover:text-lime-400 mb-4">
             <ArrowLeft size={15} /> {t("backToMatches")}
           </Link>
           <div className="flex flex-col items-center justify-center py-20 text-slate-400 dark:text-slate-500">
@@ -152,7 +152,7 @@ export default function MatchDetailPage() {
   return (
     <AppShell>
       <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
-        <Link href="/matches" className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-[#0B5CFF] mb-4">
+        <Link href="/matches" className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-lime-700 dark:hover:text-lime-400 mb-4">
           <ArrowLeft size={15} /> {t("backToMatches")}
         </Link>
 
@@ -230,7 +230,7 @@ export default function MatchDetailPage() {
                   type="number" min={0} max={99}
                   value={scoreForm.our}
                   onChange={e => setScoreForm(f => ({ ...f, our: e.target.value }))}
-                  className="w-16 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-center text-lg font-black text-slate-900 dark:text-white outline-none focus:border-[#0B5CFF]"
+                  className="w-16 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-center text-lg font-black text-slate-900 dark:text-white outline-none focus:border-lime-600 dark:focus:border-lime-400"
                   placeholder="0"
                   required
                 />
@@ -239,12 +239,12 @@ export default function MatchDetailPage() {
                   type="number" min={0} max={99}
                   value={scoreForm.opponent}
                   onChange={e => setScoreForm(f => ({ ...f, opponent: e.target.value }))}
-                  className="w-16 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-center text-lg font-black text-slate-900 dark:text-white outline-none focus:border-[#0B5CFF]"
+                  className="w-16 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-center text-lg font-black text-slate-900 dark:text-white outline-none focus:border-lime-600 dark:focus:border-lime-400"
                   placeholder="0"
                   required
                 />
                 <button type="submit" disabled={savingScore}
-                  className="h-10 px-4 rounded-xl bg-[#0B5CFF] text-white text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50">
+                  className="h-10 px-4 rounded-xl bg-lime-400 text-[#05122F] text-sm font-semibold flex items-center gap-1.5 disabled:opacity-50">
                   <Check size={14} /> Guardar
                 </button>
                 <button type="button" onClick={() => setEditingScore(false)}
@@ -268,7 +268,7 @@ export default function MatchDetailPage() {
                     type="number" min={0} max={99}
                     value={scoreForm.our}
                     onChange={e => setScoreForm(f => ({ ...f, our: e.target.value }))}
-                    className="w-20 h-14 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-center text-3xl font-black text-slate-900 dark:text-white outline-none focus:border-[#0B5CFF] transition-colors"
+                    className="w-20 h-14 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-center text-3xl font-black text-slate-900 dark:text-white outline-none focus:border-lime-600 dark:focus:border-lime-400 transition-colors"
                     placeholder="0"
                   />
                 </div>
@@ -279,7 +279,7 @@ export default function MatchDetailPage() {
                     type="number" min={0} max={99}
                     value={scoreForm.opponent}
                     onChange={e => setScoreForm(f => ({ ...f, opponent: e.target.value }))}
-                    className="w-20 h-14 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-center text-3xl font-black text-slate-900 dark:text-white outline-none focus:border-[#0B5CFF] transition-colors"
+                    className="w-20 h-14 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-center text-3xl font-black text-slate-900 dark:text-white outline-none focus:border-lime-600 dark:focus:border-lime-400 transition-colors"
                     placeholder="0"
                   />
                 </div>
@@ -287,7 +287,7 @@ export default function MatchDetailPage() {
               <button
                 type="submit"
                 disabled={savingScore || scoreForm.our === "" || scoreForm.opponent === ""}
-                className="h-11 px-5 rounded-xl bg-[#0B5CFF] text-white text-sm font-bold flex items-center gap-2 disabled:opacity-40 hover:bg-blue-700 transition-colors mt-5"
+                className="h-11 px-5 rounded-xl bg-lime-400 text-[#05122F] text-sm font-bold flex items-center gap-2 disabled:opacity-40 hover:bg-lime-700 transition-colors mt-5"
               >
                 <Check size={15} /> Confirmar resultado
               </button>
@@ -300,38 +300,38 @@ export default function MatchDetailPage() {
           <Link href={`/matches/${id}/convocatoria`} className="block mb-4">
             <div className={cn(
               "rounded-2xl p-4 flex items-center gap-4 transition-all hover:opacity-90",
-              convocatoria ? "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800" : "bg-[#0B5CFF]"
+              convocatoria ? "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800" : "bg-lime-400"
             )}>
               <div className={cn(
                 "w-11 h-11 rounded-xl flex items-center justify-center shrink-0",
-                convocatoria ? "bg-blue-50 dark:bg-blue-500/10" : "bg-white/15"
+                convocatoria ? "bg-lime-50 dark:bg-lime-500/10" : "bg-white/15"
               )}>
-                <Users size={20} className={convocatoria ? "text-[#0B5CFF]" : "text-white"} />
+                <Users size={20} className={convocatoria ? "text-lime-700 dark:text-lime-400" : "text-[#05122F]"} />
               </div>
               <div className="flex-1">
-                <p className={cn("text-sm font-bold", convocatoria ? "text-slate-900 dark:text-white" : "text-white")}>
+                <p className={cn("text-sm font-bold", convocatoria ? "text-slate-900 dark:text-white" : "text-[#05122F]")}>
                   {convocatoria ? "Convocatoria enviada" : "Convocar jugadores"}
                 </p>
-                <p className={cn("text-xs mt-0.5", convocatoria ? "text-slate-400 dark:text-slate-500" : "text-blue-100")}>
+                <p className={cn("text-xs mt-0.5", convocatoria ? "text-slate-400 dark:text-slate-500" : "text-[#05122F]/70")}>
                   {convocatoria
                     ? `${convocatoria.players.length} jugadores · ${convocatoria.players.filter(p => p.confirmed === true).length} confirmaron`
                     : "Selecciona quiénes juegan y notifícalos"}
                 </p>
               </div>
-              <ChevronRight size={18} className={convocatoria ? "text-slate-400" : "text-white"} />
+              <ChevronRight size={18} className={convocatoria ? "text-slate-400" : "text-[#05122F]"} />
             </div>
           </Link>
         ) : convocatoria ? (
           <Link href={`/matches/${id}/convocatoria/view`} className="block mb-4">
-            <div className="bg-[#0B5CFF] rounded-2xl p-4 flex items-center gap-4 hover:opacity-90 transition-all">
+            <div className="bg-lime-400 rounded-2xl p-4 flex items-center gap-4 hover:opacity-90 transition-all">
               <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-                <Users size={20} className="text-white" />
+                <Users size={20} className="text-[#05122F]" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-bold text-white">Ver mi convocatoria</p>
-                <p className="text-xs text-blue-100 mt-0.5">Confirma si puedes ir al partido</p>
+                <p className="text-sm font-bold text-[#05122F]">Ver mi convocatoria</p>
+                <p className="text-xs text-[#05122F]/70 mt-0.5">Confirma si puedes ir al partido</p>
               </div>
-              <ChevronRight size={18} className="text-white" />
+              <ChevronRight size={18} className="text-[#05122F]" />
             </div>
           </Link>
         ) : null}

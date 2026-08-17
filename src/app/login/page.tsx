@@ -93,7 +93,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex">
       {/* Left panel — branding */}
       <div className="hidden lg:flex w-[55%] relative overflow-hidden flex-col justify-between p-12" style={{ backgroundImage: "url('/login-bg.avif')", backgroundSize: "cover", backgroundPosition: "center" }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-[#071B4D]/80 via-[#0B2E8A]/70 to-[#0B5CFF]/60" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#05122F]/80 to-[#0a2647]/60" />
 
         <div className="relative z-10">
           <img src="/logo-metrikas.png" alt="Metrikas" className="h-20 w-auto object-contain" />
@@ -168,7 +168,7 @@ export default function LoginPage() {
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all" />
+                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all" />
                     </div>
                   </div>
                   <div>
@@ -176,7 +176,7 @@ export default function LoginPage() {
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} required
-                        className="w-full h-11 pl-10 pr-11 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all" />
+                        className="w-full h-11 pl-10 pr-11 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all" />
                       <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                         {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
@@ -188,13 +188,13 @@ export default function LoginPage() {
                     </div>
                   )}
                   <button type="submit" disabled={loading}
-                    className="w-full h-11 bg-[#0B5CFF] text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-200 disabled:opacity-60 flex items-center justify-center gap-2">
+                    className="w-full h-11 bg-lime-400 text-[#05122F] rounded-xl font-semibold text-sm hover:bg-lime-700 transition-all shadow-md shadow-lime-200 disabled:opacity-60 flex items-center justify-center gap-2">
                     {loading ? (
                       <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>{t("signingIn")}</>
                     ) : t("signIn")}
                   </button>
                   <div className="text-center">
-                    <a href="/forgot-password" className="text-xs text-slate-400 hover:text-[#0B5CFF] transition-colors">
+                    <a href="/forgot-password" className="text-xs text-slate-400 hover:text-lime-700 dark:hover:text-lime-400 transition-colors">
                       ¿Olvidaste tu contraseña?
                     </a>
                   </div>
@@ -220,17 +220,17 @@ export default function LoginPage() {
                         onChange={e => setActivationCode(e.target.value.trim())}
                         required
                         placeholder="Te lo envía Metrikas al contratar"
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all font-mono tracking-wider"
+                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all font-mono tracking-wider"
                       />
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-1">¿No tienes código? <a href="https://wa.me/56992103974" target="_blank" rel="noopener noreferrer" className="text-[#0B5CFF] hover:underline">Escríbenos por WhatsApp</a></p>
+                    <p className="text-[11px] text-slate-400 mt-1">¿No tienes código? <a href="https://wa.me/56992103974" target="_blank" rel="noopener noreferrer" className="text-lime-700 dark:text-lime-400 hover:underline">Escríbenos por WhatsApp</a></p>
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">Nombre de la academia</label>
                     <div className="relative">
                       <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input type="text" value={academyName} onChange={e => setAcademyName(e.target.value)} required placeholder="Academia FC"
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all" />
+                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -239,13 +239,13 @@ export default function LoginPage() {
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} required placeholder="Juan García"
-                          className="w-full h-11 pl-10 pr-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all" />
+                          className="w-full h-11 pl-10 pr-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all" />
                       </div>
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">Idioma</label>
                       <select value={language} onChange={e => setLanguage(e.target.value as Language)}
-                        className="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer">
+                        className="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 outline-none cursor-pointer">
                         {LANG_OPTIONS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
                       </select>
                     </div>
@@ -255,7 +255,7 @@ export default function LoginPage() {
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all" />
+                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all" />
                     </div>
                   </div>
                   <div>
@@ -263,7 +263,7 @@ export default function LoginPage() {
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} required minLength={6}
-                        className="w-full h-11 pl-10 pr-11 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all" />
+                        className="w-full h-11 pl-10 pr-11 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all" />
                       <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                         {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
@@ -275,7 +275,7 @@ export default function LoginPage() {
                     </div>
                   )}
                   <button type="submit" disabled={loading}
-                    className="w-full h-11 bg-[#0B5CFF] text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-200 disabled:opacity-60 flex items-center justify-center gap-2">
+                    className="w-full h-11 bg-lime-400 text-[#05122F] rounded-xl font-semibold text-sm hover:bg-lime-700 transition-all shadow-md shadow-lime-200 disabled:opacity-60 flex items-center justify-center gap-2">
                     {loading ? (
                       <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Creando academia...</>
                     ) : "Crear mi academia"}

@@ -48,7 +48,7 @@ function PlayerSelector({
           const p = players.find(p => p.id === ev.target.value) ?? null
           onSelect(p)
         }}
-        className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+        className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all"
       >
         <option value="">{t("selectPlayer")}</option>
         {players.map(p => (
@@ -93,11 +93,11 @@ function ScoreBar({ scoreA, scoreB, label }: { scoreA: number; scoreB: number; l
         <span className={cn("text-sm font-bold", getScoreColor(scoreA))}>{scoreA}</span>
         <div className="w-24 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex justify-end">
           <div
-            className={cn("h-2 rounded-full transition-all", aWins ? "bg-[#0B5CFF]" : tied ? "bg-slate-400" : "bg-slate-200 dark:bg-slate-700")}
+            className={cn("h-2 rounded-full transition-all", aWins ? "bg-lime-500" : tied ? "bg-slate-400" : "bg-slate-200 dark:bg-slate-700")}
             style={{ width: `${scoreA}%` }}
           />
         </div>
-        {aWins && <TrendingUp size={12} className="text-[#0B5CFF] shrink-0" />}
+        {aWins && <TrendingUp size={12} className="text-lime-700 dark:text-lime-400 shrink-0" />}
       </div>
 
       {/* Label */}
@@ -189,7 +189,7 @@ export default function ComparePage() {
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("attributeComparison")}</h2>
                 <div className="flex items-center gap-3 text-xs font-semibold">
-                  <span className="text-[#0B5CFF]">{playerA.name.split(" ")[0]} {aWinsCount}W</span>
+                  <span className="text-lime-700 dark:text-lime-400">{playerA.name.split(" ")[0]} {aWinsCount}W</span>
                   <Minus size={12} className="text-slate-300" />
                   <span className="text-purple-500">{playerB.name.split(" ")[0]} {bWinsCount}W</span>
                 </div>
@@ -198,8 +198,8 @@ export default function ComparePage() {
               {/* Header */}
               <div className="grid grid-cols-[1fr_auto_1fr] gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-2 justify-end">
-                  <span className="text-xs font-semibold text-[#0B5CFF] truncate text-right">{playerA.name}</span>
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#0B5CFF] shrink-0" />
+                  <span className="text-xs font-semibold text-lime-700 dark:text-lime-400 truncate text-right">{playerA.name}</span>
+                  <div className="w-2.5 h-2.5 rounded-full bg-lime-500 shrink-0" />
                 </div>
                 <div className="min-w-20" />
                 <div className="flex items-center gap-2">
@@ -251,7 +251,7 @@ export default function ComparePage() {
                     <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">{label}</p>
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-[#0B5CFF] shrink-0" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-lime-500 shrink-0" />
                         <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{a}</span>
                       </div>
                       <div className="flex items-center gap-2">

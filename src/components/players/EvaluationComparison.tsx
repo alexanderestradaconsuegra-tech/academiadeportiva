@@ -40,7 +40,7 @@ export default function EvaluationComparison({ evaluations }: { evaluations: Eva
   })
 
   const generalDelta = after.general_score - before.general_score
-  const selectClass = "h-8 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 focus:border-[#0B5CFF] outline-none cursor-pointer"
+  const selectClass = "h-8 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 outline-none cursor-pointer"
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800">
@@ -84,7 +84,7 @@ export default function EvaluationComparison({ evaluations }: { evaluations: Eva
             <PolarGrid stroke="#E2E8F0" />
             <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fill: "#64748B" }} />
             <Radar name={t("beforeLabel")} dataKey="before" stroke="#94A3B8" fill="#94A3B8" fillOpacity={0.12} strokeWidth={2} dot={{ r: 3, fill: "#94A3B8", strokeWidth: 0 }} />
-            <Radar name={t("afterLabel")} dataKey="after" stroke="#0B5CFF" fill="#0B5CFF" fillOpacity={0.15} strokeWidth={2} dot={{ r: 3, fill: "#0B5CFF", strokeWidth: 0 }} />
+            <Radar name={t("afterLabel")} dataKey="after" stroke="#84cc16" fill="#84cc16" fillOpacity={0.15} strokeWidth={2} dot={{ r: 3, fill: "#84cc16", strokeWidth: 0 }} />
             <Legend iconSize={8} wrapperStyle={{ fontSize: 11 }} />
           </RadarChart>
         </ResponsiveContainer>

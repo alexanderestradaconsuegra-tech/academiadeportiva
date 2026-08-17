@@ -59,7 +59,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#071B4D] via-[#0B2E8A] to-[#0B5CFF] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[#05122F] to-[#0a2647] flex items-center justify-center p-6">
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="text-center mb-8">
@@ -85,7 +85,7 @@ export default function OnboardingPage() {
                   onChange={e => setActivationCode(e.target.value.trim())}
                   required
                   placeholder="Te lo envía Metrikas al contratar"
-                  className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all font-mono tracking-wider"
+                  className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all font-mono tracking-wider"
                 />
               </div>
             </div>
@@ -100,7 +100,7 @@ export default function OnboardingPage() {
                 <input
                   type="text" value={academyName} onChange={e => setAcademyName(e.target.value)}
                   required placeholder="Academia Fútbol FC"
-                  className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                  className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all"
                 />
               </div>
             </div>
@@ -115,7 +115,7 @@ export default function OnboardingPage() {
                 <input
                   type="text" value={coachName} onChange={e => setCoachName(e.target.value)}
                   required placeholder="Juan García"
-                  className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                  className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm bg-white focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all"
                 />
               </div>
             </div>
@@ -130,7 +130,7 @@ export default function OnboardingPage() {
                   <button
                     key={l.value} type="button"
                     onClick={() => setLanguage(l.value)}
-                    className={`h-11 rounded-xl border text-sm font-medium transition-all flex items-center justify-center gap-2 ${language === l.value ? "border-[#0B5CFF] bg-blue-50 text-[#0B5CFF]" : "border-slate-200 text-slate-600 hover:border-slate-300"}`}
+                    className={`h-11 rounded-xl border text-sm font-medium transition-all flex items-center justify-center gap-2 ${language === l.value ? "border-lime-600 dark:border-lime-400 bg-lime-50 dark:bg-lime-500/10 text-lime-700 dark:text-lime-400" : "border-slate-200 text-slate-600 hover:border-slate-300"}`}
                   >
                     <span>{l.flag}</span> {l.label}
                   </button>
@@ -146,7 +146,7 @@ export default function OnboardingPage() {
 
             <button
               type="submit" disabled={loading}
-              className="w-full h-12 bg-[#0B5CFF] text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all shadow-md shadow-blue-200 disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
+              className="w-full h-12 bg-lime-400 text-[#05122F] rounded-xl font-bold text-sm hover:bg-lime-700 transition-all shadow-md shadow-lime-200 disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
             >
               {loading ? (
                 <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Creando tu academia...</>

@@ -195,7 +195,7 @@ function MatchRow({ m, isCoach, onEdit, onDelete, myConvEntry }: { m: Match; isC
         result === "win" ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600" :
         result === "loss" ? "bg-red-50 dark:bg-red-500/10 text-red-600" :
         result === "draw" ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600" :
-        "bg-blue-50 dark:bg-blue-500/10 text-[#0B5CFF]"
+        "bg-lime-50 dark:bg-lime-500/10 text-lime-700 dark:text-lime-400"
       )}>
         <Trophy size={18} />
       </div>

@@ -43,7 +43,7 @@ export default function SubscribeSuccessPage() {
         <div className="mt-4">
           <button
             onClick={() => router.replace("/dashboard")}
-            className="text-sm text-[#0B5CFF] hover:text-blue-300 font-semibold transition-colors"
+            className="text-sm text-lime-400 hover:text-lime-300 font-semibold transition-colors"
           >
             Ir al panel ahora →
           </button>

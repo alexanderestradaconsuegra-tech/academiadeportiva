@@ -129,7 +129,7 @@ export default function ProgressShowcase() {
               <span className="w-3 h-3 rounded bg-slate-500/70 inline-block" /> Sin Metrikas
             </span>
             <span className="flex items-center gap-1.5 text-xs text-white/80">
-              <span className="w-3 h-3 rounded bg-[#0B5CFF] inline-block" /> Con Metrikas
+              <span className="w-3 h-3 rounded bg-lime-400 inline-block" /> Con Metrikas
             </span>
           </div>
         </div>
@@ -146,7 +146,7 @@ export default function ProgressShowcase() {
                   <div className="flex-1 rounded-t-md bg-slate-500/40 transition-all duration-700"
                     style={{ height: `${(before / maxH) * 100}%` }} />
                   {/* After bar */}
-                  <div className="flex-1 rounded-t-md bg-[#0B5CFF] shadow-md shadow-blue-900/30 transition-all duration-700 relative"
+                  <div className="flex-1 rounded-t-md bg-lime-400 shadow-md shadow-lime-900/30 transition-all duration-700 relative"
                     style={{ height: `${(after / maxH) * 100}%` }}>
                     {i === MONTHS.length - 1 && (
                       <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap px-1.5 py-0.5 rounded bg-emerald-500 text-white text-[9px] font-black">
