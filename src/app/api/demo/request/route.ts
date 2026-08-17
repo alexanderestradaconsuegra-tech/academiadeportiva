@@ -4,6 +4,21 @@ import { sendEmail } from "@/lib/email"
 
 export const dynamic = "force-dynamic"
 
+// The marketing landing lives on its own domain (metrikas.pro) separate from
+// this app (app.metrikas.pro), so its "Solicitar Demo" form calls this route
+// cross-origin — it needs its own explicit CORS allowance, scoped to just the
+// landing's origin, not a wildcard.
+const ALLOWED_ORIGIN = "https://metrikas.pro"
+const corsHeaders = {
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: corsHeaders })
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { email, academy_name } = await req.json()
@@ -11,7 +26,7 @@ export async function POST(req: NextRequest) {
     if (!email || !academy_name) {
       return NextResponse.json(
         { error: "Email y nombre de academia requeridos" },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       )
     }
 
@@ -46,11 +61,12 @@ export async function POST(req: NextRequest) {
       console.error("Error inserting code:", insertError)
       return NextResponse.json(
         { error: `Error al generar código: ${insertError.message}` },
-        { status: 500 }
+        { status: 500, headers: corsHeaders }
       )
     }
 
     // Enviar email
+    const appUrl = (process.env.NEXT_PUBLIC_URL ?? "https://app.metrikas.pro").replace(/\/$/, "")
     const demoEmailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%); padding: 2px; border-radius: 12px;">
         <div style="background: white; padding: 40px; border-radius: 10px;">
@@ -87,7 +103,7 @@ export async function POST(req: NextRequest) {
           </ul>
 
           <p style="text-align: center; margin: 30px 0;">
-            <a href="https://metrikas.pro/login" style="display: inline-block; background: #a3e635; color: #05122F; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
+            <a href="${appUrl}/login" style="display: inline-block; background: #a3e635; color: #05122F; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
               👉 Ingresar a Metrikas
             </a>
           </p>
@@ -109,12 +125,12 @@ export async function POST(req: NextRequest) {
       ok: true,
       message: "Código enviado a tu email",
       code,
-    })
+    }, { headers: corsHeaders })
   } catch (err) {
     console.error("Demo request error:", err)
     return NextResponse.json(
       { error: "Error al procesar solicitud" },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     )
   }
 }
