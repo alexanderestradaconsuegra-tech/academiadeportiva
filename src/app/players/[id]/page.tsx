@@ -638,7 +638,6 @@ export default function PlayerProfilePage() {
                   { key: "AGI", value: Math.round(latestEval.agility_score) },
                 ]
                 const ovr = Math.round(stats.reduce((s, x) => s + x.value, 0) / stats.length)
-                const badge = ovr >= 88 ? "ELITE" : ovr >= 75 ? "TOP" : "PRO"
                 return (
                   <div className="flex flex-col items-center gap-4 py-2" style={{ maxWidth: "100%" }}>
                     <div
@@ -648,58 +647,52 @@ export default function PlayerProfilePage() {
                         maxWidth: "100%",
                         height: 420,
                         borderRadius: 16,
-                        background: "linear-gradient(175deg, #0f1f60 0%, #080d2e 40%, #030812 100%)",
-                        boxShadow: "inset 0 0 0 1px rgba(251,191,36,0.2), 0 20px 60px rgba(0,0,0,0.5)",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        padding: "18px 20px 14px",
-                        fontFamily: "system-ui, sans-serif",
+                        background: "#05122F",
+                        boxShadow: "inset 0 0 0 1px rgba(163,230,53,0.25), 0 20px 60px rgba(0,0,0,0.5)",
+                        overflow: "hidden",
                         position: "relative",
+                        fontFamily: "system-ui, sans-serif",
                       }}
                     >
-                      {/* Top row: OVR + badge + academy */}
-                      <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                        <div>
-                          <div style={{ fontSize: 42, fontWeight: 900, color: "#facc15", lineHeight: 1 }}>{ovr}</div>
-                          <div style={{ fontSize: 10, fontWeight: 700, color: "#facc15", letterSpacing: 2 }}>{badge}</div>
-                          <div style={{ fontSize: 9, color: "rgba(251,191,36,0.65)", marginTop: 2 }}>{player.position}</div>
-                        </div>
-                        <div style={{ textAlign: "right" }}>
-                          <div style={{ fontSize: 8, color: "rgba(251,191,36,0.45)", textTransform: "uppercase", letterSpacing: 1, maxWidth: 90 }}>{teamSettings?.name ?? "Metrikas"}</div>
-                        </div>
-                      </div>
-                      {/* Photo */}
+                      {/* Full-bleed photo */}
                       {player.photo_url ? (
                         <img
                           src={player.photo_url}
                           alt={player.name}
                           crossOrigin="anonymous"
-                          style={{ width: 130, height: 130, objectFit: "cover", borderRadius: "50%", border: "3px solid rgba(251,191,36,0.35)", marginBottom: 10 }}
+                          style={{ position: "absolute", inset: 0, width: 280, height: 420, objectFit: "cover", objectPosition: "center top" }}
                         />
                       ) : (
-                        <div style={{ width: 130, height: 130, borderRadius: "50%", background: "rgba(251,191,36,0.08)", border: "3px solid rgba(251,191,36,0.35)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10, fontSize: 44, color: "rgba(251,191,36,0.4)", fontWeight: 900 }}>
+                        <div style={{ position: "absolute", inset: 0, width: 280, height: 420, background: "linear-gradient(175deg, #0f1f60 0%, #05122F 60%, #030812 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 90, color: "rgba(163,230,53,0.25)", fontWeight: 900 }}>
                           {player.name.charAt(0)}
                         </div>
                       )}
-                      {/* Name + category */}
-                      <div style={{ textAlign: "center", marginBottom: 14 }}>
-                        <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", letterSpacing: 1, textTransform: "uppercase" }}>{player.name}</div>
-                        <div style={{ fontSize: 9, color: "rgba(251,191,36,0.55)", marginTop: 3 }}>{player.category}</div>
+                      {/* Bottom gradient for text legibility */}
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(5,18,47,0.05) 0%, rgba(5,18,47,0.15) 45%, rgba(5,18,47,0.75) 68%, #05122F 88%)" }} />
+                      {/* Top row: OVR + position + wordmark */}
+                      <div style={{ position: "absolute", top: 16, left: 18, right: 18, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div>
+                          <div style={{ fontSize: 40, fontWeight: 900, color: "#a3e635", lineHeight: 1, textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>{ovr}</div>
+                          <div style={{ fontSize: 12, fontWeight: 800, color: "#a3e635", letterSpacing: 1, textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>{player.position}</div>
+                        </div>
+                        <div style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: 1.5, textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>MÉTRIKAS</div>
                       </div>
-                      {/* Stats grid */}
-                      <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "7px 20px" }}>
-                        {stats.map(({ key, value }) => (
-                          <div key={key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span style={{ fontSize: 9, fontWeight: 600, color: "rgba(255,255,255,0.45)", letterSpacing: 1 }}>{key}</span>
-                            <span style={{ fontSize: 15, fontWeight: 900, color: value >= 80 ? "#facc15" : value >= 65 ? "#34d399" : "#38bdf8" }}>{value}</span>
-                          </div>
-                        ))}
+                      {/* Bottom content: name + stats */}
+                      <div style={{ position: "absolute", left: 18, right: 18, bottom: 16 }}>
+                        <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 10, lineHeight: 1.05 }}>{player.name}</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5px 18px" }}>
+                          {stats.map(({ key, value }) => (
+                            <div key={key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.75)", letterSpacing: 1 }}>{key}</span>
+                              <span style={{ fontSize: 15, fontWeight: 900, color: "#a3e635" }}>{value}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                     <button
                       onClick={downloadCard}
-                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-900 font-bold text-sm transition-colors"
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-lime-400 hover:bg-lime-500 text-slate-900 font-bold text-sm transition-colors"
                     >
                       <Download size={14} />
                       Descargar PNG
