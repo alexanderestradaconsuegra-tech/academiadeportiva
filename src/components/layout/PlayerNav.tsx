@@ -32,7 +32,7 @@ export default function PlayerNav() {
               <Link key={href} href={href} className="flex flex-col items-center gap-1 flex-1">
                 <div className={cn(
                   "w-10 h-10 rounded-2xl flex items-center justify-center transition-all",
-                  active ? "bg-lime-400 shadow-md shadow-lime-200 dark:shadow-none" : "bg-transparent"
+                  active ? "bg-lime-400 shadow-md shadow-lime-400/40 dark:shadow-none" : "bg-transparent"
                 )}>
                   <Icon size={20} className={active ? "text-[#05122F]" : "text-slate-400 dark:text-slate-500"} />
                 </div>

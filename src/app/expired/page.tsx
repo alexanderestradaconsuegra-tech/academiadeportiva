@@ -46,7 +46,7 @@ export default function ExpiredPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-[#05122F] mx-auto flex items-center justify-center mb-4 shadow-lg shadow-lime-200">
+          <div className="w-16 h-16 rounded-2xl bg-[#05122F] mx-auto flex items-center justify-center mb-4 shadow-lg shadow-lime-400/40">
             <Trophy size={32} className="text-white" />
           </div>
           <h1 className="text-2xl font-black text-slate-900 mb-1">Tu prueba de 7 días terminó</h1>
@@ -98,7 +98,7 @@ export default function ExpiredPage() {
               <button
                 type="submit"
                 disabled={loading || code.length < 6}
-                className="w-full h-12 bg-lime-400 text-[#05122F] rounded-xl font-bold text-sm hover:bg-lime-700 transition-all shadow-md shadow-lime-200 disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full h-12 bg-lime-400 text-[#05122F] rounded-xl font-bold text-sm hover:bg-lime-700 transition-all shadow-md shadow-lime-400/40 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? <><Loader2 size={16} className="animate-spin" /> Verificando…</> : "Activar academia →"}
               </button>

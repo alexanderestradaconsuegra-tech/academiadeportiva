@@ -40,7 +40,7 @@ export default function BottomNav() {
                     ? "bg-gradient-to-br from-red-500 to-pink-500 shadow-lg shadow-red-200"
                     : "bg-red-50 dark:bg-red-500/10"
                   : active
-                    ? "bg-lime-400 shadow-md shadow-lime-200 dark:shadow-none"
+                    ? "bg-lime-400 shadow-md shadow-lime-400/40 dark:shadow-none"
                     : "bg-transparent"
               )}>
                 <Icon

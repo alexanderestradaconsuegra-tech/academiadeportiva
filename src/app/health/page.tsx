@@ -516,7 +516,7 @@ function SetupPanel({
         {/* Start btn */}
         <button
           onClick={onStart}
-          className="w-full h-14 bg-[#05122F] text-white rounded-2xl font-bold text-base hover:opacity-90 transition-all shadow-lg shadow-lime-200 flex items-center justify-center gap-3"
+          className="w-full h-14 bg-[#05122F] text-white rounded-2xl font-bold text-base hover:opacity-90 transition-all shadow-lg shadow-lime-400/40 flex items-center justify-center gap-3"
         >
           <Play size={20} fill="white" /> {t("startLiveSession")}
         </button>

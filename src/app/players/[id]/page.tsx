@@ -15,7 +15,7 @@ import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler
 import { parseTrackFile, summarizeTrack, extractBiometrics, buildTransform, type TrackSummary, type BiometricSummary } from "@/lib/gps"
 import { supabase } from "@/lib/supabase"
 import { generatePlayerPDF } from "@/lib/generatePlayerPDF"
-import { cn, formatDate, getCategoryColor, getIntensityColor, getScoreColor } from "@/lib/utils"
+import { cn, formatDate, getCategoryColor, getIntensityColor, getPositionShort, getScoreColor } from "@/lib/utils"
 import type { Evaluation, PhysicalTest, InjurySeverity } from "@/lib/types"
 import { useMemo } from "react"
 import { useT } from "@/lib/i18n/useT"
@@ -667,19 +667,20 @@ export default function PlayerProfilePage() {
                           {player.name.charAt(0)}
                         </div>
                       )}
-                      {/* Bottom gradient for text legibility */}
-                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(5,18,47,0.05) 0%, rgba(5,18,47,0.15) 45%, rgba(5,18,47,0.75) 68%, #05122F 88%)" }} />
+                      {/* Top + bottom gradient for text legibility, clear in the middle so the photo shows */}
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(5,18,47,0.65) 0%, rgba(5,18,47,0.05) 22%, rgba(5,18,47,0.05) 45%, rgba(5,18,47,0.75) 68%, #05122F 88%)" }} />
                       {/* Top row: OVR + position + wordmark */}
                       <div style={{ position: "absolute", top: 16, left: 18, right: 18, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                         <div>
-                          <div style={{ fontSize: 40, fontWeight: 900, color: "#a3e635", lineHeight: 1, textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>{ovr}</div>
-                          <div style={{ fontSize: 12, fontWeight: 800, color: "#a3e635", letterSpacing: 1, textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>{player.position}</div>
+                          <div style={{ fontSize: 40, fontWeight: 900, color: "#a3e635", lineHeight: 1, textShadow: "0 2px 10px rgba(0,0,0,0.85)" }}>{ovr}</div>
+                          <div style={{ fontSize: 12, fontWeight: 800, color: "#a3e635", letterSpacing: 1, textShadow: "0 2px 10px rgba(0,0,0,0.85)" }}>{getPositionShort(player.position)}</div>
                         </div>
-                        <div style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: 1.5, textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>MÉTRIKAS</div>
+                        <div style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: 1.5, textShadow: "0 2px 10px rgba(0,0,0,0.85)" }}>MÉTRIKAS</div>
                       </div>
-                      {/* Bottom content: name + stats */}
+                      {/* Bottom content: name + category + stats */}
                       <div style={{ position: "absolute", left: 18, right: 18, bottom: 16 }}>
-                        <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 10, lineHeight: 1.05 }}>{player.name}</div>
+                        <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: 0.5, textTransform: "uppercase", lineHeight: 1.05 }}>{player.name}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: "#a3e635", letterSpacing: 0.5, marginBottom: 10 }}>{player.category}</div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5px 18px" }}>
                           {stats.map(({ key, value }) => (
                             <div key={key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
