@@ -11,7 +11,7 @@ interface StatCardProps {
 }
 
 const colorMap = {
-  blue: { bg: "bg-blue-50 dark:bg-blue-500/10", text: "text-[#0B5CFF]", icon: "bg-blue-100 dark:bg-blue-500/15 text-[#0B5CFF]", trend: "text-[#0B5CFF]" },
+  blue: { bg: "bg-lime-50 dark:bg-lime-500/10", text: "text-lime-700 dark:text-lime-400", icon: "bg-lime-100 dark:bg-lime-500/15 text-lime-700 dark:text-lime-400", trend: "text-lime-700 dark:text-lime-400" },
   green: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600", icon: "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600", trend: "text-emerald-600" },
   amber: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600", icon: "bg-amber-100 dark:bg-amber-500/15 text-amber-600", trend: "text-amber-600" },
   red: { bg: "bg-red-50 dark:bg-red-500/10", text: "text-red-600", icon: "bg-red-100 dark:bg-red-500/15 text-red-600", trend: "text-red-600" },

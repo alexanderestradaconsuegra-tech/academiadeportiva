@@ -19,7 +19,7 @@ export default function Input({ label, error, hint, className, ...props }: Input
         {...props}
         className={cn(
           "h-10 rounded-xl border px-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 bg-white dark:bg-slate-900 transition-all duration-150",
-          error ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100" : "border-slate-200 dark:border-slate-700 focus:border-[#0B5CFF] focus:ring-2 focus:ring-blue-100",
+          error ? "border-red-300 focus:border-red-400 focus:ring-2 focus:ring-red-100" : "border-slate-200 dark:border-slate-700 focus:border-lime-500 focus:ring-2 focus:ring-lime-100 dark:focus:ring-lime-500/20",
           "outline-none",
           className
         )}

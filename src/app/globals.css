@@ -5,8 +5,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
-  --brand-blue: #0B5CFF;
-  --brand-dark: #071B4D;
+  --brand-blue: #05122F;
+  --brand-green: #a3e635;
+  --brand-dark: #05122F;
   --brand-light: #F5F7FB;
 }
 
@@ -74,7 +75,7 @@ body {
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #0B5CFF, #3B82F6);
+  background: linear-gradient(135deg, #05122F, #a3e635);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -86,14 +87,14 @@ body {
 }
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(11, 92, 255, 0.12);
+  box-shadow: 0 12px 40px rgba(5, 18, 47, 0.12);
 }
 
 /* Input focus ring */
 .input-focus:focus {
   outline: none;
-  border-color: #0B5CFF;
-  box-shadow: 0 0 0 3px rgba(11, 92, 255, 0.12);
+  border-color: #65a30d;
+  box-shadow: 0 0 0 3px rgba(163, 230, 53, 0.2);
 }
 
 /* Score ring */
@@ -110,13 +111,13 @@ body {
   transition: all 0.15s ease;
 }
 .sidebar-item:hover {
-  background: rgba(11, 92, 255, 0.08);
-  color: #0B5CFF;
+  background: rgba(163, 230, 53, 0.08);
+  color: #4d7c0f;
 }
 .sidebar-item.active {
-  background: rgba(11, 92, 255, 0.12);
-  color: #0B5CFF;
-  border-left: 3px solid #0B5CFF;
+  background: rgba(163, 230, 53, 0.12);
+  color: #4d7c0f;
+  border-left: 3px solid #65a30d;
 }
 
 /* No scrollbar */

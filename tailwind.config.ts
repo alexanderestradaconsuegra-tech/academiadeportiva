@@ -11,8 +11,9 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          blue: "#0B5CFF",
-          dark: "#071B4D",
+          blue: "#05122F",
+          green: "#a3e635",
+          dark: "#05122F",
           light: "#F5F7FB",
         },
       },
@@ -21,7 +22,7 @@ const config: Config = {
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-        "hero-gradient": "linear-gradient(135deg, #071B4D 0%, #0B5CFF 100%)",
+        "hero-gradient": "linear-gradient(135deg, #05122F 0%, #0a2647 60%, #1a3d1f 100%)",
       },
       animation: {
         "fade-in": "fadeIn 0.3s ease-in-out",

@@ -40,7 +40,7 @@ export default function BottomNav() {
                     ? "bg-gradient-to-br from-red-500 to-pink-500 shadow-lg shadow-red-200"
                     : "bg-red-50 dark:bg-red-500/10"
                   : active
-                    ? "bg-[#0B5CFF] shadow-md shadow-blue-200"
+                    ? "bg-lime-400 shadow-md shadow-lime-200 dark:shadow-none"
                     : "bg-transparent"
               )}>
                 <Icon
@@ -49,7 +49,7 @@ export default function BottomNav() {
                     "transition-colors",
                     live
                       ? active ? "text-white" : "text-red-500"
-                      : active ? "text-white" : "text-slate-400 dark:text-slate-500"
+                      : active ? "text-[#05122F]" : "text-slate-400 dark:text-slate-500"
                   )}
                   fill={live && active ? "currentColor" : "none"}
                 />
@@ -57,7 +57,7 @@ export default function BottomNav() {
               <span className={cn(
                 "text-[8px] font-semibold transition-colors leading-none truncate w-full text-center",
                 active
-                  ? live ? "text-red-500" : "text-[#0B5CFF]"
+                  ? live ? "text-red-500" : "text-lime-700 dark:text-lime-400"
                   : "text-slate-400 dark:text-slate-500"
               )}>
                 {label}

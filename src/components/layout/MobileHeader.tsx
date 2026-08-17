@@ -35,7 +35,7 @@ export default function MobileHeader() {
   return (
     <header className="no-print md:hidden sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 px-4 h-14 flex items-center justify-between safe-area-top">
       <div className="flex items-center gap-2.5">
-        <div className={`w-7 h-7 rounded-xl flex items-center justify-center overflow-hidden shrink-0 ${isHealth ? "bg-gradient-to-br from-red-500 to-pink-500" : "bg-[#0B5CFF]"}`}>
+        <div className={`w-7 h-7 rounded-xl flex items-center justify-center overflow-hidden shrink-0 ${isHealth ? "bg-gradient-to-br from-red-500 to-pink-500" : "bg-[#05122F]"}`}>
           {teamSettings?.logo_url && !isHealth ? (
             <img src={teamSettings.logo_url} alt={teamSettings.name} className="w-full h-full object-cover" />
           ) : (
@@ -68,7 +68,7 @@ export default function MobileHeader() {
             </button>
           </>
         )}
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#0B5CFF] to-[#071B4D] flex items-center justify-center text-white text-xs font-bold">
+        <div className="w-8 h-8 rounded-full bg-[#05122F] flex items-center justify-center text-white text-xs font-bold">
           {currentUser?.full_name.charAt(0) ?? "E"}
         </div>
       </div>
