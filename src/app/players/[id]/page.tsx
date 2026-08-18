@@ -639,6 +639,7 @@ export default function PlayerProfilePage() {
                   { key: "AGI", value: Math.round(latestEval.agility_score) },
                 ]
                 const ovr = Math.round(stats.reduce((s, x) => s + x.value, 0) / stats.length)
+                const tier = ovr >= 88 ? "ELITE" : ovr >= 75 ? "TOP" : "PRO"
                 return (
                   <div className="flex flex-col items-center gap-4 py-2" style={{ maxWidth: "100%" }}>
                     <div
@@ -670,18 +671,28 @@ export default function PlayerProfilePage() {
                       )}
                       {/* Top + bottom gradient for text legibility, clear in the middle so the photo shows */}
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(5,18,47,0.65) 0%, rgba(5,18,47,0.05) 22%, rgba(5,18,47,0.05) 45%, rgba(5,18,47,0.75) 68%, #05122F 88%)" }} />
-                      {/* Top row: OVR + position + wordmark */}
+                      {/* Top row: OVR + position + academy/category on the left, tier badge on the right */}
                       <div style={{ position: "absolute", top: 16, left: 18, right: 18, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                         <div>
                           <div style={{ fontSize: 40, fontWeight: 900, color: "#a3e635", lineHeight: 1, textShadow: "0 2px 10px rgba(0,0,0,0.85)" }}>{ovr}</div>
                           <div style={{ fontSize: 12, fontWeight: 800, color: "#a3e635", letterSpacing: 1, textShadow: "0 2px 10px rgba(0,0,0,0.85)" }}>{getPositionShort(player.position)}</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
+                            {teamSettings?.logo_url && (
+                              <img
+                                src={teamSettings.logo_url}
+                                alt={teamSettings?.name ?? "academia"}
+                                crossOrigin="anonymous"
+                                style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover", border: "1px solid rgba(255,255,255,0.5)" }}
+                              />
+                            )}
+                            <span style={{ fontSize: 10, fontWeight: 700, color: "#fff", letterSpacing: 0.5, textShadow: "0 2px 8px rgba(0,0,0,0.85)" }}>{player.category}</span>
+                          </div>
                         </div>
-                        <div style={{ fontSize: 11, fontWeight: 800, color: "#fff", letterSpacing: 1.5, textShadow: "0 2px 10px rgba(0,0,0,0.85)" }}>MÉTRIKAS</div>
+                        <div style={{ fontSize: 12, fontWeight: 900, color: "#a3e635", letterSpacing: 1.5, textShadow: "0 2px 10px rgba(0,0,0,0.85)" }}>{tier}</div>
                       </div>
-                      {/* Bottom content: name + category + stats */}
+                      {/* Bottom content: name + stats */}
                       <div style={{ position: "absolute", left: 18, right: 18, bottom: 16 }}>
-                        <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: 0.5, textTransform: "uppercase", lineHeight: 1.05 }}>{player.name}</div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: "#a3e635", letterSpacing: 0.5, marginBottom: 10 }}>{player.category}</div>
+                        <div style={{ fontSize: 22, fontWeight: 900, color: "#fff", letterSpacing: 0.5, textTransform: "uppercase", lineHeight: 1.05, marginBottom: 10 }}>{player.name}</div>
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5px 18px" }}>
                           {stats.map(({ key, value }) => (
                             <div key={key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
