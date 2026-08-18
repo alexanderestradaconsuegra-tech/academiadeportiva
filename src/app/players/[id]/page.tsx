@@ -288,8 +288,9 @@ export default function PlayerProfilePage() {
     if (!cardRef.current) return
     const h2c = (await import("html2canvas")).default
     const canvas = await h2c(cardRef.current, {
-      scale: 2,
+      scale: 3,
       useCORS: true,
+      backgroundColor: null,
       width: 280,
       height: 420,
       windowWidth: 280,
