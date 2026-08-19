@@ -661,7 +661,7 @@ export default function PlayerProfilePage() {
                         <img
                           src={player.photo_url}
                           alt={player.name}
-                          crossOrigin="anonymous"
+                          crossOrigin={player.photo_url.startsWith("/api/photos/") ? undefined : "anonymous"}
                           style={{ position: "absolute", inset: 0, width: 280, height: 420, objectFit: "cover", objectPosition: "center top" }}
                         />
                       ) : (
@@ -681,7 +681,7 @@ export default function PlayerProfilePage() {
                               <img
                                 src={teamSettings.logo_url}
                                 alt={teamSettings?.name ?? "academia"}
-                                crossOrigin="anonymous"
+                                crossOrigin={teamSettings.logo_url.startsWith("/api/photos/") ? undefined : "anonymous"}
                                 style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover", border: "1px solid rgba(255,255,255,0.5)" }}
                               />
                             )}

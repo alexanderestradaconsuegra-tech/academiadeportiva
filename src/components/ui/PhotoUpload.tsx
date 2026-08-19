@@ -31,8 +31,7 @@ export default function PhotoUpload({ folder, onUploaded }: PhotoUploadProps) {
       setError("No se pudo subir la foto.")
       return
     }
-    const { data } = supabase.storage.from("photos").getPublicUrl(path)
-    onUploaded(data.publicUrl)
+    onUploaded(`/api/photos/${path}`)
   }
 
   return (
