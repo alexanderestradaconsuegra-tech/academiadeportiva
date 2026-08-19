@@ -113,7 +113,7 @@ export default function DashboardPage() {
             value={players.length}
             subtitle={t("registeredInSystem")}
             icon={<Users size={20} />}
-            color="blue"
+            color="lime"
             trend={{ value: 20, label: t("thisMonth") }}
           />
           <StatCard
@@ -177,7 +177,7 @@ export default function DashboardPage() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("topPlayers")}</h2>
-              <Link href="/players" className="text-xs text-lime-700 dark:text-lime-400 font-semibold hover:underline flex items-center gap-1">
+              <Link href="/players" className="-m-2 p-2 text-xs text-lime-700 dark:text-lime-400 font-semibold hover:underline flex items-center gap-1">
                 {t("viewAll")} <ChevronRight size={12} />
               </Link>
             </div>
@@ -191,7 +191,7 @@ export default function DashboardPage() {
                     <span className={cn("w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold shrink-0",
                       i === 0 ? "bg-amber-100 dark:bg-amber-500/15 text-amber-600" : i === 1 ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400" : "bg-orange-50 dark:bg-orange-500/10 text-orange-500"
                     )}>{i + 1}</span>
-                    <img src={player.photo_url} alt={player.name} className="w-9 h-9 rounded-xl object-cover shrink-0" />
+                    <img src={player.photo_url} alt={player.name} loading="lazy" className="w-9 h-9 rounded-xl object-cover shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{player.name}</p>
                       <p className="text-xs text-slate-400 dark:text-slate-500">{e.position(player.position)} · {e.category(player.category)}</p>
@@ -211,7 +211,7 @@ export default function DashboardPage() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("latestActivities")}</h2>
-              <Link href="/activities" className="text-xs text-lime-700 dark:text-lime-400 font-semibold hover:underline flex items-center gap-1">
+              <Link href="/activities" className="-m-2 p-2 text-xs text-lime-700 dark:text-lime-400 font-semibold hover:underline flex items-center gap-1">
                 {t("viewAllFem")} <ChevronRight size={12} />
               </Link>
             </div>

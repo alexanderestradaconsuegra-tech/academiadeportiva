@@ -6,19 +6,19 @@ interface StatCardProps {
   subtitle?: string
   icon?: React.ReactNode
   trend?: { value: number; label: string }
-  color?: "blue" | "green" | "amber" | "red" | "purple"
+  color?: "lime" | "green" | "amber" | "red" | "purple"
   className?: string
 }
 
 const colorMap = {
-  blue: { bg: "bg-lime-50 dark:bg-lime-500/10", text: "text-lime-700 dark:text-lime-400", icon: "bg-lime-100 dark:bg-lime-500/15 text-lime-700 dark:text-lime-400", trend: "text-lime-700 dark:text-lime-400" },
+  lime: { bg: "bg-lime-50 dark:bg-lime-500/10", text: "text-lime-700 dark:text-lime-400", icon: "bg-lime-100 dark:bg-lime-500/15 text-lime-700 dark:text-lime-400", trend: "text-lime-700 dark:text-lime-400" },
   green: { bg: "bg-emerald-50 dark:bg-emerald-500/10", text: "text-emerald-600", icon: "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600", trend: "text-emerald-600" },
   amber: { bg: "bg-amber-50 dark:bg-amber-500/10", text: "text-amber-600", icon: "bg-amber-100 dark:bg-amber-500/15 text-amber-600", trend: "text-amber-600" },
   red: { bg: "bg-red-50 dark:bg-red-500/10", text: "text-red-600", icon: "bg-red-100 dark:bg-red-500/15 text-red-600", trend: "text-red-600" },
   purple: { bg: "bg-purple-50 dark:bg-purple-500/10", text: "text-purple-600", icon: "bg-purple-100 dark:bg-purple-500/15 text-purple-600", trend: "text-purple-600" },
 }
 
-export default function StatCard({ title, value, subtitle, icon, trend, color = "blue", className }: StatCardProps) {
+export default function StatCard({ title, value, subtitle, icon, trend, color = "lime", className }: StatCardProps) {
   const c = colorMap[color]
   return (
     <div className={cn("bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 card-hover", className)}>
