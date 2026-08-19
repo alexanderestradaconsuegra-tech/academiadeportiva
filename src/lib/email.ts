@@ -73,6 +73,44 @@ export function trialReminderEmail(academyName: string, daysLeft: number): strin
   return ""
 }
 
+export function demoReminderEmail(academyName: string, code: string, daysLeft: number): string {
+  const appUrl = (process.env.NEXT_PUBLIC_URL ?? "https://app.metrikas.pro").replace(/\/$/, "")
+  const urgent = daysLeft <= 1
+
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%); padding: 2px; border-radius: 12px;">
+      <div style="background: white; padding: 40px; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #05122F; margin: 0; font-size: 26px;">${urgent ? "⏱️ Tu demo vence mañana" : "👋 ¿Ya probaste Metrikas?"}</h1>
+        </div>
+
+        <p style="color: #333; font-size: 16px; line-height: 1.6;">
+          Hola,<br><br>
+          Vimos que solicitaste una demo para <strong>${academyName}</strong> pero todavía no la has activado.
+          ${urgent
+            ? "Tu código vence <strong>mañana</strong> — actívalo hoy para no perder tus 14 días gratis."
+            : "Todavía te quedan <strong>" + daysLeft + " días</strong> para probar todo lo que Metrikas puede hacer por tu academia."}
+        </p>
+
+        <div style="background: #05122F; color: #a3e635; padding: 20px; border-radius: 8px; text-align: center; margin: 30px 0; border: 2px solid #a3e635;">
+          <p style="margin: 0 0 10px 0; font-size: 12px; color: #a3e635;">TU CÓDIGO DE DEMO</p>
+          <p style="margin: 0; font-size: 32px; font-weight: bold; letter-spacing: 2px; color: #a3e635;">${code}</p>
+        </div>
+
+        <p style="text-align: center; margin: 30px 0;">
+          <a href="${appUrl}/login" style="display: inline-block; background: #a3e635; color: #05122F; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
+            👉 Activar mi demo ahora
+          </a>
+        </p>
+
+        <p style="color: #999; font-size: 12px; text-align: center; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+          ¿Tienes dudas o necesitas ayuda para empezar? Escríbenos por WhatsApp: <a href="https://wa.me/56992103974" style="color: #a3e635; text-decoration: none;">+56 9 9210 3974</a>
+        </p>
+      </div>
+    </div>
+  `
+}
+
 export function accountDeletedEmail(academyName: string): string {
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
