@@ -287,7 +287,13 @@ export default function PlayerProfilePage() {
   async function downloadCard() {
     if (!cardRef.current) return
     const h2c = (await import("html2canvas")).default
-    const canvas = await h2c(cardRef.current, {
+    // Drop the outer drop-shadow just for the capture — it bleeds past the
+    // card's own box and can show up as an uneven halo/background in the
+    // exported PNG. Restored right after so the on-screen card is unaffected.
+    const el = cardRef.current
+    const prevBoxShadow = el.style.boxShadow
+    el.style.boxShadow = "none"
+    const canvas = await h2c(el, {
       scale: 3,
       useCORS: true,
       backgroundColor: null,
@@ -296,6 +302,7 @@ export default function PlayerProfilePage() {
       windowWidth: 280,
       windowHeight: 420,
     })
+    el.style.boxShadow = prevBoxShadow
     canvas.toBlob((blob) => {
       if (!blob) return
       const url = URL.createObjectURL(blob)
