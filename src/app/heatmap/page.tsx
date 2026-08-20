@@ -1,5 +1,6 @@
 "use client"
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import AppShell from "@/components/layout/AppShell"
 import PageHeader from "@/components/ui/PageHeader"
 import Button from "@/components/ui/Button"
@@ -48,7 +49,15 @@ export default function HeatmapPage() {
   const lastSampleRef = useRef(0)
   const watchIdRef = useRef<number | null>(null)
 
-  const [playerId, setPlayerId] = useState(players[0]?.id ?? "")
+  const searchParams = useSearchParams()
+  const [playerId, setPlayerId] = useState(() => searchParams.get("player") ?? players[0]?.id ?? "")
+
+  // Arriving from a player's profile preselects that player
+  useEffect(() => {
+    const fromUrl = searchParams.get("player")
+    if (fromUrl && players.some(p => p.id === fromUrl)) setPlayerId(fromUrl)
+  }, [searchParams, players])
+
   const [sessionLabel, setSessionLabel] = useState("")
   const [viewSession, setViewSession] = useState<string | null>(null)
   const [recording, setRecording] = useState(false)

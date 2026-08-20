@@ -11,7 +11,7 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import NotificationToggle from "@/components/ui/NotificationToggle"
 import ChartSkeleton from "@/components/ui/ChartSkeleton"
-import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck, CreditCard, Loader2, Upload, CheckCircle2, AlertCircle, Heart, Zap, Wind, Activity as ActivityIcon } from "lucide-react"
+import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck, CreditCard, Loader2, Upload, CheckCircle2, AlertCircle, Heart, Zap, Wind, Radar, Activity as ActivityIcon } from "lucide-react"
 import { parseTrackFile, summarizeTrack, extractBiometrics, buildTransform, type TrackSummary, type BiometricSummary } from "@/lib/gps"
 import { supabase } from "@/lib/supabase"
 import { generatePlayerPDF } from "@/lib/generatePlayerPDF"
@@ -1256,6 +1256,15 @@ export default function PlayerProfilePage() {
                     <div>
                       <p className="text-sm font-semibold text-slate-900 dark:text-white">{t("viewReport")}</p>
                       <p className="text-xs text-slate-400 dark:text-slate-500">{t("fullPlayerReport")}</p>
+                    </div>
+                  </Link>
+                  <Link href={`/heatmap?player=${id}`} className="flex items-center gap-3 p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-lime-200 hover:bg-lime-50/50 transition-all group">
+                    <div className="w-9 h-9 rounded-xl bg-lime-50 dark:bg-lime-500/10 flex items-center justify-center group-hover:bg-lime-400 transition-colors">
+                      <Radar size={16} className="text-lime-700 dark:text-lime-400 group-hover:text-[#05122F] transition-colors" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">Mapa de calor</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">Zonas de la cancha con GPS</p>
                     </div>
                   </Link>
                 </div>
