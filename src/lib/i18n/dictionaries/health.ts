@@ -1,8 +1,8 @@
 import type { Translations } from "@/lib/i18n/useT"
 
 export const health = {
-  pageTitle: { es: "Salud en Vivo", en: "Live Health", pt: "Saúde em Tempo Real" },
-  pageSubtitle: { es: "Monitor de ritmo cardíaco, velocidad y métricas biométricas en tiempo real", en: "Real-time heart rate, speed, and biometric monitoring", pt: "Monitor de frequência cardíaca, velocidade e métricas biométricas em tempo real" },
+  pageTitle: { es: "Seguimiento Físico", en: "Physical Tracking", pt: "Acompanhamento Físico" },
+  pageSubtitle: { es: "Ritmo cardíaco, velocidad y esfuerzo del entrenamiento en tiempo real", en: "Real-time heart rate, speed, and training effort", pt: "Frequência cardíaca, velocidade e esforço do treino em tempo real" },
   sessionSaved: { es: "Sesión guardada", en: "Session saved", pt: "Sessão salva" },
 
   // Zones

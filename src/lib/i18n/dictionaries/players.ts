@@ -75,7 +75,7 @@ export const players = {
   club: { es: "Club", en: "Club", pt: "Clube" },
   upcomingTrainings: { es: "Próximos Entrenamientos", en: "Upcoming Trainings", pt: "Próximos Treinos" },
   bestPersonalMark: { es: "Mejor Marca Personal", en: "Best Personal Mark", pt: "Melhor Marca Pessoal" },
-  biometricHealth: { es: "Salud Biométrica", en: "Biometric Health", pt: "Saúde Biométrica" },
+  biometricHealth: { es: "Seguimiento Físico", en: "Physical Tracking", pt: "Acompanhamento Físico" },
   restingHr: { es: "FC Reposo", en: "Resting HR", pt: "FC Repouso" },
   maxHr: { es: "FC Máxima", en: "Max HR", pt: "FC Máxima" },
   vo2max: { es: "VO₂ Máx", en: "VO₂ Max", pt: "VO₂ Máx" },

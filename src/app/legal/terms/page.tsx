@@ -25,8 +25,9 @@ export default function TermsPage() {
       <h2 className={h2}>1. Descripción del servicio</h2>
       <p className={p}>
         Metrikas es una plataforma de software como servicio (SaaS) para la gestión de academias de fútbol:
-        jugadores y categorías, convocatorias y formaciones, entrenamientos y asistencia, evaluaciones físicas y
-        salud, notificaciones y cobro de mensualidades.
+        jugadores y categorías, convocatorias y formaciones, entrenamientos y asistencia, evaluaciones y
+        seguimiento físico, notificaciones y cobro de mensualidades. Metrikas es una herramienta de gestión
+        deportiva y no constituye un servicio médico, diagnóstico ni asesoría clínica.
       </p>
 
       <h2 className={h2}>2. Cuentas y roles</h2>

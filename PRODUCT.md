@@ -12,7 +12,7 @@ Primary: dueños y entrenadores de academias de fútbol infantil/juvenil (Chile/
 
 ## Product Purpose
 
-Reemplazar Excel y WhatsApp como la forma de gestionar una academia de fútbol: convocatorias con confirmación individual, evaluaciones físicas con gráficas de progreso, calendario de entrenamientos con asistencia/RSVP del jugador, pizarra táctica, seguimiento de salud/biometría, comunicación con jugadores, y cobro automático de mensualidades. Éxito = que el dueño de la academia deje de depender de Excel/WhatsApp/cobro manual, y que los jugadores se mantengan comprometidos con su propio progreso.
+Reemplazar Excel y WhatsApp como la forma de gestionar una academia de fútbol: convocatorias con confirmación individual, evaluaciones físicas con gráficas de progreso, calendario de entrenamientos con asistencia/RSVP del jugador, pizarra táctica, seguimiento físico (ritmo cardíaco, esfuerzo, lesiones y pruebas de rendimiento), comunicación con jugadores, y cobro automático de mensualidades. Se posiciona deliberadamente como herramienta de gestión deportiva, no como sistema clínico o médico. Éxito = que el dueño de la academia deje de depender de Excel/WhatsApp/cobro manual, y que los jugadores se mantengan comprometidos con su propio progreso.
 
 ## Positioning
 

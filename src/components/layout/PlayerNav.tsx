@@ -16,7 +16,7 @@ export default function PlayerNav() {
     { href: "/calendar",   icon: CalendarDays, label: "Entrenos" },
     { href: "/matches",    icon: Trophy,     label: "Partidos" },
     { href: "/activities", icon: Dumbbell,   label: "Ejercicios" },
-    { href: "/health",     icon: Heart,      label: "Salud" },
+    { href: "/health",     icon: Heart,      label: "Físico" },
     { href: "/tactics",    icon: PenTool,    label: "Tácticas" },
     { href: "/payments",   icon: CreditCard, label: "Pagos" },
   ]

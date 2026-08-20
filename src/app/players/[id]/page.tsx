@@ -1166,7 +1166,7 @@ export default function PlayerProfilePage() {
                       )}
                       {isOwnProfile && (
                         <Link href="/health" className="mt-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-lime-700 dark:text-lime-400 hover:underline pt-1">
-                          Ver datos de salud →
+                          Ver seguimiento físico →
                         </Link>
                       )}
                     </div>
