@@ -25,6 +25,7 @@ interface AppState {
   isAuthenticated: boolean
   isOnboarding: boolean
   authReady: boolean
+  dataReady: boolean
   currentUser: Profile | null
   darkMode: boolean
 }
@@ -404,6 +405,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: false,
     isOnboarding: false,
     authReady: false,
+    dataReady: false,
     currentUser: null,
     darkMode: false,
   })
@@ -433,21 +435,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, teamSettings: data ? mapTeamSettings(data) : null }))
   }, [])
 
+  // Boot loads in two waves. The first carries what the shell and the common
+  // pages render from, and is what callers await. The second holds the
+  // per-player detail sets (and position_samples, which grows without bound
+  // once GPS tracking is in real use) — it runs in the background so a heavy
+  // table can never hold the whole app on a blank screen.
   const loadPlayerData = useCallback(async (categoryFilter?: string | null) => {
-    const [playersRes, activitiesRes, evaluationsRes, healthRes, sessionsRes, trainingsRes, positionSamplesRes, matchesRes, matchStatsRes, exercisesRes, attendanceRes, physicalTestsRes, injuriesRes, paymentsRes, convRes] = await Promise.all([
+    const [playersRes, activitiesRes, evaluationsRes, trainingsRes, matchesRes, exercisesRes, attendanceRes, paymentsRes, convRes] = await Promise.all([
       supabase.from("players").select("*"),
       supabase.from("activities").select("*"),
       supabase.from("evaluations").select("*"),
-      supabase.from("health_profiles").select("*"),
-      supabase.from("live_sessions").select("id, player_id, started_at, ended_at, device_name, device_type, avg_hr, max_hr_session, min_hr_session, avg_speed_kmh, max_speed_kmh, distance_m, duration_s, calories_est, notes"),
       supabase.from("trainings").select("*"),
-      supabase.from("position_samples").select("*"),
       supabase.from("matches").select("*"),
-      supabase.from("match_player_stats").select("*"),
       supabase.from("exercises").select("*"),
       supabase.from("attendance").select("*"),
-      supabase.from("physical_tests").select("*"),
-      supabase.from("injuries").select("*"),
       categoryFilter ? supabase.from("payments").select("*").limit(0) : supabase.from("payments").select("*"),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase as any).from("convocatorias").select("*, convocatoria_players(*)"),
@@ -491,29 +492,52 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       evaluations: categoryFilter
         ? (evaluationsRes.data ?? []).map(mapEvaluation).filter(e => filteredPlayerIds.has(e.player_id))
         : (evaluationsRes.data ?? []).map(mapEvaluation),
-      healthProfiles: categoryFilter
-        ? (healthRes.data ?? []).map(mapHealthProfile).filter(h => filteredPlayerIds.has(h.player_id))
-        : (healthRes.data ?? []).map(mapHealthProfile),
-      liveSessions: categoryFilter
-        ? (sessionsRes.data ?? []).map(mapLiveSession).filter(ls => filteredPlayerIds.has(ls.player_id))
-        : (sessionsRes.data ?? []).map(mapLiveSession),
       trainings: filteredTrainings,
-      positionSamples: categoryFilter
-        ? (positionSamplesRes.data ?? []).map(mapPositionSample).filter(ps => filteredPlayerIds.has(ps.player_id))
-        : (positionSamplesRes.data ?? []).map(mapPositionSample),
       matches: filteredMatches,
-      matchStats: (matchStatsRes.data ?? []).map(mapMatchStat),
       exercises: (exercisesRes.data ?? []).map(mapExercise),
       attendance: (attendanceRes.data ?? []).map(mapAttendance),
-      physicalTests: categoryFilter
-        ? (physicalTestsRes.data ?? []).map(mapPhysicalTest).filter(pt => filteredPlayerIds.has(pt.player_id))
-        : (physicalTestsRes.data ?? []).map(mapPhysicalTest),
-      injuries: categoryFilter
-        ? (injuriesRes.data ?? []).map(mapInjury).filter(inj => filteredPlayerIds.has(inj.player_id))
-        : (injuriesRes.data ?? []).map(mapInjury),
       payments: categoryFilter ? [] : (paymentsRes.data ?? []).map(mapPayment),
       convocatorias,
+      dataReady: true,
     }))
+
+    // Second wave: detail sets only the player profile, health, and heatmap
+    // pages read. Deliberately not awaited — these land a moment later and
+    // React re-renders those pages when they do.
+    void (async () => {
+      const [healthRes, sessionsRes, positionSamplesRes, matchStatsRes, physicalTestsRes, injuriesRes] = await Promise.all([
+        supabase.from("health_profiles").select("*"),
+        supabase.from("live_sessions").select("id, player_id, started_at, ended_at, device_name, device_type, avg_hr, max_hr_session, min_hr_session, avg_speed_kmh, max_speed_kmh, distance_m, duration_s, calories_est, notes"),
+        supabase.from("position_samples").select("*"),
+        supabase.from("match_player_stats").select("*"),
+        supabase.from("physical_tests").select("*"),
+        supabase.from("injuries").select("*"),
+      ])
+      setState(s => {
+        // If the session ended while these were in flight, drop them rather
+        // than repopulating state the sign-out just cleared.
+        if (!s.isAuthenticated) return s
+        return {
+          ...s,
+          healthProfiles: categoryFilter
+            ? (healthRes.data ?? []).map(mapHealthProfile).filter(h => filteredPlayerIds.has(h.player_id))
+            : (healthRes.data ?? []).map(mapHealthProfile),
+          liveSessions: categoryFilter
+            ? (sessionsRes.data ?? []).map(mapLiveSession).filter(ls => filteredPlayerIds.has(ls.player_id))
+            : (sessionsRes.data ?? []).map(mapLiveSession),
+          positionSamples: categoryFilter
+            ? (positionSamplesRes.data ?? []).map(mapPositionSample).filter(ps => filteredPlayerIds.has(ps.player_id))
+            : (positionSamplesRes.data ?? []).map(mapPositionSample),
+          matchStats: (matchStatsRes.data ?? []).map(mapMatchStat),
+          physicalTests: categoryFilter
+            ? (physicalTestsRes.data ?? []).map(mapPhysicalTest).filter(pt => filteredPlayerIds.has(pt.player_id))
+            : (physicalTestsRes.data ?? []).map(mapPhysicalTest),
+          injuries: categoryFilter
+            ? (injuriesRes.data ?? []).map(mapInjury).filter(inj => filteredPlayerIds.has(inj.player_id))
+            : (injuriesRes.data ?? []).map(mapInjury),
+        }
+      })
+    })()
   }, [])
 
   const loadProfileFor = useCallback(async (userId: string) => {
@@ -526,11 +550,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const { data } = await supabase.auth.getSession()
       const userId = data.session?.user.id
       if (userId) {
-        const profile = await loadProfileFor(userId)
+        // team settings does not depend on the profile, so it rides along
+        // instead of waiting for a second round trip
+        const [profile] = await Promise.all([loadProfileFor(userId), loadTeamSettings()])
         if (profile) {
-          setState(s => ({ ...s, isAuthenticated: true, currentUser: profile }))
+          // authReady flips here, not after the data loads, so the app shell
+          // paints immediately instead of holding a blank screen for the
+          // duration of the queries
+          setState(s => ({ ...s, isAuthenticated: true, currentUser: profile, authReady: true }))
           const catFilter = profile.role === "assistant" ? profile.category : null
-          await Promise.all([loadTeamSettings(), loadPlayerData(catFilter)])
+          await loadPlayerData(catFilter)
         } else {
           setState(s => ({ ...s, isAuthenticated: true, isOnboarding: true }))
         }
@@ -545,6 +574,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           ...s,
           isAuthenticated: false,
           isOnboarding: false,
+          dataReady: false,
           currentUser: null,
           teamSettings: null,
           players: [],

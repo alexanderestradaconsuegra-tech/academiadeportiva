@@ -61,6 +61,9 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  // Match all routes except Next.js internals
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // Skip Next.js internals, API routes, and anything with a file extension.
+  // The function already returns early for these, but excluding them here
+  // means it is never invoked at all — every photo and API request was
+  // paying for a middleware invocation it did nothing with.
+  matcher: ["/((?!_next/static|_next/image|api/|favicon.ico|.*\\.).*)"],
 }
