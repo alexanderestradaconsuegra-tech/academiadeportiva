@@ -12,7 +12,7 @@ import { cn, formatDate } from "@/lib/utils"
 import type { HRSample, SpeedSample, HRZone, LiveSession } from "@/lib/types"
 import { HR_ZONES, getZone, calcCalories, formatDuration } from "@/lib/health-zones"
 import {
-  Heart, Bluetooth, BluetoothConnected, BluetoothOff,
+  Bluetooth, BluetoothConnected, BluetoothOff,
   Timer, MapPin, Play, PenLine, Flame,
   Activity, CheckCircle
 } from "lucide-react"

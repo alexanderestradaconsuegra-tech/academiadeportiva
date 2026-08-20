@@ -2,7 +2,7 @@ import Link from "next/link"
 import Image from "next/image"
 import type { Metadata } from "next"
 import {
-  Trophy, Users, CalendarDays, CreditCard, Heart, Bell, Languages,
+  Trophy, Users, CalendarDays, CreditCard, Activity, Bell, Languages,
   ShieldCheck, CheckCircle2, ArrowRight, BarChart3,
   Video, UserCog, Star, Smartphone, MessageCircle, ChevronDown, Sparkles,
 } from "lucide-react"
@@ -53,7 +53,7 @@ const FEATURES = [
   { icon: Trophy, title: "Partidos y convocatoria", desc: "Arma la nómina, elige la formación (11, 8, 7 o 5) y notifica al equipo. Cada jugador confirma desde su teléfono." },
   { icon: BarChart3, title: "Evaluaciones y progreso", desc: "Velocidad, fuerza, técnica, resistencia. Una gráfica real que muestra cómo crece cada jugador mes a mes." },
   { icon: CalendarDays, title: "Entrenamientos y asistencia", desc: "Publica el calendario y recibe confirmación de cada jugador. Sabes quién va a venir antes de llegar al campo." },
-  { icon: Heart, title: "Seguimiento físico", desc: "Lesiones, ritmo cardíaco, pruebas de rendimiento y sesiones en vivo. Todo en un solo lugar para planificar mejor la carga de entrenamiento." },
+  { icon: Activity, title: "Seguimiento físico", desc: "Lesiones, ritmo cardíaco, pruebas de rendimiento y sesiones en vivo. Todo en un solo lugar para planificar mejor la carga de entrenamiento." },
   { icon: CreditCard, title: "Pagos automáticos", desc: "Las cuotas mensuales se generan solas. En un vistazo ves quién está al día y quién debe — sin hojas de cálculo." },
   { icon: Bell, title: "Notificaciones push", desc: "El jugador recibe convocatoria, recordatorio de entrenamiento o aviso de pago directo en su celular." },
   { icon: UserCog, title: "Un acceso por categoría", desc: "Cada profesor entra con su cuenta y ve solo su categoría. Tú conservas el control completo de la academia." },

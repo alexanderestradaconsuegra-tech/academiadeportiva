@@ -6,7 +6,7 @@ import { HR_ZONES, formatDuration } from "@/lib/health-zones"
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Line,
 } from "recharts"
-import { Heart, BluetoothConnected, MapPin, Gauge, Flame, TrendingUp, Pause, Play, Square } from "lucide-react"
+import { Activity, BluetoothConnected, MapPin, Gauge, Flame, TrendingUp, Pause, Play, Square } from "lucide-react"
 import { useT } from "@/lib/i18n/useT"
 import { health as healthDict } from "@/lib/i18n/dictionaries/health"
 
@@ -74,7 +74,7 @@ export default function LivePanel({
           {/* HR */}
           <div className="bg-white/80 backdrop-blur rounded-2xl p-4 text-center border border-white/60 shadow-sm">
             <div className="flex items-center justify-center gap-1.5 mb-2">
-              <Heart size={14} className="text-red-500" fill="#EF4444" />
+              <Activity size={14} className="text-lime-600 dark:text-lime-400" />
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">{t("heartRate")}</span>
             </div>
             <div className="text-4xl font-black tabular-nums" style={{ color: zoneConfig?.color ?? "#94A3B8" }}>
@@ -146,7 +146,7 @@ export default function LivePanel({
         {/* Manual HR input */}
         {selectedDevice === "manual" && sessionState === "running" && (
           <div className="relative z-10 bg-white/60 rounded-xl p-3 flex items-center gap-3">
-            <Heart size={14} className="text-red-400 shrink-0" />
+            <Activity size={14} className="text-lime-600 dark:text-lime-400 shrink-0" />
             <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{t("enterManualHr")}</span>
             <input
               type="number" min={30} max={250} placeholder="ej. 165"
@@ -191,7 +191,7 @@ export default function LivePanel({
         {liveChartData.length < 2 ? (
           <div className="h-48 flex items-center justify-center text-slate-400 dark:text-slate-500">
             <div className="text-center">
-              <Heart size={28} className="mx-auto mb-2 opacity-30" />
+              <Activity size={28} className="mx-auto mb-2 opacity-30" />
               <p className="text-sm">{t("waitingHrData")}</p>
             </div>
           </div>

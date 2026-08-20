@@ -1076,7 +1076,7 @@ export default function PlayerProfilePage() {
               {health && (
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-2 mb-4">
-                    <Heart size={15} className="text-red-500" fill="#EF4444" />
+                    <ActivityIcon size={15} className="text-lime-600 dark:text-lime-400" />
                     <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("biometricHealth")}</h2>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -1115,8 +1115,8 @@ export default function PlayerProfilePage() {
                   </div>
                   {sessions.slice(0, 2).map(s => (
                     <div key={s.id} className="flex items-center gap-3 py-2.5 border-b border-slate-50 dark:border-slate-800 last:border-0">
-                      <div className="w-8 h-8 rounded-xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center shrink-0">
-                        <Heart size={14} className="text-red-500" />
+                      <div className="w-8 h-8 rounded-xl bg-lime-50 dark:bg-lime-500/10 flex items-center justify-center shrink-0">
+                        <ActivityIcon size={14} className="text-lime-600 dark:text-lime-400" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-slate-900 dark:text-white">{s.device_name ?? s.device_type}</p>

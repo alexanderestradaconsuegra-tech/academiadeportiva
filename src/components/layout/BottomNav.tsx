@@ -1,7 +1,7 @@
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, Heart, Dumbbell, BarChart3, CalendarDays, PenTool, Trophy } from "lucide-react"
+import { LayoutDashboard, Users, Activity, Dumbbell, BarChart3, CalendarDays, PenTool, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useT } from "@/lib/i18n/useT"
 import { nav } from "@/lib/i18n/dictionaries/nav"
@@ -13,7 +13,7 @@ export default function BottomNav() {
   const NAV = [
     { href: "/dashboard", icon: LayoutDashboard, label: t("home") },
     { href: "/players",   icon: Users,          label: t("players") },
-    { href: "/health",    icon: Heart,           label: t("healthShort"), live: true },
+    { href: "/health",    icon: Activity,        label: t("healthShort"), live: true },
     { href: "/activities",icon: Dumbbell,        label: t("activity") },
     { href: "/matches",   icon: Trophy,          label: t("matches") },
     { href: "/calendar",  icon: CalendarDays,    label: t("calendar") },
