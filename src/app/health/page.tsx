@@ -62,7 +62,7 @@ export default function HealthPage() {
     date: new Date().toISOString().split("T")[0],
     durationH: "", durationM: "", durationS: "",
     distanceKm: "", avgHr: "", maxHr: "", minHr: "",
-    spo2: "", calories: "", notes: "",
+    calories: "", notes: "",
   })
   const [manualSaving, setManualSaving] = useState(false)
 
@@ -227,15 +227,11 @@ export default function HealthPage() {
     const avgHr = manualForm.avgHr ? parseInt(manualForm.avgHr) : null
     const maxHr = manualForm.maxHr ? parseInt(manualForm.maxHr) : null
     const minHr = manualForm.minHr ? parseInt(manualForm.minHr) : null
-    const spo2 = manualForm.spo2 ? parseFloat(manualForm.spo2) : null
     const calories = manualForm.calories ? parseInt(manualForm.calories) : null
     const avgSpeed = durationS > 0 && distanceM > 0 ? parseFloat(((distanceM / durationS) * 3.6).toFixed(1)) : null
     const started = new Date(manualForm.date + "T12:00:00").toISOString()
     const ended = durationS > 0 ? new Date(new Date(started).getTime() + durationS * 1000).toISOString() : null
-    const notes = [
-      manualForm.notes,
-      spo2 ? `SpO2: ${spo2}%` : null,
-    ].filter(Boolean).join(" · ") || null
+    const notes = manualForm.notes.trim() || null
 
     await supabase.from("live_sessions").insert({
       player_id: selectedPlayer,
@@ -256,7 +252,7 @@ export default function HealthPage() {
       .select("*").eq("player_id", selectedPlayer)
       .order("started_at", { ascending: false }).limit(50)
     if (data) setDbSessions(data as unknown as LiveSession[])
-    setManualForm({ date: new Date().toISOString().split("T")[0], durationH: "", durationM: "", durationS: "", distanceKm: "", avgHr: "", maxHr: "", minHr: "", spo2: "", calories: "", notes: "" })
+    setManualForm({ date: new Date().toISOString().split("T")[0], durationH: "", durationM: "", durationS: "", distanceKm: "", avgHr: "", maxHr: "", minHr: "", calories: "", notes: "" })
     setShowManualForm(false)
     setManualSaving(false)
     setShowSavedMsg(true)
@@ -571,17 +567,10 @@ function SetupPanel({
                   </div>
                 ))}
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">SpO2 / Oxígeno (%)</label>
-                  <input type="number" min="50" max="100" step="0.1" placeholder="98.0" value={manualForm.spo2} onChange={e => onManualFormChange("spo2", e.target.value)}
-                    className="mt-1 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Calorías (kcal)</label>
-                  <input type="number" placeholder="—" value={manualForm.calories} onChange={e => onManualFormChange("calories", e.target.value)}
-                    className="mt-1 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" />
-                </div>
+              <div>
+                <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Calorías (kcal)</label>
+                <input type="number" placeholder="—" value={manualForm.calories} onChange={e => onManualFormChange("calories", e.target.value)}
+                  className="mt-1 w-full text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-lime-300" />
               </div>
               <div>
                 <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Notas (opcional)</label>

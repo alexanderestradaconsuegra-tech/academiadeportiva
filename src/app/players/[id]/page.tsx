@@ -199,10 +199,7 @@ export default function PlayerProfilePage() {
           distance_m: summary.distanceM || null,
           duration_s: summary.durationS || null,
           calories_est: bio.avgHr > 0 ? Math.round(bio.avgHr * summary.durationS * 0.014) : null,
-          notes: [
-            bio.avgSpo2 ? `SpO2: ${bio.avgSpo2}%` : null,
-            summary.elevationGainM ? `Desnivel+: ${Math.round(summary.elevationGainM)}m` : null,
-          ].filter(Boolean).join(" · ") || null,
+          notes: summary.elevationGainM ? `Desnivel+: ${Math.round(summary.elevationGainM)}m` : null,
         })
         if (lsErr) {
           setGpsError(`Error al guardar sesión: ${lsErr.message}`)
@@ -1214,9 +1211,6 @@ export default function PlayerProfilePage() {
                               ...(gpsBiometrics?.hasHr ? [
                                 { label: "FC media", value: `${gpsBiometrics.avgHr} bpm` },
                                 { label: "FC máx.", value: `${gpsBiometrics.maxHr} bpm` },
-                              ] : []),
-                              ...(gpsBiometrics?.hasSpo2 ? [
-                                { label: "SpO2 media", value: `${gpsBiometrics.avgSpo2}%` },
                               ] : []),
                             ].map(m => (
                               <div key={m.label} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-2.5 border border-slate-100 dark:border-slate-700">
