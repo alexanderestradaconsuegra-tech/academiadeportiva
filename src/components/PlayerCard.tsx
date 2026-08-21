@@ -5,7 +5,8 @@ import type { Player, Evaluation, DominantFoot } from "@/lib/types"
 import { cn, getScoreColor, getPositionShort, avatarUrl } from "@/lib/utils"
 import Badge from "./ui/Badge"
 import ScoreRing from "./ui/ScoreRing"
-import { ChevronRight, AlertCircle, CreditCard } from "lucide-react"
+import { ChevronRight, AlertCircle, CreditCard, CalendarX } from "lucide-react"
+import { COMMITMENT_LABELS, type CommitmentLevel } from "@/lib/commitment"
 import { useT } from "@/lib/i18n/useT"
 import { players as playersDict } from "@/lib/i18n/dictionaries/players"
 import { useEnumT } from "@/lib/i18n/enums"
@@ -29,9 +30,11 @@ interface PlayerCardProps {
   evaluation?: Evaluation
   isInjured?: boolean
   hasOverduePayment?: boolean
+  /** Only passed when attendance is slipping — see the header badge below */
+  lowCommitment?: CommitmentLevel | null
 }
 
-export default function PlayerCard({ player, evaluation, isInjured, hasOverduePayment }: PlayerCardProps) {
+export default function PlayerCard({ player, evaluation, isInjured, hasOverduePayment, lowCommitment }: PlayerCardProps) {
   const t = useT(playersDict)
   const e = useEnumT()
   const score = evaluation?.general_score ?? 0
@@ -51,6 +54,19 @@ export default function PlayerCard({ player, evaluation, isInjured, hasOverduePa
           {isInjured && (
             <span className="flex items-center gap-1 bg-red-500/90 backdrop-blur text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
               <AlertCircle size={9} /> {t("injured")}
+            </span>
+          )}
+          {/* Surfaced only when attendance is slipping, matching how the
+              injury and overdue-payment badges only appear on a problem */}
+          {lowCommitment && (
+            <span
+              className={cn(
+                "flex items-center gap-1 backdrop-blur text-white text-[10px] font-bold px-2 py-0.5 rounded-md",
+                lowCommitment === "ausente" ? "bg-red-500/90" : "bg-amber-500/90"
+              )}
+              title={`Compromiso: ${COMMITMENT_LABELS[lowCommitment]}`}
+            >
+              <CalendarX size={9} /> {COMMITMENT_LABELS[lowCommitment]}
             </span>
           )}
           <span className="bg-white/20 backdrop-blur text-white text-[10px] font-semibold px-2 py-0.5 rounded-md">{player.category}</span>

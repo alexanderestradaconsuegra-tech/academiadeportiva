@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import Link from "next/link"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
@@ -11,13 +11,24 @@ import type { Category, Position } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
 import { players as playersDict } from "@/lib/i18n/dictionaries/players"
 import { useEnumT } from "@/lib/i18n/enums"
+import { computeCommitment, type CommitmentLevel } from "@/lib/commitment"
 
 const CATEGORIES: Category[] = ["Sub-10","Sub-12","Sub-14","Sub-16","Sub-18","Juvenil","Senior"]
 const POSITIONS: Position[] = ["Portero","Defensa Central","Lateral Derecho","Lateral Izquierdo","Mediocampista Defensivo","Mediocampista Central","Mediocampista Ofensivo","Extremo Derecho","Extremo Izquierdo","Delantero Centro","Segundo Delantero"]
 
 export default function PlayersPage() {
-  const { players, injuries, payments, getLatestEvaluation } = useApp()
+  const { players, injuries, payments, attendance, trainings, getLatestEvaluation } = useApp()
   const injuredIds = new Set(injuries.filter(i => !i.is_recovered).map(i => i.player_id))
+  // Only players whose attendance has actually slipped get a badge, so the
+  // grid stays quiet until there is something worth acting on
+  const lowCommitmentByPlayer = useMemo(() => {
+    const map = new Map<string, CommitmentLevel>()
+    for (const p of players) {
+      const c = computeCommitment(attendance.filter(a => a.player_id === p.id), trainings)
+      if (c.level === "irregular" || c.level === "ausente") map.set(p.id, c.level)
+    }
+    return map
+  }, [players, attendance, trainings])
   const today = new Date().toISOString().split("T")[0]
   const overduePaymentIds = new Set(payments.filter(p => p.status === "pending" && p.due_date < today).map(p => p.player_id))
   const t = useT(playersDict)
@@ -95,6 +106,7 @@ export default function PlayersPage() {
                 evaluation={getLatestEvaluation(player.id)}
                 isInjured={injuredIds.has(player.id)}
                 hasOverduePayment={overduePaymentIds.has(player.id)}
+                lowCommitment={lowCommitmentByPlayer.get(player.id) ?? null}
               />
             ))}
           </div>

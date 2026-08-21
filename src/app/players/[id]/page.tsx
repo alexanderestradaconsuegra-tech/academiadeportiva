@@ -16,6 +16,7 @@ import { parseTrackFile, summarizeTrack, extractBiometrics, buildTransform, type
 import { supabase } from "@/lib/supabase"
 import { generatePlayerPDF } from "@/lib/generatePlayerPDF"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getPositionShort, getScoreColor } from "@/lib/utils"
+import { computeCommitment, COMMITMENT_LABELS, COMMITMENT_STYLE, COMMITMENT_TEXT, COMMITMENT_BAR } from "@/lib/commitment"
 import type { Evaluation, PhysicalTest, InjurySeverity } from "@/lib/types"
 import { useMemo } from "react"
 import { useT } from "@/lib/i18n/useT"
@@ -267,6 +268,8 @@ export default function PlayerProfilePage() {
   const todayStr = new Date().toISOString().split("T")[0]
   const overduePayments = playerPayments.filter(p => p.status === "pending" && p.due_date < todayStr)
   const overdueTotal = overduePayments.reduce((sum, p) => sum + p.amount, 0)
+  const commitment = computeCommitment(playerAttendance, trainings)
+
   const attendanceStats = {
     total: playerAttendance.length,
     present: playerAttendance.filter(a => a.status === "present").length,
@@ -1032,18 +1035,26 @@ export default function PlayerProfilePage() {
                 </div>
               )}
 
-              {/* Attendance stats */}
-              {attendanceStats.total > 0 && (
+              {/* Commitment — attendance-driven, deliberately separate from the rating */}
+              {commitment.rate !== null && (
                 <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("attendanceRate")}</h2>
-                    <span className={cn("text-lg font-black", attendanceStats.rate! >= 80 ? "text-emerald-500" : attendanceStats.rate! >= 60 ? "text-amber-500" : "text-red-500")}>
-                      {attendanceStats.rate}%
+                  <div className="flex items-center justify-between mb-1">
+                    <h2 className="text-sm font-bold text-slate-900 dark:text-white">Compromiso</h2>
+                    <span className={cn("text-xs font-black px-2 py-0.5 rounded-lg", COMMITMENT_STYLE[commitment.level!])}>
+                      {COMMITMENT_LABELS[commitment.level!]}
                     </span>
                   </div>
-                  <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-3">
-                    <div className="h-2 bg-emerald-500 rounded-full transition-all" style={{ width: `${attendanceStats.rate}%` }} />
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mb-3">
+                    Asistió a {commitment.present + commitment.late} de sus últimos {commitment.counted} entrenamientos
+                    {commitment.excused > 0 && ` · ${commitment.excused} con justificación`}
+                  </p>
+                  <span className={cn("block text-3xl font-black mb-2", COMMITMENT_TEXT[commitment.level!])}>{commitment.rate}%</span>
+                  <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-4">
+                    <div className={cn("h-2 rounded-full transition-all", COMMITMENT_BAR[commitment.level!])} style={{ width: `${commitment.rate}%` }} />
                   </div>
+                  <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2">
+                    Historial completo · {attendanceStats.total} {t("attendanceSessions")}
+                  </p>
                   <div className="grid grid-cols-2 gap-2">
                     {([["presentLabel","present","text-emerald-600","bg-emerald-50 dark:bg-emerald-500/10"],["lateLabel","late","text-amber-600","bg-amber-50 dark:bg-amber-500/10"],["excusedLabel","excused","text-blue-600","bg-blue-50 dark:bg-blue-500/10"],["absentLabel","absent","text-red-600","bg-red-50 dark:bg-red-500/10"]] as const).map(([labelKey, statKey, textCls, bgCls]) => (
                       <div key={statKey} className={cn("rounded-xl p-2.5 text-center", bgCls)}>
@@ -1052,7 +1063,6 @@ export default function PlayerProfilePage() {
                       </div>
                     ))}
                   </div>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center mt-2">{attendanceStats.total} {t("attendanceSessions")}</p>
                 </div>
               )}
 
