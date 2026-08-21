@@ -3,18 +3,55 @@ import { unstable_noStore as noStore } from "next/cache"
 import "./globals.css"
 import { AppProvider } from "@/context/AppContext"
 
+const APP_URL = (process.env.NEXT_PUBLIC_URL ?? "https://app.metrikas.pro").replace(/\/$/, "")
+const TITLE = "Metrikas — Gestión de academias de fútbol"
+const DESCRIPTION =
+  "Convocatorias con confirmación, evaluaciones con gráficas de progreso, asistencia y cobro automático de mensualidades. Deja el Excel y los grupos de WhatsApp."
+
 export const metadata: Metadata = {
-  title: "Metrikas — Academia de Fútbol",
-  description: "Plataforma premium para entrenadores: registra jugadores, controla ejercicios y visualiza el progreso deportivo.",
+  metadataBase: new URL(APP_URL),
+  title: {
+    default: TITLE,
+    template: "%s · Metrikas",
+  },
+  description: DESCRIPTION,
+  applicationName: "Metrikas",
+  keywords: [
+    "academia de fútbol",
+    "gestión deportiva",
+    "escuela de fútbol",
+    "convocatorias",
+    "evaluación de jugadores",
+    "asistencia entrenamientos",
+    "mensualidades academia",
+  ],
   manifest: "/manifest.json",
+  openGraph: {
+    type: "website",
+    siteName: "Metrikas",
+    title: TITLE,
+    description: DESCRIPTION,
+    url: APP_URL,
+    locale: "es_CL",
+    images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "Metrikas" }],
+  },
+  twitter: {
+    card: "summary",
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ["/icon-512.png"],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Metrikas",
   },
   icons: {
-    icon: "/favicon.png",
-    apple: "/icon-192.png",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.png", type: "image/png", sizes: "256x256" },
+    ],
+    apple: "/apple-icon.png",
   },
   other: {
     "mobile-web-app-capable": "yes",

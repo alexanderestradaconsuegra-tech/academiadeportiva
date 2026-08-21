@@ -1,23 +1,31 @@
 {
-  "name": "FutbolMetrics",
-  "short_name": "FutbolMetrics",
-  "description": "Sistema premium para academias de fútbol",
+  "name": "Metrikas — Gestión de academias de fútbol",
+  "short_name": "Metrikas",
+  "description": "Convocatorias, evaluaciones, asistencia y cobro de mensualidades para tu academia de fútbol. Todo en un solo lugar.",
   "start_url": "/dashboard",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#05122F",
+  "background_color": "#000000",
   "theme_color": "#05122F",
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "categories": ["sports", "health", "productivity"]
+  "categories": ["sports", "productivity"]
 }

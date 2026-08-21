@@ -105,7 +105,12 @@ const AppContext = createContext<AppContextType | null>(null)
 const isDev = process.env.NODE_ENV === "development"
 const dbg = (...args: unknown[]) => { if (isDev) console.error(...args) }
 
-const AUTH_ERRORS: Record<"invalidCredentials" | "noAccess", Record<Language, string>> = {
+const AUTH_ERRORS: Record<"invalidCredentials" | "noAccess" | "profileUnavailable", Record<Language, string>> = {
+  profileUnavailable: {
+    es: "No pudimos cargar tu cuenta. Revisa tu conexión e intenta de nuevo.",
+    en: "We couldn't load your account. Check your connection and try again.",
+    pt: "Não conseguimos carregar sua conta. Verifique sua conexão e tente novamente.",
+  },
   invalidCredentials: {
     es: "Credenciales incorrectas. Intenta de nuevo.",
     en: "Incorrect credentials. Please try again.",
@@ -540,9 +545,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     })()
   }, [])
 
-  const loadProfileFor = useCallback(async (userId: string) => {
-    const { data } = await supabase.from("profiles").select("*").eq("id", userId).single()
-    return data ? mapProfile(data) : null
+  // Returns `failed` so callers can tell "this account genuinely has no
+  // profile" apart from "the query did not come back". Collapsing the two is
+  // what sent existing coaches to the create-your-academy screen on a cold
+  // open: maybeSingle keeps a zero-row result out of the error channel.
+  const loadProfileFor = useCallback(async (userId: string): Promise<{ profile: Profile | null; failed: boolean }> => {
+    const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle()
+    if (error) return { profile: null, failed: true }
+    return { profile: data ? mapProfile(data) : null, failed: false }
   }, [])
 
   useEffect(() => {
@@ -552,17 +562,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (userId) {
         // team settings does not depend on the profile, so it rides along
         // instead of waiting for a second round trip
-        const [profile] = await Promise.all([loadProfileFor(userId), loadTeamSettings()])
-        if (profile) {
+        let [result] = await Promise.all([loadProfileFor(userId), loadTeamSettings()])
+
+        // A cold open often restores a session whose access token has already
+        // expired: getSession hands it over from storage before the refresh
+        // lands, so the first query goes out stale and comes back empty.
+        // Refresh and ask once more before drawing any conclusion.
+        if (result.failed) {
+          const { data: refreshed } = await supabase.auth.refreshSession()
+          const refreshedId = refreshed.session?.user.id
+          if (refreshedId) result = await loadProfileFor(refreshedId)
+        }
+
+        if (result.profile) {
           // authReady flips here, not after the data loads, so the app shell
           // paints immediately instead of holding a blank screen for the
           // duration of the queries
-          setState(s => ({ ...s, isAuthenticated: true, currentUser: profile, authReady: true }))
-          const catFilter = profile.role === "assistant" ? profile.category : null
+          setState(s => ({ ...s, isAuthenticated: true, currentUser: result.profile, authReady: true }))
+          const catFilter = result.profile.role === "assistant" ? result.profile.category : null
           await loadPlayerData(catFilter)
-        } else {
+        } else if (!result.failed) {
+          // Confirmed: signed in, but this account has no profile yet
           setState(s => ({ ...s, isAuthenticated: true, isOnboarding: true }))
         }
+        // Still failing after a refresh — leave the session unauthenticated so
+        // the user lands on login and can retry, rather than being pushed into
+        // onboarding for an academy they already have.
       }
       setState(s => ({ ...s, authReady: true }))
     }
@@ -602,7 +627,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const lang = state.teamSettings?.language ?? "es"
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error || !data.user) return AUTH_ERRORS.invalidCredentials[lang]
-    const profile = await loadProfileFor(data.user.id)
+    const { profile, failed } = await loadProfileFor(data.user.id)
+    // Same distinction as on session restore: a failed lookup must not be read
+    // as "this account needs onboarding"
+    if (failed) return AUTH_ERRORS.profileUnavailable[lang]
     if (!profile) {
       setState(s => ({ ...s, isAuthenticated: true, isOnboarding: true }))
       return null
