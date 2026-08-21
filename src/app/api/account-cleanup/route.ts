@@ -12,6 +12,20 @@ export async function POST(req: NextRequest) {
       { auth: { persistSession: false } }
     )
 
+    // This runs on the service role and deletes accounts, so it must never be
+    // callable anonymously. Two legitimate callers: the scheduled job (cron
+    // secret) and a user who just signed in (their session token).
+    const authHeader = req.headers.get("authorization") ?? ""
+    const token = authHeader.replace(/^Bearer\s+/i, "")
+    const isCron = Boolean(process.env.CRON_SECRET) && token === process.env.CRON_SECRET
+    if (!isCron) {
+      if (!token) return NextResponse.json({ error: "No autenticado." }, { status: 401 })
+      const { data: userData, error: userError } = await admin.auth.getUser(token)
+      if (userError || !userData.user) {
+        return NextResponse.json({ error: "Sesión inválida." }, { status: 401 })
+      }
+    }
+
     const now = new Date()
 
     // Get all academies with active trials (no subscription)

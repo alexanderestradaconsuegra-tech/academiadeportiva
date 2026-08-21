@@ -637,8 +637,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
     setState(s => ({ ...s, isAuthenticated: true, currentUser: profile }))
     await Promise.all([loadTeamSettings(), loadPlayerData()])
-    // Check and cleanup expired accounts silently in background
-    fetch("/api/account-cleanup", { method: "POST" }).catch(err => console.error("Cleanup error:", err))
+    // Check and cleanup expired accounts silently in background. The route
+    // runs on the service role and deletes accounts, so it needs proof this
+    // came from a signed-in user rather than an anonymous caller.
+    if (data.session?.access_token) {
+      fetch("/api/account-cleanup", {
+        method: "POST",
+        headers: { authorization: `Bearer ${data.session.access_token}` },
+      }).catch(err => console.error("Cleanup error:", err))
+    }
     return null
   }, [loadProfileFor, loadTeamSettings, loadPlayerData, state.teamSettings?.language])
 

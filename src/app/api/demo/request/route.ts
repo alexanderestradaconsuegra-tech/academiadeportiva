@@ -19,6 +19,33 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders })
 }
 
+// CORS only constrains browsers, so it is no defence against a script hitting
+// this endpoint in a loop. Without a limit, anyone could mint unlimited demo
+// codes and, worse, use this domain to mail arbitrary addresses — which is how
+// a sending reputation gets burned. Per-IP counting is in memory (a speed bump
+// that resets on deploy); the per-email rule is checked against the table, so
+// it survives restarts and holds across instances.
+const RATE_PER_IP = 3
+const RATE_WINDOW_MS = 60 * 60 * 1000
+const ipHits = new Map<string, number[]>()
+
+function ipRateLimited(ip: string, now: number): boolean {
+  const hits = (ipHits.get(ip) ?? []).filter(t => now - t < RATE_WINDOW_MS)
+  if (hits.length >= RATE_PER_IP) {
+    ipHits.set(ip, hits)
+    return true
+  }
+  hits.push(now)
+  ipHits.set(ip, hits)
+  // Keep the map from growing without bound on a long-lived process
+  if (ipHits.size > 5000) {
+    ipHits.forEach((times, key) => {
+      if (times.every((t: number) => now - t >= RATE_WINDOW_MS)) ipHits.delete(key)
+    })
+  }
+  return false
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { email, academy_name } = await req.json()
@@ -30,11 +57,35 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || "desconocida"
+    if (ipRateLimited(ip, Date.now())) {
+      return NextResponse.json(
+        { error: "Demasiadas solicitudes. Intenta de nuevo en una hora." },
+        { status: 429, headers: corsHeaders }
+      )
+    }
+
     const admin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       { auth: { persistSession: false } }
     )
+
+    // One demo per email per day, checked against what is already stored
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    const { count: recentForEmail } = await admin
+      .from("activation_codes")
+      .select("id", { count: "exact", head: true })
+      .eq("code_type", "demo")
+      .eq("email", email)
+      .gte("requested_at", since)
+
+    if ((recentForEmail ?? 0) > 0) {
+      return NextResponse.json(
+        { error: "Ya enviamos un código a este correo. Revisa tu bandeja o escríbenos por WhatsApp." },
+        { status: 429, headers: corsHeaders }
+      )
+    }
 
     // Generar código único
     const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase()
