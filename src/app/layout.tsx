@@ -53,6 +53,13 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-icon.png",
   },
+  // The system is a login wall with no public content — keep search results
+  // pointed at the marketing site (metrikas.pro), not a bare sign-in screen.
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
   other: {
     "mobile-web-app-capable": "yes",
   },
