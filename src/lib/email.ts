@@ -111,6 +111,48 @@ export function demoReminderEmail(academyName: string, code: string, daysLeft: n
   `
 }
 
+export function newAcademyCredentialsEmail(academyName: string, email: string, password: string): string {
+  const appUrl = (process.env.NEXT_PUBLIC_URL ?? "https://app.metrikas.pro").replace(/\/$/, "")
+
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%); padding: 2px; border-radius: 12px;">
+      <div style="background: white; padding: 40px; border-radius: 10px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #05122F; margin: 0; font-size: 26px;">🎉 ¡Tu academia ya está lista!</h1>
+        </div>
+
+        <p style="color: #333; font-size: 16px; line-height: 1.6;">
+          Hola,<br><br>
+          Recibimos tu pago y creamos tu cuenta en Metrikas para <strong>${academyName}</strong>. Ya puedes entrar con estos datos:
+        </p>
+
+        <div style="background: #05122F; color: #a3e635; padding: 20px; border-radius: 8px; margin: 30px 0; border: 2px solid #a3e635;">
+          <p style="margin: 0 0 4px 0; font-size: 11px; color: #a3e635; text-transform: uppercase; letter-spacing: 1px;">Usuario</p>
+          <p style="margin: 0 0 16px 0; font-size: 18px; font-weight: bold; color: #fff;">${email}</p>
+          <p style="margin: 0 0 4px 0; font-size: 11px; color: #a3e635; text-transform: uppercase; letter-spacing: 1px;">Contraseña</p>
+          <p style="margin: 0; font-size: 22px; font-weight: bold; letter-spacing: 1px; color: #fff;">${password}</p>
+        </div>
+
+        <div style="background: #f0fdf4; border-left: 4px solid #a3e635; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <p style="margin: 0; color: #166534; font-size: 14px;">
+            <strong>💡 Recomendación:</strong> una vez dentro, ve a Configuración y cambia esta contraseña por una que solo tú conozcas.
+          </p>
+        </div>
+
+        <p style="text-align: center; margin: 30px 0;">
+          <a href="${appUrl}/login" style="display: inline-block; background: #a3e635; color: #05122F; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;">
+            👉 Entrar a Metrikas
+          </a>
+        </p>
+
+        <p style="color: #999; font-size: 12px; text-align: center; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+          ¿Tienes dudas o necesitas ayuda para empezar? Escríbenos por WhatsApp: <a href="https://wa.me/56992103974" style="color: #a3e635; text-decoration: none;">+56 9 9210 3974</a>
+        </p>
+      </div>
+    </div>
+  `
+}
+
 export function accountDeletedEmail(academyName: string): string {
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

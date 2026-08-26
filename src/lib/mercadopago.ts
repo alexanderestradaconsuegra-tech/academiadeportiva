@@ -15,11 +15,19 @@ export const MP_PRICES = {
 
 export const MP_CURRENCY = process.env.MP_CURRENCY ?? "CLP"
 
-/** Creates an automatic recurring subscription (Preapproval API). */
+/**
+ * Creates an automatic recurring subscription (Preapproval API).
+ *
+ * `reference` becomes the `::`-prefixed part of external_reference. For the
+ * existing signed-in flow it's a real academy_id; for the public checkout
+ * (no account yet) it's an activation code instead — the webhook resolves
+ * either shape, see resolveOrCreateAcademy.
+ */
 export async function createPreapproval(
   plan: "monthly" | "annual",
-  academyId: string,
+  reference: string,
   payerEmail: string,
+  backUrl?: string,
 ) {
   const isAnnual = plan === "annual"
   const amount = MP_PRICES[plan]
@@ -35,9 +43,9 @@ export async function createPreapproval(
       transaction_amount: amount,
       currency_id: MP_CURRENCY,
     },
-    back_url: `${appUrl}/subscribe/success?plan=${plan}&academy=${academyId}`,
+    back_url: backUrl ?? `${appUrl}/subscribe/success?plan=${plan}&academy=${reference}`,
     payer_email: payerEmail,
-    external_reference: `${academyId}::${plan}`,
+    external_reference: `${reference}::${plan}`,
     notification_url: `${appUrl}/api/webhooks/mercadopago`,
     status: "pending",
   }
