@@ -59,6 +59,56 @@ export type Database = {
           },
         ]
       }
+      expenses: {
+        Row: {
+          id: string
+          academy_id: string
+          category: "arriendo" | "sueldos" | "implementos" | "servicios" | "otro"
+          concept: string
+          amount: number
+          date: string
+          is_recurring: boolean
+          notes: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          academy_id: string
+          category: "arriendo" | "sueldos" | "implementos" | "servicios" | "otro"
+          concept: string
+          amount: number
+          date: string
+          is_recurring?: boolean
+          notes?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          academy_id?: string
+          category?: "arriendo" | "sueldos" | "implementos" | "servicios" | "otro"
+          concept?: string
+          amount?: number
+          date?: string
+          is_recurring?: boolean
+          notes?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_academy_id_fkey"
+            columns: ["academy_id"]
+            isOneToOne: false
+            referencedRelation: "team_settings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           id: string

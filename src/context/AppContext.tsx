@@ -1,7 +1,7 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, RsvpStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer } from "@/lib/types"
-import { resolveMonthlyPaymentDueDate } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, RsvpStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer, Expense } from "@/lib/types"
+import { resolveMonthlyChargeDate } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
@@ -22,6 +22,7 @@ interface AppState {
   physicalTests: PhysicalTest[]
   injuries: Injury[]
   payments: Payment[]
+  expenses: Expense[]
   convocatorias: Convocatoria[]
   isAuthenticated: boolean
   isOnboarding: boolean
@@ -86,6 +87,9 @@ interface AppContextType extends AppState {
   updatePayment: (id: string, data: Partial<Omit<Payment, "id" | "created_at" | "player_id">>) => void
   deletePayment: (id: string) => void
   getPlayerPayments: (playerId: string) => Payment[]
+  addExpense: (data: Omit<Expense, "id" | "created_at">) => Expense
+  updateExpense: (id: string, data: Partial<Omit<Expense, "id" | "created_at">>) => void
+  deleteExpense: (id: string) => void
   submitPaymentReceipt: (paymentId: string, file: File, note: string) => Promise<{ error: string | null }>
   approvePaymentReceipt: (paymentId: string) => void
   rejectPaymentReceipt: (paymentId: string, note: string) => void
@@ -306,6 +310,19 @@ function mapPayment(row: Tables<"payments">): Payment {
   }
 }
 
+function mapExpense(row: Tables<"expenses">): Expense {
+  return {
+    id: row.id,
+    category: row.category,
+    concept: row.concept,
+    amount: Number(row.amount),
+    date: row.date,
+    is_recurring: row.is_recurring,
+    notes: row.notes ?? null,
+    created_at: row.created_at,
+  }
+}
+
 function mapInjury(row: Tables<"injuries">): Injury {
   return {
     id: row.id,
@@ -407,6 +424,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     physicalTests: [],
     injuries: [],
     payments: [],
+    expenses: [],
     convocatorias: [],
     isAuthenticated: false,
     isOnboarding: false,
@@ -447,7 +465,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // once GPS tracking is in real use) — it runs in the background so a heavy
   // table can never hold the whole app on a blank screen.
   const loadPlayerData = useCallback(async (categoryFilter?: string | null) => {
-    const [playersRes, activitiesRes, evaluationsRes, trainingsRes, matchesRes, exercisesRes, attendanceRes, paymentsRes, convRes] = await Promise.all([
+    const [playersRes, activitiesRes, evaluationsRes, trainingsRes, matchesRes, exercisesRes, attendanceRes, paymentsRes, expensesRes, convRes] = await Promise.all([
       supabase.from("players").select("*"),
       supabase.from("activities").select("*"),
       supabase.from("evaluations").select("*"),
@@ -456,6 +474,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       supabase.from("exercises").select("*"),
       supabase.from("attendance").select("*"),
       categoryFilter ? supabase.from("payments").select("*").limit(0) : supabase.from("payments").select("*"),
+      // Financial data — assistants never see it, same boundary as payments.
+      // RLS already blocks non-coaches from reading it at all, this just
+      // skips the wasted round trip.
+      categoryFilter ? supabase.from("expenses").select("*").limit(0) : supabase.from("expenses").select("*"),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase as any).from("convocatorias").select("*, convocatoria_players(*)"),
     ])
@@ -503,6 +525,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       exercises: (exercisesRes.data ?? []).map(mapExercise),
       attendance: (attendanceRes.data ?? []).map(mapAttendance),
       payments: categoryFilter ? [] : (paymentsRes.data ?? []).map(mapPayment),
+      expenses: categoryFilter ? [] : (expensesRes.data ?? []).map(mapExpense),
       convocatorias,
       dataReady: true,
     }))
@@ -617,6 +640,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           physicalTests: [],
           injuries: [],
           payments: [],
+          expenses: [],
           convocatorias: [],
         }))
       }
@@ -1257,6 +1281,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     supabase.from("payments").delete().eq("id", id).then(({ error }) => { if (error) dbg("deletePayment:", error) })
   }, [])
 
+  const addExpense = useCallback((data: Omit<Expense, "id" | "created_at">): Expense => {
+    const expense: Expense = { ...data, id: crypto.randomUUID(), created_at: new Date().toISOString() }
+    const academyId = state.teamSettings?.id
+    setState(s => ({ ...s, expenses: [...s.expenses, expense] }))
+    if (!academyId) { dbg("addExpense: no academy id"); return expense }
+    supabase.from("expenses").insert({
+      id: expense.id,
+      academy_id: academyId,
+      category: expense.category,
+      concept: expense.concept,
+      amount: expense.amount,
+      date: expense.date,
+      is_recurring: expense.is_recurring,
+      notes: expense.notes || null,
+      created_at: expense.created_at,
+    }).then(({ error }) => { if (error) dbg("addExpense:", error) })
+    return expense
+  }, [state.teamSettings?.id])
+
+  const updateExpense = useCallback((id: string, data: Partial<Omit<Expense, "id" | "created_at">>) => {
+    setState(s => ({ ...s, expenses: s.expenses.map(e => e.id === id ? { ...e, ...data } : e) }))
+    supabase.from("expenses").update({ ...data }).eq("id", id).then(({ error }) => { if (error) dbg("updateExpense:", error) })
+  }, [])
+
+  const deleteExpense = useCallback((id: string) => {
+    setState(s => ({ ...s, expenses: s.expenses.filter(e => e.id !== id) }))
+    supabase.from("expenses").delete().eq("id", id).then(({ error }) => { if (error) dbg("deleteExpense:", error) })
+  }, [])
+
   const submitPaymentReceipt = useCallback(async (paymentId: string, file: File, note: string): Promise<{ error: string | null }> => {
     const academyId = state.teamSettings?.id
     if (!academyId) return { error: "No se pudo identificar la academia." }
@@ -1406,7 +1459,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const monthlyFee = state.teamSettings?.monthly_fee
     if (!monthlyFee || monthlyFee <= 0) return 0
     const today = new Date().toISOString().split("T")[0]
-    const dueDate = resolveMonthlyPaymentDueDate(today)
+    const dueDate = resolveMonthlyChargeDate(today)
     const duePrefix = dueDate.slice(0, 7)
     const existingForTarget = state.payments.filter(p =>
       p.concept === "monthly_fee" && p.due_date.startsWith(duePrefix)
@@ -1551,6 +1604,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         rejectPaymentReceipt,
         getReceiptSignedUrl,
         getPlayerPayments,
+        addExpense,
+        updateExpense,
+        deleteExpense,
         getConvocatoria,
         saveConvocatoria,
         respondConvocatoria,

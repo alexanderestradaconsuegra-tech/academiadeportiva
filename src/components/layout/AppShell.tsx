@@ -9,7 +9,7 @@ import PlayerNav from "./PlayerNav"
 import DemoBanner from "./DemoBanner"
 
 const PLAYER_ALLOWED_PREFIXES = ["/matches", "/activities", "/tactics", "/health", "/payments", "/calendar"]
-const ASSISTANT_BLOCKED_PREFIXES = ["/payments", "/settings", "/reports", "/charts"]
+const ASSISTANT_BLOCKED_PREFIXES = ["/payments", "/finances", "/settings", "/reports", "/charts"]
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isOnboarding, authReady, dataReady, currentUser, isTrialExpired, trialDaysLeft, isSubscriptionBlocked } = useApp()

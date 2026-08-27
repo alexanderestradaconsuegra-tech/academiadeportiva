@@ -7,7 +7,7 @@ import { useT } from "@/lib/i18n/useT"
 import { nav } from "@/lib/i18n/dictionaries/nav"
 import { common } from "@/lib/i18n/dictionaries/common"
 import {
-  LayoutDashboard, Users, Dumbbell, BarChart3, FileText, LogOut, Trophy, ChevronRight, Activity, Settings, CalendarDays, Sun, Moon, PenTool, CreditCard
+  LayoutDashboard, Users, Dumbbell, BarChart3, FileText, LogOut, Trophy, ChevronRight, Activity, Settings, CalendarDays, Sun, Moon, PenTool, CreditCard, Wallet
 } from "lucide-react"
 import PushToggle from "@/components/PushToggle"
 import MetrikasLogo from "@/components/ui/MetrikasLogo"
@@ -29,6 +29,7 @@ export default function Sidebar() {
     { href: "/health", icon: Activity, label: t("health"), badge: "LIVE", adminOnly: false },
     { href: "/tactics", icon: PenTool, label: t("tactics"), adminOnly: false },
     { href: "/payments", icon: CreditCard, label: t("paymentsNav"), adminOnly: true },
+    { href: "/finances", icon: Wallet, label: t("financesNav"), adminOnly: true },
     { href: "/charts", icon: BarChart3, label: t("charts"), adminOnly: true },
     { href: "/reports", icon: FileText, label: t("reports"), adminOnly: true },
     { href: "/settings", icon: Settings, label: t("settings"), adminOnly: true },

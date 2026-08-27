@@ -34,6 +34,7 @@ const TABLES = [
   "convocatorias",
   "convocatoria_players",
   "payments",
+  "expenses",
   "physical_tests",
   "injuries",
   "health_profiles",

@@ -142,7 +142,7 @@ export function effectivePaymentStatus(payment: Payment, today: string): Payment
  * grace period, that would backdate a debt the family never actually missed
  * — so it skips straight to next month's 1st instead.
  */
-export function resolveMonthlyPaymentDueDate(today: string): string {
+export function resolveMonthlyChargeDate(today: string): string {
   const currentMonthFirst = today.slice(0, 7) + "-01"
   const overdueFrom = addDaysToDateString(currentMonthFirst, PAYMENT_GRACE_DAYS)
   if (today >= overdueFrom) {
@@ -151,6 +151,29 @@ export function resolveMonthlyPaymentDueDate(today: string): string {
     return d.toISOString().split("T")[0]
   }
   return currentMonthFirst
+}
+
+// ── Gastos de la academia ────────────────────────────────────────────────
+
+export type ExpenseCategory = "arriendo" | "sueldos" | "implementos" | "servicios" | "otro"
+
+export interface Expense {
+  id: string
+  category: ExpenseCategory
+  concept: string
+  amount: number
+  date: string
+  is_recurring: boolean
+  notes: string | null
+  created_at: string
+}
+
+export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
+  arriendo: "Arriendo de cancha",
+  sueldos: "Sueldos",
+  implementos: "Implementos",
+  servicios: "Servicios (luz, agua, internet)",
+  otro: "Otro",
 }
 
 export type InjurySeverity = "minor" | "moderate" | "severe"

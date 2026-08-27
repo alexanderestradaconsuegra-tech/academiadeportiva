@@ -19,6 +19,7 @@ export const nav = {
   chartsShort: { es: "Análisis", en: "Analytics", pt: "Análise" },
   reports: { es: "Reportes", en: "Reports", pt: "Relatórios" },
   paymentsNav: { es: "Pagos", en: "Payments", pt: "Pagamentos" },
+  financesNav: { es: "Finanzas", en: "Finances", pt: "Finanças" },
   settings: { es: "Configuración", en: "Settings", pt: "Configurações" },
   coach: { es: "Coach", en: "Coach", pt: "Treinador" },
   trainer: { es: "Entrenador", en: "Trainer", pt: "Treinador" },

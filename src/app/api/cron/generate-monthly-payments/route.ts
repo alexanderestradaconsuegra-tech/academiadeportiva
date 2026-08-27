@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
-import { resolveMonthlyPaymentDueDate } from "@/lib/types"
+import { resolveMonthlyChargeDate } from "@/lib/types"
 
 export const dynamic = "force-dynamic"
 
@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic"
  * payment check below), so running it more often than strictly necessary
  * costs nothing and only helps.
  *
- * Shares resolveMonthlyPaymentDueDate with the client-side generator so both
+ * Shares resolveMonthlyChargeDate with the client-side generator so both
  * apply the exact same grace-period rule — the whole reason that function
  * exists is to stop a late-configured fee from backdating a debt no one
  * actually missed, and that logic must not drift between the two callers.
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     for (const academy of academies) {
       results.academiesChecked++
       try {
-        const dueDate = resolveMonthlyPaymentDueDate(today)
+        const dueDate = resolveMonthlyChargeDate(today)
         const duePrefix = dueDate.slice(0, 7)
 
         const { data: players } = await admin

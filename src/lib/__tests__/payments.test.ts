@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { effectivePaymentStatus, resolveMonthlyPaymentDueDate, PAYMENT_GRACE_DAYS } from "../types"
+import { effectivePaymentStatus, resolveMonthlyChargeDate, PAYMENT_GRACE_DAYS } from "../types"
 import type { Payment } from "../types"
 
 function payment(status: Payment["status"], due_date: string): Payment {
@@ -70,20 +70,20 @@ describe("effectivePaymentStatus", () => {
 // Decides which month a newly-configured or newly-generated monthly fee gets
 // dated to. Getting this wrong either silently skips billing a month, or
 // backdates a debt a family never actually had a chance to pay on time.
-describe("resolveMonthlyPaymentDueDate", () => {
+describe("resolveMonthlyChargeDate", () => {
   it("targets the 1st of the current month when comfortably within the grace window", () => {
-    expect(resolveMonthlyPaymentDueDate("2026-03-01")).toBe("2026-03-01")
-    expect(resolveMonthlyPaymentDueDate("2026-03-05")).toBe("2026-03-01")
+    expect(resolveMonthlyChargeDate("2026-03-01")).toBe("2026-03-01")
+    expect(resolveMonthlyChargeDate("2026-03-05")).toBe("2026-03-01")
   })
 
   it("skips to next month once a current-month charge would already read as overdue", () => {
     // Activating the fee on the 6th (or later) must not create a charge
     // that is instantly "Vencido" the moment it appears.
-    expect(resolveMonthlyPaymentDueDate("2026-03-06")).toBe("2026-04-01")
-    expect(resolveMonthlyPaymentDueDate("2026-03-20")).toBe("2026-04-01")
+    expect(resolveMonthlyChargeDate("2026-03-06")).toBe("2026-04-01")
+    expect(resolveMonthlyChargeDate("2026-03-20")).toBe("2026-04-01")
   })
 
   it("rolls over the year when the skip happens in December", () => {
-    expect(resolveMonthlyPaymentDueDate("2026-12-20")).toBe("2027-01-01")
+    expect(resolveMonthlyChargeDate("2026-12-20")).toBe("2027-01-01")
   })
 })
