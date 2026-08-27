@@ -101,15 +101,22 @@ export async function createPlayerPaymentPreference(
   academyAccessToken: string,
   payment: { id: string; concept: string; amount: number },
   academyId: string,
+  payerEmail?: string,
 ) {
   const appUrl = (process.env.NEXT_PUBLIC_URL ?? "https://metrikas.pro").replace(/\/$/, "")
 
   const body = {
     items: [{ title: payment.concept, quantity: 1, unit_price: payment.amount, currency_id: MP_CURRENCY }],
+    payer: payerEmail ? { email: payerEmail } : undefined,
     external_reference: payment.id,
-    back_url: `${appUrl}/payments?paid=${payment.id}`,
+    back_urls: {
+      success: `${appUrl}/payments?paid=${payment.id}`,
+      pending: `${appUrl}/payments?pending=${payment.id}`,
+      failure: `${appUrl}/payments?failed=${payment.id}`,
+    },
     auto_return: "approved",
     notification_url: `${appUrl}/api/webhooks/mercadopago/player-payment?payment_id=${payment.id}&academy_id=${academyId}`,
+    statement_descriptor: "METRIKAS",
   }
 
   const res = await fetch(`${MP_BASE}/checkout/preferences`, {

@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
       creds.mp_access_token,
       { id: payment.id, concept: payment.concept, amount: payment.amount },
       academyId,
+      callerData.user.email,
     )
     return NextResponse.json({ checkout_url: preference.init_point })
   } catch (e: any) {
