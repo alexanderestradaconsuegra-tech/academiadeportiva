@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient, SupabaseClient } from "@supabase/supabase-js"
 import crypto from "crypto"
 import { getPayment, getPreapproval, periodEndFromPlan } from "@/lib/mercadopago"
+import { verifyMercadoPagoSignature } from "@/lib/mp-signature"
 import { sendEmail, newAcademyCredentialsEmail } from "@/lib/email"
 
 function admin() {
@@ -98,6 +99,22 @@ async function resolveOrCreateAcademy(sb: SupabaseClient, reference: string, pay
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
+
+    // Reject forged calls when a webhook secret is configured. Returns null
+    // when it cannot be checked (no secret set yet) — in that case fall
+    // through, since the routes below re-fetch every payment from
+    // MercadoPago's API anyway and never trust the body's status.
+    const sig = verifyMercadoPagoSignature({
+      signatureHeader: req.headers.get("x-signature"),
+      requestId: req.headers.get("x-request-id"),
+      dataId: body?.data?.id ? String(body.data.id) : null,
+      secret: process.env.MP_WEBHOOK_SECRET,
+    })
+    if (sig === false) {
+      console.error("[MP webhook] firma inválida — solicitud descartada")
+      return NextResponse.json({ error: "Firma inválida." }, { status: 401 })
+    }
+
     const sb = admin()
 
     // Subscription status changes (authorized, paused, cancelled)
