@@ -1,6 +1,7 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
 import type { Player, Activity, Evaluation, HealthProfile, LiveSession, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, RsvpStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer } from "@/lib/types"
+import { resolveMonthlyPaymentDueDate } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
@@ -1405,12 +1406,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const monthlyFee = state.teamSettings?.monthly_fee
     if (!monthlyFee || monthlyFee <= 0) return 0
     const today = new Date().toISOString().split("T")[0]
-    const monthPrefix = today.slice(0, 7)
-    const firstOfMonth = monthPrefix + "-01"
-    const existingThisMonth = state.payments.filter(p =>
-      p.concept === "monthly_fee" && p.due_date.startsWith(monthPrefix)
+    const dueDate = resolveMonthlyPaymentDueDate(today)
+    const duePrefix = dueDate.slice(0, 7)
+    const existingForTarget = state.payments.filter(p =>
+      p.concept === "monthly_fee" && p.due_date.startsWith(duePrefix)
     )
-    const existingPlayerIds = new Set(existingThisMonth.map(p => p.player_id))
+    const existingPlayerIds = new Set(existingForTarget.map(p => p.player_id))
     const missing = state.players.filter(p => !existingPlayerIds.has(p.id))
     if (missing.length === 0) return 0
     const now = new Date().toISOString()
@@ -1420,7 +1421,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       player_id: player.id,
       concept: "monthly_fee",
       amount: monthlyFee,
-      due_date: firstOfMonth,
+      due_date: dueDate,
       paid_date: null,
       status: "pending" as const,
       notes: null,

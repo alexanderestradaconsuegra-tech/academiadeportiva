@@ -10,7 +10,7 @@ import Input from "@/components/ui/Input"
 import { Plus, X, Trash2, Check, CreditCard, AlertTriangle, Clock, ChevronRight, Search, Bell, RefreshCw, Settings2, Upload, FileCheck, XCircle } from "lucide-react"
 import { cn, formatDate, avatarUrl } from "@/lib/utils"
 import type { Payment } from "@/lib/types"
-import { effectivePaymentStatus } from "@/lib/types"
+import { effectivePaymentStatus, PAYMENT_GRACE_DAYS } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
 import { payments as paymentsDict } from "@/lib/i18n/dictionaries/payments"
 
@@ -692,7 +692,7 @@ export default function PaymentsPage() {
             </div>
             <div className="p-5 space-y-4">
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Define el monto de la mensualidad. Al inicio de cada mes se generarán pagos pendientes automáticamente para todos los alumnos.
+                Define el monto de la mensualidad. Al inicio de cada mes se generará el cobro pendiente automáticamente para todos los alumnos, sin que tengas que hacer nada. Un pago se marca "Vencido" recién {PAYMENT_GRACE_DAYS} días después de su vencimiento.
               </p>
               <Input
                 label="Monto mensual ($)"

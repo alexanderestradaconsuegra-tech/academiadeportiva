@@ -117,10 +117,40 @@ export interface Payment {
   rejection_note?: string | null
 }
 
+/** Days after due_date before an unpaid payment reads as "Vencido" instead of "Pendiente". */
+export const PAYMENT_GRACE_DAYS = 5
+
+function addDaysToDateString(dateStr: string, days: number): string {
+  const d = new Date(dateStr + "T00:00:00Z")
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().split("T")[0]
+}
+
 export function effectivePaymentStatus(payment: Payment, today: string): PaymentStatus {
   if (payment.status === "paid") return "paid"
   if (payment.status === "en_revision") return "en_revision"
-  return payment.due_date < today ? "overdue" : "pending"
+  const overdueFrom = addDaysToDateString(payment.due_date, PAYMENT_GRACE_DAYS)
+  return today >= overdueFrom ? "overdue" : "pending"
+}
+
+/**
+ * Which month's monthly-fee charge to generate, given today's date.
+ *
+ * Normally the 1st of the current month. But if a coach turns on the
+ * monthly fee for the first time (or the generator runs) late enough in the
+ * month that a charge dated the 1st would already read as overdue under the
+ * grace period, that would backdate a debt the family never actually missed
+ * — so it skips straight to next month's 1st instead.
+ */
+export function resolveMonthlyPaymentDueDate(today: string): string {
+  const currentMonthFirst = today.slice(0, 7) + "-01"
+  const overdueFrom = addDaysToDateString(currentMonthFirst, PAYMENT_GRACE_DAYS)
+  if (today >= overdueFrom) {
+    const d = new Date(currentMonthFirst + "T00:00:00Z")
+    d.setUTCMonth(d.getUTCMonth() + 1)
+    return d.toISOString().split("T")[0]
+  }
+  return currentMonthFirst
 }
 
 export type InjurySeverity = "minor" | "moderate" | "severe"
