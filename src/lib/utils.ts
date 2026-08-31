@@ -42,8 +42,12 @@ export function getCategoryColor(category: string): string {
 }
 
 export function formatDate(dateStr: string): string {
+  // dateStr is a plain "YYYY-MM-DD" — new Date() parses that as UTC midnight.
+  // Formatting in the browser's local timezone (Chile and the rest of Latin
+  // America are behind UTC) would then roll it back to the previous day, so
+  // this must render in UTC to show the date the user actually entered.
   const date = new Date(dateStr)
-  return date.toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" })
+  return date.toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" })
 }
 
 export function getPositionShort(position: string): string {

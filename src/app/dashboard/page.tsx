@@ -55,7 +55,7 @@ export default function DashboardPage() {
     return sortedKeys.map(key => {
       const scores = byMonth.get(key)!
       const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-      const label = new Date(`${key}-01`).toLocaleString(locale, { month: "short" })
+      const label = new Date(`${key}-01`).toLocaleString(locale, { month: "short", timeZone: "UTC" })
       return { month: label.charAt(0).toUpperCase() + label.slice(1), score: avg }
     })
   }, [evaluations, language])
