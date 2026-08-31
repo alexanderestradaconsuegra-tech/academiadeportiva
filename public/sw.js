@@ -1,3 +1,14 @@
+// Without these, a new deploy's service worker sits "waiting" until every
+// open tab from the previous version is closed — during which the push
+// toggle's `navigator.serviceWorker.ready` never resolves and just hangs.
+self.addEventListener("install", () => {
+  self.skipWaiting()
+})
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim())
+})
+
 self.addEventListener("push", (event) => {
   let data = { title: "FutbolMetrics", body: "" }
   try {
