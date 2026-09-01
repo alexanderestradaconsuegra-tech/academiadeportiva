@@ -77,6 +77,18 @@ export interface Exercise {
   category: ActivityCategory
   name: string
   video_url: string // link de referencia (ej. YouTube) mostrando la técnica correcta
+  description: string // cómo ejecutarlo: "3 series de 10, descanso 40s"
+  created_at: string
+}
+
+/** Un ejercicio que el coach le asignó a un jugador — su "plan de trabajo". */
+export interface ExerciseAssignment {
+  id: string
+  player_id: string
+  exercise_id: string
+  note: string | null
+  due_date: string | null
+  completed_at: string | null
   created_at: string
 }
 

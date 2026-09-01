@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, RsvpStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer, Expense } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, RsvpStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer, Expense, ExerciseAssignment } from "@/lib/types"
 import { resolveMonthlyChargeDate } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
@@ -18,6 +18,7 @@ interface AppState {
   matches: Match[]
   matchStats: MatchPlayerStat[]
   exercises: Exercise[]
+  exerciseAssignments: ExerciseAssignment[]
   attendance: Attendance[]
   physicalTests: PhysicalTest[]
   injuries: Injury[]
@@ -60,6 +61,10 @@ interface AppContextType extends AppState {
   addExercise: (exercise: Omit<Exercise, "id" | "created_at">) => Exercise
   updateExercise: (id: string, data: Partial<Omit<Exercise, "id" | "created_at">>) => void
   deleteExercise: (id: string) => void
+  assignExercise: (playerId: string, exerciseId: string, note?: string | null, dueDate?: string | null) => void
+  unassignExercise: (id: string) => void
+  setAssignmentDone: (id: string, done: boolean) => void
+  getPlayerAssignments: (playerId: string) => ExerciseAssignment[]
   getPlayer: (id: string) => Player | undefined
   getPlayerActivities: (playerId: string) => Activity[]
   getPlayerEvaluations: (playerId: string) => Evaluation[]
@@ -391,6 +396,19 @@ function mapExercise(row: Tables<"exercises">): Exercise {
     category: row.category,
     name: row.name,
     video_url: row.video_url ?? "",
+    description: row.description ?? "",
+    created_at: row.created_at,
+  }
+}
+
+function mapExerciseAssignment(row: Tables<"exercise_assignments">): ExerciseAssignment {
+  return {
+    id: row.id,
+    player_id: row.player_id,
+    exercise_id: row.exercise_id,
+    note: row.note ?? null,
+    due_date: row.due_date ?? null,
+    completed_at: row.completed_at ?? null,
     created_at: row.created_at,
   }
 }
@@ -420,6 +438,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     matches: [],
     matchStats: [],
     exercises: [],
+    exerciseAssignments: [],
     attendance: [],
     physicalTests: [],
     injuries: [],
@@ -465,13 +484,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // once GPS tracking is in real use) — it runs in the background so a heavy
   // table can never hold the whole app on a blank screen.
   const loadPlayerData = useCallback(async (categoryFilter?: string | null) => {
-    const [playersRes, activitiesRes, evaluationsRes, trainingsRes, matchesRes, exercisesRes, attendanceRes, paymentsRes, expensesRes, convRes] = await Promise.all([
+    const [playersRes, activitiesRes, evaluationsRes, trainingsRes, matchesRes, exercisesRes, assignmentsRes, attendanceRes, paymentsRes, expensesRes, convRes] = await Promise.all([
       supabase.from("players").select("*"),
       supabase.from("activities").select("*"),
       supabase.from("evaluations").select("*"),
       supabase.from("trainings").select("*"),
       supabase.from("matches").select("*"),
       supabase.from("exercises").select("*"),
+      // The player's own plan — RLS already narrows this to their row set, so
+      // a player fetches only their assignments and a coach the whole academy.
+      supabase.from("exercise_assignments").select("*"),
       supabase.from("attendance").select("*"),
       categoryFilter ? supabase.from("payments").select("*").limit(0) : supabase.from("payments").select("*"),
       // Financial data — assistants never see it, same boundary as payments.
@@ -523,6 +545,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       trainings: filteredTrainings,
       matches: filteredMatches,
       exercises: (exercisesRes.data ?? []).map(mapExercise),
+      exerciseAssignments: (assignmentsRes.data ?? []).map(mapExerciseAssignment),
       attendance: (attendanceRes.data ?? []).map(mapAttendance),
       payments: categoryFilter ? [] : (paymentsRes.data ?? []).map(mapPayment),
       expenses: categoryFilter ? [] : (expensesRes.data ?? []).map(mapExpense),
@@ -636,6 +659,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           matches: [],
           matchStats: [],
           exercises: [],
+          exerciseAssignments: [],
           attendance: [],
           physicalTests: [],
           injuries: [],
@@ -1086,6 +1110,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         category: exercise.category,
         name: exercise.name,
         video_url: exercise.video_url || null,
+        description: exercise.description || null,
         created_at: exercise.created_at,
         academy_id: s.teamSettings?.id ?? null,
       }).then(({ error }) => { if (error) dbg("addExercise:", error) })
@@ -1101,6 +1126,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }))
     const update: TablesUpdate<"exercises"> = { ...data }
     if ("video_url" in update) update.video_url = update.video_url || null
+    if ("description" in update) update.description = update.description || null
     supabase.from("exercises").update(update).eq("id", id).then(({ error }) => { if (error) dbg("updateExercise:", error) })
   }, [])
 
@@ -1108,6 +1134,62 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, exercises: s.exercises.filter(e => e.id !== id) }))
     supabase.from("exercises").delete().eq("id", id).then(({ error }) => { if (error) dbg("deleteExercise:", error) })
   }, [])
+
+  const assignExercise = useCallback((playerId: string, exerciseId: string, note?: string | null, dueDate?: string | null) => {
+    setState(s => {
+      // (player, exercise) is unique in the database, so assigning the same
+      // drill twice is a no-op rather than a duplicate row or an error.
+      if (s.exerciseAssignments.some(a => a.player_id === playerId && a.exercise_id === exerciseId)) return s
+      const academyId = s.teamSettings?.id
+      if (!academyId) { dbg("assignExercise: no academy id"); return s }
+      const assignment: ExerciseAssignment = {
+        id: crypto.randomUUID(),
+        player_id: playerId,
+        exercise_id: exerciseId,
+        note: note || null,
+        due_date: dueDate || null,
+        completed_at: null,
+        created_at: new Date().toISOString(),
+      }
+      supabase.from("exercise_assignments").insert({
+        id: assignment.id,
+        academy_id: academyId,
+        player_id: assignment.player_id,
+        exercise_id: assignment.exercise_id,
+        note: assignment.note,
+        due_date: assignment.due_date,
+        created_at: assignment.created_at,
+      }).then(({ error }) => { if (error) dbg("assignExercise:", error) })
+      return { ...s, exerciseAssignments: [...s.exerciseAssignments, assignment] }
+    })
+  }, [])
+
+  const unassignExercise = useCallback((id: string) => {
+    setState(s => ({ ...s, exerciseAssignments: s.exerciseAssignments.filter(a => a.id !== id) }))
+    supabase.from("exercise_assignments").delete().eq("id", id).then(({ error }) => { if (error) dbg("unassignExercise:", error) })
+  }, [])
+
+  const setAssignmentDone = useCallback((id: string, done: boolean) => {
+    const completedAt = done ? new Date().toISOString() : null
+    setState(s => ({
+      ...s,
+      exerciseAssignments: s.exerciseAssignments.map(a => a.id === id ? { ...a, completed_at: completedAt } : a),
+    }))
+    supabase.from("exercise_assignments").update({ completed_at: completedAt }).eq("id", id)
+      .then(({ error }) => { if (error) dbg("setAssignmentDone:", error) })
+  }, [])
+
+  const getPlayerAssignments = useCallback(
+    (playerId: string) => state.exerciseAssignments
+      .filter(a => a.player_id === playerId)
+      // Pending first, then most recently assigned — the player opens this to
+      // see what's left to do, not to admire what they already finished.
+      .sort((a, b) => {
+        if (!a.completed_at !== !b.completed_at) return a.completed_at ? 1 : -1
+        return b.created_at.localeCompare(a.created_at)
+      }),
+    [state.exerciseAssignments]
+  )
 
   const addPositionSample = useCallback((data: Omit<PositionSample, "id" | "created_at">) => {
     const sample: PositionSample = { ...data, id: crypto.randomUUID(), created_at: new Date().toISOString() }
@@ -1579,6 +1661,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addExercise,
         updateExercise,
         deleteExercise,
+        assignExercise,
+        unassignExercise,
+        setAssignmentDone,
+        getPlayerAssignments,
         getPlayer,
         getPlayerActivities,
         getPlayerEvaluations,

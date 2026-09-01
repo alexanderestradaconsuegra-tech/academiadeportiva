@@ -9,6 +9,7 @@ import Select from "@/components/ui/Select"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
 import Badge from "@/components/ui/Badge"
+import PlayerPlan from "@/components/plan/PlayerPlan"
 import { Plus, X, Dumbbell, Film } from "lucide-react"
 import { cn, formatDate, getCategoryColor, getIntensityColor } from "@/lib/utils"
 import type { ActivityCategory, ActivityUnit, Intensity } from "@/lib/types"
@@ -93,6 +94,10 @@ export default function ActivitiesPage() {
             </Button>
           )}
         </PageHeader>
+
+        {/* The player's plan comes before their history: what to do next
+            matters more than what they already did. */}
+        {isPlayer && ownPlayerId && <PlayerPlan playerId={ownPlayerId} />}
 
         {/* Modal form */}
         {showForm && (

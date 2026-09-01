@@ -354,6 +354,7 @@ export type Database = {
           id: string
           name: string
           video_url: string | null
+          description: string | null
           academy_id: string | null
         }
         Insert: {
@@ -362,6 +363,7 @@ export type Database = {
           id?: string
           name: string
           video_url?: string | null
+          description?: string | null
           academy_id?: string | null
         }
         Update: {
@@ -370,9 +372,71 @@ export type Database = {
           id?: string
           name?: string
           video_url?: string | null
+          description?: string | null
           academy_id?: string | null
         }
         Relationships: []
+      }
+      exercise_assignments: {
+        Row: {
+          id: string
+          academy_id: string
+          player_id: string
+          exercise_id: string
+          note: string | null
+          due_date: string | null
+          completed_at: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          academy_id: string
+          player_id: string
+          exercise_id: string
+          note?: string | null
+          due_date?: string | null
+          completed_at?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          academy_id?: string
+          player_id?: string
+          exercise_id?: string
+          note?: string | null
+          due_date?: string | null
+          completed_at?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_assignments_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_assignments_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercise_assignments_academy_id_fkey"
+            columns: ["academy_id"]
+            isOneToOne: false
+            referencedRelation: "team_settings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       health_profiles: {
         Row: {

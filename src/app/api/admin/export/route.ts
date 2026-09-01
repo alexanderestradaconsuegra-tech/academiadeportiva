@@ -27,6 +27,7 @@ const TABLES = [
   "evaluations",
   "activities",
   "exercises",
+  "exercise_assignments",
   "trainings",
   "attendance",
   "matches",
