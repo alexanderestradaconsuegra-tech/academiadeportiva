@@ -377,6 +377,54 @@ export type Database = {
         }
         Relationships: []
       }
+      session_loads: {
+        Row: {
+          id: string
+          academy_id: string
+          player_id: string
+          training_id: string | null
+          date: string
+          rpe: number
+          duration_min: number
+          load: number
+          notes: string | null
+          logged_by_coach: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          academy_id?: string
+          player_id: string
+          training_id?: string | null
+          date: string
+          rpe: number
+          duration_min: number
+          notes?: string | null
+          logged_by_coach?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          player_id?: string
+          training_id?: string | null
+          date?: string
+          rpe?: number
+          duration_min?: number
+          notes?: string | null
+          logged_by_coach?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_loads_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercise_assignments: {
         Row: {
           id: string

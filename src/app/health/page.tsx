@@ -8,6 +8,9 @@ import PageHeader from "@/components/ui/PageHeader"
 import Button from "@/components/ui/Button"
 import Badge from "@/components/ui/Badge"
 import ChartSkeleton from "@/components/ui/ChartSkeleton"
+import RpeLogger from "@/components/health/RpeLogger"
+import WorkloadCard from "@/components/health/WorkloadCard"
+import SquadWorkload from "@/components/health/SquadWorkload"
 import { cn, formatDate } from "@/lib/utils"
 import type { HRSample, SpeedSample, HRZone, LiveSession } from "@/lib/types"
 import { HR_ZONES, getZone, calcCalories, formatDuration } from "@/lib/health-zones"
@@ -323,6 +326,19 @@ export default function HealthPage() {
             </div>
           )}
         </PageHeader>
+
+        {/* Training load. For a player this is the one thing on the page they
+            act on, so it leads; for a coach it's the squad risk list. */}
+        {isPlayer && ownPlayerId ? (
+          <>
+            <RpeLogger playerId={ownPlayerId} />
+            <div className="mb-5">
+              <WorkloadCard playerId={ownPlayerId} variant="player" />
+            </div>
+          </>
+        ) : (
+          <SquadWorkload />
+        )}
 
         {/* Tabs: Setup / Live / Historial */}
         {sessionState === "idle" || sessionState === "finished" ? (

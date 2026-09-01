@@ -81,6 +81,23 @@ export interface Exercise {
   created_at: string
 }
 
+/**
+ * Carga de una sesión: esfuerzo percibido (1-10) x minutos. Es la base del
+ * control de carga aguda:crónica que se usa para anticipar lesiones.
+ */
+export interface SessionLoad {
+  id: string
+  player_id: string
+  training_id: string | null
+  date: string
+  rpe: number
+  duration_min: number
+  load: number
+  notes: string | null
+  logged_by_coach: boolean
+  created_at: string
+}
+
 /** Un ejercicio que el coach le asignó a un jugador — su "plan de trabajo". */
 export interface ExerciseAssignment {
   id: string

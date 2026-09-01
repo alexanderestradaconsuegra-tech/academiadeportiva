@@ -28,6 +28,7 @@ const TABLES = [
   "activities",
   "exercises",
   "exercise_assignments",
+  "session_loads",
   "trainings",
   "attendance",
   "matches",

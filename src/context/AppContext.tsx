@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, RsvpStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer, Expense, ExerciseAssignment } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, RsvpStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer, Expense, ExerciseAssignment, SessionLoad } from "@/lib/types"
 import { resolveMonthlyChargeDate } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
@@ -19,6 +19,7 @@ interface AppState {
   matchStats: MatchPlayerStat[]
   exercises: Exercise[]
   exerciseAssignments: ExerciseAssignment[]
+  sessionLoads: SessionLoad[]
   attendance: Attendance[]
   physicalTests: PhysicalTest[]
   injuries: Injury[]
@@ -65,6 +66,9 @@ interface AppContextType extends AppState {
   unassignExercise: (id: string) => void
   setAssignmentDone: (id: string, done: boolean) => void
   getPlayerAssignments: (playerId: string) => ExerciseAssignment[]
+  logSessionLoad: (data: Omit<SessionLoad, "id" | "load" | "created_at">) => void
+  deleteSessionLoad: (id: string) => void
+  getPlayerLoads: (playerId: string) => SessionLoad[]
   getPlayer: (id: string) => Player | undefined
   getPlayerActivities: (playerId: string) => Activity[]
   getPlayerEvaluations: (playerId: string) => Evaluation[]
@@ -401,6 +405,21 @@ function mapExercise(row: Tables<"exercises">): Exercise {
   }
 }
 
+function mapSessionLoad(row: Tables<"session_loads">): SessionLoad {
+  return {
+    id: row.id,
+    player_id: row.player_id,
+    training_id: row.training_id ?? null,
+    date: row.date,
+    rpe: row.rpe,
+    duration_min: row.duration_min,
+    load: row.load,
+    notes: row.notes ?? null,
+    logged_by_coach: row.logged_by_coach,
+    created_at: row.created_at,
+  }
+}
+
 function mapExerciseAssignment(row: Tables<"exercise_assignments">): ExerciseAssignment {
   return {
     id: row.id,
@@ -439,6 +458,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     matchStats: [],
     exercises: [],
     exerciseAssignments: [],
+    sessionLoads: [],
     attendance: [],
     physicalTests: [],
     injuries: [],
@@ -484,7 +504,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // once GPS tracking is in real use) — it runs in the background so a heavy
   // table can never hold the whole app on a blank screen.
   const loadPlayerData = useCallback(async (categoryFilter?: string | null) => {
-    const [playersRes, activitiesRes, evaluationsRes, trainingsRes, matchesRes, exercisesRes, assignmentsRes, attendanceRes, paymentsRes, expensesRes, convRes] = await Promise.all([
+    const twentyEightDaysAgo = (() => {
+      const d = new Date()
+      d.setUTCDate(d.getUTCDate() - 28)
+      return d.toISOString().split("T")[0]
+    })()
+    const [playersRes, activitiesRes, evaluationsRes, trainingsRes, matchesRes, exercisesRes, assignmentsRes, loadsRes, attendanceRes, paymentsRes, expensesRes, convRes] = await Promise.all([
       supabase.from("players").select("*"),
       supabase.from("activities").select("*"),
       supabase.from("evaluations").select("*"),
@@ -494,6 +519,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // The player's own plan — RLS already narrows this to their row set, so
       // a player fetches only their assignments and a coach the whole academy.
       supabase.from("exercise_assignments").select("*"),
+      // Only the last 28 days matter for acute:chronic load, so the query
+      // stays small no matter how long an academy has been running.
+      supabase.from("session_loads").select("*").gte("date", twentyEightDaysAgo),
       supabase.from("attendance").select("*"),
       categoryFilter ? supabase.from("payments").select("*").limit(0) : supabase.from("payments").select("*"),
       // Financial data — assistants never see it, same boundary as payments.
@@ -546,6 +574,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       matches: filteredMatches,
       exercises: (exercisesRes.data ?? []).map(mapExercise),
       exerciseAssignments: (assignmentsRes.data ?? []).map(mapExerciseAssignment),
+      sessionLoads: (loadsRes.data ?? []).map(mapSessionLoad),
       attendance: (attendanceRes.data ?? []).map(mapAttendance),
       payments: categoryFilter ? [] : (paymentsRes.data ?? []).map(mapPayment),
       expenses: categoryFilter ? [] : (expensesRes.data ?? []).map(mapExpense),
@@ -660,6 +689,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           matchStats: [],
           exercises: [],
           exerciseAssignments: [],
+          sessionLoads: [],
           attendance: [],
           physicalTests: [],
           injuries: [],
@@ -1179,6 +1209,57 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .then(({ error }) => { if (error) dbg("setAssignmentDone:", error) })
   }, [])
 
+  const logSessionLoad = useCallback((data: Omit<SessionLoad, "id" | "load" | "created_at">) => {
+    const entry: SessionLoad = {
+      ...data,
+      id: crypto.randomUUID(),
+      load: data.rpe * data.duration_min,
+      created_at: new Date().toISOString(),
+    }
+    setState(s => {
+      // Rating the same training twice corrects the first rating instead of
+      // counting the session's load a second time — the database enforces
+      // this too, this just keeps the screen honest before the round trip.
+      const existing = entry.training_id
+        ? s.sessionLoads.find(l => l.player_id === entry.player_id && l.training_id === entry.training_id)
+        : undefined
+      const next = existing
+        ? s.sessionLoads.map(l => l.id === existing.id ? { ...entry, id: existing.id } : l)
+        : [...s.sessionLoads, entry]
+
+      const row = {
+        player_id: entry.player_id,
+        training_id: entry.training_id,
+        date: entry.date,
+        rpe: entry.rpe,
+        duration_min: entry.duration_min,
+        notes: entry.notes,
+        logged_by_coach: entry.logged_by_coach,
+      }
+      // academy_id is set by a database trigger from the player, never sent
+      // from here — the client doesn't get to decide which academy a row
+      // belongs to. load is a generated column for the same reason.
+      const write = existing
+        ? supabase.from("session_loads").update(row).eq("id", existing.id)
+        : supabase.from("session_loads").insert({ id: entry.id, ...row })
+      write.then(({ error }) => { if (error) dbg("logSessionLoad:", error) })
+
+      return { ...s, sessionLoads: next }
+    })
+  }, [])
+
+  const deleteSessionLoad = useCallback((id: string) => {
+    setState(s => ({ ...s, sessionLoads: s.sessionLoads.filter(l => l.id !== id) }))
+    supabase.from("session_loads").delete().eq("id", id).then(({ error }) => { if (error) dbg("deleteSessionLoad:", error) })
+  }, [])
+
+  const getPlayerLoads = useCallback(
+    (playerId: string) => state.sessionLoads
+      .filter(l => l.player_id === playerId)
+      .sort((a, b) => b.date.localeCompare(a.date)),
+    [state.sessionLoads]
+  )
+
   const getPlayerAssignments = useCallback(
     (playerId: string) => state.exerciseAssignments
       .filter(a => a.player_id === playerId)
@@ -1665,6 +1746,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         unassignExercise,
         setAssignmentDone,
         getPlayerAssignments,
+        logSessionLoad,
+        deleteSessionLoad,
+        getPlayerLoads,
         getPlayer,
         getPlayerActivities,
         getPlayerEvaluations,

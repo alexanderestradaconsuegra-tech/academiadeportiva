@@ -11,6 +11,7 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import NotificationToggle from "@/components/ui/NotificationToggle"
 import CoachPlan from "@/components/plan/CoachPlan"
+import WorkloadCard from "@/components/health/WorkloadCard"
 import ChartSkeleton from "@/components/ui/ChartSkeleton"
 import { ArrowLeft, Edit, Dumbbell, Calendar, CalendarDays, Clock, MapPin, Ruler, Weight, Target, Star, TrendingUp, ArrowUp, ArrowDown, ArrowRight, Plus, X, Trash2, Trophy, Goal, Footprints, Download, FlaskConical, ShieldAlert, ShieldCheck, CreditCard, Loader2, Upload, CheckCircle2, AlertCircle, Heart, Zap, Wind, Radar, Activity as ActivityIcon } from "lucide-react"
 import { parseTrackFile, summarizeTrack, extractBiometrics, buildTransform, type TrackSummary, type BiometricSummary } from "@/lib/gps"
@@ -759,6 +760,9 @@ export default function PlayerProfilePage() {
               {/* Training plan — the coach assigns here, the player sees it on
                   their phone under Ejercicios. */}
               {isCoach && <CoachPlan playerId={id} />}
+
+              {/* Injury-risk view of this player's last four weeks. */}
+              {isCoach && <WorkloadCard playerId={id} />}
 
               {/* Activities */}
               <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800">
