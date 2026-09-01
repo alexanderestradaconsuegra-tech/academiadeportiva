@@ -1,10 +1,37 @@
 "use client"
 import { useMemo, useState } from "react"
 import { useApp } from "@/context/AppContext"
+import { supabase } from "@/lib/supabase"
 import { cn, formatDate } from "@/lib/utils"
 import { recommendedExercises, STRONG_SCORE } from "@/lib/recommendations"
 import { Target, Plus, Trash2, Check, Film, Sparkles } from "lucide-react"
 import { useEnumT } from "@/lib/i18n/enums"
+
+/**
+ * Tells the player a drill landed in their plan. Best-effort on purpose: the
+ * assignment is already saved by the time this runs, so a player with
+ * notifications off (or a push service having a bad day) must not make the
+ * assignment itself look like it failed.
+ */
+async function notifyAssigned(playerId: string, exerciseName: string, note: string) {
+  try {
+    const { data } = await supabase.auth.getSession()
+    const token = data.session?.access_token
+    if (!token) return
+    await fetch("/api/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        title: "Nuevo ejercicio en tu plan 💪",
+        body: note ? `${exerciseName} · ${note}` : exerciseName,
+        url: "/activities",
+        player_id: playerId,
+      }),
+    })
+  } catch {
+    /* silencioso a propósito: ver comentario arriba */
+  }
+}
 
 /**
  * The coach's side of the training plan: what this player's last evaluation
@@ -35,9 +62,16 @@ export default function CoachPlan({ playerId }: { playerId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [latestEval, exercises])
 
+  function handleAssign(exerciseId: string, assignNote = "") {
+    if (assignedIds.has(exerciseId)) return
+    assignExercise(playerId, exerciseId, assignNote, dueDate)
+    const name = exerciseById.get(exerciseId)?.name
+    if (name) void notifyAssigned(playerId, name, assignNote)
+  }
+
   function handleAssignPicked() {
     if (!pickedExercise) return
-    assignExercise(playerId, pickedExercise, note, dueDate)
+    handleAssign(pickedExercise, note)
     setPickedExercise("")
     setNote("")
     setDueDate("")
@@ -203,7 +237,7 @@ export default function CoachPlan({ playerId }: { playerId: string }) {
                             </a>
                           )}
                           <button
-                            onClick={() => assignExercise(playerId, ex.id)}
+                            onClick={() => handleAssign(ex.id)}
                             disabled={already}
                             className={cn(
                               "h-9 px-3 rounded-lg text-[11px] font-bold transition-colors shrink-0",

@@ -14,9 +14,17 @@ export async function POST(req: NextRequest) {
   }
 
   const { data: callerProfile, error: callerProfileError } = await admin
-    .from("profiles").select("role").eq("id", callerData.user.id).single()
+    .from("profiles").select("role, academy_id").eq("id", callerData.user.id).single()
   if (callerProfileError || callerProfile?.role !== "coach") {
     return NextResponse.json({ error: "Solo el entrenador puede enviar notificaciones." }, { status: 403 })
+  }
+  // Every query below runs on the service-role client, which bypasses RLS —
+  // so the academy boundary has to be enforced by hand here. Without it a
+  // coach's "pago pendiente" push reached the players of every academy in
+  // the system, not just their own.
+  const callerAcademyId = callerProfile.academy_id
+  if (!callerAcademyId) {
+    return NextResponse.json({ error: "Tu cuenta no tiene una academia asociada." }, { status: 403 })
   }
 
   // VAPID_PUBLIC_KEY is server-only (no NEXT_PUBLIC_ prefix) to avoid build-time inlining issues.
@@ -34,22 +42,26 @@ export async function POST(req: NextRequest) {
   }
   webpush.setVapidDetails(vapidSubject!, vapidPublicKey!, vapidPrivateKey!)
 
-  const { title, body, url, category } = await req.json()
+  const { title, body, url, category, player_id } = await req.json()
   if (!title || !body) {
     return NextResponse.json({ error: "Título y mensaje son requeridos." }, { status: 400 })
   }
 
-  let profileIds: string[]
-  if (category && category !== "all") {
-    const { data: playersInCategory } = await admin.from("players").select("id").eq("category", category)
-    const playerIds = (playersInCategory ?? []).map(p => p.id)
-    if (playerIds.length === 0) return NextResponse.json({ sent: 0, failed: 0 })
-    const { data: profiles } = await admin.from("profiles").select("id").in("player_id", playerIds)
-    profileIds = (profiles ?? []).map(p => p.id)
-  } else {
-    const { data: profiles } = await admin.from("profiles").select("id").eq("role", "player")
-    profileIds = (profiles ?? []).map(p => p.id)
+  // Narrow to this academy's players first, then to a single player or a
+  // category within it. player_id wins over category — it's the specific ask.
+  let playersQuery = admin.from("players").select("id").eq("academy_id", callerAcademyId)
+  if (player_id) {
+    playersQuery = playersQuery.eq("id", player_id)
+  } else if (category && category !== "all") {
+    playersQuery = playersQuery.eq("category", category)
   }
+  const { data: targetPlayers } = await playersQuery
+  const playerIds = (targetPlayers ?? []).map(p => p.id)
+  if (playerIds.length === 0) return NextResponse.json({ sent: 0, failed: 0 })
+
+  const { data: profiles } = await admin
+    .from("profiles").select("id").eq("role", "player").in("player_id", playerIds)
+  const profileIds = (profiles ?? []).map(p => p.id)
 
   if (profileIds.length === 0) return NextResponse.json({ sent: 0, failed: 0 })
 
