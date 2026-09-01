@@ -56,11 +56,15 @@ export async function POST(req: NextRequest) {
           .select("id")
           .eq("academy_id", academy.id)
         if (!players?.length) continue
+        const playerIds = players.map(p => p.id)
 
+        // payments has no academy_id column of its own — it's scoped through
+        // player_id, same as every RLS policy on this table. Filtering by a
+        // column that doesn't exist here, so this must go through playerIds.
         const { data: existing } = await admin
           .from("payments")
           .select("player_id")
-          .eq("academy_id", academy.id)
+          .in("player_id", playerIds)
           .eq("concept", "monthly_fee")
           .like("due_date", `${duePrefix}%`)
 
@@ -71,7 +75,6 @@ export async function POST(req: NextRequest) {
         const now = new Date().toISOString()
         const newPayments = missing.map(player => ({
           player_id: player.id,
-          academy_id: academy.id,
           concept: "monthly_fee",
           amount: academy.monthly_fee,
           due_date: dueDate,

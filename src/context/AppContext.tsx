@@ -1468,7 +1468,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const missing = state.players.filter(p => !existingPlayerIds.has(p.id))
     if (missing.length === 0) return 0
     const now = new Date().toISOString()
-    const academyId = state.teamSettings?.id ?? null
     const newPayments: Payment[] = missing.map(player => ({
       id: crypto.randomUUID(),
       player_id: player.id,
@@ -1480,10 +1479,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       notes: null,
       created_at: now,
     }))
-    await supabase.from("payments").insert(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      newPayments.map(p => ({ ...p, academy_id: academyId }) as any)
-    ).then(({ error }) => { if (error) dbg("autoGenerateMonthlyPayments:", error) })
+    // payments has no academy_id column — it's scoped through player_id, same
+    // as every RLS policy on this table. Sending one silently failed the
+    // insert every time (the error was logged but never surfaced), so the
+    // optimistic setState below made it look like it worked locally while
+    // nothing was ever actually saved.
+    const { error } = await supabase.from("payments").insert(
+      newPayments.map(({ id, player_id, concept, amount, due_date, paid_date, status, notes, created_at }) => ({
+        id, player_id, concept, amount, due_date, paid_date, status, notes, created_at,
+      }))
+    )
+    if (error) { dbg("autoGenerateMonthlyPayments:", error); return 0 }
     setState(s => ({ ...s, payments: [...s.payments, ...newPayments] }))
     return newPayments.length
   }, [state.teamSettings, state.payments, state.players])
