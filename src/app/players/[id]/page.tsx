@@ -18,6 +18,7 @@ import { generatePlayerPDF } from "@/lib/generatePlayerPDF"
 import { cn, formatDate, getCategoryColor, getIntensityColor, getPositionShort, getScoreColor } from "@/lib/utils"
 import { computeCommitment, COMMITMENT_LABELS, COMMITMENT_STYLE, COMMITMENT_TEXT, COMMITMENT_BAR } from "@/lib/commitment"
 import type { Evaluation, PhysicalTest, InjurySeverity } from "@/lib/types"
+import { effectivePaymentStatus } from "@/lib/types"
 import { useMemo } from "react"
 import { useT } from "@/lib/i18n/useT"
 import { players as playersDict } from "@/lib/i18n/dictionaries/players"
@@ -34,6 +35,16 @@ const ScoreEvolutionChart = dynamic(() => import("@/components/players/PlayerCha
 const AttributeRadarChart = dynamic(() => import("@/components/players/PlayerCharts").then(m => m.AttributeRadarChart), {
   ssr: false, loading: () => <ChartSkeleton height={220} />,
 })
+
+const PAYMENT_CONCEPTS = ["monthly_fee", "enrollment", "uniform", "tournament", "other"] as const
+type PaymentConcept = typeof PAYMENT_CONCEPTS[number]
+const PAYMENT_CONCEPT_KEYS: Record<PaymentConcept, "monthlyFee" | "enrollment" | "uniform" | "tournament" | "otherConcept"> = {
+  monthly_fee: "monthlyFee",
+  enrollment: "enrollment",
+  uniform: "uniform",
+  tournament: "tournament",
+  other: "otherConcept",
+}
 
 const ATTR_KEYS: Record<string, ActivityCategory> = {
   speed_score: "Velocidad",
@@ -110,7 +121,7 @@ const EMPTY_EVAL_FORM = {
 export default function PlayerProfilePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, getPlayerConvocatoria, currentUser, language, teamSettings, trainings, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, updatePayment, addPositionSamples, getPlayerPositionSamples, addLiveSession, deletePlayer } = useApp()
+  const { getPlayer, getPlayerActivities, getPlayerEvaluations, getLatestEvaluation, getPlayerHealth, getPlayerSessions, getUpcomingTrainings, getPlayerMatches, getPlayerAttendance, getPlayerPhysicalTests, getPlayerInjuries, getPlayerPayments, getPlayerConvocatoria, currentUser, language, teamSettings, trainings, addEvaluation, updateEvaluation, deleteEvaluation, addPhysicalTest, deletePhysicalTest, addInjury, updateInjury, deleteInjury, addPayment, updatePayment, addPositionSamples, getPlayerPositionSamples, addLiveSession, deletePlayer } = useApp()
   const isCoach = currentUser?.role === "coach"
   const isOwnProfile = currentUser?.role === "player" && currentUser.player_id === id
 
@@ -266,8 +277,28 @@ export default function PlayerProfilePage() {
   const tp = useT(paymentsDict)
   const playerPayments = getPlayerPayments(id)
   const todayStr = new Date().toISOString().split("T")[0]
-  const overduePayments = playerPayments.filter(p => p.status === "pending" && p.due_date < todayStr)
+  // Same grace-period rule as /payments — a payment inside its grace window
+  // is late but not yet "vencido", and this card must agree with that page.
+  const overduePayments = playerPayments.filter(p => effectivePaymentStatus(p, todayStr) === "overdue")
   const overdueTotal = overduePayments.reduce((sum, p) => sum + p.amount, 0)
+
+  const [showPaymentForm, setShowPaymentForm] = useState(false)
+  const [paymentForm, setPaymentForm] = useState({ concept: "monthly_fee" as PaymentConcept, amount: "", due_date: todayStr, paid_date: "" })
+
+  function handleAddPayment(ev: React.FormEvent) {
+    ev.preventDefault()
+    addPayment({
+      player_id: id,
+      concept: paymentForm.concept,
+      amount: Number(paymentForm.amount),
+      due_date: paymentForm.due_date,
+      paid_date: paymentForm.paid_date || null,
+      status: paymentForm.paid_date ? "paid" : "pending",
+      notes: null,
+    })
+    setShowPaymentForm(false)
+    setPaymentForm({ concept: "monthly_fee", amount: "", due_date: todayStr, paid_date: "" })
+  }
   const commitment = computeCommitment(playerAttendance, trainings)
 
   const attendanceStats = {
@@ -1001,7 +1032,12 @@ export default function PlayerProfilePage() {
                       <CreditCard size={15} className={overduePayments.length > 0 ? "text-amber-500" : "text-emerald-500"} />
                       <h2 className="text-sm font-bold text-slate-900 dark:text-white">{tp("paymentStatus")}</h2>
                     </div>
-                    <Link href={`/payments?player=${id}`} className="text-[10px] text-lime-700 dark:text-lime-400 font-semibold hover:underline">{tp("viewPayments")}</Link>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setShowPaymentForm(true)} className="text-[10px] text-lime-700 dark:text-lime-400 font-semibold hover:underline">
+                        Registrar pago
+                      </button>
+                      <Link href={`/payments?player=${id}`} className="text-[10px] text-lime-700 dark:text-lime-400 font-semibold hover:underline">{tp("viewPayments")}</Link>
+                    </div>
                   </div>
                   {overduePayments.length === 0 ? (
                     <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20">
@@ -1423,6 +1459,40 @@ export default function PlayerProfilePage() {
                 </div>
                 <div className="flex items-center gap-3 justify-end pt-2">
                   <Button variant="secondary" type="button" onClick={() => setShowTestForm(false)}>{t("cancel")}</Button>
+                  <Button type="submit">{t("save")}</Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showPaymentForm && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm animate-scale-in">
+              <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Registrar pago</h2>
+                <button onClick={() => setShowPaymentForm(false)} aria-label="Cerrar" className="w-11 h-11 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
+                  <X size={16} />
+                </button>
+              </div>
+              <form onSubmit={handleAddPayment} className="p-5 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">{tp("conceptLabel")}</label>
+                  <select
+                    value={paymentForm.concept}
+                    onChange={ev => setPaymentForm(f => ({ ...f, concept: ev.target.value as PaymentConcept }))}
+                    className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-lime-600 dark:focus:border-lime-400 outline-none"
+                  >
+                    {PAYMENT_CONCEPTS.map(c => <option key={c} value={c}>{tp(PAYMENT_CONCEPT_KEYS[c])}</option>)}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input label={tp("amountLabel")} type="number" min={0} step="0.01" value={paymentForm.amount} onChange={ev => setPaymentForm(f => ({ ...f, amount: ev.target.value }))} required />
+                  <Input label={tp("dueDateLabel")} type="date" value={paymentForm.due_date} onChange={ev => setPaymentForm(f => ({ ...f, due_date: ev.target.value }))} required />
+                </div>
+                <Input label={tp("paidDateLabel")} type="date" value={paymentForm.paid_date} onChange={ev => setPaymentForm(f => ({ ...f, paid_date: ev.target.value }))} />
+                <div className="flex gap-3 justify-end pt-2">
+                  <Button variant="secondary" type="button" onClick={() => setShowPaymentForm(false)}>{t("cancel")}</Button>
                   <Button type="submit">{t("save")}</Button>
                 </div>
               </form>

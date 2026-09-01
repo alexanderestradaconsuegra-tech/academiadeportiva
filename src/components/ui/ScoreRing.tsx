@@ -36,14 +36,12 @@ export default function ScoreRing({ score, size = 80, strokeWidth = 7, className
           style={{ transition: "stroke-dashoffset 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)" }}
         />
       </svg>
-      {showLabel && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={cn("font-bold leading-none", getScoreColor(score), size >= 70 ? "text-xl" : "text-base")}>
-            {score}
-          </span>
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Score</span>
-        </div>
-      )}
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className={cn("font-bold leading-none", getScoreColor(score), size >= 70 ? "text-xl" : "text-base")}>
+          {score}
+        </span>
+        {showLabel && <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Score</span>}
+      </div>
     </div>
   )
 }

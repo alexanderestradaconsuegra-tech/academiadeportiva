@@ -83,7 +83,7 @@ export default function PlayerCard({ player, evaluation, isInjured, hasOverduePa
               className="w-full h-full object-cover"
             />
           </div>
-          {evaluation && <ScoreRing score={score} size={44} strokeWidth={4} />}
+          {evaluation && <ScoreRing score={score} size={44} strokeWidth={4} showLabel={false} />}
         </div>
 
         {/* Info */}
