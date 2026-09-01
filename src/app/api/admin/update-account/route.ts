@@ -1,27 +1,21 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getSupabaseAdmin } from "@/lib/supabase-admin"
+import { requireCoach, assertSameAcademy } from "@/lib/api-auth"
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get("authorization") ?? ""
-  const token = authHeader.replace(/^Bearer\s+/i, "")
-  if (!token) return NextResponse.json({ error: "No autenticado." }, { status: 401 })
-
-  const admin = getSupabaseAdmin()
-  const { data: callerData, error: callerError } = await admin.auth.getUser(token)
-  if (callerError || !callerData.user) {
-    return NextResponse.json({ error: "Sesión inválida." }, { status: 401 })
-  }
-
-  const { data: callerProfile, error: callerProfileError } = await admin
-    .from("profiles").select("role").eq("id", callerData.user.id).single()
-  if (callerProfileError || callerProfile?.role !== "coach") {
-    return NextResponse.json({ error: "Solo el entrenador puede editar accesos." }, { status: 403 })
-  }
+  const auth = await requireCoach(req.headers.get("authorization"))
+  if (!auth.ok) return auth.response
+  const { admin } = auth.caller
 
   const { user_id, email, password } = await req.json()
   if (!user_id || (!email && !password)) {
     return NextResponse.json({ error: "user_id y al menos email o contraseña son requeridos." }, { status: 400 })
   }
+
+  // user_id arrives from the client. Unchecked, it pointed at any account in
+  // the database — a coach could set the password of another academy's coach
+  // and sign in as them.
+  const wrongAcademy = await assertSameAcademy(auth.caller, user_id)
+  if (wrongAcademy) return wrongAcademy
 
   const updates: { email?: string; password?: string } = {}
   if (email) updates.email = email

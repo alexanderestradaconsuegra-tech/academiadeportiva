@@ -51,5 +51,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No se pudo configurar el perfil." }, { status: 500 })
   }
 
+  // This route builds the academy by hand instead of going through
+  // create_academy_with_code, so it has to ask for the starter exercise
+  // library itself — otherwise the academy opens with an empty plan.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: seedError } = await (admin as any).rpc("seed_academy_exercises", { p_academy_id: academy.id })
+  if (seedError) {
+    // The academy is real and usable without it; the coach can add drills
+    // by hand. Not worth undoing a successful signup over.
+    console.error("[bootstrap-coach] seed exercises error:", seedError.message)
+  }
+
   return NextResponse.json({ success: true })
 }

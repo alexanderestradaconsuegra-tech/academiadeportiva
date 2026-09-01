@@ -1,22 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getSupabaseAdmin } from "@/lib/supabase-admin"
+import { requireCoach } from "@/lib/api-auth"
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get("authorization") ?? ""
-  const token = authHeader.replace(/^Bearer\s+/i, "")
-  if (!token) return NextResponse.json({ error: "No autenticado." }, { status: 401 })
-
-  const admin = getSupabaseAdmin()
-  const { data: callerData, error: callerError } = await admin.auth.getUser(token)
-  if (callerError || !callerData.user) {
-    return NextResponse.json({ error: "Sesión inválida." }, { status: 401 })
-  }
-
-  const { data: callerProfile, error: callerProfileError } = await admin
-    .from("profiles").select("role, academy_id").eq("id", callerData.user.id).single()
-  if (callerProfileError || callerProfile?.role !== "coach") {
-    return NextResponse.json({ error: "Solo el entrenador puede crear accesos." }, { status: 403 })
-  }
+  const auth = await requireCoach(req.headers.get("authorization"))
+  if (!auth.ok) return auth.response
+  const { admin, academyId } = auth.caller
 
   const { email, password, player_id, full_name, role, category } = await req.json()
   const targetRole = role === "assistant" ? "assistant" : "player"
@@ -26,6 +14,17 @@ export async function POST(req: NextRequest) {
   }
   if (targetRole === "player" && !player_id) {
     return NextResponse.json({ error: "El jugador es requerido." }, { status: 400 })
+  }
+
+  // player_id comes from the client. Linking an account to another academy's
+  // player would hand this login that player's data: every player-side RLS
+  // policy keys off get_my_player_id(), so the profile row is the grant.
+  if (targetRole === "player") {
+    const { data: player } = await admin
+      .from("players").select("id").eq("id", player_id).eq("academy_id", academyId).maybeSingle()
+    if (!player) {
+      return NextResponse.json({ error: "Jugador no encontrado en tu academia." }, { status: 404 })
+    }
   }
 
   const { data: userData, error: userError } = await admin.auth.admin.createUser({
@@ -42,7 +41,7 @@ export async function POST(req: NextRequest) {
     role: targetRole,
     player_id: targetRole === "player" ? player_id : null,
     full_name: full_name || null,
-    academy_id: callerProfile.academy_id,
+    academy_id: academyId,
   }
   if (targetRole === "assistant" && category) {
     profileInsert.category = category
