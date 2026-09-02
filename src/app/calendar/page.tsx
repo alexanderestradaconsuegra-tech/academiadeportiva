@@ -14,6 +14,8 @@ import { cn, formatDate, avatarUrl } from "@/lib/utils"
 import type { Category, Training, AttendanceStatus, RsvpStatus } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
 import { calendar } from "@/lib/i18n/dictionaries/calendar"
+import WeeklySchedule from "@/components/calendar/WeeklySchedule"
+import UpcomingAgenda from "@/components/calendar/UpcomingAgenda"
 import { useEnumT } from "@/lib/i18n/enums"
 
 const CATEGORIES: Category[] = ["Sub-10", "Sub-12", "Sub-14", "Sub-16", "Sub-18", "Juvenil", "Senior"]
@@ -94,6 +96,7 @@ export default function CalendarPage() {
       category: form.category || null,
       location: form.location,
       notes: form.notes,
+      schedule_id: null,
     }
     if (editingId) {
       updateTraining(editingId, data)
@@ -118,6 +121,9 @@ export default function CalendarPage() {
       <AppShell>
         <div className="p-4 md:p-6 xl:p-8 animate-fade-in">
           <PageHeader title={t("pageTitle")} subtitle={`${upcoming.length} ${t("trainingsScheduled")}`} />
+
+          {/* Everything they're committed to, matches included. */}
+          <UpcomingAgenda categoryFilter={ownPlayer?.category ?? null} />
 
           <div className="space-y-8">
             <div>
@@ -217,6 +223,9 @@ export default function CalendarPage() {
             </div>
           </div>
         )}
+
+        <WeeklySchedule />
+        <UpcomingAgenda />
 
         <div className="space-y-8">
           <div>

@@ -1,10 +1,11 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, RsvpStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer, Expense, ExerciseAssignment, SessionLoad } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, RsvpStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer, Expense, ExerciseAssignment, SessionLoad, TrainingSchedule } from "@/lib/types"
 import { resolveMonthlyChargeDate } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
 import type { Tables, TablesUpdate, Json } from "@/lib/database.types"
+import { pendingSessions } from "@/lib/schedules"
 
 interface AppState {
   players: Player[]
@@ -20,6 +21,7 @@ interface AppState {
   exercises: Exercise[]
   exerciseAssignments: ExerciseAssignment[]
   sessionLoads: SessionLoad[]
+  trainingSchedules: TrainingSchedule[]
   attendance: Attendance[]
   physicalTests: PhysicalTest[]
   injuries: Injury[]
@@ -69,6 +71,9 @@ interface AppContextType extends AppState {
   logSessionLoad: (data: Omit<SessionLoad, "id" | "load" | "created_at">) => void
   deleteSessionLoad: (id: string) => void
   getPlayerLoads: (playerId: string) => SessionLoad[]
+  addTrainingSchedule: (data: Omit<TrainingSchedule, "id" | "created_at">) => void
+  updateTrainingSchedule: (id: string, data: Partial<Omit<TrainingSchedule, "id" | "created_at">>) => void
+  deleteTrainingSchedule: (id: string) => void
   getPlayer: (id: string) => Player | undefined
   getPlayerActivities: (playerId: string) => Activity[]
   getPlayerEvaluations: (playerId: string) => Evaluation[]
@@ -276,6 +281,22 @@ function mapTraining(row: Tables<"trainings">): Training {
     category: row.category,
     location: row.location ?? "",
     notes: row.notes ?? "",
+    schedule_id: row.schedule_id ?? null,
+    created_at: row.created_at,
+  }
+}
+
+function mapTrainingSchedule(row: Tables<"training_schedules">): TrainingSchedule {
+  return {
+    id: row.id,
+    day_of_week: row.day_of_week,
+    time: row.time ?? "",
+    title: row.title ?? "",
+    // Stored as text here but as an enum on trainings; the values match.
+    category: (row.category ?? null) as TrainingSchedule["category"],
+    location: row.location ?? "",
+    notes: row.notes ?? "",
+    is_active: row.is_active,
     created_at: row.created_at,
   }
 }
@@ -459,6 +480,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     exercises: [],
     exerciseAssignments: [],
     sessionLoads: [],
+    trainingSchedules: [],
     attendance: [],
     physicalTests: [],
     injuries: [],
@@ -509,7 +531,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       d.setUTCDate(d.getUTCDate() - 28)
       return d.toISOString().split("T")[0]
     })()
-    const [playersRes, activitiesRes, evaluationsRes, trainingsRes, matchesRes, exercisesRes, assignmentsRes, loadsRes, attendanceRes, paymentsRes, expensesRes, convRes] = await Promise.all([
+    const [playersRes, activitiesRes, evaluationsRes, trainingsRes, matchesRes, exercisesRes, assignmentsRes, loadsRes, schedulesRes, attendanceRes, paymentsRes, expensesRes, convRes] = await Promise.all([
       supabase.from("players").select("*"),
       supabase.from("activities").select("*"),
       supabase.from("evaluations").select("*"),
@@ -522,6 +544,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // Only the last 28 days matter for acute:chronic load, so the query
       // stays small no matter how long an academy has been running.
       supabase.from("session_loads").select("*").gte("date", twentyEightDaysAgo),
+      supabase.from("training_schedules").select("*"),
       supabase.from("attendance").select("*"),
       categoryFilter ? supabase.from("payments").select("*").limit(0) : supabase.from("payments").select("*"),
       // Financial data — assistants never see it, same boundary as payments.
@@ -575,6 +598,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       exercises: (exercisesRes.data ?? []).map(mapExercise),
       exerciseAssignments: (assignmentsRes.data ?? []).map(mapExerciseAssignment),
       sessionLoads: (loadsRes.data ?? []).map(mapSessionLoad),
+      trainingSchedules: (schedulesRes.data ?? []).map(mapTrainingSchedule),
       attendance: (attendanceRes.data ?? []).map(mapAttendance),
       payments: categoryFilter ? [] : (paymentsRes.data ?? []).map(mapPayment),
       expenses: categoryFilter ? [] : (expensesRes.data ?? []).map(mapExpense),
@@ -690,6 +714,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           exercises: [],
           exerciseAssignments: [],
           sessionLoads: [],
+          trainingSchedules: [],
           attendance: [],
           physicalTests: [],
           injuries: [],
@@ -1010,8 +1035,125 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const deleteTraining = useCallback((id: string) => {
-    setState(s => ({ ...s, trainings: s.trainings.filter(t => t.id !== id) }))
-    supabase.from("trainings").delete().eq("id", id).then(({ error }) => { if (error) dbg("deleteTraining:", error) })
+    setState(s => {
+      const training = s.trainings.find(t => t.id === id)
+      // Cancelling one session of a recurring series has to be remembered,
+      // or the generator puts it straight back on its next run.
+      if (training?.schedule_id && s.teamSettings?.id) {
+        supabase.from("training_schedule_skips").insert({
+          academy_id: s.teamSettings.id,
+          schedule_id: training.schedule_id,
+          date: training.date,
+        }).then(({ error }) => { if (error) dbg("deleteTraining skip:", error) })
+      }
+      supabase.from("trainings").delete().eq("id", id).then(({ error }) => { if (error) dbg("deleteTraining:", error) })
+      return { ...s, trainings: s.trainings.filter(t => t.id !== id) }
+    })
+  }, [])
+
+  /**
+   * Creates the sessions a schedule implies for the next few weeks.
+   *
+   * The daily cron does this too, but a coach who just set up a schedule
+   * needs to see it take effect now, not tomorrow morning.
+   */
+  const materializeSchedule = useCallback(async (schedule: TrainingSchedule, academyId: string) => {
+    const today = new Date().toISOString().split("T")[0]
+    const [{ data: existing }, { data: skips }] = await Promise.all([
+      supabase.from("trainings").select("date").eq("schedule_id", schedule.id).gte("date", today),
+      supabase.from("training_schedule_skips").select("date").eq("schedule_id", schedule.id).gte("date", today),
+    ])
+    const planned = pendingSessions(
+      schedule,
+      new Set((existing ?? []).map(t => t.date)),
+      new Set((skips ?? []).map(s => s.date)),
+      today,
+    )
+    if (planned.length === 0) return
+
+    const rows = planned.map(p => ({
+      id: crypto.randomUUID(),
+      academy_id: academyId,
+      schedule_id: p.schedule_id,
+      title: p.title,
+      date: p.date,
+      time: p.time || null,
+      category: p.category as Category | null,
+      location: p.location || null,
+      notes: p.notes || null,
+    }))
+    const { error } = await supabase.from("trainings").insert(rows)
+    if (error) { dbg("materializeSchedule:", error); return }
+
+    setState(s => ({
+      ...s,
+      trainings: [...s.trainings, ...rows.map(r => ({
+        id: r.id,
+        title: r.title,
+        date: r.date,
+        time: r.time ?? "",
+        category: r.category,
+        location: r.location ?? "",
+        notes: r.notes ?? "",
+        schedule_id: r.schedule_id,
+        created_at: new Date().toISOString(),
+      }))],
+    }))
+  }, [])
+
+  const addTrainingSchedule = useCallback((data: Omit<TrainingSchedule, "id" | "created_at">) => {
+    const schedule: TrainingSchedule = { ...data, id: crypto.randomUUID(), created_at: new Date().toISOString() }
+    setState(s => {
+      const academyId = s.teamSettings?.id
+      if (!academyId) { dbg("addTrainingSchedule: no academy id"); return s }
+      supabase.from("training_schedules").insert({
+        id: schedule.id,
+        academy_id: academyId,
+        day_of_week: schedule.day_of_week,
+        time: schedule.time,
+        title: schedule.title || null,
+        category: schedule.category,
+        location: schedule.location || null,
+        notes: schedule.notes || null,
+        is_active: schedule.is_active,
+      }).then(({ error }) => {
+        if (error) { dbg("addTrainingSchedule:", error); return }
+        void materializeSchedule(schedule, academyId)
+      })
+      return { ...s, trainingSchedules: [...s.trainingSchedules, schedule] }
+    })
+  }, [materializeSchedule])
+
+  const updateTrainingSchedule = useCallback((id: string, data: Partial<Omit<TrainingSchedule, "id" | "created_at">>) => {
+    setState(s => {
+      const next = s.trainingSchedules.map(sc => sc.id === id ? { ...sc, ...data } : sc)
+      const updated = next.find(sc => sc.id === id)
+      const academyId = s.teamSettings?.id
+      supabase.from("training_schedules").update({
+        ...(data.day_of_week !== undefined ? { day_of_week: data.day_of_week } : {}),
+        ...(data.time !== undefined ? { time: data.time } : {}),
+        ...(data.title !== undefined ? { title: data.title || null } : {}),
+        ...(data.category !== undefined ? { category: data.category } : {}),
+        ...(data.location !== undefined ? { location: data.location || null } : {}),
+        ...(data.notes !== undefined ? { notes: data.notes || null } : {}),
+        ...(data.is_active !== undefined ? { is_active: data.is_active } : {}),
+      }).eq("id", id).then(({ error }) => {
+        if (error) { dbg("updateTrainingSchedule:", error); return }
+        // Reactivating or moving a schedule should show up right away.
+        if (updated?.is_active && academyId) void materializeSchedule(updated, academyId)
+      })
+      return { ...s, trainingSchedules: next }
+    })
+  }, [materializeSchedule])
+
+  const deleteTrainingSchedule = useCallback((id: string) => {
+    setState(s => ({
+      ...s,
+      trainingSchedules: s.trainingSchedules.filter(sc => sc.id !== id),
+      // Sessions already generated stay: attendance and load may hang off
+      // them. The database sets their schedule_id to null on delete.
+    }))
+    supabase.from("training_schedules").delete().eq("id", id).then(({ error }) => { if (error) dbg("deleteTrainingSchedule:", error) })
   }, [])
 
   const addMatch = useCallback((data: Omit<Match, "id" | "created_at">): Match => {
@@ -1749,6 +1891,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         logSessionLoad,
         deleteSessionLoad,
         getPlayerLoads,
+        addTrainingSchedule,
+        updateTrainingSchedule,
+        deleteTrainingSchedule,
         getPlayer,
         getPlayerActivities,
         getPlayerEvaluations,

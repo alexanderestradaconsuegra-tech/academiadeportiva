@@ -288,6 +288,21 @@ export interface Training {
   category: Category | null
   location: string
   notes: string
+  /** Qué horario fijo generó esta sesión, si vino de uno. */
+  schedule_id: string | null
+  created_at: string
+}
+
+/** Horario fijo semanal: "Sub-12 entrena martes 18:30 en la cancha municipal". */
+export interface TrainingSchedule {
+  id: string
+  day_of_week: number // 0 = domingo
+  time: string
+  title: string
+  category: Category | null
+  location: string
+  notes: string
+  is_active: boolean
   created_at: string
 }
 

@@ -377,6 +377,69 @@ export type Database = {
         }
         Relationships: []
       }
+      training_schedules: {
+        Row: {
+          id: string
+          academy_id: string | null
+          day_of_week: number
+          time: string
+          title: string | null
+          category: string | null
+          location: string | null
+          notes: string | null
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          academy_id?: string | null
+          day_of_week: number
+          time: string
+          title?: string | null
+          category?: string | null
+          location?: string | null
+          notes?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          academy_id?: string | null
+          day_of_week?: number
+          time?: string
+          title?: string | null
+          category?: string | null
+          location?: string | null
+          notes?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
+      training_schedule_skips: {
+        Row: {
+          id: string
+          academy_id: string
+          schedule_id: string
+          date: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          academy_id: string
+          schedule_id: string
+          date: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          academy_id?: string
+          schedule_id?: string
+          date?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       session_loads: {
         Row: {
           id: string
@@ -942,6 +1005,7 @@ export type Database = {
           time: string | null
           title: string
           academy_id: string | null
+          schedule_id: string | null
         }
         Insert: {
           category?: Database["public"]["Enums"]["category"] | null
@@ -953,6 +1017,7 @@ export type Database = {
           time?: string | null
           title: string
           academy_id?: string | null
+          schedule_id?: string | null
         }
         Update: {
           category?: Database["public"]["Enums"]["category"] | null
@@ -964,6 +1029,7 @@ export type Database = {
           time?: string | null
           title?: string
           academy_id?: string | null
+          schedule_id?: string | null
         }
         Relationships: []
       }
