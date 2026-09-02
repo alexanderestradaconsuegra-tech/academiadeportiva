@@ -1,5 +1,6 @@
 "use client"
 import { useState, useRef, useCallback, useEffect, useMemo } from "react"
+import { usePresentationMode } from "@/lib/usePresentationMode"
 import AppShell from "@/components/layout/AppShell"
 import { useApp } from "@/context/AppContext"
 import { supabase } from "@/lib/supabase"
@@ -250,6 +251,9 @@ export default function TacticsPage() {
   useEffect(() => { loadPlays() }, [loadPlays])
 
   // ── SVG coords ────────────────────────────────────────────────────────────
+  // Pantalla completa para mostrarle el tablero al equipo en la cancha.
+  const presentation = usePresentationMode<HTMLDivElement>()
+
   const svgRef = useRef<SVGSVGElement>(null)
   const toSVG = useCallback((cx:number,cy:number):[number,number]=>{
     const s=svgRef.current; if(!s) return [0,0]
@@ -581,6 +585,10 @@ export default function TacticsPage() {
                 className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${showZones ? "bg-violet-600 text-white border-violet-600" : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600"}`}>
                 🗺️ Zonas
               </button>
+              <button onClick={presentation.toggle}
+                className="ml-auto px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition-opacity">
+                ⛶ Pantalla completa
+              </button>
             </div>
 
             {/* Toolbar */}
@@ -619,9 +627,61 @@ export default function TacticsPage() {
             </div>
 
             {/* Pitch */}
-            <div className="p-4">
-              <div className="relative mx-auto rounded-xl overflow-hidden shadow-lg"
-                style={{maxWidth:720,aspectRatio:`${dims.w}/${dims.h}`,background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}}>
+            <div
+              ref={presentation.ref}
+              className={presentation.active
+                ? "fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-2 sm:p-4"
+                : "p-4"}
+            >
+              {presentation.active && (
+                <div className="w-full flex items-center justify-between gap-2 mb-2 shrink-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs font-bold text-white/90 truncate">{playName}</span>
+                    {category && <span className="text-[10px] text-white/50 shrink-0">{category}</span>}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {playing ? (
+                      <button onClick={resetAnim} className="h-10 px-4 rounded-xl bg-white/15 text-white text-xs font-bold">
+                        ⏹ Detener
+                      </button>
+                    ) : (
+                      <button onClick={startPlay} disabled={lines.length===0}
+                        className="h-10 px-4 rounded-xl bg-emerald-500 text-white text-xs font-bold disabled:opacity-40">
+                        ▶ Ver jugada
+                      </button>
+                    )}
+                    <button onClick={presentation.exit} className="h-10 px-4 rounded-xl bg-white/15 text-white text-xs font-bold">
+                      ✕ Salir
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Drawing tools stay reachable while presenting: a board you can
+                  only look at is a slideshow. This is where a coach draws the
+                  instruction mid-talk. */}
+              {presentation.active && (
+                <div className="w-full flex flex-wrap items-center gap-1.5 mb-2 shrink-0">
+                  {TOOLS.map(tItem => (
+                    <button key={tItem.id} onClick={() => { resetAnim(); setTool(tItem.id) }}
+                      className={`h-10 px-3 rounded-xl text-[11px] font-bold transition-colors ${
+                        tool===tItem.id ? "bg-white text-slate-900" : "bg-white/15 text-white/80"
+                      }`}>
+                      {tItem.label}
+                    </button>
+                  ))}
+                  <button onClick={undo}
+                    className="h-10 px-3 rounded-xl bg-white/15 text-white/80 text-[11px] font-bold ml-auto">
+                    ↩ Deshacer
+                  </button>
+                </div>
+              )}
+              <div className={presentation.active
+                  ? "relative rounded-lg overflow-hidden shadow-2xl w-full"
+                  : "relative mx-auto rounded-xl overflow-hidden shadow-lg"}
+                style={presentation.active
+                  ? {aspectRatio:`${dims.w}/${dims.h}`,maxHeight:"100%",maxWidth:`calc((100vh - 9rem) * ${dims.w / dims.h})`,background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}
+                  : {maxWidth:720,aspectRatio:`${dims.w}/${dims.h}`,background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}}>
                 {/* grass stripes */}
                 <div className="absolute inset-0 opacity-[0.12]"
                   style={{backgroundImage:"repeating-linear-gradient(90deg,transparent,transparent 55px,rgba(0,0,0,1) 55px,rgba(0,0,0,1) 110px)"}}/>
@@ -706,7 +766,7 @@ export default function TacticsPage() {
               </div>
 
               {/* Legend */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-[10px] text-slate-400 font-medium">
+              <div className={`flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-[10px] text-slate-400 font-medium ${presentation.active ? "hidden" : "flex"}`}>
                 <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-blue-700 border-2 border-white shadow-sm inline-block"/>Local</span>
                 <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-red-600 border-2 border-white shadow-sm inline-block"/>Rival</span>
                 <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-white border-2 border-slate-300 shadow-sm inline-block"/>Balón</span>
@@ -715,7 +775,7 @@ export default function TacticsPage() {
               </div>
 
               {/* Controls */}
-              <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
+              <div className={`flex-wrap items-center justify-center gap-3 mt-4 ${presentation.active ? "hidden" : "flex"}`}>
                 {playing ? (
                   <button onClick={resetAnim}
                     className="px-6 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold shadow hover:bg-red-600 transition-colors">
