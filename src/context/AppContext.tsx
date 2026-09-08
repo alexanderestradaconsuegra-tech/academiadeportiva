@@ -1764,16 +1764,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const monthlyFee = state.teamSettings?.monthly_fee
     if (!monthlyFee || monthlyFee <= 0) return 0
     const today = new Date().toISOString().split("T")[0]
-    const dueDate = resolveMonthlyChargeDate(today)
-    const duePrefix = dueDate.slice(0, 7)
-    const existingForTarget = state.payments.filter(p =>
-      p.concept === "monthly_fee" && p.due_date.startsWith(duePrefix)
+    // Bill the current month. Only when nobody has this month's charge yet is
+    // resolveMonthlyChargeDate consulted, and only then can it move to next
+    // month — that's the "the fee was switched on late in the month" case,
+    // where backdating a debt would be wrong. Asking it first instead meant
+    // that from the 6th onward, with the month already billed, this created
+    // next month's charge weeks early.
+    const currentMonthFirst = today.slice(0, 7) + "-01"
+    const alreadyBilled = new Set(
+      state.payments.filter(p => p.concept === "monthly_fee" && p.due_date === currentMonthFirst)
+        .map(p => p.player_id)
     )
-    const existingPlayerIds = new Set(existingForTarget.map(p => p.player_id))
-    const missing = state.players.filter(p => !existingPlayerIds.has(p.id))
+    const missing = state.players.filter(p => !alreadyBilled.has(p.id))
     if (missing.length === 0) return 0
+
+    const dueDate = resolveMonthlyChargeDate(today)
+    // Late in the month with nothing billed: the charge lands on next month's
+    // 1st, so skip anyone who already has that one.
+    const alreadyBilledTarget = new Set(
+      state.payments.filter(p => p.concept === "monthly_fee" && p.due_date === dueDate)
+        .map(p => p.player_id)
+    )
+    const toCreate = missing.filter(p => !alreadyBilledTarget.has(p.id))
+    if (toCreate.length === 0) return 0
     const now = new Date().toISOString()
-    const newPayments: Payment[] = missing.map(player => ({
+    const newPayments: Payment[] = toCreate.map(player => ({
       id: crypto.randomUUID(),
       player_id: player.id,
       concept: "monthly_fee",

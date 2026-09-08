@@ -33,7 +33,6 @@ export async function POST(req: NextRequest) {
 
     const today = new Date().toISOString().split("T")[0]
     const targetDate = resolveMonthlyChargeDate(today)
-    const targetPrefix = targetDate.slice(0, 7)
     const results = { academiesChecked: 0, expensesCreated: 0, failed: 0 }
 
     const { data: academies } = await admin.from("team_settings").select("id")
@@ -58,11 +57,23 @@ export async function POST(req: NextRequest) {
           if (!templates.has(key)) templates.set(key, row)
         }
 
-        const { data: existing } = await admin
+        // date is a date column, so LIKE '2026-09%' raises "operator does not
+        // exist: date ~~ unknown" rather than matching anything — the same
+        // mistake that had the payments job re-charging every player daily.
+        const { data: existing, error: existingError } = await admin
           .from("expenses")
           .select("category, concept")
           .eq("academy_id", academy.id)
-          .like("date", `${targetPrefix}%`)
+          .eq("date", targetDate)
+
+        // Treating a failed existence check as "nothing exists" is what turns
+        // a broken query into duplicated rows on every run.
+        if (existingError) {
+          console.error(`[generate-monthly-expenses] academy ${academy.id} existing check:`, existingError.message)
+          results.failed++
+          continue
+        }
+
         const existingKeys = new Set((existing ?? []).map(e => `${e.category}::${e.concept}`))
 
         const missing = Array.from(templates.values()).filter(tpl => !existingKeys.has(`${tpl.category}::${tpl.concept}`))

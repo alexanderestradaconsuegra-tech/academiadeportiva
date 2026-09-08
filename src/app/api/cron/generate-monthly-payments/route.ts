@@ -48,8 +48,20 @@ export async function POST(req: NextRequest) {
     for (const academy of academies) {
       results.academiesChecked++
       try {
-        const dueDate = resolveMonthlyChargeDate(today)
-        const duePrefix = dueDate.slice(0, 7)
+        // This job only ever bills the month it is currently in.
+        //
+        // It used to ask resolveMonthlyChargeDate for the target, but that
+        // function answers a different question ("a fee was just switched on,
+        // which month should it bill?"). Running daily, it meant that from the
+        // 6th onward — once the current month's charge already existed — every
+        // run targeted next month, so families saw October's fee sitting as
+        // pending in the first week of September, and the coach's "por cobrar"
+        // total silently included money that wasn't owed yet.
+        const dueDate = today.slice(0, 7) + "-01"
+        // Past the grace window with nothing on record means this academy or
+        // player started mid-month: billing them now would backdate a debt
+        // they never had a chance to pay. Next month's run picks them up.
+        const tooLateToBillThisMonth = resolveMonthlyChargeDate(today) !== dueDate
 
         const { data: players } = await admin
           .from("players")
@@ -61,16 +73,30 @@ export async function POST(req: NextRequest) {
         // payments has no academy_id column of its own — it's scoped through
         // player_id, same as every RLS policy on this table. Filtering by a
         // column that doesn't exist here, so this must go through playerIds.
-        const { data: existing } = await admin
+        //
+        // due_date is a date column: matching it with LIKE '2026-09%' raises
+        // "operator does not exist: date ~~ unknown". That error was ignored
+        // below, the check came back empty, and this job charged every player
+        // again every single day. Match the exact date instead.
+        const { data: existing, error: existingError } = await admin
           .from("payments")
           .select("player_id")
           .in("player_id", playerIds)
           .eq("concept", "monthly_fee")
-          .like("due_date", `${duePrefix}%`)
+          .eq("due_date", dueDate)
+
+        // A failed "does this already exist?" check must never be read as
+        // "nothing exists" — that turns one broken query into duplicate
+        // charges for real families.
+        if (existingError) {
+          console.error(`[generate-monthly-payments] academy ${academy.id} existing check:`, existingError.message)
+          results.failed++
+          continue
+        }
 
         const existingPlayerIds = new Set((existing ?? []).map(p => p.player_id))
         const missing = players.filter(p => !existingPlayerIds.has(p.id))
-        if (missing.length === 0) continue
+        if (missing.length === 0 || tooLateToBillThisMonth) continue
 
         const now = new Date().toISOString()
         const newPayments = missing.map(player => ({
