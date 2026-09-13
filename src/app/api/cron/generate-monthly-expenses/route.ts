@@ -32,7 +32,15 @@ export async function POST(req: NextRequest) {
     )
 
     const today = new Date().toISOString().split("T")[0]
-    const targetDate = resolveMonthlyChargeDate(today)
+    // Same rule as the payments job: this only ever books the month it is in.
+    // Asking resolveMonthlyChargeDate for the target meant that from the 6th
+    // onward, with the month already booked, every run created next month's
+    // expenses — October's rent showing up in the first week of September and
+    // distorting the month's real result.
+    const targetDate = today.slice(0, 7) + "-01"
+    // Nothing booked this late in the month means the academy started
+    // mid-month; next month's run picks it up rather than backdating a cost.
+    const tooLateToBookThisMonth = resolveMonthlyChargeDate(today) !== targetDate
     const results = { academiesChecked: 0, expensesCreated: 0, failed: 0 }
 
     const { data: academies } = await admin.from("team_settings").select("id")
@@ -77,7 +85,7 @@ export async function POST(req: NextRequest) {
         const existingKeys = new Set((existing ?? []).map(e => `${e.category}::${e.concept}`))
 
         const missing = Array.from(templates.values()).filter(tpl => !existingKeys.has(`${tpl.category}::${tpl.concept}`))
-        if (missing.length === 0) continue
+        if (missing.length === 0 || tooLateToBookThisMonth) continue
 
         const now = new Date().toISOString()
         const newExpenses = missing.map(tpl => ({

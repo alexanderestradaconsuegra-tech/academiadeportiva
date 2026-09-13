@@ -48,12 +48,23 @@ export async function POST(req: NextRequest) {
     for (const row of schedules) {
       results.schedulesChecked++
       try {
-        const [{ data: existing }, { data: skips }] = await Promise.all([
+        const [{ data: existing, error: existingError }, { data: skips, error: skipsError }] = await Promise.all([
           admin.from("trainings").select("date")
             .eq("schedule_id", row.id).gte("date", today).lte("date", horizonEnd),
           admin.from("training_schedule_skips").select("date")
             .eq("schedule_id", row.id).gte("date", today).lte("date", horizonEnd),
         ])
+
+        // Both of these answer "what already exists?". Reading a failed query
+        // as "nothing exists" is what had the payments job re-charging every
+        // player daily for a week; here it would mean a duplicate set of
+        // sessions per schedule, every day.
+        if (existingError || skipsError) {
+          console.error(`[generate-trainings] schedule ${row.id} existing check:`,
+            existingError?.message ?? skipsError?.message)
+          results.failed++
+          continue
+        }
 
         const planned = pendingSessions(
           row as unknown as TrainingSchedule,
