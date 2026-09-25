@@ -9,13 +9,14 @@ import Select from "@/components/ui/Select"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
 import Badge from "@/components/ui/Badge"
-import { Plus, X, CalendarDays, MapPin, Clock, Pencil, Trash2, ClipboardList, Check, ThumbsUp, ThumbsDown } from "lucide-react"
+import { Plus, X, CalendarDays, MapPin, Clock, Pencil, Trash2, ClipboardList, Check, ThumbsUp, ThumbsDown, ListChecks } from "lucide-react"
 import { cn, formatDate, avatarUrl } from "@/lib/utils"
 import type { Category, Training, AttendanceStatus, RsvpStatus } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
 import { calendar } from "@/lib/i18n/dictionaries/calendar"
 import WeeklySchedule from "@/components/calendar/WeeklySchedule"
 import UpcomingAgenda from "@/components/calendar/UpcomingAgenda"
+import SessionPlan from "@/components/calendar/SessionPlan"
 import { useEnumT } from "@/lib/i18n/enums"
 
 const CATEGORIES: Category[] = ["Sub-10", "Sub-12", "Sub-14", "Sub-16", "Sub-18", "Juvenil", "Senior"]
@@ -48,12 +49,14 @@ export default function CalendarPage() {
   const {
     trainings, players, addTraining, updateTraining, deleteTraining,
     upsertAttendance, setTrainingRsvp, getTrainingAttendance, getPlayerAttendance, currentUser,
+    getTrainingExercises,
   } = useApp()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState(emptyForm)
   const [attendanceTraining, setAttendanceTraining] = useState<Training | null>(null)
+  const [planTraining, setPlanTraining] = useState<Training | null>(null)
   const t = useT(calendar)
   const e = useEnumT()
 
@@ -182,6 +185,10 @@ export default function CalendarPage() {
         </PageHeader>
 
         {/* Attendance modal */}
+        {planTraining && (
+          <SessionPlan training={planTraining} onClose={() => setPlanTraining(null)} />
+        )}
+
         {attendanceTraining && (
           <AttendanceModal
             training={attendanceTraining}
@@ -239,7 +246,7 @@ export default function CalendarPage() {
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                 <div className="divide-y divide-slate-50 dark:divide-slate-800">
                   {upcoming.map(tr => (
-                    <TrainingRow key={tr.id} t={tr} isPast={false} attendance={getTrainingAttendance(tr.id)} onEdit={() => openEdit(tr)} onDelete={() => handleDelete(tr.id)} onAttendance={() => setAttendanceTraining(tr)} />
+                    <TrainingRow key={tr.id} t={tr} isPast={false} attendance={getTrainingAttendance(tr.id)} onEdit={() => openEdit(tr)} onDelete={() => handleDelete(tr.id)} onAttendance={() => setAttendanceTraining(tr)} onPlan={() => setPlanTraining(tr)} planCount={getTrainingExercises(tr.id).length} />
                   ))}
                 </div>
               </div>
@@ -252,7 +259,7 @@ export default function CalendarPage() {
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
                 <div className="divide-y divide-slate-50 dark:divide-slate-800">
                   {past.map(tr => (
-                    <TrainingRow key={tr.id} t={tr} isPast={true} attendance={getTrainingAttendance(tr.id)} onEdit={() => openEdit(tr)} onDelete={() => handleDelete(tr.id)} onAttendance={() => setAttendanceTraining(tr)} />
+                    <TrainingRow key={tr.id} t={tr} isPast={true} attendance={getTrainingAttendance(tr.id)} onEdit={() => openEdit(tr)} onDelete={() => handleDelete(tr.id)} onAttendance={() => setAttendanceTraining(tr)} onPlan={() => setPlanTraining(tr)} planCount={getTrainingExercises(tr.id).length} />
                   ))}
                 </div>
               </div>
@@ -264,8 +271,8 @@ export default function CalendarPage() {
   )
 }
 
-function TrainingRow({ t: training, isPast, attendance, onEdit, onDelete, onAttendance }: {
-  t: Training; isPast: boolean; attendance: ReturnType<typeof useApp>["attendance"]; onEdit: () => void; onDelete: () => void; onAttendance: () => void
+function TrainingRow({ t: training, isPast, attendance, onEdit, onDelete, onAttendance, onPlan, planCount }: {
+  t: Training; isPast: boolean; attendance: ReturnType<typeof useApp>["attendance"]; onEdit: () => void; onDelete: () => void; onAttendance: () => void; onPlan: () => void; planCount: number
 }) {
   const t = useT(calendar)
   const e = useEnumT()
@@ -301,6 +308,18 @@ function TrainingRow({ t: training, isPast, attendance, onEdit, onDelete, onAtte
       </div>
       <div className="flex items-center gap-2 shrink-0">
         {training.category && <Badge variant="blue">{e.category(training.category)}</Badge>}
+        <button
+          onClick={onPlan}
+          title="Plan de la sesión"
+          className={cn(
+            "h-8 px-2 rounded-lg flex items-center justify-center gap-1 text-xs font-bold transition-colors",
+            planCount > 0
+              ? "bg-lime-100 dark:bg-lime-500/20 text-lime-700 dark:text-lime-400"
+              : "text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+          )}
+        >
+          <ListChecks size={14} />{planCount > 0 && planCount}
+        </button>
         <button onClick={onAttendance} className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors" title={t("markAttendance")}>
           <ClipboardList size={14} />
         </button>

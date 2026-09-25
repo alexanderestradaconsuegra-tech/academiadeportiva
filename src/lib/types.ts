@@ -294,6 +294,28 @@ export interface Training {
 }
 
 /** Horario fijo semanal: "Sub-12 entrena martes 18:30 en la cancha municipal". */
+/**
+ * Un ejercicio dentro del plan de una sesión. Lo hace el grupo entero; solo
+ * los marcados como `is_measurable` piden un número por jugador.
+ */
+export interface TrainingExercise {
+  id: string
+  training_id: string
+  exercise_id: string | null
+  /** Copia del nombre: el plan de hace tres meses debe leerse igual aunque el ejercicio ya no exista en la biblioteca. */
+  name: string
+  category: ActivityCategory
+  position: number
+  sets: number | null
+  reps: number | null
+  duration_min: number | null
+  is_measurable: boolean
+  unit: ActivityUnit | null
+  notes: string | null
+  completed_at: string | null
+  created_at: string
+}
+
 export interface TrainingSchedule {
   id: string
   day_of_week: number // 0 = domingo

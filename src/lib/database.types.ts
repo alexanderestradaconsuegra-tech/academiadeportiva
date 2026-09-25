@@ -377,6 +377,66 @@ export type Database = {
         }
         Relationships: []
       }
+      training_exercises: {
+        Row: {
+          id: string
+          academy_id: string
+          training_id: string
+          exercise_id: string | null
+          name: string
+          category: Database["public"]["Enums"]["activity_category"]
+          position: number
+          sets: number | null
+          reps: number | null
+          duration_min: number | null
+          is_measurable: boolean
+          unit: Database["public"]["Enums"]["activity_unit"] | null
+          notes: string | null
+          completed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          academy_id?: string
+          training_id: string
+          exercise_id?: string | null
+          name: string
+          category: Database["public"]["Enums"]["activity_category"]
+          position?: number
+          sets?: number | null
+          reps?: number | null
+          duration_min?: number | null
+          is_measurable?: boolean
+          unit?: Database["public"]["Enums"]["activity_unit"] | null
+          notes?: string | null
+          completed_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          exercise_id?: string | null
+          name?: string
+          category?: Database["public"]["Enums"]["activity_category"]
+          position?: number
+          sets?: number | null
+          reps?: number | null
+          duration_min?: number | null
+          is_measurable?: boolean
+          unit?: Database["public"]["Enums"]["activity_unit"] | null
+          notes?: string | null
+          completed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_exercises_training_id_fkey"
+            columns: ["training_id"]
+            isOneToOne: false
+            referencedRelation: "trainings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_schedules: {
         Row: {
           id: string

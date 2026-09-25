@@ -44,6 +44,7 @@ const TABLES = [
   "position_samples",
   "activation_codes",
   "training_schedules",
+  "training_exercises",
   "training_schedule_skips",
   "tactic_plays",
   "tactics_plays",

@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
-import type { Player, Activity, Evaluation, HealthProfile, LiveSession, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, RsvpStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer, Expense, ExerciseAssignment, SessionLoad, TrainingSchedule } from "@/lib/types"
+import type { Player, Activity, Evaluation, HealthProfile, LiveSession, TeamSettings, Profile, UserRole, Training, Category, PositionSample, Match, MatchPlayerStat, Exercise, Language, Attendance, AttendanceStatus, RsvpStatus, PhysicalTest, Injury, InjurySeverity, Payment, Convocatoria, ConvocatoriaPlayer, Expense, ExerciseAssignment, SessionLoad, TrainingSchedule, TrainingExercise } from "@/lib/types"
 import { resolveMonthlyChargeDate } from "@/lib/types"
 import { supabase } from "@/lib/supabase"
 import { registerServiceWorker } from "@/lib/push"
@@ -22,6 +22,7 @@ interface AppState {
   exerciseAssignments: ExerciseAssignment[]
   sessionLoads: SessionLoad[]
   trainingSchedules: TrainingSchedule[]
+  trainingExercises: TrainingExercise[]
   attendance: Attendance[]
   physicalTests: PhysicalTest[]
   injuries: Injury[]
@@ -74,6 +75,11 @@ interface AppContextType extends AppState {
   addTrainingSchedule: (data: Omit<TrainingSchedule, "id" | "created_at">) => void
   updateTrainingSchedule: (id: string, data: Partial<Omit<TrainingSchedule, "id" | "created_at">>) => void
   deleteTrainingSchedule: (id: string) => void
+  getTrainingExercises: (trainingId: string) => TrainingExercise[]
+  addTrainingExercise: (trainingId: string, data: Omit<TrainingExercise, "id" | "training_id" | "created_at">) => void
+  updateTrainingExercise: (id: string, data: Partial<Omit<TrainingExercise, "id" | "training_id" | "created_at">>) => void
+  removeTrainingExercise: (id: string) => void
+  copySessionPlan: (fromTrainingId: string, toTrainingId: string) => Promise<number>
   getPlayer: (id: string) => Player | undefined
   getPlayerActivities: (playerId: string) => Activity[]
   getPlayerEvaluations: (playerId: string) => Evaluation[]
@@ -286,6 +292,25 @@ function mapTraining(row: Tables<"trainings">): Training {
   }
 }
 
+function mapTrainingExercise(row: Tables<"training_exercises">): TrainingExercise {
+  return {
+    id: row.id,
+    training_id: row.training_id,
+    exercise_id: row.exercise_id ?? null,
+    name: row.name,
+    category: row.category,
+    position: row.position,
+    sets: row.sets ?? null,
+    reps: row.reps ?? null,
+    duration_min: row.duration_min ?? null,
+    is_measurable: row.is_measurable,
+    unit: row.unit ?? null,
+    notes: row.notes ?? null,
+    completed_at: row.completed_at ?? null,
+    created_at: row.created_at,
+  }
+}
+
 function mapTrainingSchedule(row: Tables<"training_schedules">): TrainingSchedule {
   return {
     id: row.id,
@@ -481,6 +506,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     exerciseAssignments: [],
     sessionLoads: [],
     trainingSchedules: [],
+    trainingExercises: [],
     attendance: [],
     physicalTests: [],
     injuries: [],
@@ -531,7 +557,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       d.setUTCDate(d.getUTCDate() - 28)
       return d.toISOString().split("T")[0]
     })()
-    const [playersRes, activitiesRes, evaluationsRes, trainingsRes, matchesRes, exercisesRes, assignmentsRes, loadsRes, schedulesRes, attendanceRes, paymentsRes, expensesRes, convRes] = await Promise.all([
+    const [playersRes, activitiesRes, evaluationsRes, trainingsRes, matchesRes, exercisesRes, assignmentsRes, loadsRes, schedulesRes, planRes, attendanceRes, paymentsRes, expensesRes, convRes] = await Promise.all([
       supabase.from("players").select("*"),
       supabase.from("activities").select("*"),
       supabase.from("evaluations").select("*"),
@@ -545,6 +571,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // stays small no matter how long an academy has been running.
       supabase.from("session_loads").select("*").gte("date", twentyEightDaysAgo),
       supabase.from("training_schedules").select("*"),
+      supabase.from("training_exercises").select("*"),
       supabase.from("attendance").select("*"),
       categoryFilter ? supabase.from("payments").select("*").limit(0) : supabase.from("payments").select("*"),
       // Financial data — assistants never see it, same boundary as payments.
@@ -599,6 +626,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       exerciseAssignments: (assignmentsRes.data ?? []).map(mapExerciseAssignment),
       sessionLoads: (loadsRes.data ?? []).map(mapSessionLoad),
       trainingSchedules: (schedulesRes.data ?? []).map(mapTrainingSchedule),
+      trainingExercises: (planRes.data ?? []).map(mapTrainingExercise),
       attendance: (attendanceRes.data ?? []).map(mapAttendance),
       payments: categoryFilter ? [] : (paymentsRes.data ?? []).map(mapPayment),
       expenses: categoryFilter ? [] : (expensesRes.data ?? []).map(mapExpense),
@@ -715,6 +743,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           exerciseAssignments: [],
           sessionLoads: [],
           trainingSchedules: [],
+          trainingExercises: [],
           attendance: [],
           physicalTests: [],
           injuries: [],
@@ -1155,6 +1184,102 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }))
     supabase.from("training_schedules").delete().eq("id", id).then(({ error }) => { if (error) dbg("deleteTrainingSchedule:", error) })
   }, [])
+
+  // ── Plan de sesión ────────────────────────────────────────────────────────
+
+  const getTrainingExercises = useCallback(
+    (trainingId: string) => state.trainingExercises
+      .filter(te => te.training_id === trainingId)
+      .sort((a, b) => a.position - b.position || a.created_at.localeCompare(b.created_at)),
+    [state.trainingExercises]
+  )
+
+  const addTrainingExercise = useCallback((trainingId: string, data: Omit<TrainingExercise, "id" | "training_id" | "created_at">) => {
+    const entry: TrainingExercise = {
+      ...data,
+      id: crypto.randomUUID(),
+      training_id: trainingId,
+      created_at: new Date().toISOString(),
+    }
+    setState(s => {
+      // academy_id is set by a database trigger from the session itself, so
+      // it's deliberately not sent from here.
+      supabase.from("training_exercises").insert({
+        id: entry.id,
+        training_id: trainingId,
+        exercise_id: entry.exercise_id,
+        name: entry.name,
+        category: entry.category,
+        position: entry.position,
+        sets: entry.sets,
+        reps: entry.reps,
+        duration_min: entry.duration_min,
+        is_measurable: entry.is_measurable,
+        unit: entry.unit,
+        notes: entry.notes,
+      }).then(({ error }) => { if (error) dbg("addTrainingExercise:", error) })
+      return { ...s, trainingExercises: [...s.trainingExercises, entry] }
+    })
+  }, [])
+
+  const updateTrainingExercise = useCallback((id: string, data: Partial<Omit<TrainingExercise, "id" | "training_id" | "created_at">>) => {
+    setState(s => ({
+      ...s,
+      trainingExercises: s.trainingExercises.map(te => te.id === id ? { ...te, ...data } : te),
+    }))
+    supabase.from("training_exercises").update({ ...data }).eq("id", id)
+      .then(({ error }) => { if (error) dbg("updateTrainingExercise:", error) })
+  }, [])
+
+  const removeTrainingExercise = useCallback((id: string) => {
+    setState(s => ({ ...s, trainingExercises: s.trainingExercises.filter(te => te.id !== id) }))
+    supabase.from("training_exercises").delete().eq("id", id)
+      .then(({ error }) => { if (error) dbg("removeTrainingExercise:", error) })
+  }, [])
+
+  /**
+   * Copies a previous session's drills onto another session.
+   *
+   * This is what makes next Tuesday two taps instead of rebuilding the plan,
+   * and it's why there's no separate "template" table: the sessions an
+   * academy already ran are the templates. Only the plan is copied — notes
+   * about how it actually went and the completed marks belong to their own
+   * session.
+   */
+  const copySessionPlan = useCallback(async (fromTrainingId: string, toTrainingId: string): Promise<number> => {
+    const source = state.trainingExercises
+      .filter(te => te.training_id === fromTrainingId)
+      .sort((a, b) => a.position - b.position)
+    if (source.length === 0) return 0
+
+    const rows = source.map((te, i) => ({
+      id: crypto.randomUUID(),
+      training_id: toTrainingId,
+      exercise_id: te.exercise_id,
+      name: te.name,
+      category: te.category,
+      position: i,
+      sets: te.sets,
+      reps: te.reps,
+      duration_min: te.duration_min,
+      is_measurable: te.is_measurable,
+      unit: te.unit,
+      notes: null,
+    }))
+
+    const { error } = await supabase.from("training_exercises").insert(rows)
+    if (error) { dbg("copySessionPlan:", error); return 0 }
+
+    setState(s => ({
+      ...s,
+      trainingExercises: [...s.trainingExercises, ...rows.map(r => ({
+        ...r,
+        completed_at: null,
+        created_at: new Date().toISOString(),
+      }))],
+    }))
+    return rows.length
+  }, [state.trainingExercises])
 
   const addMatch = useCallback((data: Omit<Match, "id" | "created_at">): Match => {
     const match: Match = {
@@ -1909,6 +2034,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addTrainingSchedule,
         updateTrainingSchedule,
         deleteTrainingSchedule,
+        getTrainingExercises,
+        addTrainingExercise,
+        updateTrainingExercise,
+        removeTrainingExercise,
+        copySessionPlan,
         getPlayer,
         getPlayerActivities,
         getPlayerEvaluations,
