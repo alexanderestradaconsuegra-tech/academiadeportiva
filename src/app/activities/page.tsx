@@ -10,6 +10,8 @@ import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
 import Badge from "@/components/ui/Badge"
 import PlayerPlan from "@/components/plan/PlayerPlan"
+import InsightsPanel from "@/components/insights/InsightsPanel"
+import { activityInsights } from "@/lib/insights"
 import { Plus, X, Dumbbell, Film } from "lucide-react"
 import { cn, formatDate, getCategoryColor, getIntensityColor } from "@/lib/utils"
 import type { ActivityCategory, ActivityUnit, Intensity } from "@/lib/types"
@@ -26,7 +28,7 @@ const catBadgeMap: Record<string, "amber" | "red" | "blue" | "green" | "orange" 
 }
 
 export default function ActivitiesPage() {
-  const { players, activities, exercises, addActivity, currentUser } = useApp()
+  const { players, activities, exercises, addActivity, currentUser, trainingExercises, trainings } = useApp()
   const t = useT(activitiesDict)
   const enumT = useEnumT()
   const isPlayer = currentUser?.role === "player"
@@ -98,6 +100,14 @@ export default function ActivitiesPage() {
         {/* The player's plan comes before their history: what to do next
             matters more than what they already did. */}
         {isPlayer && ownPlayerId && <PlayerPlan playerId={ownPlayerId} />}
+
+        {/* For the coach: what the group's measurements actually say. */}
+        {!isPlayer && (
+          <InsightsPanel
+            insights={activityInsights({ players, activities, trainingExercises, trainings }, new Date().toISOString().split("T")[0])}
+            emptyText="Todavía no hay suficientes marcas para ver tendencias. Registrá mediciones desde el plan de cada sesión."
+          />
+        )}
 
         {/* Modal form */}
         {showForm && (

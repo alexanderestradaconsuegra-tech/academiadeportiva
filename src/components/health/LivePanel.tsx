@@ -96,9 +96,6 @@ export default function LivePanel({
             </div>
             <div className="text-4xl font-black tabular-nums text-lime-700 dark:text-lime-400">{currentSpeed || "—"}</div>
             <div className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-1">km/h</div>
-            {!gpsEnabled && selectedDevice === "manual" && (
-              <div className="mt-2 text-[9px] text-slate-400 dark:text-slate-500">{t("simulated")}</div>
-            )}
           </div>
 
           {/* Calories */}
@@ -155,7 +152,6 @@ export default function LivePanel({
               className="h-8 w-24 rounded-lg border border-slate-200 dark:border-slate-700 px-3 text-sm font-bold text-center outline-none focus:border-lime-600 dark:focus:border-lime-400"
             />
             <Button size="sm" onClick={onSubmitManualHR} disabled={!manualHR}>{t("register")}</Button>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-auto">{t("dataAlsoSimulated")}</span>
           </div>
         )}
 

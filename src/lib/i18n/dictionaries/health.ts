@@ -27,7 +27,7 @@ export const health = {
   deviceGenericName: { es: "Banda BLE genérica", en: "Generic BLE strap", pt: "Faixa BLE genérica" },
   deviceGenericDesc: { es: "Cualquier monitor BLE", en: "Any BLE monitor", pt: "Qualquer monitor BLE" },
   deviceManualName: { es: "Entrada manual", en: "Manual entry", pt: "Entrada manual" },
-  deviceManualDesc: { es: "Simula datos para demo", en: "Simulates data for demo", pt: "Simula dados para demonstração" },
+  deviceManualDesc: { es: "Anotas el pulso a mano", en: "You type the heart rate", pt: "Você digita a frequência" },
 
   // Setup panel
   selectPlayer: { es: "Seleccionar Jugador", en: "Select Player", pt: "Selecionar Jogador" },

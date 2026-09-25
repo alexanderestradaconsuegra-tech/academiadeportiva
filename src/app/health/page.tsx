@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { useApp } from "@/context/AppContext"
 import { supabase } from "@/lib/supabase"
@@ -11,6 +11,8 @@ import ChartSkeleton from "@/components/ui/ChartSkeleton"
 import RpeLogger from "@/components/health/RpeLogger"
 import WorkloadCard from "@/components/health/WorkloadCard"
 import SquadWorkload from "@/components/health/SquadWorkload"
+import InsightsPanel from "@/components/insights/InsightsPanel"
+import { physicalInsights } from "@/lib/insights"
 import { cn, formatDate } from "@/lib/utils"
 import type { HRSample, SpeedSample, HRZone, LiveSession } from "@/lib/types"
 import { HR_ZONES, getZone, calcCalories, formatDuration } from "@/lib/health-zones"
@@ -39,10 +41,14 @@ const DEVICE_TYPES = [
 ] as const
 
 export default function HealthPage() {
-  const { players, addLiveSession, liveSessions, currentUser } = useApp()
+  const { players, addLiveSession, liveSessions, currentUser, sessionLoads, injuries, evaluations, trainings } = useApp()
   const t = useT(healthDict)
   const isPlayer = currentUser?.role === "player"
   const ownPlayerId = currentUser?.player_id ?? null
+  const insights = useMemo(
+    () => isPlayer ? [] : physicalInsights({ players, sessionLoads, injuries, evaluations, trainings }, new Date().toISOString().split("T")[0]),
+    [isPlayer, players, sessionLoads, injuries, evaluations, trainings]
+  )
   const [selectedPlayer, setSelectedPlayer] = useState(
     isPlayer && ownPlayerId ? ownPlayerId : (players[0]?.id ?? "")
   )
@@ -82,7 +88,6 @@ export default function HealthPage() {
 
   const btCharRef = useRef<any>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const simulRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const gpsWatchRef = useRef<number | null>(null)
   const startTimeRef = useRef<number>(0)
 
@@ -119,38 +124,11 @@ export default function HealthPage() {
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [sessionState])
 
-  // Simulate HR if manual mode
-  useEffect(() => {
-    if (sessionState === "running" && selectedDevice === "manual") {
-      const maxHR = health?.max_hr ?? 200
-      const restHR = health?.resting_hr ?? 60
-      simulRef.current = setInterval(() => {
-        setElapsed(prev => {
-          const t = prev
-          const phase = Math.min(t / 2700, 1)
-          let target = phase < 0.1 ? restHR + 30 :
-                       phase < 0.5 ? restHR + 70 + (maxHR - restHR - 70) * ((phase - 0.1) / 0.4) :
-                       phase < 0.8 ? maxHR * 0.88 + Math.random() * 10 :
-                       restHR + 50 - (phase - 0.8) / 0.2 * 30
-          const bpm = Math.max(restHR - 5, Math.min(maxHR, Math.round(target + (Math.random() - 0.5) * 6)))
-          const zone = getZone(bpm, maxHR)
-          setCurrentHR(bpm)
-          setHrSamples(prev => [...prev, { ts: t, bpm, zone }])
-          // Simulate speed
-          const spd = phase < 0.1 ? 5 + Math.random() * 3 :
-                      phase < 0.5 ? 10 + Math.random() * 12 :
-                      phase < 0.8 ? 14 + Math.random() * 18 :
-                      8 + Math.random() * 6
-          setCurrentSpeed(parseFloat(spd.toFixed(1)))
-          setSpeedSamples(prev => [...prev, { ts: t, kmh: parseFloat(spd.toFixed(1)) }])
-          return prev
-        })
-      }, 1000)
-    } else {
-      if (simulRef.current) { clearInterval(simulRef.current); simulRef.current = null }
-    }
-    return () => { if (simulRef.current) clearInterval(simulRef.current) }
-  }, [sessionState, selectedDevice, health])
+  // Manual mode used to run a simulator here that injected a random heart
+  // rate and speed every second, then saved them as a real session — so a
+  // coach could store fabricated numbers without knowing it. Manual mode is
+  // now exactly what it says: the coach types the readings (see
+  // onSubmitManualHR below), and nothing is invented.
 
   // GPS speed
   const startGPS = useCallback(() => {
@@ -337,7 +315,10 @@ export default function HealthPage() {
             </div>
           </>
         ) : (
-          <SquadWorkload />
+          <>
+            <InsightsPanel insights={insights} emptyText="Sin alertas físicas esta semana: cargas, lesiones y evaluaciones en orden." />
+            <SquadWorkload />
+          </>
         )}
 
         {/* Tabs: Setup / Live / Historial */}
