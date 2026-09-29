@@ -13,17 +13,8 @@ import type { Payment } from "@/lib/types"
 import { effectivePaymentStatus, PAYMENT_GRACE_DAYS } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
 import { payments as paymentsDict } from "@/lib/i18n/dictionaries/payments"
-
-const CONCEPTS = ["monthly_fee", "enrollment", "uniform", "tournament", "other"] as const
-type Concept = typeof CONCEPTS[number]
-
-const CONCEPT_KEYS: Record<Concept, keyof typeof paymentsDict> = {
-  monthly_fee: "monthlyFee",
-  enrollment: "enrollment",
-  uniform: "uniform",
-  tournament: "tournament",
-  other: "otherConcept",
-}
+import { CONCEPTS, CONCEPT_KEYS, type Concept } from "@/lib/paymentConcepts"
+import NewChargeModal from "@/components/payments/NewChargeModal"
 
 const STATUS_CFG = {
   overdue:     { label: "statusOverdue",    color: "text-red-600",    bg: "bg-red-50 dark:bg-red-500/10",    border: "border-red-200 dark:border-red-500/20" },
@@ -31,8 +22,6 @@ const STATUS_CFG = {
   en_revision: { label: "statusEnRevision", color: "text-violet-600", bg: "bg-violet-50 dark:bg-violet-500/10", border: "border-violet-200 dark:border-violet-500/20" },
   paid:        { label: "statusPaid",       color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-500/10", border: "border-emerald-200 dark:border-emerald-500/20" },
 } as const
-
-const EMPTY_FORM = { player_id: "", concept: "monthly_fee" as Concept, amount: "", due_date: "", paid_date: "", notes: "" }
 
 export default function PaymentsPage() {
   const {
@@ -51,7 +40,7 @@ export default function PaymentsPage() {
   const [conceptFilter, setConceptFilter] = useState<"all" | Concept>("all")
   const [search, setSearch] = useState("")
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ ...EMPTY_FORM, due_date: new Date().toISOString().split("T")[0] })
+  const [chargeMsg, setChargeMsg] = useState("")
   const [generating, setGenerating] = useState(false)
   const [notifying, setNotifying] = useState(false)
   const [notifyResult, setNotifyResult] = useState<string | null>(null)
@@ -207,21 +196,6 @@ export default function PaymentsPage() {
     rejectPaymentReceipt(id, rejectDrafts[id] ?? "")
     setReviewUrls(u => { const n = { ...u }; delete n[id]; return n })
     setRejectDrafts(d => { const n = { ...d }; delete n[id]; return n })
-  }
-
-  function handleSubmit(ev: React.FormEvent) {
-    ev.preventDefault()
-    addPayment({
-      player_id: form.player_id,
-      concept: form.concept,
-      amount: Number(form.amount),
-      due_date: form.due_date,
-      paid_date: form.paid_date || null,
-      status: form.paid_date ? "paid" : "pending",
-      notes: form.notes || null,
-    })
-    setShowForm(false)
-    setForm({ ...EMPTY_FORM, due_date: new Date().toISOString().split("T")[0] })
   }
 
   function markPaid(p: Payment) {
@@ -425,6 +399,16 @@ export default function PaymentsPage() {
             </div>
           )}
         </PageHeader>
+
+        {chargeMsg && (
+          <div role="status" className="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-2xl px-4 py-3 mb-5 flex items-center gap-3">
+            <Check size={16} className="text-emerald-600 shrink-0" />
+            <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300 flex-1">{chargeMsg}</p>
+            <button onClick={() => setChargeMsg("")} aria-label="Cerrar aviso" className="w-9 h-9 rounded-lg flex items-center justify-center text-emerald-600">
+              <X size={14} />
+            </button>
+          </div>
+        )}
 
         {/* Monthly fee banner */}
         {isCoach && teamSettings?.monthly_fee && missingMonthlyFee.length > 0 && (
@@ -715,52 +699,12 @@ export default function PaymentsPage() {
       {/* Receipt upload modal */}
       {receiptModal}
 
-      {/* New payment modal */}
+      {/* New charge — one student or many */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md animate-scale-in">
-            <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t("newPaymentTitle")}</h2>
-              <button onClick={() => setShowForm(false)} aria-label="Cerrar" className="w-11 h-11 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 transition-colors">
-                <X size={16} />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit} className="p-5 space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">{t("playerLabel")}</label>
-                <select
-                  value={form.player_id}
-                  onChange={ev => setForm(f => ({ ...f, player_id: ev.target.value }))}
-                  className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-lime-600 dark:focus:border-lime-400 outline-none"
-                  required
-                >
-                  <option value="">—</option>
-                  {players.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">{t("conceptLabel")}</label>
-                <select
-                  value={form.concept}
-                  onChange={ev => setForm(f => ({ ...f, concept: ev.target.value as Concept }))}
-                  className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:border-lime-600 dark:focus:border-lime-400 outline-none"
-                >
-                  {CONCEPTS.map(c => <option key={c} value={c}>{t(CONCEPT_KEYS[c])}</option>)}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Input label={t("amountLabel")} type="number" min={0} step="0.01" value={form.amount} onChange={ev => setForm(f => ({ ...f, amount: ev.target.value }))} required />
-                <Input label={t("dueDateLabel")} type="date" value={form.due_date} onChange={ev => setForm(f => ({ ...f, due_date: ev.target.value }))} required />
-              </div>
-              <Input label={t("paidDateLabel")} type="date" value={form.paid_date} onChange={ev => setForm(f => ({ ...f, paid_date: ev.target.value }))} />
-              <Input label={t("notesLabel")} placeholder={t("notesPlaceholder")} value={form.notes} onChange={ev => setForm(f => ({ ...f, notes: ev.target.value }))} />
-              <div className="flex gap-3 justify-end pt-2">
-                <Button variant="secondary" type="button" onClick={() => setShowForm(false)}>{t("cancel")}</Button>
-                <Button type="submit">{t("save")}</Button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <NewChargeModal
+          onClose={() => setShowForm(false)}
+          onDone={msg => { setChargeMsg(msg); setTimeout(() => setChargeMsg(""), 8000) }}
+        />
       )}
     </AppShell>
   )

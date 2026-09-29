@@ -106,6 +106,7 @@ interface AppContextType extends AppState {
   addPayment: (data: Omit<Payment, "id" | "created_at">) => Payment
   updatePayment: (id: string, data: Partial<Omit<Payment, "id" | "created_at" | "player_id">>) => void
   deletePayment: (id: string) => void
+  addPaymentsBulk: (rows: Omit<Payment, "id" | "created_at">[]) => Promise<{ created: number; error: string | null }>
   getPlayerPayments: (playerId: string) => Payment[]
   addExpense: (data: Omit<Expense, "id" | "created_at">) => Expense
   updateExpense: (id: string, data: Partial<Omit<Expense, "id" | "created_at">>) => void
@@ -1711,6 +1712,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     supabase.from("payments").delete().eq("id", id).then(({ error }) => { if (error) dbg("deletePayment:", error) })
   }, [])
 
+  /**
+   * Creates many charges in one request.
+   *
+   * Unlike addPayment this waits for the database before touching the screen.
+   * A bulk charge is money owed by dozens of families: showing rows that were
+   * never saved (the optimistic pattern used elsewhere) is exactly how the
+   * monthly-fee generator once looked fine while saving nothing. One insert,
+   * so it lands whole or not at all.
+   */
+  const addPaymentsBulk = useCallback(async (rows: Omit<Payment, "id" | "created_at">[]): Promise<{ created: number; error: string | null }> => {
+    if (rows.length === 0) return { created: 0, error: null }
+    const now = new Date().toISOString()
+    const payments: Payment[] = rows.map(r => ({ ...r, id: crypto.randomUUID(), created_at: now }))
+    const { error } = await supabase.from("payments").insert(
+      payments.map(p => ({
+        id: p.id,
+        player_id: p.player_id,
+        concept: p.concept,
+        amount: p.amount,
+        due_date: p.due_date,
+        paid_date: p.paid_date ?? null,
+        status: p.status,
+        notes: p.notes || null,
+        created_at: p.created_at,
+      }))
+    )
+    if (error) {
+      dbg("addPaymentsBulk:", error)
+      return { created: 0, error: "No se pudieron guardar los cobros. No se creó ninguno; revisa e intenta de nuevo." }
+    }
+    setState(s => ({ ...s, payments: [...s.payments, ...payments] }))
+    return { created: payments.length, error: null }
+  }, [])
+
   const addExpense = useCallback((data: Omit<Expense, "id" | "created_at">): Expense => {
     const expense: Expense = { ...data, id: crypto.randomUUID(), created_at: new Date().toISOString() }
     const academyId = state.teamSettings?.id
@@ -2065,6 +2100,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addPayment,
         updatePayment,
         deletePayment,
+        addPaymentsBulk,
         submitPaymentReceipt,
         approvePaymentReceipt,
         rejectPaymentReceipt,
