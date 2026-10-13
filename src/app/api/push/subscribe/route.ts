@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSupabaseAdmin } from "@/lib/supabase-admin"
+import { isAllowedPushEndpoint } from "@/lib/push-endpoint"
 
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("authorization") ?? ""
@@ -15,6 +16,11 @@ export async function POST(req: NextRequest) {
   const { endpoint, p256dh, auth } = await req.json()
   if (!endpoint || !p256dh || !auth) {
     return NextResponse.json({ error: "Datos de suscripción incompletos." }, { status: 400 })
+  }
+  // The server later POSTs to this URL. Only a browser vendor's push service is
+  // a legitimate destination — see lib/push-endpoint.
+  if (!isAllowedPushEndpoint(endpoint)) {
+    return NextResponse.json({ error: "Endpoint de notificaciones no válido." }, { status: 400 })
   }
 
   const { error } = await admin.from("push_subscriptions").upsert({

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient, SupabaseClient } from "@supabase/supabase-js"
 import crypto from "crypto"
 import { getPayment, getPreapproval, periodEndFromPlan } from "@/lib/mercadopago"
+import { safePlan, approvalDate, shouldApplyPeriod, shouldActivateFromPreapproval } from "@/lib/subscription-period"
 import { verifyMercadoPagoSignature } from "@/lib/mp-signature"
 import { sendEmail, newAcademyCredentialsEmail } from "@/lib/email"
 
@@ -135,15 +136,28 @@ export async function POST(req: NextRequest) {
           // through with nothing to attach it to. Let MercadoPago retry.
           return NextResponse.json({ error: "No se pudo resolver o crear la academia." }, { status: 500 })
         }
-        const periodEnd = periodEndFromPlan(plan ?? "monthly")
-        await sb.from("team_settings").update({
-          subscription_status: "active",
-          subscription_current_period_end: periodEnd.toISOString(),
-          mp_plan: plan ?? "monthly",
-          mp_preapproval_id: String(preapprovalId),
-          trial_expires_at: null,
-          updated_at: new Date().toISOString(),
-        }).eq("id", academyId)
+        const thePlan = safePlan(plan)
+        const { data: current } = await sb.from("team_settings")
+          .select("subscription_status, subscription_current_period_end").eq("id", academyId).maybeSingle()
+
+        if (shouldActivateFromPreapproval(current?.subscription_status, current?.subscription_current_period_end)) {
+          await sb.from("team_settings").update({
+            subscription_status: "active",
+            subscription_current_period_end: periodEndFromPlan(thePlan).toISOString(),
+            mp_plan: thePlan,
+            mp_preapproval_id: String(preapprovalId),
+            trial_expires_at: null,
+            updated_at: new Date().toISOString(),
+          }).eq("id", academyId)
+        } else {
+          // Already paid through a future date. Re-sending an "authorized"
+          // notification must not buy another period; the money for the next
+          // one arrives as its own approved payment.
+          await sb.from("team_settings").update({
+            mp_preapproval_id: String(preapprovalId),
+            updated_at: new Date().toISOString(),
+          }).eq("id", academyId)
+        }
       } else if (mpStatus === "paused" && UUID_RE.test(reference)) {
         await sb.from("team_settings").update({
           subscription_status: "past_due",
@@ -173,15 +187,28 @@ export async function POST(req: NextRequest) {
         if (!academyId) {
           return NextResponse.json({ error: "No se pudo resolver o crear la academia." }, { status: 500 })
         }
-        const periodEnd = periodEndFromPlan(plan ?? "monthly")
-        await sb.from("team_settings").update({
-          subscription_status: "active",
-          subscription_current_period_end: periodEnd.toISOString(),
-          mp_payment_id: String(paymentId),
-          mp_plan: plan ?? "monthly",
-          trial_expires_at: null,
-          updated_at: new Date().toISOString(),
-        }).eq("id", academyId)
+        const thePlan = safePlan(plan)
+        const periodEnd = periodEndFromPlan(thePlan, approvalDate(payment.date_approved))
+
+        // The notification body is unauthenticated and the signature check can
+        // be skipped by leaving the header out, so anyone who knows an approved
+        // payment's id (it is printed on the receipt) can resend it. Counting
+        // the period from the payment's own approval date and refusing to
+        // apply anything that does not extend the current period makes a
+        // replay change nothing — it can no longer buy a free renewal.
+        const { data: current } = await sb.from("team_settings")
+          .select("subscription_current_period_end").eq("id", academyId).maybeSingle()
+
+        if (shouldApplyPeriod(current?.subscription_current_period_end, periodEnd)) {
+          await sb.from("team_settings").update({
+            subscription_status: "active",
+            subscription_current_period_end: periodEnd.toISOString(),
+            mp_payment_id: String(paymentId),
+            mp_plan: thePlan,
+            trial_expires_at: null,
+            updated_at: new Date().toISOString(),
+          }).eq("id", academyId)
+        }
       } else if ((payment.status === "rejected" || payment.status === "cancelled") && UUID_RE.test(reference)) {
         // A rejected/cancelled first attempt on a brand-new signup has no
         // academy yet — nothing to mark past_due, and definitely not a

@@ -1,17 +1,52 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { normalizeEmail, isValidEmail, cleanAcademyName } from "@/lib/signup-guards"
 
 export const dynamic = "force-dynamic"
 
+// Redeeming a code is an unauthenticated call that accepts guesses. Codes are
+// now long and random, but there was no limit at all on how fast someone could
+// try them. In memory, per IP: a speed bump, not the only defence.
+const ATTEMPTS_PER_IP = 12
+const ATTEMPT_WINDOW_MS = 60 * 60 * 1000
+const attempts = new Map<string, number[]>()
+
+function tooManyAttempts(ip: string, now: number): boolean {
+  const recent = (attempts.get(ip) ?? []).filter(t => now - t < ATTEMPT_WINDOW_MS)
+  if (recent.length >= ATTEMPTS_PER_IP) { attempts.set(ip, recent); return true }
+  recent.push(now)
+  attempts.set(ip, recent)
+  if (attempts.size > 5000) {
+    attempts.forEach((times, key) => { if (times.every(t => now - t >= ATTEMPT_WINDOW_MS)) attempts.delete(key) })
+  }
+  return false
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, academyName, coachName, language, activationCode } = await req.json()
+    const raw = await req.json().catch(() => ({}))
+    const { password, language, activationCode } = raw
+    const email = normalizeEmail(raw.email)
+    const academyName = cleanAcademyName(raw.academyName)
+    const coachName = cleanAcademyName(raw.coachName)
 
-    if (!email || !password || !activationCode) {
+    const ip = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() || "desconocida"
+    if (tooManyAttempts(ip, Date.now())) {
+      return NextResponse.json(
+        { error: "Demasiados intentos. Intenta de nuevo en una hora." },
+        { status: 429 }
+      )
+    }
+
+    if (!email || !password || !activationCode || typeof activationCode !== "string" || typeof password !== "string") {
       return NextResponse.json(
         { error: "Email, password, y código requeridos" },
         { status: 400 }
       )
+    }
+
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ error: "Ese correo no parece válido." }, { status: 400 })
     }
 
     const admin = createClient(
@@ -28,6 +63,17 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (codeError || !codeData) {
+      return NextResponse.json(
+        { error: "Código de activación inválido o expirado" },
+        { status: 400 }
+      )
+    }
+
+    // Payment codes stand in for an academy that has not been created yet and
+    // are redeemed only by the payment webhook, using the service role. A
+    // person is never meant to type one — accepting it here would let anyone
+    // who guessed a pending checkout's code get an academy without paying.
+    if (codeData.code_type === "payment") {
       return NextResponse.json(
         { error: "Código de activación inválido o expirado" },
         { status: 400 }

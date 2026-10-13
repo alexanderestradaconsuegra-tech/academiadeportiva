@@ -25,6 +25,13 @@ const nextConfig = {
   output: "standalone",
   poweredByHeader: false,
   images: {
+    // The built-in optimizer is switched off. This app only shows a few small
+    // avatars and local assets, so it buys almost nothing — but its endpoint
+    // (/_next/image) is where most of the published advisories for this Next.js
+    // line live (denial of service, disk growth, and an AVIF remote-code-
+    // execution issue), and the fixes for those exist only in Next 15. With it
+    // off, <Image> renders a plain <img> and that surface is gone.
+    unoptimized: true,
     domains: ["api.dicebear.com", "ui-avatars.com"],
   },
   async headers() {

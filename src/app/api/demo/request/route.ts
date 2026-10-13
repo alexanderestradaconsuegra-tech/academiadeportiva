@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
-import { sendEmail } from "@/lib/email"
+import { sendEmail, escapeHtml } from "@/lib/email"
+import { generateActivationCode, normalizeEmail, isValidEmail, cleanAcademyName } from "@/lib/signup-guards"
 
 export const dynamic = "force-dynamic"
 
@@ -20,13 +21,16 @@ export async function OPTIONS() {
 }
 
 // CORS only constrains browsers, so it is no defence against a script hitting
-// this endpoint in a loop. Without a limit, anyone could mint unlimited demo
-// codes and, worse, use this domain to mail arbitrary addresses — which is how
-// a sending reputation gets burned. Per-IP counting is in memory (a speed bump
-// that resets on deploy); the per-email rule is checked against the table, so
-// it survives restarts and holds across instances.
+// this endpoint in a loop. Three layers, because each has a hole on its own:
+//  - per IP, in memory: a speed bump that resets on deploy, and the IP comes
+//    from a header the caller can influence, so it must never be the only gate;
+//  - per email, against the table: survives restarts, but a script just varies
+//    the email;
+//  - a global ceiling per hour, against the table: whatever the caller varies,
+//    the total number of demo emails this endpoint can send is bounded.
 const RATE_PER_IP = 3
 const RATE_WINDOW_MS = 60 * 60 * 1000
+const GLOBAL_DEMOS_PER_HOUR = 40
 const ipHits = new Map<string, number[]>()
 
 function ipRateLimited(ip: string, now: number): boolean {
@@ -48,11 +52,19 @@ function ipRateLimited(ip: string, now: number): boolean {
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, academy_name } = await req.json()
+    const body = await req.json().catch(() => ({}))
+    const email = normalizeEmail(body?.email)
+    const academy_name = cleanAcademyName(body?.academy_name)
 
     if (!email || !academy_name) {
       return NextResponse.json(
         { error: "Email y nombre de academia requeridos" },
+        { status: 400, headers: corsHeaders }
+      )
+    }
+    if (!isValidEmail(email)) {
+      return NextResponse.json(
+        { error: "Ese correo no parece válido." },
         { status: 400, headers: corsHeaders }
       )
     }
@@ -71,25 +83,38 @@ export async function POST(req: NextRequest) {
       { auth: { persistSession: false } }
     )
 
+    const hourAgo = new Date(Date.now() - RATE_WINDOW_MS).toISOString()
+    const { count: lastHour, error: lastHourError } = await admin
+      .from("activation_codes")
+      .select("id", { count: "exact", head: true })
+      .eq("code_type", "demo")
+      .gte("requested_at", hourAgo)
+    // A failed count must not read as "nobody asked": that would switch the
+    // ceiling off exactly when something is wrong.
+    if (lastHourError || (lastHour ?? 0) >= GLOBAL_DEMOS_PER_HOUR) {
+      return NextResponse.json(
+        { error: "Estamos recibiendo muchas solicitudes. Intenta de nuevo en un rato o escríbenos por WhatsApp." },
+        { status: 429, headers: corsHeaders }
+      )
+    }
+
     // One demo per email per day, checked against what is already stored
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-    const { count: recentForEmail } = await admin
+    const { count: recentForEmail, error: recentError } = await admin
       .from("activation_codes")
       .select("id", { count: "exact", head: true })
       .eq("code_type", "demo")
       .eq("email", email)
       .gte("requested_at", since)
 
-    if ((recentForEmail ?? 0) > 0) {
+    if (recentError || (recentForEmail ?? 0) > 0) {
       return NextResponse.json(
         { error: "Ya enviamos un código a este correo. Revisa tu bandeja o escríbenos por WhatsApp." },
         { status: 429, headers: corsHeaders }
       )
     }
 
-    // Generar código único
-    const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase()
-    const code = `DEMO-${randomPart}`
+    const code = generateActivationCode("DEMO")
 
     // Calcular fecha de vencimiento (14 días)
     const now = new Date()
@@ -111,7 +136,7 @@ export async function POST(req: NextRequest) {
     if (insertError) {
       console.error("Error inserting code:", insertError)
       return NextResponse.json(
-        { error: `Error al generar código: ${insertError.message}` },
+        { error: "No pudimos generar tu código. Intenta de nuevo en un momento." },
         { status: 500, headers: corsHeaders }
       )
     }
@@ -127,12 +152,12 @@ export async function POST(req: NextRequest) {
 
           <p style="color: #333; font-size: 16px; line-height: 1.6;">
             Hola,<br><br>
-            Tu código de demostración para <strong>${academy_name}</strong> está listo. Tienes <strong>14 días gratis</strong> para probar todo lo que Metrikas tiene para ofrecerte.
+            Tu código de demostración para <strong>${escapeHtml(academy_name)}</strong> está listo. Tienes <strong>14 días gratis</strong> para probar todo lo que Metrikas tiene para ofrecerte.
           </p>
 
           <div style="background: #05122F; color: #a3e635; padding: 20px; border-radius: 8px; text-align: center; margin: 30px 0; border: 2px solid #a3e635;">
             <p style="margin: 0 0 10px 0; font-size: 12px; color: #a3e635;">TU CÓDIGO DE DEMO</p>
-            <p style="margin: 0; font-size: 32px; font-weight: bold; letter-spacing: 2px; color: #a3e635;">${code}</p>
+            <p style="margin: 0; font-size: 32px; font-weight: bold; letter-spacing: 2px; color: #a3e635;">${escapeHtml(code)}</p>
             <p style="margin: 10px 0 0 0; font-size: 12px; color: #a3e635;">Válido hasta: ${expiresAt.toLocaleDateString("es-CL")}</p>
           </div>
 
@@ -172,10 +197,14 @@ export async function POST(req: NextRequest) {
       demoEmailHtml
     )
 
+    // The code is deliberately NOT in the response. It used to be, which made
+    // the email pointless as proof of ownership: anyone could request a demo
+    // for somebody else's address, read the code from the reply, and create
+    // an account under that address without ever seeing the mailbox. Now the
+    // only place the code exists is the inbox it was sent to.
     return NextResponse.json({
       ok: true,
       message: "Código enviado a tu email",
-      code,
     }, { headers: corsHeaders })
   } catch (err) {
     console.error("Demo request error:", err)

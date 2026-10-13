@@ -136,8 +136,15 @@ export async function createPlayerPaymentPreference(
   return res.json() as Promise<{ id: string; init_point: string }>
 }
 
-export function periodEndFromPlan(plan: string): Date {
-  const d = new Date()
+/**
+ * End of the period a payment covers, counted from `from` (default: now).
+ *
+ * Renewals must pass the payment's own approval date, not "now": counting
+ * from now meant that replaying an old approved payment's notification pushed
+ * the paid-through date forward by a fresh month each time.
+ */
+export function periodEndFromPlan(plan: string, from: Date = new Date()): Date {
+  const d = new Date(from.getTime())
   if (plan === "annual") {
     d.setFullYear(d.getFullYear() + 1)
   } else {

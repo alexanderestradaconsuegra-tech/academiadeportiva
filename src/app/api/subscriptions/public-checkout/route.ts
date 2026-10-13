@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { createPreapproval } from "@/lib/mercadopago"
+import { generateActivationCode } from "@/lib/signup-guards"
 
 export const dynamic = "force-dynamic"
 
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
     // A fresh, unused "payment" code stands in for the not-yet-created
     // academy. The webhook looks it up by this same code once MercadoPago
     // confirms the charge, and that's the only place an account gets made.
-    const code = `PAY-${Math.random().toString(36).substring(2, 8).toUpperCase()}`
+    const code = generateActivationCode("PAY")
     const now = new Date()
     const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
 

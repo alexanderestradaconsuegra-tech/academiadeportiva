@@ -12,18 +12,16 @@ export async function POST(req: NextRequest) {
       { auth: { persistSession: false } }
     )
 
-    // This runs on the service role and deletes accounts, so it must never be
-    // callable anonymously. Two legitimate callers: the scheduled job (cron
-    // secret) and a user who just signed in (their session token).
+    // This runs on the service role and DELETES whole academies, across every
+    // tenant. It used to also accept any signed-in user's session token ("a
+    // user who just signed in"), and the app called it on every login — so a
+    // player's login could have triggered a cross-tenant destructive sweep. It
+    // happened to be inert only because its query matches no rows. Scheduled
+    // job only: the cron secret and nothing else.
     const authHeader = req.headers.get("authorization") ?? ""
     const token = authHeader.replace(/^Bearer\s+/i, "")
-    const isCron = Boolean(process.env.CRON_SECRET) && token === process.env.CRON_SECRET
-    if (!isCron) {
-      if (!token) return NextResponse.json({ error: "No autenticado." }, { status: 401 })
-      const { data: userData, error: userError } = await admin.auth.getUser(token)
-      if (userError || !userData.user) {
-        return NextResponse.json({ error: "Sesión inválida." }, { status: 401 })
-      }
+    if (!process.env.CRON_SECRET || token !== process.env.CRON_SECRET) {
+      return NextResponse.json({ error: "No autorizado." }, { status: 401 })
     }
 
     const now = new Date()

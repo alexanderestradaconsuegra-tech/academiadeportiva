@@ -24,13 +24,31 @@ export async function sendEmail(to: string, subject: string, html: string) {
   }
 }
 
+/**
+ * Escapes text before it is placed inside an HTML email.
+ *
+ * Several of these values come straight from the public: the academy name in
+ * the demo-request form is typed by an anonymous visitor and then mailed, from
+ * Metrikas's own address, to whatever email they entered. Left raw, a visitor
+ * could plant their own links and markup in a message that arrives looking
+ * like it is from us.
+ */
+export function escapeHtml(value: string): string {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
+
 export function trialReminderEmail(academyName: string, daysLeft: number): string {
   if (daysLeft === 4) {
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>¡Tu período de prueba vence pronto! 🎯</h2>
         <p>Hola,</p>
-        <p>Tu academia <strong>${academyName}</strong> tiene acceso gratuito a Metrikas por solo <strong>4 días más</strong>.</p>
+        <p>Tu academia <strong>${escapeHtml(academyName)}</strong> tiene acceso gratuito a Metrikas por solo <strong>4 días más</strong>.</p>
         <p>Para continuar usando Metrikas después del período de prueba, necesitas activar tu suscripción.</p>
         <a href="https://metrikas.pro/subscribe" style="display: inline-block; background: #a3e635; color: #05122F; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px 0;">
           Activar suscripción ahora
@@ -45,7 +63,7 @@ export function trialReminderEmail(academyName: string, daysLeft: number): strin
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Tu período de prueba terminó ⏰</h2>
         <p>Hola,</p>
-        <p>Tu academia <strong>${academyName}</strong> completó los 14 días de prueba gratuita.</p>
+        <p>Tu academia <strong>${escapeHtml(academyName)}</strong> completó los 14 días de prueba gratuita.</p>
         <p>Para continuar usando Metrikas, activa tu suscripción ahora.</p>
         <a href="https://metrikas.pro/subscribe" style="display: inline-block; background: #a3e635; color: #05122F; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px 0;">
           Activar suscripción
@@ -60,7 +78,7 @@ export function trialReminderEmail(academyName: string, daysLeft: number): strin
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>⚠️ Última oportunidad: Tu cuenta se elimina en 20 días</h2>
         <p>Hola,</p>
-        <p>Tu academia <strong>${academyName}</strong> se elimará en <strong>20 días</strong> si no activas una suscripción.</p>
+        <p>Tu academia <strong>${escapeHtml(academyName)}</strong> se elimará en <strong>20 días</strong> si no activas una suscripción.</p>
         <p><strong>Todos tus datos (jugadores, evaluaciones, actividades) se borrarán permanentemente.</strong></p>
         <a href="https://metrikas.pro/subscribe" style="display: inline-block; background: #DC2626; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 20px 0;">
           Guardar mi academia ahora
@@ -86,7 +104,7 @@ export function demoReminderEmail(academyName: string, code: string, daysLeft: n
 
         <p style="color: #333; font-size: 16px; line-height: 1.6;">
           Hola,<br><br>
-          Vimos que solicitaste una demo para <strong>${academyName}</strong> pero todavía no la has activado.
+          Vimos que solicitaste una demo para <strong>${escapeHtml(academyName)}</strong> pero todavía no la has activado.
           ${urgent
             ? "Tu código vence <strong>mañana</strong> — actívalo hoy para no perder tus 14 días gratis."
             : "Todavía te quedan <strong>" + daysLeft + " días</strong> para probar todo lo que Metrikas puede hacer por tu academia."}
@@ -94,7 +112,7 @@ export function demoReminderEmail(academyName: string, code: string, daysLeft: n
 
         <div style="background: #05122F; color: #a3e635; padding: 20px; border-radius: 8px; text-align: center; margin: 30px 0; border: 2px solid #a3e635;">
           <p style="margin: 0 0 10px 0; font-size: 12px; color: #a3e635;">TU CÓDIGO DE DEMO</p>
-          <p style="margin: 0; font-size: 32px; font-weight: bold; letter-spacing: 2px; color: #a3e635;">${code}</p>
+          <p style="margin: 0; font-size: 32px; font-weight: bold; letter-spacing: 2px; color: #a3e635;">${escapeHtml(code)}</p>
         </div>
 
         <p style="text-align: center; margin: 30px 0;">
@@ -123,14 +141,14 @@ export function newAcademyCredentialsEmail(academyName: string, email: string, p
 
         <p style="color: #333; font-size: 16px; line-height: 1.6;">
           Hola,<br><br>
-          Recibimos tu pago y creamos tu cuenta en Metrikas para <strong>${academyName}</strong>. Ya puedes entrar con estos datos:
+          Recibimos tu pago y creamos tu cuenta en Metrikas para <strong>${escapeHtml(academyName)}</strong>. Ya puedes entrar con estos datos:
         </p>
 
         <div style="background: #05122F; color: #a3e635; padding: 20px; border-radius: 8px; margin: 30px 0; border: 2px solid #a3e635;">
           <p style="margin: 0 0 4px 0; font-size: 11px; color: #a3e635; text-transform: uppercase; letter-spacing: 1px;">Usuario</p>
-          <p style="margin: 0 0 16px 0; font-size: 18px; font-weight: bold; color: #fff;">${email}</p>
+          <p style="margin: 0 0 16px 0; font-size: 18px; font-weight: bold; color: #fff;">${escapeHtml(email)}</p>
           <p style="margin: 0 0 4px 0; font-size: 11px; color: #a3e635; text-transform: uppercase; letter-spacing: 1px;">Contraseña</p>
-          <p style="margin: 0; font-size: 22px; font-weight: bold; letter-spacing: 1px; color: #fff;">${password}</p>
+          <p style="margin: 0; font-size: 22px; font-weight: bold; letter-spacing: 1px; color: #fff;">${escapeHtml(password)}</p>
         </div>
 
         <div style="background: #f0fdf4; border-left: 4px solid #a3e635; padding: 15px; margin: 20px 0; border-radius: 4px;">
@@ -158,7 +176,7 @@ export function accountDeletedEmail(academyName: string): string {
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2>Tu cuenta en Metrikas ha sido eliminada</h2>
       <p>Hola,</p>
-      <p>Lamentamos informarte que tu academia <strong>${academyName}</strong> ha sido eliminada de Metrikas.</p>
+      <p>Lamentamos informarte que tu academia <strong>${escapeHtml(academyName)}</strong> ha sido eliminada de Metrikas.</p>
       <p><strong>Razón:</strong> No se activó una suscripción después del período de prueba.</p>
       <p>Todos tus datos se han borrado permanentemente.</p>
       <p style="color: #666; font-size: 14px; margin-top: 30px;">Si deseas volver a usar Metrikas, puedes crear una nueva cuenta en <strong>https://metrikas.pro</strong></p>
