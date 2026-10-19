@@ -25,11 +25,11 @@ export default function StatCard({ title, value, subtitle, icon, trend, color = 
       <div className="flex items-start justify-between mb-4">
         <div>
           <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{title}</p>
-          <p className={cn("text-3xl font-bold mt-1 tracking-tight", c.text)}>{value}</p>
+          <p className={cn("text-3xl font-bold mt-1 tracking-tight tabular-nums", c.text)}>{value}</p>
           {subtitle && <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>}
         </div>
         {icon && (
-          <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center", c.icon)}>
+          <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center ring-1 ring-inset ring-black/[0.03] dark:ring-white/5", c.icon)}>
             {icon}
           </div>
         )}

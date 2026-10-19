@@ -60,7 +60,7 @@ body {
   to { opacity: 1; transform: scale(1); }
 }
 
-.animate-fade-in { animation: fadeIn 0.35s ease-out; }
+.animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
 .animate-slide-in { animation: slideIn 0.35s ease-out; }
 .animate-scale-in { animation: scaleIn 0.25s ease-out; }
 
@@ -81,14 +81,35 @@ body {
   background-clip: text;
 }
 
-/* Card glow on hover */
+/* Card: soft resting shadow, lifts on hover */
 .card-hover {
-  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(5, 18, 47, 0.04), 0 1px 1px rgba(5, 18, 47, 0.03);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.25s ease, border-color 0.2s ease;
+  will-change: transform;
 }
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(5, 18, 47, 0.12);
+  box-shadow: 0 1px 2px rgba(5, 18, 47, 0.04), 0 14px 32px -8px rgba(5, 18, 47, 0.14);
 }
+.dark .card-hover { box-shadow: none; }
+.dark .card-hover:hover { box-shadow: 0 14px 32px -8px rgba(0, 0, 0, 0.5); }
+
+/* Keyboard focus: visible ring on the brand green (mouse clicks unaffected) */
+:focus-visible {
+  outline: 2px solid rgba(101, 163, 13, 0.7);
+  outline-offset: 2px;
+}
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; }
+
+::selection { background: rgba(163, 230, 53, 0.35); }
+
+/* Staggered entrance for lists of cards: add class "stagger" to the parent */
+.stagger > * { animation: fadeIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.stagger > *:nth-child(2) { animation-delay: 0.05s; }
+.stagger > *:nth-child(3) { animation-delay: 0.1s; }
+.stagger > *:nth-child(4) { animation-delay: 0.15s; }
+.stagger > *:nth-child(5) { animation-delay: 0.2s; }
+.stagger > *:nth-child(n+6) { animation-delay: 0.25s; }
 
 /* Input focus ring */
 .input-focus:focus {
@@ -137,6 +158,9 @@ body {
 
 /* Mobile card adjustments */
 @media (max-width: 767px) {
+  .card-hover:hover { transform: none; }
+}
+@media (hover: none) {
   .card-hover:hover { transform: none; }
 }
 
