@@ -110,6 +110,11 @@ export default function PlayerCard({ player, evaluation, isInjured, hasOverduePa
             ))}
           </div>
         )}
+        {!evaluation && (
+          <div className="flex items-center justify-center min-h-[52px] md:min-h-[64px] mb-3 md:mb-4 p-2 md:p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-[11px] text-slate-400 dark:text-slate-500">
+            Sin evaluaciones aún
+          </div>
+        )}
 
         <Link
           href={`/players/${player.id}`}

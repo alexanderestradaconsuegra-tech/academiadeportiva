@@ -52,11 +52,13 @@ export default function DashboardPage() {
     })
     const sortedKeys = Array.from(byMonth.keys()).sort().slice(-6)
     const locale = language === "en" ? "en-US" : language === "pt" ? "pt-BR" : "es-CO"
+    const spansYears = new Set(sortedKeys.map(k => k.slice(0, 4))).size > 1
     return sortedKeys.map(key => {
       const scores = byMonth.get(key)!
       const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
       const label = new Date(`${key}-01`).toLocaleString(locale, { month: "short", timeZone: "UTC" })
-      return { month: label.charAt(0).toUpperCase() + label.slice(1), score: avg }
+      const name = label.charAt(0).toUpperCase() + label.slice(1)
+      return { month: spansYears ? `${name} ${key.slice(2, 4)}` : name, score: avg }
     })
   }, [evaluations, language])
 
@@ -114,7 +116,6 @@ export default function DashboardPage() {
             subtitle={t("registeredInSystem")}
             icon={<Users size={20} />}
             color="lime"
-            trend={{ value: 20, label: t("thisMonth") }}
           />
           <StatCard
             title={t("activePlayers")}
@@ -129,7 +130,6 @@ export default function DashboardPage() {
             subtitle={t("teamGeneralEvaluation")}
             icon={<TrendingUp size={20} />}
             color="purple"
-            trend={{ value: 5, label: t("vsLastMonth") }}
           />
           <StatCard
             title={t("lowPerformance")}
