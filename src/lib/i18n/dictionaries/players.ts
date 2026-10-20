@@ -1,6 +1,8 @@
 import type { Translations } from "@/lib/i18n/useT"
 
 export const players = {
+  historyAndDetail: { es: "Historial y detalle", en: "History and detail", pt: "Histórico e detalhes" },
+  healthAndGps: { es: "Datos, salud y GPS", en: "Data, health and GPS", pt: "Dados, saúde e GPS" },
   // players/page.tsx
   playersTitle: { es: "Jugadores", en: "Players", pt: "Jogadores" },
   playersSubtitle: { es: "jugadores registrados en el sistema", en: "players registered in the system", pt: "jogadores registrados no sistema" },

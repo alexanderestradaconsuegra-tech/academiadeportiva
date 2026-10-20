@@ -1,4 +1,5 @@
 "use client"
+import { ChevronDown } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import dynamic from "next/dynamic"
 import { useParams, useRouter } from "next/navigation"
@@ -660,14 +661,6 @@ export default function PlayerProfilePage() {
                 </div>
               ) : null}
 
-              {/* Progress line chart */}
-              {progressData.length > 1 && (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 overflow-hidden">
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("scoreEvolution")}</h2>
-                  <ScoreEvolutionChart data={progressData} generalScoreLabel={t("generalScore")} />
-                </div>
-              )}
-
               {/* Inline FIFA player card */}
               {latestEval && player && (() => {
                 const stats = [
@@ -754,12 +747,26 @@ export default function PlayerProfilePage() {
                 )
               })()}
 
-              {/* Before/after comparison */}
-              {evaluations.length > 1 && <EvaluationComparison evaluations={evaluations} />}
-
               {/* Training plan — the coach assigns here, the player sees it on
                   their phone under Ejercicios. */}
               {isCoach && <CoachPlan playerId={id} />}
+
+              <details className="group">
+                <summary className="flex items-center justify-between cursor-pointer list-none rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 px-4 md:px-6 py-4 text-sm font-bold text-slate-900 dark:text-white [&::-webkit-details-marker]:hidden">
+                  {t("historyAndDetail")}
+                  <ChevronDown size={16} className="text-slate-400 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="space-y-6 mt-6">
+              {/* Progress line chart */}
+              {progressData.length > 1 && (
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 overflow-hidden">
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-4">{t("scoreEvolution")}</h2>
+                  <ScoreEvolutionChart data={progressData} generalScoreLabel={t("generalScore")} />
+                </div>
+              )}
+
+              {/* Before/after comparison */}
+              {evaluations.length > 1 && <EvaluationComparison evaluations={evaluations} />}
 
               {/* Injury-risk view of this player's last four weeks. */}
               {isCoach && <WorkloadCard playerId={id} />}
@@ -892,6 +899,8 @@ export default function PlayerProfilePage() {
                   </>
                 )}
               </div>
+                </div>
+              </details>
             </div>
 
             {/* Right column */}
@@ -905,26 +914,6 @@ export default function PlayerProfilePage() {
                   <AttributeRadarChart data={radarData} />
                 </div>
               )}
-
-              {/* Info */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 space-y-4">
-                {player.objective && (
-                  <div>
-                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">{t("sportingObjective")}</p>
-                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{player.objective}</p>
-                  </div>
-                )}
-                {player.notes && (
-                  <div>
-                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">{t("observations")}</p>
-                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{player.notes}</p>
-                  </div>
-                )}
-                <div>
-                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">{t("club")}</p>
-                  <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">{player.club}</p>
-                </div>
-              </div>
 
               {/* Upcoming trainings */}
               {upcomingTrainings.length > 0 && (
@@ -1111,6 +1100,32 @@ export default function PlayerProfilePage() {
                 </div>
               )}
 
+              <details className="group">
+                <summary className="flex items-center justify-between cursor-pointer list-none rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 px-4 md:px-6 py-4 text-sm font-bold text-slate-900 dark:text-white [&::-webkit-details-marker]:hidden">
+                  {t("healthAndGps")}
+                  <ChevronDown size={16} className="text-slate-400 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="space-y-6 mt-6">
+              {/* Info */}
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 space-y-4">
+                {player.objective && (
+                  <div>
+                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">{t("sportingObjective")}</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{player.objective}</p>
+                  </div>
+                )}
+                {player.notes && (
+                  <div>
+                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">{t("observations")}</p>
+                    <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{player.notes}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">{t("club")}</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 font-medium">{player.club}</p>
+                </div>
+              </div>
+
               {/* Best mark */}
               {bestActivity && (
                 <div className="bg-[#05122F] rounded-2xl p-5 text-white">
@@ -1285,6 +1300,9 @@ export default function PlayerProfilePage() {
                   )}
                 </div>
               )}
+
+                </div>
+              </details>
 
               {/* Quick actions */}
               {isCoach && (
