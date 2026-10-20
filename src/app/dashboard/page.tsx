@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useApp } from "@/context/AppContext"
 import AppShell from "@/components/layout/AppShell"
 import StatCard from "@/components/ui/StatCard"
+import GettingStarted from "@/components/dashboard/GettingStarted"
 import TodayCards from "@/components/dashboard/TodayCards"
 import ChartSkeleton from "@/components/ui/ChartSkeleton"
 import { Users, TrendingUp, AlertTriangle, Activity, ChevronRight, Star } from "lucide-react"
@@ -96,6 +97,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        <GettingStarted />
         <TodayCards />
 
         {/* Stat cards */}
