@@ -1,6 +1,7 @@
 "use client"
 import { useState, useRef, useCallback, useEffect, useMemo } from "react"
 import { usePresentationMode } from "@/lib/usePresentationMode"
+import { Hand, Route, Zap, Circle, Eraser, Undo2, Maximize2, Grid3x3, Play, Square, Save, Plus, Users, Check, Trash2 } from "lucide-react"
 import AppShell from "@/components/layout/AppShell"
 import { useApp } from "@/context/AppContext"
 import { supabase } from "@/lib/supabase"
@@ -181,12 +182,29 @@ export default function TacticsPage() {
 
   // ── Undo history ─────────────────────────────────────────────────────────
   const histRef = useRef<{markers:Marker[];lines:TLine[]}[]>([])
-  function pushHistory(m:Marker[],l:TLine[]){ histRef.current=[...histRef.current.slice(-29),{markers:m,lines:l}] }
+  const [undoCount, setUndoCount] = useState(0)
+  function pushHistory(m:Marker[],l:TLine[]){
+    histRef.current=[...histRef.current.slice(-29),{markers:m,lines:l}]
+    setUndoCount(histRef.current.length)
+  }
   function undo(){
     const h=histRef.current; if(!h.length) return
     const prev=h[h.length-1]; histRef.current=h.slice(0,-1)
+    setUndoCount(histRef.current.length)
     setMarkers(prev.markers); setLines(prev.lines)
   }
+
+  // Short-lived message on the pitch ("start the run on a player", "saved").
+  const [notice, setNotice] = useState("")
+  const noticeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  function flash(msg: string) {
+    setNotice(msg)
+    clearTimeout(noticeTimer.current)
+    noticeTimer.current = setTimeout(() => setNotice(""), 3500)
+  }
+
+  // What was last saved/opened, to warn before throwing away unsaved work.
+  const savedRef = useRef("")
 
   // ── Animation state (overlaid on top, never touches edit state)
   const [animPos,  setAnimPos]  = useState<Record<string,[number,number]>|null>(null)
@@ -233,6 +251,40 @@ export default function TacticsPage() {
     }
     return msgs
   }, [zoneAnalysis])
+
+  // A board that opens empty leaves a new coach not knowing where to start:
+  // open with the default formation and the ball on the centre spot.
+  function seedMarkers(f: Format, key: string): Marker[] {
+    const dict = f === "11" ? FMTS11 : FMTS7
+    const d = DIMS[f]
+    return [
+      ...(dict[key] ?? []).map((p, i) => ({ id: uid(), x: p.x, y: p.y, team: "home" as Team, label: i === 0 ? "P" : String(i) })),
+      { id: uid(), x: d.w / 2, y: d.h / 2, team: "ball" as Team },
+    ]
+  }
+  function snapshotOf(m: Marker[], l: TLine[], name: string) { return JSON.stringify({ m, l, name }) }
+  const dirty = (markers.length > 0 || lines.length > 0) && snapshotOf(markers, lines, playName) !== savedRef.current
+  function confirmDiscard(): boolean {
+    return !dirty || window.confirm("Tienes cambios sin guardar en esta jugada. ¿Continuar y descartarlos?")
+  }
+
+  useEffect(() => {
+    const seeded = seedMarkers("11", "4-3-3")
+    setMarkers(seeded)
+    savedRef.current = snapshotOf(seeded, [], "Nueva jugada")
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement | null)?.tagName
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undo() }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // ── DB load/save ──────────────────────────────────────────────────────────
   const loadPlays = useCallback(async () => {
@@ -389,9 +441,12 @@ export default function TacticsPage() {
     const pos=toSVG(e.clientX,e.clientY)
     e.currentTarget.setPointerCapture(e.pointerId)
 
-    if(tool==="move"){
+    if(tool==="move"||tool==="home"||tool==="away"||tool==="ball"){
       const hit=markers.find(m=>Math.hypot(m.x-pos[0],m.y-pos[1])<hitR)
-      if(hit){ pushHistory(markers,lines); setDragging(hit.id) }
+      if(hit){ pushHistory(markers,lines); setDragging(hit.id); return }
+    }
+    if(tool==="move"){
+      return
     } else if(tool==="run"||tool==="pass"){
       setDrawing([pos])
     } else if(tool==="home"){
@@ -423,6 +478,11 @@ export default function TacticsPage() {
 
   function onUp(){
     if(dragging){ setDragging(null); return }
+    if(drawing&&drawing.length>=2&&tool==="run"){
+      const start=drawing[0]
+      const onPlayer=markers.some(m=>m.team!=="ball"&&Math.hypot(m.x-start[0],m.y-start[1])<9*scale)
+      if(!onPlayer){ setDrawing(null); flash("Empieza el movimiento encima de un jugador para que se mueva."); return }
+    }
     if(drawing&&drawing.length>=2){
       pushHistory(markers,lines)
       setLines(ls=>[...ls,{id:uid(),type:tool==="pass"?"pass":"run",pts:drawing}])
@@ -434,7 +494,9 @@ export default function TacticsPage() {
   function applyFmt(key:string){
     const dict = format==="11" ? FMTS11 : FMTS7
     const f=dict[key]; if(!f) return
+    if(lines.length>0 && !window.confirm("Cambiar la formación borra las flechas dibujadas. ¿Continuar? (Puedes deshacer)")) return
     resetAnim()
+    pushHistory(markers,lines)
     setFormationKey(key)
     const ball=markers.find(m=>m.team==="ball")
     const nm:Marker[]=f.map((p,i)=>({id:uid(),x:p.x,y:p.y,team:"home",label:i===0?"P":String(i)}))
@@ -491,11 +553,13 @@ export default function TacticsPage() {
 
   function switchFormat(f: Format) {
     if (f === format) return
+    if (!confirmDiscard()) return
     resetAnim()
+    histRef.current = []; setUndoCount(0)
     setFormat(f)
-    setMarkers([]); setLines([])
     const firstKey = Object.keys(f==="11"?FMTS11:FMTS7)[0]
     setFormationKey(firstKey)
+    setMarkers(seedMarkers(f, firstKey)); setLines([])
   }
 
   // ── Save/load ──────────────────────────────────────────────────────────────
@@ -507,51 +571,95 @@ export default function TacticsPage() {
       const { error: err } = await (supabase as any).from("tactic_plays")
         .update({ ...payload, updated_at: new Date().toISOString() }).eq("id", activeId)
       if (err) setError("No se pudo guardar la jugada.")
+      else { savedRef.current = snapshotOf(markers, lines, playName); flash("Jugada guardada ✓") }
     } else {
       const { data, error: err } = await (supabase as any).from("tactic_plays").insert(payload).select().single()
       if (err) setError("No se pudo guardar la jugada.")
-      else if (data) setActiveId(data.id)
+      else if (data) { setActiveId(data.id); savedRef.current = snapshotOf(markers, lines, playName); flash("Jugada guardada ✓") }
     }
     await loadPlays()
     setSaving(false)
   }
   function load(p:Play){
+    if (p.id !== activeId && !confirmDiscard()) return
     resetAnim()
+    histRef.current = []; setUndoCount(0)
+    savedRef.current = snapshotOf(p.markers, p.lines, p.name)
     setFormat(p.format); setCategory(p.category)
     setMarkers(p.markers); setLines(p.lines); setPlayName(p.name); setActiveId(p.id)
   }
   async function del(id:string){
+    const name = plays.find(p => p.id === id)?.name ?? "esta jugada"
+    if (!window.confirm(`¿Eliminar "${name}"? Esto no se puede deshacer.`)) return
     const { error: err } = await (supabase as any).from("tactic_plays").delete().eq("id", id)
     if (err) { setError("No se pudo eliminar la jugada."); return }
-    if(activeId===id){ resetAnim(); setMarkers([]); setLines([]); setActiveId(null) }
+    if(activeId===id){ resetAnim(); const seeded = seedMarkers(format, formationKey); setMarkers(seeded); setLines([]); setActiveId(null); setPlayName("Nueva jugada"); savedRef.current = snapshotOf(seeded, [], "Nueva jugada") }
     await loadPlays()
   }
-  function newPlay(){ resetAnim(); setMarkers([]); setLines([]); setPlayName("Nueva jugada"); setActiveId(null) }
+  function newPlay(){
+    if (!confirmDiscard()) return
+    resetAnim()
+    histRef.current = []; setUndoCount(0)
+    const seeded = seedMarkers(format, formationKey)
+    setMarkers(seeded); setLines([]); setPlayName("Nueva jugada"); setActiveId(null)
+    savedRef.current = snapshotOf(seeded, [], "Nueva jugada")
+  }
+  function clearArrows(){
+    if (lines.length === 0) return
+    resetAnim(); pushHistory(markers, lines); setLines([])
+  }
 
   // ── Display positions ──────────────────────────────────────────────────────
   const dispMarkers = markers.map(m=>animPos ? {...m, x:animPos[m.id]?.[0]??m.x, y:animPos[m.id]?.[1]??m.y} : m)
   const ballM       = dispMarkers.find(m=>m.team==="ball")
   const ballPos:[number,number]|null = animBall ?? (ballM?[ballM.x,ballM.y]:null)
-  const passLines   = lines.filter(l=>l.type==="pass")
   const homeMarkers = markers.filter(m=>m.team==="home")
 
   // ── Tools config ──────────────────────────────────────────────────────────
-  const TOOLS:{id:Tool;label:string;color:string}[]=[
-    {id:"move",  label:"✋ Mover",      color:"slate"},
-    {id:"run",   label:"→ Movimiento",  color:"sky"},
-    {id:"pass",  label:"⚡ Pase",        color:"amber"},
-    {id:"home",  label:"● Local",       color:"blue"},
-    {id:"away",  label:"● Rival",       color:"red"},
-    {id:"ball",  label:"○ Balón",       color:"white"},
-    {id:"erase", label:"✕ Borrar",      color:"rose"},
+  const dot = (cls: string) => <span className={`w-3.5 h-3.5 rounded-full border-2 shadow-sm inline-block ${cls}`} />
+  const TOOLS: { id: Tool; label: string; icon: React.ReactNode; hint: string }[] = [
+    { id: "move",  label: "Mover",      icon: <Hand size={15} />,  hint: "Arrastra un jugador o el balón para cambiarlo de lugar." },
+    { id: "pass",  label: "Pase",       icon: <Zap size={15} />,   hint: "Traza el pase desde donde está el balón. Los pases se juegan en el orden en que los dibujas." },
+    { id: "run",   label: "Movimiento", icon: <Route size={15} />, hint: "Traza el recorrido empezando encima del jugador que se desplaza." },
+    { id: "home",  label: "Local",      icon: dot("bg-blue-700 border-white"),  hint: "Toca la cancha para agregar un jugador de tu equipo. Toca uno que ya está para moverlo." },
+    { id: "away",  label: "Rival",      icon: dot("bg-red-600 border-white"),   hint: "Toca la cancha para agregar un rival. Toca uno que ya está para moverlo." },
+    { id: "ball",  label: "Balón",      icon: dot("bg-white border-slate-300"), hint: "Toca la cancha para poner el balón." },
+    { id: "erase", label: "Borrar",     icon: <Eraser size={15} />, hint: "Toca un jugador, o el inicio o final de una flecha, para borrarlo." },
   ]
+  const GROUPS: { title: string; ids: Tool[] }[] = [
+    { title: "", ids: ["move"] },
+    { title: "Dibujar", ids: ["pass", "run"] },
+    { title: "Agregar", ids: ["home", "away", "ball"] },
+    { title: "", ids: ["erase"] },
+  ]
+  const toolHint = TOOLS.find(t => t.id === tool)?.hint ?? ""
+  const playerName = (id?: string) => id ? players.find(p => p.id === id)?.name.split(" ")[0] : undefined
+  const pick = (id: Tool) => { resetAnim(); setTool(id) }
+
+  // Three-step guide: what a coach does here, with what's already done ticked.
+  const steps = [
+    { n: 1, label: "Ubica a tus jugadores", done: markers.some(m => m.team !== "ball") },
+    { n: 2, label: "Dibuja pases y movimientos", done: lines.length > 0 },
+    { n: 3, label: "Pulsa Ver jugada", done: false },
+  ]
+
+  const selectCls = "h-9 text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-2 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200"
 
   return (
     <AppShell>
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Tablero Táctico</h1>
-          <p className="text-xs text-slate-500 mt-0.5">Dibuja jugadas y anima los movimientos</p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Tablero Táctico</h1>
+            <p className="text-xs text-slate-500 mt-0.5">Arma la jugada, dibújala y muéstrasela a tu equipo animada.</p>
+          </div>
+          <ol className="hidden md:flex flex-wrap items-center gap-2 text-xs">
+            {steps.map(st => (
+              <li key={st.n} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${st.done ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400" : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"}`}>
+                {st.done ? <Check size={12} /> : <span className="font-bold">{st.n}</span>} {st.label}
+              </li>
+            ))}
+          </ol>
         </div>
 
         {error && (
@@ -560,70 +668,73 @@ export default function TacticsPage() {
 
         <div className="flex flex-col xl:flex-row gap-4">
           {/* ── Pitch panel ── */}
-          <div className="flex-1 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+          <div className="flex-1 min-w-0 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
 
-            {/* Format + category */}
+            {/* Set-up: what kind of match and who plays */}
             <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 flex flex-wrap items-center gap-2">
               <div className="flex rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden">
                 {(["7","11"] as Format[]).map(f=>(
                   <button key={f} onClick={()=>switchFormat(f)}
-                    className={`px-3 py-1.5 text-xs font-bold transition-colors ${format===f ? "bg-emerald-600 text-white" : "bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-300"}`}>
-                    ⚽ Fútbol {f}
+                    className={`h-9 px-3 text-xs font-bold transition-colors ${format===f ? "bg-emerald-600 text-white" : "bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-300"}`}>
+                    Fútbol {f}
                   </button>
                 ))}
               </div>
-              <select value={category ?? ""} onChange={e=>setCategory((e.target.value || null) as Category | null)}
-                className="text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200">
+              <label className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                Formación
+                <select value={formationKey} onChange={e=>applyFmt(e.target.value)} className={selectCls}>
+                  {Object.keys(format==="11"?FMTS11:FMTS7).map(f=><option key={f} value={f}>{f}</option>)}
+                </select>
+              </label>
+              <select value={category ?? ""} onChange={e=>setCategory((e.target.value || null) as Category | null)} className={selectCls} aria-label="Categoría">
                 {isCoach && <option value="">Todas las categorías</option>}
                 {CATEGORIES.map(c=><option key={c} value={c}>{c}</option>)}
               </select>
               <button onClick={autoFillFromRoster} disabled={roster.length===0}
-                className="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 transition-colors">
-                🧠 Cargar plantilla real
+                title="Pone a tus jugadores reales en la formación según su posición"
+                className="h-9 px-3 inline-flex items-center gap-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 transition-colors">
+                <Users size={14} /> Usar mis jugadores
               </button>
-              <button onClick={()=>setShowZones(z=>!z)}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${showZones ? "bg-violet-600 text-white border-violet-600" : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600"}`}>
-                🗺️ Zonas
+              <button onClick={()=>setShowZones(z=>!z)} aria-pressed={showZones}
+                title="Divide la cancha en tercios y carriles"
+                className={`h-9 px-3 inline-flex items-center gap-1.5 text-xs font-bold rounded-lg border transition-colors ${showZones ? "bg-violet-600 text-white border-violet-600" : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600"}`}>
+                <Grid3x3 size={14} /> Zonas
               </button>
               <button onClick={presentation.toggle}
-                className="ml-auto px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition-opacity">
-                ⛶ Pantalla completa
+                className="ml-auto h-9 px-3 inline-flex items-center gap-1.5 text-xs font-bold rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition-opacity">
+                <Maximize2 size={14} /> Pantalla completa
               </button>
             </div>
 
-            {/* Toolbar */}
-            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
-              <div className="flex flex-wrap gap-2">
-                {TOOLS.map(t=>(
-                  <button key={t.id} onClick={()=>{ resetAnim(); setTool(t.id) }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                      tool===t.id
-                        ? "bg-blue-600 text-white border-blue-600 shadow ring-2 ring-blue-300"
-                        : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:bg-slate-50"
-                    }`}>
-                    {t.label}
-                  </button>
+            {/* Tools, grouped by what they do */}
+            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+                {GROUPS.map((g, gi) => (
+                  <div key={gi}>
+                    {g.title && <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">{g.title}</p>}
+                    <div className="flex gap-1.5">
+                      {g.ids.map(id => {
+                        const t = TOOLS.find(x => x.id === id)!
+                        return (
+                          <button key={id} onClick={() => pick(id)} aria-pressed={tool===id}
+                            className={`h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                              tool===id
+                                ? "bg-blue-600 text-white border-blue-600 shadow ring-2 ring-blue-300 dark:ring-blue-500/40"
+                                : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600"
+                            }`}>
+                            {t.icon} {t.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
                 ))}
-                <div className="ml-auto flex items-center gap-2">
-                  <select value={formationKey} onChange={e=>applyFmt(e.target.value)}
-                    className="text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200">
-                    {Object.keys(format==="11"?FMTS11:FMTS7).map(f=><option key={f} value={f}>{f}</option>)}
-                  </select>
-                  <button onClick={()=>{ resetAnim(); setMarkers([]); setLines([]) }}
-                    className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg bg-white dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300 text-slate-500 hover:text-red-500 hover:border-red-300">
-                    Limpiar
-                  </button>
-                </div>
+                <button onClick={undo} disabled={undoCount===0} title="Deshacer (Ctrl+Z)"
+                  className="ml-auto h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 disabled:opacity-30 transition-colors">
+                  <Undo2 size={14} /> Deshacer
+                </button>
               </div>
-              <p className="text-[10px] text-slate-400 mt-1.5">
-                {tool==="move"  && "Arrastra jugadores o el balón para reposicionarlos"}
-                {tool==="run"   && "Dibuja la ruta de movimiento de un jugador (azul)"}
-                {tool==="pass"  && "Dibuja la secuencia de pases — el balón los seguirá en orden (amarillo)"}
-                {tool==="home"  && "Clic en la cancha para añadir jugador local (azul)"}
-                {tool==="away"  && "Clic en la cancha para añadir jugador rival (rojo)"}
-                {tool==="ball"  && "Clic en la cancha para colocar el balón"}
-                {tool==="erase" && "Clic sobre un jugador o extremo de línea para borrarlo"}
-              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{toolHint}</p>
             </div>
 
             {/* Pitch */}
@@ -641,17 +752,17 @@ export default function TacticsPage() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {playing ? (
-                      <button onClick={resetAnim} className="h-10 px-4 rounded-xl bg-white/15 text-white text-xs font-bold">
-                        ⏹ Detener
+                      <button onClick={resetAnim} className="h-10 px-4 inline-flex items-center gap-1.5 rounded-xl bg-white/15 text-white text-xs font-bold">
+                        <Square size={14} /> Detener
                       </button>
                     ) : (
                       <button onClick={startPlay} disabled={lines.length===0}
-                        className="h-10 px-4 rounded-xl bg-emerald-500 text-white text-xs font-bold disabled:opacity-40">
-                        ▶ Ver jugada
+                        className="h-10 px-4 inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 text-white text-xs font-bold disabled:opacity-40">
+                        <Play size={14} /> Ver jugada
                       </button>
                     )}
                     <button onClick={presentation.exit} className="h-10 px-4 rounded-xl bg-white/15 text-white text-xs font-bold">
-                      ✕ Salir
+                      Salir
                     </button>
                   </div>
                 </div>
@@ -663,16 +774,16 @@ export default function TacticsPage() {
               {presentation.active && (
                 <div className="w-full flex flex-wrap items-center gap-1.5 mb-2 shrink-0">
                   {TOOLS.map(tItem => (
-                    <button key={tItem.id} onClick={() => { resetAnim(); setTool(tItem.id) }}
-                      className={`h-10 px-3 rounded-xl text-[11px] font-bold transition-colors ${
+                    <button key={tItem.id} onClick={() => pick(tItem.id)}
+                      className={`h-10 px-3 inline-flex items-center gap-1.5 rounded-xl text-[11px] font-bold transition-colors ${
                         tool===tItem.id ? "bg-white text-slate-900" : "bg-white/15 text-white/80"
                       }`}>
-                      {tItem.label}
+                      {tItem.icon} {tItem.label}
                     </button>
                   ))}
-                  <button onClick={undo}
-                    className="h-10 px-3 rounded-xl bg-white/15 text-white/80 text-[11px] font-bold ml-auto">
-                    ↩ Deshacer
+                  <button onClick={undo} disabled={undoCount===0}
+                    className="h-10 px-3 inline-flex items-center gap-1.5 rounded-xl bg-white/15 text-white/80 text-[11px] font-bold ml-auto disabled:opacity-30">
+                    <Undo2 size={14} /> Deshacer
                   </button>
                 </div>
               )}
@@ -686,8 +797,14 @@ export default function TacticsPage() {
                 <div className="absolute inset-0 opacity-[0.12]"
                   style={{backgroundImage:"repeating-linear-gradient(90deg,transparent,transparent 55px,rgba(0,0,0,1) 55px,rgba(0,0,0,1) 110px)"}}/>
 
+                {notice && (
+                  <div role="status" className="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 z-10 max-w-[90%] text-center bg-slate-900/85 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow">
+                    {notice}
+                  </div>
+                )}
+
                 <svg ref={svgRef} viewBox={`0 0 ${dims.w} ${dims.h}`} className="absolute inset-0 w-full h-full"
-                  style={{cursor:tool==="move"?"grab":tool==="erase"?"crosshair":"crosshair",touchAction:"none"}}
+                  style={{cursor:tool==="move"?"grab":"crosshair",touchAction:"none"}}
                   onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}>
 
                   <defs>
@@ -742,16 +859,22 @@ export default function TacticsPage() {
                       fill="none" strokeLinecap="round" strokeDasharray="2 1.5" opacity={0.65}/>
                   )}
 
-                  {/* Players */}
-                  {dispMarkers.filter(m=>m.team!=="ball").map(m=>(
-                    <g key={m.id}>
-                      <ellipse cx={m.x} cy={m.y+3.8*scale} rx={2.5*scale} ry={0.7*scale} fill="rgba(0,0,0,0.18)"/>
-                      <circle cx={m.x} cy={m.y} r={3.4*scale}
-                        fill={m.team==="home"?"#1d4ed8":"#dc2626"} stroke="white" strokeWidth={0.6*scale}/>
-                      {m.label&&<text x={m.x} y={m.y+0.9*scale} textAnchor="middle" dominantBaseline="middle"
-                        fontSize={2.2*scale} fontWeight="bold" fill="white" style={{userSelect:"none"}}>{m.label}</text>}
-                    </g>
-                  ))}
+                  {/* Players — with the real player's first name when assigned */}
+                  {dispMarkers.filter(m=>m.team!=="ball").map(m=>{
+                    const name = playerName(m.player_id)
+                    return (
+                      <g key={m.id}>
+                        <ellipse cx={m.x} cy={m.y+3.8*scale} rx={2.5*scale} ry={0.7*scale} fill="rgba(0,0,0,0.18)"/>
+                        <circle cx={m.x} cy={m.y} r={3.4*scale}
+                          fill={m.team==="home"?"#1d4ed8":"#dc2626"} stroke="white" strokeWidth={0.6*scale}/>
+                        {m.label&&<text x={m.x} y={m.y+0.9*scale} textAnchor="middle" dominantBaseline="middle"
+                          fontSize={2.2*scale} fontWeight="bold" fill="white" style={{userSelect:"none"}}>{m.label}</text>}
+                        {name&&<text x={m.x} y={m.y+5.9*scale} textAnchor="middle" dominantBaseline="middle"
+                          fontSize={1.9*scale} fontWeight="bold" fill="white" stroke="rgba(0,0,0,0.55)" strokeWidth={0.45*scale}
+                          paintOrder="stroke" style={{userSelect:"none",pointerEvents:"none"}}>{name}</text>}
+                      </g>
+                    )
+                  })}
 
                   {/* Ball */}
                   {ballPos&&(
@@ -765,146 +888,133 @@ export default function TacticsPage() {
                 </svg>
               </div>
 
-              {/* Legend */}
-              <div className={`flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-[10px] text-slate-400 font-medium ${presentation.active ? "hidden" : "flex"}`}>
-                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-blue-700 border-2 border-white shadow-sm inline-block"/>Local</span>
-                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-red-600 border-2 border-white shadow-sm inline-block"/>Rival</span>
-                <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-white border-2 border-slate-300 shadow-sm inline-block"/>Balón</span>
-                <span className="flex items-center gap-1.5"><span className="w-5 h-0.5 bg-sky-400 inline-block"/>Movimiento</span>
-                <span className="flex items-center gap-1.5"><span className="w-5 h-0.5 bg-amber-400 inline-block"/>Pase (en orden)</span>
-              </div>
-
-              {/* Controls */}
+              {/* Playback */}
               <div className={`flex-wrap items-center justify-center gap-3 mt-4 ${presentation.active ? "hidden" : "flex"}`}>
                 {playing ? (
                   <button onClick={resetAnim}
-                    className="px-6 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold shadow hover:bg-red-600 transition-colors">
-                    ⏹ Detener
+                    className="h-11 px-6 inline-flex items-center gap-2 rounded-xl bg-red-500 text-white text-sm font-bold shadow hover:bg-red-600 transition-colors">
+                    <Square size={15} /> Detener
                   </button>
                 ) : (
                   <>
-                    <button onClick={startPlay}
-                      disabled={lines.length===0&&markers.filter(m=>m.team!=="ball").length===0}
-                      className="px-7 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold shadow-lg hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                      ▶ Ver jugada
+                    <button onClick={startPlay} disabled={lines.length===0}
+                      title={lines.length===0 ? "Dibuja al menos un pase o movimiento" : undefined}
+                      className="h-11 px-7 inline-flex items-center gap-2 rounded-xl bg-emerald-600 text-white text-sm font-bold shadow-lg hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                      <Play size={15} /> Ver jugada
                     </button>
-                    <div className="flex rounded-xl border-2 border-slate-200 dark:border-slate-600 overflow-hidden">
-                      {(["1x","2x","3x"] as SpeedTier[]).map(t=>(
-                        <button key={t} onClick={()=>setSpeedTier(t)} title="Velocidad de reproducción"
-                          className={`px-3 py-2.5 text-xs font-bold transition-colors ${speedTier===t ? "bg-slate-700 text-white" : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300"}`}>
-                          {t}
-                        </button>
-                      ))}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-400">Velocidad</span>
+                      <div className="flex rounded-xl border border-slate-200 dark:border-slate-600 overflow-hidden">
+                        {(["1x","2x","3x"] as SpeedTier[]).map(t=>(
+                          <button key={t} onClick={()=>setSpeedTier(t)} aria-pressed={speedTier===t}
+                            className={`h-11 px-3 text-xs font-bold transition-colors ${speedTier===t ? "bg-slate-700 text-white" : "bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300"}`}>
+                            {t}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <button onClick={undo}
-                      disabled={histRef.current.length===0}
-                      className="px-4 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-bold hover:bg-slate-50 disabled:opacity-30 transition-colors">
-                      ↩ Deshacer
-                    </button>
-                    <button onClick={()=>{ resetAnim(); pushHistory(markers,lines); setMarkers([]); setLines([]) }}
-                      className="px-4 py-2.5 rounded-xl border-2 border-red-200 bg-white dark:bg-slate-800 text-red-500 text-sm font-bold hover:bg-red-50 transition-colors">
-                      ✕ Limpiar
+                    <button onClick={clearArrows} disabled={lines.length===0}
+                      title="Quita pases y movimientos; los jugadores quedan donde están"
+                      className="h-11 px-4 inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:text-red-500 hover:border-red-300 disabled:opacity-30 transition-colors">
+                      <Trash2 size={15} /> Borrar flechas
                     </button>
                   </>
                 )}
               </div>
 
-              {/* Pass progress */}
-              {passLines.length>1&&(
-                <div className="flex items-center justify-center gap-2 mt-3">
-                  <span className="text-xs text-slate-400 font-medium">Pases:</span>
-                  {passLines.map((_,i)=>(
-                    <div key={i} className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center border-2 transition-all ${
-                      playing&&passStep===i ? "bg-amber-400 border-amber-500 text-slate-900 scale-125 shadow-md"
-                        : playing&&passStep>i  ? "bg-amber-100 border-amber-300 text-amber-700"
-                        : "bg-slate-100 dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-400"
-                    }`}>{i+1}</div>
-                  ))}
-                </div>
-              )}
+              {/* Legend */}
+              <div className={`flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-3 text-[11px] text-slate-400 font-medium ${presentation.active ? "hidden" : "flex"}`}>
+                <span className="flex items-center gap-1.5">{dot("bg-blue-700 border-white")}Local</span>
+                <span className="flex items-center gap-1.5">{dot("bg-red-600 border-white")}Rival</span>
+                <span className="flex items-center gap-1.5">{dot("bg-white border-slate-300")}Balón</span>
+                <span className="flex items-center gap-1.5"><span className="w-5 h-0.5 bg-amber-400 inline-block"/>Pase</span>
+                <span className="flex items-center gap-1.5"><span className="w-5 h-0.5 bg-sky-400 inline-block"/>Movimiento</span>
+                <span>Los números indican el orden</span>
+              </div>
             </div>
           </div>
 
           {/* ── Side panel ── */}
-          <div className="xl:w-72 space-y-4">
+          <div className="xl:w-80 shrink-0 space-y-4">
             {/* Save */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
-              <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-3">💾 Guardar jugada</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-bold text-slate-800 dark:text-white">Esta jugada</h2>
+                {dirty
+                  ? <span className="text-[10px] font-semibold text-amber-600">Sin guardar</span>
+                  : activeId && <span className="text-[10px] font-semibold text-emerald-600 inline-flex items-center gap-1"><Check size={11} /> Guardada</span>}
+              </div>
               <input value={playName} onChange={e=>setPlayName(e.target.value)}
-                placeholder="Nombre de la jugada"
-                className="w-full text-sm border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 mb-3 bg-white dark:bg-slate-800 dark:text-white focus:outline-none focus:border-blue-400"/>
+                placeholder="Nombre de la jugada" aria-label="Nombre de la jugada"
+                className="w-full h-10 text-sm border border-slate-200 dark:border-slate-700 rounded-xl px-3 mb-3 bg-white dark:bg-slate-800 dark:text-white focus:outline-none focus:border-blue-400"/>
               <div className="flex gap-2">
                 <button onClick={save} disabled={saving}
-                  className="flex-1 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 disabled:opacity-50 transition-colors">
-                  {saving ? "Guardando…" : "Guardar"}
+                  className="flex-1 h-10 inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                  <Save size={14} /> {saving ? "Guardando…" : "Guardar"}
                 </button>
                 <button onClick={newPlay}
-                  className="flex-1 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                  Nueva
+                  className="flex-1 h-10 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                  <Plus size={14} /> Nueva
                 </button>
               </div>
             </div>
 
-            {/* Roster assignment */}
-            {homeMarkers.length>0 && (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
-                <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-3">👤 Jugadores en cancha</h2>
-                {roster.length===0 && <p className="text-[11px] text-slate-400 mb-2">No hay jugadores en esta categoría todavía.</p>}
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {homeMarkers.map(m=>(
-                    <div key={m.id} className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-blue-700 text-white text-[10px] font-bold flex items-center justify-center shrink-0">{m.label}</span>
-                      <select value={m.player_id ?? ""} onChange={e=>assignPlayer(m.id, e.target.value || null)}
-                        className="flex-1 text-xs border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 dark:text-white">
-                        <option value="">Sin asignar</option>
-                        {roster.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
-                      </select>
+            {/* Saved plays — what a coach comes back for */}
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
+              <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Mis jugadas</h2>
+              {plays.length === 0 ? (
+                <p className="text-xs text-slate-400">Aún no tienes jugadas guardadas. Arma una y pulsa Guardar.</p>
+              ) : (
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  {plays.map(p=>(
+                    <div key={p.id}
+                      className={`flex items-center gap-2 rounded-xl border transition-all ${
+                        activeId===p.id
+                          ? "border-blue-300 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-700"
+                          : "border-slate-100 dark:border-slate-700 hover:border-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                      }`}>
+                      <button onClick={()=>load(p)} className="flex-1 min-w-0 text-left p-3">
+                        <span className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs font-bold text-slate-800 dark:text-white truncate">{p.name}</span>
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600">F{p.format}</span>
+                          {p.category && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500">{p.category}</span>}
+                        </span>
+                        <span className="block text-[10px] text-slate-400 mt-0.5">
+                          {p.lines.filter(l=>l.type==="pass").length} pases · {p.lines.filter(l=>l.type==="run").length} movimientos
+                        </span>
+                      </button>
+                      <button onClick={()=>del(p.id)} aria-label={`Eliminar ${p.name}`}
+                        className="w-9 h-9 mr-1.5 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors shrink-0">
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-
-            {/* Stats */}
-            {(markers.length>0||lines.length>0)&&(
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Jugada actual</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    {l:"Locales",     v:markers.filter(m=>m.team==="home").length, c:"text-blue-600"},
-                    {l:"Rivales",     v:markers.filter(m=>m.team==="away").length, c:"text-red-500"},
-                    {l:"Pases",       v:lines.filter(l=>l.type==="pass").length,   c:"text-amber-500"},
-                    {l:"Movimientos", v:lines.filter(l=>l.type==="run").length,    c:"text-sky-500"},
-                  ].map(s=>(
-                    <div key={s.l} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-2.5 text-center">
-                      <p className={`text-lg font-black ${s.c}`}>{s.v}</p>
-                      <p className="text-[10px] text-slate-400 font-medium">{s.l}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Play sequence — this order is exactly what "Ver jugada" will follow */}
             {lines.length>0 && (
               <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
-                <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-1">🎬 Secuencia de la jugada</h2>
-                <p className="text-[10px] text-slate-400 mb-3">Este es el orden exacto que sigue la animación. Reordena con ↑↓.</p>
+                <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-1">Orden de la jugada</h2>
+                <p className="text-[11px] text-slate-400 mb-3">Así se reproduce. Cambia el orden con las flechas.</p>
                 <div className="space-y-1.5 mb-3">
                   {zoneAnalysis.map((z,i)=>(
                     <div key={z.id} className="flex items-center gap-1.5">
                       <div className="flex flex-col shrink-0">
-                        <button onClick={()=>moveLine(z.id,-1)} disabled={i===0}
-                          className="text-slate-400 hover:text-blue-600 disabled:opacity-20 leading-none text-[10px]">▲</button>
-                        <button onClick={()=>moveLine(z.id,1)} disabled={i===zoneAnalysis.length-1}
-                          className="text-slate-400 hover:text-blue-600 disabled:opacity-20 leading-none text-[10px]">▼</button>
+                        <button onClick={()=>moveLine(z.id,-1)} disabled={i===0} aria-label="Subir"
+                          className="text-slate-400 hover:text-blue-600 disabled:opacity-20 leading-none text-[11px] px-1">▲</button>
+                        <button onClick={()=>moveLine(z.id,1)} disabled={i===zoneAnalysis.length-1} aria-label="Bajar"
+                          className="text-slate-400 hover:text-blue-600 disabled:opacity-20 leading-none text-[11px] px-1">▼</button>
                       </div>
+                      <span className={`w-5 h-5 shrink-0 rounded-full text-[10px] font-bold flex items-center justify-center ${z.type==="pass" ? "bg-amber-100 text-amber-700" : "bg-sky-100 text-sky-700"}`}>{i+1}</span>
                       <p className="text-[11px] text-slate-600 dark:text-slate-300 flex-1 min-w-0">
-                        {z.type==="pass" ? "⚡" : "→"} {i+1}: <span className="font-semibold">{z.start.channel}</span> ({z.start.third}) → <span className="font-semibold">{z.end.channel}</span> ({z.end.third})
+                        <span className="font-semibold">{z.type==="pass" ? "Pase" : "Movimiento"}</span>: {z.start.channel} → {z.end.channel}
+                        <span className="text-slate-400"> ({z.end.third})</span>
                       </p>
-                      <button onClick={()=>deleteLine(z.id)}
-                        className="w-6 h-6 shrink-0 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors text-xs">
-                        ✕
+                      <button onClick={()=>deleteLine(z.id)} aria-label="Quitar paso"
+                        className="w-7 h-7 shrink-0 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                        <Trash2 size={12} />
                       </button>
                     </div>
                   ))}
@@ -917,36 +1027,29 @@ export default function TacticsPage() {
               </div>
             )}
 
-            {/* Saved plays */}
-            {plays.length>0&&(
-              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
-                <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-3">📂 Jugadas guardadas</h2>
-                <div className="space-y-2">
-                  {plays.map(p=>(
-                    <div key={p.id} onClick={()=>load(p)}
-                      className={`flex items-center gap-2 p-3 rounded-xl border cursor-pointer transition-all ${
-                        activeId===p.id
-                          ? "border-blue-300 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-700"
-                          : "border-slate-100 dark:border-slate-700 hover:border-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                      }`}>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <p className="text-xs font-bold text-slate-800 dark:text-white truncate">{p.name}</p>
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600">⚽{p.format}</span>
-                          {p.category && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500">{p.category}</span>}
-                        </div>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          {p.markers.filter(m=>m.team==="home").length} loc · {p.markers.filter(m=>m.team==="away").length} riv · {p.lines.filter(l=>l.type==="pass").length} pases
-                        </p>
+            {/* Roster assignment — optional, folded */}
+            {homeMarkers.length>0 && (
+              <details className="group bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
+                <summary className="cursor-pointer list-none flex items-center justify-between text-sm font-bold text-slate-800 dark:text-white [&::-webkit-details-marker]:hidden">
+                  Poner nombres a los jugadores
+                  <span className="text-xs text-slate-400 font-normal">{homeMarkers.filter(m=>m.player_id).length}/{homeMarkers.length}</span>
+                </summary>
+                <div className="mt-3">
+                  {roster.length===0 && <p className="text-[11px] text-slate-400 mb-2">No hay jugadores en esta categoría todavía.</p>}
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {homeMarkers.map(m=>(
+                      <div key={m.id} className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-blue-700 text-white text-[10px] font-bold flex items-center justify-center shrink-0">{m.label}</span>
+                        <select value={m.player_id ?? ""} onChange={e=>assignPlayer(m.id, e.target.value || null)}
+                          className="flex-1 h-9 text-xs border border-slate-200 dark:border-slate-700 rounded-lg px-2 bg-white dark:bg-slate-800 dark:text-white">
+                          <option value="">Sin asignar</option>
+                          {roster.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+                        </select>
                       </div>
-                      <button onClick={e=>{e.stopPropagation();del(p.id)}}
-                        className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors text-sm shrink-0">
-                        ✕
-                      </button>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </details>
             )}
           </div>
         </div>
