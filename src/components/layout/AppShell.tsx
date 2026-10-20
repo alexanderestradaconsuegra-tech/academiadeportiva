@@ -4,6 +4,7 @@ import { useRouter, usePathname } from "next/navigation"
 import { useApp } from "@/context/AppContext"
 import Sidebar from "./Sidebar"
 import BottomNav from "./BottomNav"
+import QuickSearch from "./QuickSearch"
 import MobileHeader from "./MobileHeader"
 import PlayerNav from "./PlayerNav"
 import DemoBanner from "./DemoBanner"
@@ -93,6 +94,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {!isPlayer && <BottomNav />}
+      {!isPlayer && <QuickSearch />}
     </div>
   )
 }

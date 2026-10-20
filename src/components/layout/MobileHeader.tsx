@@ -1,7 +1,8 @@
 "use client"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Trophy, Settings, LogOut, Sun, Moon, CreditCard } from "lucide-react"
+import { Trophy, Settings, LogOut, Sun, Moon, CreditCard, Search } from "lucide-react"
+import { openQuickSearch } from "./QuickSearch"
 import { useApp } from "@/context/AppContext"
 import { useT } from "@/lib/i18n/useT"
 import { nav } from "@/lib/i18n/dictionaries/nav"
@@ -34,7 +35,7 @@ export default function MobileHeader() {
 
   return (
     <header className="no-print md:hidden sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-100 dark:border-slate-800 px-4 h-14 flex items-center justify-between safe-area-top">
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2.5 min-w-0">
         <div className={`w-7 h-7 rounded-xl flex items-center justify-center overflow-hidden shrink-0 ${isHealth ? "bg-gradient-to-br from-red-500 to-pink-500" : "bg-[#05122F]"}`}>
           {teamSettings?.logo_url && !isHealth ? (
             <img src={teamSettings.logo_url} alt={teamSettings.name} className="w-full h-full object-cover" />
@@ -42,12 +43,17 @@ export default function MobileHeader() {
             <Trophy size={14} className="text-white" />
           )}
         </div>
-        <span className="text-base font-bold text-slate-900 dark:text-white tracking-tight">{title}</span>
+        <span className="text-base font-bold text-slate-900 dark:text-white tracking-tight truncate">{title}</span>
         {isHealth && (
           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-red-100 dark:bg-red-500/15 text-red-600 animate-pulse">LIVE</span>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 shrink-0">
+        {!isPlayer && (
+          <button onClick={openQuickSearch} className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title={t("search")} aria-label={t("search")}>
+            <Search size={17} />
+          </button>
+        )}
         <button onClick={toggleDarkMode} className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" title={t("changeTheme")}>
           {darkMode ? <Sun size={16} /> : <Moon size={16} />}
         </button>

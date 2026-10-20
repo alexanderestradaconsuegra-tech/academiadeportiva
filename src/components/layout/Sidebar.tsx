@@ -7,7 +7,8 @@ import { useT } from "@/lib/i18n/useT"
 import { nav } from "@/lib/i18n/dictionaries/nav"
 import { common } from "@/lib/i18n/dictionaries/common"
 import { useEffect, useState } from "react"
-import { LogOut, ChevronRight, ChevronDown, Sun, Moon } from "lucide-react"
+import { LogOut, ChevronRight, ChevronDown, Sun, Moon, Search } from "lucide-react"
+import { openQuickSearch } from "./QuickSearch"
 import { MAIN_NAV, MORE_NAV, SETTINGS_NAV, visibleTo, type NavItem } from "./nav-items"
 import PushToggle from "@/components/PushToggle"
 import MetrikasLogo from "@/components/ui/MetrikasLogo"
@@ -81,6 +82,19 @@ export default function Sidebar() {
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-widest">Pro</p>
           </div>
         </div>
+      </div>
+
+      {/* Quick search (Ctrl+K) */}
+      <div className="px-3 pt-4">
+        <button
+          type="button"
+          onClick={openQuickSearch}
+          className="w-full flex items-center gap-2.5 h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 text-sm text-slate-400 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+        >
+          <Search size={16} />
+          <span className="flex-1 text-left">{t("search")}</span>
+          <kbd className="text-[10px] font-semibold border border-slate-200 dark:border-slate-700 rounded px-1.5 py-0.5">Ctrl K</kbd>
+        </button>
       </div>
 
       {/* Nav */}
