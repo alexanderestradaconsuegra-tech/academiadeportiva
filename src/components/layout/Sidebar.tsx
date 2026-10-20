@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils"
 import { useT } from "@/lib/i18n/useT"
 import { nav } from "@/lib/i18n/dictionaries/nav"
 import { common } from "@/lib/i18n/dictionaries/common"
-import {
-  LayoutDashboard, Users, Dumbbell, BarChart3, FileText, LogOut, Trophy, ChevronRight, Activity, Settings, CalendarDays, Sun, Moon, PenTool, CreditCard, Wallet
-} from "lucide-react"
+import { useEffect, useState } from "react"
+import { LogOut, ChevronRight, ChevronDown, Sun, Moon } from "lucide-react"
+import { MAIN_NAV, MORE_NAV, SETTINGS_NAV, visibleTo, type NavItem } from "./nav-items"
 import PushToggle from "@/components/PushToggle"
 import MetrikasLogo from "@/components/ui/MetrikasLogo"
 
@@ -20,21 +20,46 @@ export default function Sidebar() {
 
   const isAssistant = currentUser?.role === "assistant"
 
-  const ALL_NAV = [
-    { href: "/dashboard", icon: LayoutDashboard, label: t("dashboard"), adminOnly: false },
-    { href: "/players", icon: Users, label: t("players"), adminOnly: false },
-    { href: "/activities", icon: Dumbbell, label: t("activities"), adminOnly: false },
-    { href: "/calendar", icon: CalendarDays, label: t("calendar"), adminOnly: false },
-    { href: "/matches", icon: Trophy, label: t("matches"), adminOnly: false },
-    { href: "/health", icon: Activity, label: t("health"), badge: "LIVE", adminOnly: false },
-    { href: "/tactics", icon: PenTool, label: t("tactics"), adminOnly: false },
-    { href: "/payments", icon: CreditCard, label: t("paymentsNav"), adminOnly: true },
-    { href: "/finances", icon: Wallet, label: t("financesNav"), adminOnly: true },
-    { href: "/charts", icon: BarChart3, label: t("charts"), adminOnly: true },
-    { href: "/reports", icon: FileText, label: t("reports"), adminOnly: true },
-    { href: "/settings", icon: Settings, label: t("settings"), adminOnly: true },
-  ]
-  const NAV = ALL_NAV.filter(item => !isAssistant || !item.adminOnly)
+  const main = visibleTo(MAIN_NAV, isAssistant)
+  const more = visibleTo(MORE_NAV, isAssistant)
+  const settings = visibleTo([SETTINGS_NAV], isAssistant)
+
+  // The "more tools" group opens by itself when you are on one of its pages,
+  // and remembers if you left it open.
+  const moreActive = more.some(i => pathname.startsWith(i.href))
+  const [moreOpenPref, setMoreOpenPref] = useState(false)
+  useEffect(() => {
+    try { setMoreOpenPref(localStorage.getItem("metrikas-nav-more") === "1") } catch { /* private mode */ }
+  }, [])
+  const moreOpen = moreOpenPref || moreActive
+  const toggleMore = () => {
+    const next = !moreOpenPref
+    setMoreOpenPref(next)
+    try { localStorage.setItem("metrikas-nav-more", next ? "1" : "0") } catch { /* private mode */ }
+  }
+
+  const renderItem = ({ href, icon: Icon, label, badge }: NavItem) => {
+    const active = pathname.startsWith(href)
+    return (
+      <Link
+        key={href}
+        href={href}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
+          active
+            ? "bg-lime-50 dark:bg-lime-500/10 text-lime-700 dark:text-lime-400 border-l-[3px] border-lime-600 dark:border-lime-400 pl-[9px]"
+            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white"
+        )}
+      >
+        <Icon className={cn("w-4.5 h-4.5", active ? "text-lime-700 dark:text-lime-400" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600")} size={18} />
+        <span className="flex-1">{t(label)}</span>
+        {badge && !active && (
+          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-500/15 text-red-600 animate-pulse">{badge}</span>
+        )}
+        {active && <ChevronRight className="w-3.5 h-3.5 text-lime-700 dark:text-lime-400" />}
+      </Link>
+    )
+  }
 
   return (
     <aside className="no-print hidden md:flex fixed left-0 top-0 h-screen w-64 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 flex-col z-30 shadow-sm">
@@ -61,28 +86,22 @@ export default function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
         <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-3 mb-3">{t("menu")}</p>
-        {NAV.map(({ href, icon: Icon, label, badge }) => {
-          const active = pathname.startsWith(href)
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
-                active
-                  ? "bg-lime-50 dark:bg-lime-500/10 text-lime-700 dark:text-lime-400 border-l-[3px] border-lime-600 dark:border-lime-400 pl-[9px]"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white"
-              )}
-            >
-              <Icon className={cn("w-4.5 h-4.5", active ? "text-lime-700 dark:text-lime-400" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600")} size={18} />
-              <span className="flex-1">{label}</span>
-              {badge && !active && (
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-500/15 text-red-600 animate-pulse">{badge}</span>
-              )}
-              {active && <ChevronRight className="w-3.5 h-3.5 text-lime-700 dark:text-lime-400" />}
-            </Link>
-          )
-        })}
+        {main.map(renderItem)}
+
+        <button
+          type="button"
+          onClick={toggleMore}
+          aria-expanded={moreOpen}
+          className="w-full flex items-center gap-3 px-3 py-2.5 mt-2 rounded-xl text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors"
+        >
+          <ChevronDown size={18} className={cn("transition-transform duration-200", moreOpen ? "" : "-rotate-90")} />
+          <span className="flex-1 text-left">{t("moreTools")}</span>
+        </button>
+        {moreOpen && <div className="space-y-0.5">{more.map(renderItem)}</div>}
+
+        {settings.length > 0 && (
+          <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800">{settings.map(renderItem)}</div>
+        )}
       </nav>
 
       {/* Push toggle — solo entrenador */}
