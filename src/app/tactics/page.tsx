@@ -647,8 +647,8 @@ export default function TacticsPage() {
 
   return (
     <AppShell>
-      <div className="max-w-7xl mx-auto px-4 py-6 space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="max-w-7xl mx-auto px-3 md:px-4 pt-3 md:pt-6 pb-28 md:pb-6 space-y-4">
+        <div className="hidden md:flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white">Tablero Táctico</h1>
             <p className="text-xs text-slate-500 mt-0.5">Arma la jugada, dibújala y muéstrasela a tu equipo animada.</p>
@@ -668,10 +668,10 @@ export default function TacticsPage() {
 
         <div className="flex flex-col xl:flex-row gap-4">
           {/* ── Pitch panel ── */}
-          <div className="flex-1 min-w-0 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+          <div className="flex-1 min-w-0 flex flex-col md:block bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
 
             {/* Set-up: what kind of match and who plays */}
-            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 flex flex-wrap items-center gap-2">
+            <div className="order-3 md:order-none px-3 md:px-4 py-3 border-t md:border-t-0 md:border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 flex flex-wrap items-center gap-2">
               <div className="flex rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden">
                 {(["7","11"] as Format[]).map(f=>(
                   <button key={f} onClick={()=>switchFormat(f)}
@@ -707,17 +707,20 @@ export default function TacticsPage() {
             </div>
 
             {/* Tools, grouped by what they do */}
-            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+            <div
+              className="fixed md:static inset-x-0 z-30 md:z-auto bg-white/95 dark:bg-slate-900/95 md:bg-transparent md:dark:bg-transparent backdrop-blur md:backdrop-blur-none border-t md:border-t-0 md:border-b border-slate-200 dark:border-slate-800 px-2 py-2 md:px-4 md:py-3"
+              style={{ bottom: "calc(51px + max(12px, env(safe-area-inset-bottom)))" }}
+            >
+              <div className="flex md:flex-wrap items-end gap-x-2 md:gap-x-4 gap-y-2 overflow-x-auto md:overflow-visible no-scrollbar">
                 {GROUPS.map((g, gi) => (
-                  <div key={gi}>
-                    {g.title && <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">{g.title}</p>}
+                  <div key={gi} className="shrink-0">
+                    {g.title && <p className="hidden md:block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">{g.title}</p>}
                     <div className="flex gap-1.5">
                       {g.ids.map(id => {
                         const t = TOOLS.find(x => x.id === id)!
                         return (
                           <button key={id} onClick={() => pick(id)} aria-pressed={tool===id}
-                            className={`h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                            className={`h-10 md:h-9 px-3 shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold border transition-all ${
                               tool===id
                                 ? "bg-blue-600 text-white border-blue-600 shadow ring-2 ring-blue-300 dark:ring-blue-500/40"
                                 : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600"
@@ -730,11 +733,13 @@ export default function TacticsPage() {
                   </div>
                 ))}
                 <button onClick={undo} disabled={undoCount===0} title="Deshacer (Ctrl+Z)"
-                  className="ml-auto h-9 px-3 inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 disabled:opacity-30 transition-colors">
+                  className="md:ml-auto h-10 md:h-9 px-3 shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 disabled:opacity-30 transition-colors">
                   <Undo2 size={14} /> Deshacer
                 </button>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">{toolHint}</p>
+              <p className="hidden md:block text-xs text-slate-500 dark:text-slate-400 mt-2">{toolHint}</p>
+              {/* Phones: fade on the right edge says the bar scrolls sideways */}
+              <div aria-hidden className="md:hidden pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-white dark:from-slate-900" />
             </div>
 
             {/* Pitch */}
@@ -742,8 +747,9 @@ export default function TacticsPage() {
               ref={presentation.ref}
               className={presentation.active
                 ? "fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-2 sm:p-4"
-                : "p-4"}
+                : "order-1 md:order-none p-2 md:p-4"}
             >
+              {!presentation.active && <p className="md:hidden text-xs text-slate-500 dark:text-slate-400 mb-2 px-1">{toolHint}</p>}
               {presentation.active && (
                 <div className="w-full flex items-center justify-between gap-2 mb-2 shrink-0">
                   <div className="flex items-center gap-2 min-w-0">
