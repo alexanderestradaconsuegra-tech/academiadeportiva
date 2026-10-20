@@ -24,6 +24,7 @@ import type { Evaluation, PhysicalTest, InjurySeverity } from "@/lib/types"
 import { effectivePaymentStatus } from "@/lib/types"
 import { useMemo } from "react"
 import { useT } from "@/lib/i18n/useT"
+import PlayerAchievements from "@/components/players/PlayerAchievements"
 import { players as playersDict } from "@/lib/i18n/dictionaries/players"
 import { payments as paymentsDict } from "@/lib/i18n/dictionaries/payments"
 import { useEnumT } from "@/lib/i18n/enums"
@@ -746,6 +747,8 @@ export default function PlayerProfilePage() {
                   </div>
                 )
               })()}
+
+              <PlayerAchievements playerId={id} />
 
               {/* Training plan — the coach assigns here, the player sees it on
                   their phone under Ejercicios. */}
