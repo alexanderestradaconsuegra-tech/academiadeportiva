@@ -1,6 +1,17 @@
 import type { Translations } from "@/lib/i18n/useT"
 
 export const dashboard = {
+  todayTitle: { es: "Hoy", en: "Today", pt: "Hoje" },
+  todayTrainings: { es: "Entrenamientos y partidos de hoy", en: "Today's trainings and matches", pt: "Treinos e jogos de hoje" },
+  nothingToday: { es: "Hoy no hay nada programado", en: "Nothing scheduled today", pt: "Nada programado para hoje" },
+  nextUp: { es: "Próximo", en: "Next", pt: "Próximo" },
+  matchTag: { es: "Partido", en: "Match", pt: "Jogo" },
+  addToCalendar: { es: "Programar en el calendario", en: "Schedule in calendar", pt: "Agendar no calendário" },
+  allPaidUp: { es: "Todo al día, sin pagos vencidos", en: "All paid up, nothing overdue", pt: "Tudo em dia, sem atrasos" },
+  attentionTitle: { es: "Requieren atención", en: "Need attention", pt: "Precisam de atenção" },
+  noAttention: { es: "Nadie lesionado ni con bajo rendimiento", en: "No injured or low-performing players", pt: "Ninguém lesionado ou com baixo desempenho" },
+  injuredTag: { es: "Lesionado", en: "Injured", pt: "Lesionado" },
+  lowTag: { es: "Bajo rendimiento", en: "Low performance", pt: "Baixo desempenho" },
   welcomeBack: { es: "Bienvenido de vuelta 👋", en: "Welcome back 👋", pt: "Bem-vindo de volta 👋" },
   controlPanel: { es: "Panel de Control", en: "Control Panel", pt: "Painel de Controle" },
   performanceSummary: { es: "Resumen de rendimiento", en: "Performance summary", pt: "Resumo de desempenho" },
