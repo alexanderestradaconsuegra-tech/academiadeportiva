@@ -8,7 +8,7 @@ import Button from "@/components/ui/Button"
 import Input from "@/components/ui/Input"
 import Textarea from "@/components/ui/Textarea"
 import PhotoUpload from "@/components/ui/PhotoUpload"
-import { Trophy, Check, KeyRound, UserCheck, Sun, Moon, Send, Languages, UserPlus, GraduationCap, Trash2, CreditCard, ExternalLink, Unlink } from "lucide-react"
+import { ChevronDown, Trophy, Check, KeyRound, UserCheck, Sun, Moon, Send, Languages, UserPlus, GraduationCap, Trash2, CreditCard, ExternalLink, Unlink } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Category, Language } from "@/lib/types"
 import { useT } from "@/lib/i18n/useT"
@@ -21,6 +21,22 @@ const LANGUAGES: { code: Language; label: string }[] = [
 ]
 
 const CATEGORIES: Category[] = ["Sub-10", "Sub-12", "Sub-14", "Sub-16", "Sub-18", "Juvenil", "Senior"]
+
+// Advanced tools fold away so the page opens short; a click opens each one.
+function Section({ title, hint, children }: { title: string; hint: string; children: React.ReactNode }) {
+  return (
+    <details className="group">
+      <summary className="flex items-center justify-between gap-3 cursor-pointer list-none rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 px-5 py-4 [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0">
+          <span className="block text-sm font-bold text-slate-900 dark:text-white">{title}</span>
+          <span className="block text-xs text-slate-500 dark:text-slate-400">{hint}</span>
+        </span>
+        <ChevronDown size={16} className="text-slate-400 shrink-0 transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="mt-3">{children}</div>
+    </details>
+  )
+}
 
 function NotificationBroadcast() {
   const t = useT(settings)
@@ -669,11 +685,11 @@ export default function SettingsPage() {
         </form>
 
         {isCoach && (
-          <div className="mt-6 space-y-6">
-            <NotificationBroadcast />
-            <MercadoPagoConnect />
-            <AccessManager />
-            <CoachManager />
+          <div className="mt-6 space-y-3">
+            <Section title={t("secPayments")} hint={t("secPaymentsHint")}><MercadoPagoConnect /></Section>
+            <Section title={t("secAccess")} hint={t("secAccessHint")}><AccessManager /></Section>
+            <Section title={t("secCoaches")} hint={t("secCoachesHint")}><CoachManager /></Section>
+            <Section title={t("secBroadcast")} hint={t("secBroadcastHint")}><NotificationBroadcast /></Section>
           </div>
         )}
       </div>

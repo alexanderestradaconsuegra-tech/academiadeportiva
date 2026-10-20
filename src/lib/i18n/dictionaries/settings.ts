@@ -1,6 +1,14 @@
 import type { Translations } from "@/lib/i18n/useT"
 
 export const settings = {
+  secBroadcast: { es: "Avisos a las familias", en: "Notices to families", pt: "Avisos às famílias" },
+  secBroadcastHint: { es: "Envía una notificación a los celulares", en: "Send a notification to phones", pt: "Envie uma notificação aos celulares" },
+  secPayments: { es: "Cobros en línea (MercadoPago)", en: "Online payments (MercadoPago)", pt: "Cobranças online (MercadoPago)" },
+  secPaymentsHint: { es: "Conecta tu cuenta para recibir pagos", en: "Connect your account to receive payments", pt: "Conecte sua conta para receber pagamentos" },
+  secAccess: { es: "Acceso de jugadores y apoderados", en: "Player and guardian access", pt: "Acesso de jogadores e responsáveis" },
+  secAccessHint: { es: "Crea el usuario para que vean su ficha", en: "Create a login so they can see their profile", pt: "Crie o acesso para verem a ficha" },
+  secCoaches: { es: "Asistentes y entrenadores", en: "Assistants and coaches", pt: "Assistentes e treinadores" },
+  secCoachesHint: { es: "Da acceso a tu equipo de trabajo", en: "Give your staff access", pt: "Dê acesso à sua equipe" },
   title: { es: "Configuración", en: "Settings", pt: "Configurações" },
   subtitle: { es: "Datos del equipo / academia que se muestran en toda la app", en: "Team / academy data shown throughout the app", pt: "Dados da equipe / academia exibidos em todo o app" },
   appearanceTitle: { es: "Apariencia", en: "Appearance", pt: "Aparência" },
