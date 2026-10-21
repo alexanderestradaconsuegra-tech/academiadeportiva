@@ -31,7 +31,7 @@ export async function createPreapproval(
 ) {
   const isAnnual = plan === "annual"
   const amount = MP_PRICES[plan]
-  const appUrl = (process.env.NEXT_PUBLIC_URL ?? "https://metrikas.pro").replace(/\/$/, "")
+  const appUrl = (process.env.NEXT_PUBLIC_URL ?? "https://app.metrikas.pro").replace(/\/$/, "")
 
   const body = {
     reason: isAnnual
@@ -103,7 +103,7 @@ export async function createPlayerPaymentPreference(
   academyId: string,
   payerEmail?: string,
 ) {
-  const appUrl = (process.env.NEXT_PUBLIC_URL ?? "https://metrikas.pro").replace(/\/$/, "")
+  const appUrl = (process.env.NEXT_PUBLIC_URL ?? "https://app.metrikas.pro").replace(/\/$/, "")
 
   const body = {
     items: [{ title: payment.concept, quantity: 1, unit_price: payment.amount, currency_id: MP_CURRENCY }],
