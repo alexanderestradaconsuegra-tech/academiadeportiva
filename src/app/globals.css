@@ -214,3 +214,16 @@ input:focus-visible, textarea:focus-visible, select:focus-visible { outline: non
   .pres-tools { display:grid !important; grid-template-columns:1fr 1fr; gap:6px !important; margin:0 !important; }
   .pres-tools button { height:46px !important; width:100%; flex-direction:column; justify-content:center; gap:3px !important; padding:0 2px !important; font-size:10px !important; line-height:1.1; margin-left:0 !important; text-align:center; }
 }
+
+/* ── Tactics board as an app screen on phones (portrait and landscape below md) ── */
+.tac-stage { display:contents; }
+@media (max-width:767px) {
+  .tac-app { position:fixed; left:0; right:0; top:var(--tac-top,56px); bottom:var(--tac-bottom,64px); z-index:10; display:flex; flex-direction:column; gap:0 !important; padding:6px !important; overflow:hidden; overscroll-behavior:none; background:#f5f7fb; }
+  .dark .tac-app { background:#0b1120; }
+  .tac-app > * + * { margin-top:0 !important; }
+  .tac-row { flex:1; min-height:0; }
+  .tac-panel { flex:1; min-height:0; display:flex !important; flex-direction:column; }
+  .tac-stage-wrap { flex:1; min-height:0; display:flex; flex-direction:column; padding:6px 8px !important; }
+  .tac-stage { flex:1; min-height:0; min-width:0; container-type:size; display:grid; place-items:center; }
+  .tac-stage > div { width:min(100cqw, calc(100cqh * var(--pr, 1.5))) !important; max-width:none !important; margin:0 !important; }
+}

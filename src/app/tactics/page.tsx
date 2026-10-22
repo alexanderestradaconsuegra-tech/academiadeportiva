@@ -1,7 +1,7 @@
 "use client"
 import { useState, useRef, useCallback, useEffect, useMemo } from "react"
 import { usePresentationMode } from "@/lib/usePresentationMode"
-import { Hand, Route, Zap, Circle, Eraser, Undo2, Maximize2, Grid3x3, Play, Square, Save, Plus, Users, Check, Trash2 } from "lucide-react"
+import { Hand, Route, Zap, Circle, Eraser, Undo2, Maximize2, Grid3x3, Play, Square, Save, Plus, Users, Check, Trash2, SlidersHorizontal, X } from "lucide-react"
 import AppShell from "@/components/layout/AppShell"
 import { useApp } from "@/context/AppContext"
 import { supabase } from "@/lib/supabase"
@@ -177,6 +177,22 @@ export default function TacticsPage() {
   const [error, setError] = useState("")
   const [saving, setSaving] = useState(false)
   const [showZones, setShowZones] = useState(false)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  // Phones: the board is an app screen fixed between the top header and the
+  // bottom menu, so the page never scrolls and a finger on the pitch only draws.
+  useEffect(() => {
+    const root = document.querySelector<HTMLElement>(".tac-app")
+    if (!root) return
+    const measure = () => {
+      const header = document.querySelector<HTMLElement>("header.sticky")
+      const nav = document.querySelector<HTMLElement>("nav.fixed.bottom-0")
+      root.style.setProperty("--tac-top", `${header ? Math.round(header.getBoundingClientRect().bottom) : 56}px`)
+      root.style.setProperty("--tac-bottom", `${nav ? Math.round(window.innerHeight - nav.getBoundingClientRect().top) : 64}px`)
+    }
+    measure()
+    window.addEventListener("resize", measure)
+    return () => window.removeEventListener("resize", measure)
+  }, [])
   const [speedTier, setSpeedTier] = useState<SpeedTier>("1x")
 
   const roster = useMemo(() => category ? players.filter(p => p.category === category) : players, [players, category])
@@ -650,10 +666,10 @@ export default function TacticsPage() {
 
   // ── Tools config ──────────────────────────────────────────────────────────
   const dot = (cls: string) => <span className={`w-3.5 h-3.5 rounded-full border-2 shadow-sm inline-block ${cls}`} />
-  const TOOLS: { id: Tool; label: string; icon: React.ReactNode; hint: string }[] = [
+  const TOOLS: { id: Tool; label: string; short?: string; icon: React.ReactNode; hint: string }[] = [
     { id: "move",  label: "Mover",      icon: <Hand size={15} />,  hint: "Arrastra un jugador o el balón para cambiarlo de lugar." },
     { id: "pass",  label: "Pase",       icon: <Zap size={15} />,   hint: "Traza el pase desde donde está el balón. Los pases se juegan en el orden en que los dibujas." },
-    { id: "run",   label: "Movimiento", icon: <Route size={15} />, hint: "Traza el recorrido empezando encima del jugador que se desplaza." },
+    { id: "run",   label: "Movimiento", short: "Correr", icon: <Route size={15} />, hint: "Traza el recorrido empezando encima del jugador que se desplaza." },
     { id: "home",  label: "Local",      icon: dot("bg-blue-700 border-white"),  hint: "Toca la cancha para agregar un jugador de tu equipo. Toca uno que ya está para moverlo." },
     { id: "away",  label: "Rival",      icon: dot("bg-red-600 border-white"),   hint: "Toca la cancha para agregar un rival. Toca uno que ya está para moverlo." },
     { id: "ball",  label: "Balón",      icon: dot("bg-white border-slate-300"), hint: "Toca la cancha para poner el balón." },
@@ -678,33 +694,9 @@ export default function TacticsPage() {
 
   const selectCls = "h-9 text-xs border border-slate-200 dark:border-slate-600 rounded-lg px-2 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200"
 
-  return (
-    <AppShell>
-      <div className="max-w-7xl mx-auto px-3 md:px-4 pt-3 md:pt-6 pb-28 md:pb-6 space-y-4">
-        <div className="hidden md:flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Tablero Táctico</h1>
-            <p className="text-xs text-slate-500 mt-0.5">Arma la jugada, dibújala y muéstrasela a tu equipo animada.</p>
-          </div>
-          <ol className="hidden md:flex flex-wrap items-center gap-2 text-xs">
-            {steps.map(st => (
-              <li key={st.n} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${st.done ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400" : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"}`}>
-                {st.done ? <Check size={12} /> : <span className="font-bold">{st.n}</span>} {st.label}
-              </li>
-            ))}
-          </ol>
-        </div>
-
-        {error && (
-          <div className="text-xs text-red-600 bg-red-50 dark:bg-red-500/10 rounded-xl px-3 py-2">{error}</div>
-        )}
-
-        <div className="flex flex-col xl:flex-row gap-4">
-          {/* ── Pitch panel ── */}
-          <div className="flex-1 min-w-0 flex flex-col md:block bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-
-            {/* Set-up: what kind of match and who plays */}
-            <div className="order-3 md:order-none px-3 md:px-4 py-3 border-t md:border-t-0 md:border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 flex flex-wrap items-center gap-2">
+  // Blocks shown in place on desktop and inside the phone sheet.
+  const setupControls = (
+    <>
               <div className="flex rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden">
                 {(["7","11"] as Format[]).map(f=>(
                   <button key={f} onClick={()=>switchFormat(f)}
@@ -733,219 +725,10 @@ export default function TacticsPage() {
                 className={`h-9 px-3 inline-flex items-center gap-1.5 text-xs font-bold rounded-lg border transition-colors ${showZones ? "bg-violet-600 text-white border-violet-600" : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600"}`}>
                 <Grid3x3 size={14} /> Zonas
               </button>
-              <button onClick={presentation.toggle}
-                className="ml-auto h-9 px-3 inline-flex items-center gap-1.5 text-xs font-bold rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition-opacity">
-                <Maximize2 size={14} /> Pantalla completa
-              </button>
-            </div>
-
-            {/* Tools, grouped by what they do */}
-            <div
-              className="fixed md:static inset-x-0 z-30 md:z-auto bg-white/95 dark:bg-slate-900/95 md:bg-transparent md:dark:bg-transparent backdrop-blur md:backdrop-blur-none border-t md:border-t-0 md:border-b border-slate-200 dark:border-slate-800 px-2 py-2 md:px-4 md:py-3"
-              style={{ bottom: "calc(51px + max(12px, env(safe-area-inset-bottom)))" }}
-            >
-              <div className="flex md:flex-wrap items-end gap-x-2 md:gap-x-4 gap-y-2 overflow-x-auto md:overflow-visible no-scrollbar">
-                {GROUPS.map((g, gi) => (
-                  <div key={gi} className="shrink-0">
-                    {g.title && <p className="hidden md:block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">{g.title}</p>}
-                    <div className="flex gap-1.5">
-                      {g.ids.map(id => {
-                        const t = TOOLS.find(x => x.id === id)!
-                        return (
-                          <button key={id} onClick={() => pick(id)} aria-pressed={tool===id}
-                            className={`h-10 md:h-9 px-3 shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                              tool===id
-                                ? "bg-blue-600 text-white border-blue-600 shadow ring-2 ring-blue-300 dark:ring-blue-500/40"
-                                : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600"
-                            }`}>
-                            {t.icon} {t.label}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ))}
-                <button onClick={undo} disabled={undoCount===0} title="Deshacer (Ctrl+Z)"
-                  className="md:ml-auto h-10 md:h-9 px-3 shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 disabled:opacity-30 transition-colors">
-                  <Undo2 size={14} /> Deshacer
-                </button>
-              </div>
-              <p className="hidden md:block text-xs text-slate-500 dark:text-slate-400 mt-2">{toolHint}</p>
-              {/* Phones: fade on the right edge says the bar scrolls sideways */}
-              <div aria-hidden className="md:hidden pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-white dark:from-slate-900" />
-            </div>
-
-            {/* Pitch */}
-            <div
-              ref={presentation.ref}
-              className={presentation.active
-                ? "pres-root fixed inset-0 z-[100] bg-black flex flex-col p-2 sm:p-4"
-                : "order-1 md:order-none p-2 md:p-4"}
-            >
-              {!presentation.active && <p className="md:hidden text-xs text-slate-500 dark:text-slate-400 mb-2 px-1">{toolHint}</p>}
-              {presentation.active && (
-                <div className="pres-rail shrink-0">
-                <div className="pres-head w-full flex items-center justify-between gap-2 mb-2 shrink-0">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-xs font-bold text-white/90 truncate">{playName}</span>
-                    {category && <span className="text-[10px] text-white/50 shrink-0">{category}</span>}
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {playing ? (
-                      <button onClick={resetAnim} className="h-10 px-4 inline-flex items-center gap-1.5 rounded-xl bg-white/15 text-white text-xs font-bold">
-                        <Square size={14} /> Detener
-                      </button>
-                    ) : (
-                      <button onClick={startPlay} disabled={lines.length===0}
-                        className="h-10 px-4 inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 text-white text-xs font-bold disabled:opacity-40">
-                        <Play size={14} /> Ver jugada
-                      </button>
-                    )}
-                    <button onClick={presentation.exit} className="h-10 px-4 rounded-xl bg-white/15 text-white text-xs font-bold">
-                      Salir
-                    </button>
-                  </div>
-                </div>
-
-                {/* Drawing tools stay reachable while presenting: a board you can
-                    only look at is a slideshow. This is where a coach draws the
-                    instruction mid-talk. */}
-                <div className="pres-tools w-full flex flex-wrap items-center gap-1.5 mb-2 shrink-0">
-                  {TOOLS.map(tItem => (
-                    <button key={tItem.id} onClick={() => pick(tItem.id)}
-                      className={`h-10 px-3 inline-flex items-center gap-1.5 rounded-xl text-[11px] font-bold transition-colors ${
-                        tool===tItem.id ? "bg-white text-slate-900" : "bg-white/15 text-white/80"
-                      }`}>
-                      {tItem.icon} {tItem.label}
-                    </button>
-                  ))}
-                  <button onClick={undo} disabled={undoCount===0}
-                    className="h-10 px-3 inline-flex items-center gap-1.5 rounded-xl bg-white/15 text-white/80 text-[11px] font-bold ml-auto disabled:opacity-30">
-                    <Undo2 size={14} /> Deshacer
-                  </button>
-                </div>
-                </div>
-              )}
-              <div className={presentation.active ? "pres-stage" : "contents"}>
-              <div className={presentation.active
-                  ? "relative rounded-lg overflow-hidden shadow-2xl"
-                  : "relative mx-auto rounded-xl overflow-hidden shadow-lg"}
-                style={presentation.active
-                  ? {aspectRatio:vertical?`${dims.h}/${dims.w}`:`${dims.w}/${dims.h}`,width:`min(100cqw, calc(100cqh * ${vertical ? dims.h / dims.w : dims.w / dims.h}))`,background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}
-                  : {maxWidth:vertical?400:720,aspectRatio:vertical?`${dims.h}/${dims.w}`:`${dims.w}/${dims.h}`,background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}}>
-                {/* grass stripes */}
-                <div className="absolute inset-0 opacity-[0.12]"
-                  style={{backgroundImage:`repeating-linear-gradient(${vertical?180:90}deg,transparent,transparent 55px,rgba(0,0,0,1) 55px,rgba(0,0,0,1) 110px)`}}/>
-
-                {notice && (
-                  <div role="status" className="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 z-10 max-w-[90%] text-center bg-slate-900/85 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow">
-                    {notice}
-                  </div>
-                )}
-
-                <svg ref={svgRef} viewBox={vertical ? `0 0 ${dims.h} ${dims.w}` : `0 0 ${dims.w} ${dims.h}`} className="absolute inset-0 w-full h-full"
-                  style={{cursor:tool==="move"?"grab":"crosshair",touchAction:"none"}}
-                  onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}>
-
-                  <defs>
-                    <marker id="ar" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
-                      <path d="M0,0.5 L4.5,2.5 L0,4.5 Z" fill="#38bdf8"/>
-                    </marker>
-                    <marker id="ap" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
-                      <path d="M0,0.5 L4.5,2.5 L0,4.5 Z" fill="#fbbf24"/>
-                    </marker>
-                  </defs>
-
-                  <g ref={planeRef} transform={vertical ? `translate(0 ${dims.w}) rotate(-90)` : undefined}>
-                  {format==="11" ? <Pitch11SVG/> : <Pitch7SVG/>}
-                  {showZones && <ZoneGrid dims={dims} vertical={vertical}/>}
-
-                  {/* Lines */}
-                  {lines.map((l,li)=>(
-                    <g key={l.id}>
-                      <polyline points={l.pts.map(p=>p.join(",")).join(" ")}
-                        stroke={l.type==="pass"?"#fbbf24":"#38bdf8"} strokeWidth={(l.type==="pass"?0.9:0.75)*scale}
-                        fill="none" strokeLinecap="round" strokeLinejoin="round"
-                        markerEnd={l.type==="pass"?"url(#ap)":"url(#ar)"} opacity={0.9}/>
-                      {(()=>{
-                        // Step number badge — shown on every line (pass or run) so the
-                        // shared play order is visible on the pitch, not just in the side panel.
-                        const mid=l.pts[Math.floor(l.pts.length/2)]
-                        const active=playing&&activeStep===li
-                        const passColor = l.type==="pass"
-                        const fillIdle = passColor ? "rgba(251,191,36,0.25)" : "rgba(56,189,248,0.25)"
-                        const strokeIdle = passColor ? "rgba(251,191,36,0.5)" : "rgba(56,189,248,0.5)"
-                        const fillActive = passColor ? "#fbbf24" : "#38bdf8"
-                        const strokeActive = passColor ? "#f59e0b" : "#0ea5e9"
-                        const textIdle = passColor ? "rgba(251,191,36,0.9)" : "rgba(56,189,248,0.9)"
-                        return (
-                          <g>
-                            <circle cx={vertical?mid[0]+3*scale:mid[0]} cy={vertical?mid[1]:mid[1]-3*scale} r={2.3*scale}
-                              fill={active?fillActive:fillIdle}
-                              stroke={active?strokeActive:strokeIdle} strokeWidth={0.3*scale}/>
-                            <text x={vertical?mid[0]+3*scale:mid[0]} y={vertical?mid[1]:mid[1]-3*scale} transform={upright(vertical?mid[0]+3*scale:mid[0], vertical?mid[1]:mid[1]-3*scale)} textAnchor="middle" dominantBaseline="middle"
-                              fontSize={1.8*scale} fontWeight="bold" fill={active?"#1e293b":textIdle}>
-                              {li+1}
-                            </text>
-                          </g>
-                        )
-                      })()}
-                    </g>
-                  ))}
-
-                  {/* Drawing preview */}
-                  {drawing&&drawing.length>=2&&(
-                    <polyline points={drawing.map(p=>p.join(",")).join(" ")}
-                      stroke={tool==="pass"?"#fbbf24":"#38bdf8"} strokeWidth={0.8*scale}
-                      fill="none" strokeLinecap="round" strokeDasharray="2 1.5" opacity={0.65}/>
-                  )}
-
-                  {/* Players — with the real player's first name when assigned */}
-                  {dispMarkers.filter(m=>m.team!=="ball").map(m=>{
-                    const name = playerName(m.player_id)
-                    return (
-                      <g key={m.id}>
-                        <ellipse cx={vertical?m.x-3.8*scale:m.x} cy={vertical?m.y:m.y+3.8*scale} rx={(vertical?0.7:2.5)*scale} ry={(vertical?2.5:0.7)*scale} fill="rgba(0,0,0,0.18)"/>
-                        <circle cx={m.x} cy={m.y} r={3.4*scale}
-                          fill={m.team==="home"?"#1d4ed8":"#dc2626"} stroke="white" strokeWidth={0.6*scale}/>
-                        {m.label&&<text x={m.x} y={m.y+0.9*scale} transform={upright(m.x,m.y)} textAnchor="middle" dominantBaseline="middle"
-                          fontSize={2.2*scale} fontWeight="bold" fill="white" style={{userSelect:"none"}}>{m.label}</text>}
-                        {name&&<text x={vertical?m.x-5.9*scale:m.x} y={vertical?m.y:m.y+5.9*scale} transform={upright(vertical?m.x-5.9*scale:m.x, vertical?m.y:m.y+5.9*scale)} textAnchor="middle" dominantBaseline="middle"
-                          fontSize={1.9*scale} fontWeight="bold" fill="white" stroke="rgba(0,0,0,0.55)" strokeWidth={0.45*scale}
-                          paintOrder="stroke" style={{userSelect:"none",pointerEvents:"none"}}>{name}</text>}
-                      </g>
-                    )
-                  })}
-
-                  {/* Ball */}
-                  {ballPos&&(
-                    <g>
-                      <ellipse cx={vertical?ballPos[0]-2.5*scale:ballPos[0]} cy={vertical?ballPos[1]:ballPos[1]+2.5*scale} rx={(vertical?0.55:1.8)*scale} ry={(vertical?1.8:0.55)*scale} fill="rgba(0,0,0,0.18)"/>
-                      <circle cx={ballPos[0]} cy={ballPos[1]} r={2.4*scale} fill="white" stroke="#cbd5e1" strokeWidth={0.4*scale}/>
-                      <circle cx={ballPos[0]} cy={ballPos[1]} r={2.4*scale} fill="none" stroke="#94a3b8" strokeWidth={0.25*scale} strokeDasharray="1.2 1.1"/>
-                      <circle cx={ballPos[0]} cy={ballPos[1]} r={0.7*scale} fill="#94a3b8"/>
-                    </g>
-                  )}
-                </g>
-                </svg>
-              </div>
-
-              </div>
-
-              {/* Playback */}
-              <div className={`flex-wrap items-center justify-center gap-3 mt-4 ${presentation.active ? "hidden" : "flex"}`}>
-                {playing ? (
-                  <button onClick={resetAnim}
-                    className="h-11 px-6 inline-flex items-center gap-2 rounded-xl bg-red-500 text-white text-sm font-bold shadow hover:bg-red-600 transition-colors">
-                    <Square size={15} /> Detener
-                  </button>
-                ) : (
-                  <>
-                    <button onClick={startPlay} disabled={lines.length===0}
-                      title={lines.length===0 ? "Dibuja al menos un pase o movimiento" : undefined}
-                      className="h-11 px-7 inline-flex items-center gap-2 rounded-xl bg-emerald-600 text-white text-sm font-bold shadow-lg hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-                      <Play size={15} /> Ver jugada
-                    </button>
+    </>
+  )
+  const playbackExtras = (
+    <>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-slate-400">Velocidad</span>
                       <div className="flex rounded-xl border border-slate-200 dark:border-slate-600 overflow-hidden">
@@ -962,24 +745,10 @@ export default function TacticsPage() {
                       className="h-11 px-4 inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:text-red-500 hover:border-red-300 disabled:opacity-30 transition-colors">
                       <Trash2 size={15} /> Borrar flechas
                     </button>
-                  </>
-                )}
-              </div>
-
-              {/* Legend */}
-              <div className={`flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-3 text-[11px] text-slate-400 font-medium ${presentation.active ? "hidden" : "flex"}`}>
-                <span className="flex items-center gap-1.5">{dot("bg-blue-700 border-white")}Local</span>
-                <span className="flex items-center gap-1.5">{dot("bg-red-600 border-white")}Rival</span>
-                <span className="flex items-center gap-1.5">{dot("bg-white border-slate-300")}Balón</span>
-                <span className="flex items-center gap-1.5"><span className="w-5 h-0.5 bg-amber-400 inline-block"/>Pase</span>
-                <span className="flex items-center gap-1.5"><span className="w-5 h-0.5 bg-sky-400 inline-block"/>Movimiento</span>
-                <span>Los números indican el orden</span>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Side panel ── */}
-          <div className="xl:w-80 shrink-0 space-y-4">
+    </>
+  )
+  const sidePanelContent = (
+    <>
             {/* Save */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-4">
               <div className="flex items-center justify-between mb-3">
@@ -1095,9 +864,316 @@ export default function TacticsPage() {
                 </div>
               </details>
             )}
+    </>
+  )
+
+  return (
+    <AppShell>
+      <div className="tac-app max-w-7xl mx-auto px-3 md:px-4 pt-3 md:pt-6 pb-28 md:pb-6 space-y-4">
+        <div className="hidden md:flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Tablero Táctico</h1>
+            <p className="text-xs text-slate-500 mt-0.5">Arma la jugada, dibújala y muéstrasela a tu equipo animada.</p>
+          </div>
+          <ol className="hidden md:flex flex-wrap items-center gap-2 text-xs">
+            {steps.map(st => (
+              <li key={st.n} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${st.done ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400" : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"}`}>
+                {st.done ? <Check size={12} /> : <span className="font-bold">{st.n}</span>} {st.label}
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        {error && (
+          <div className="text-xs text-red-600 bg-red-50 dark:bg-red-500/10 rounded-xl px-3 py-2">{error}</div>
+        )}
+
+        <div className="tac-row flex flex-col xl:flex-row gap-4">
+          {/* ── Pitch panel ── */}
+          <div className="tac-panel flex-1 min-w-0 flex flex-col md:block bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+
+            {/* Set-up: what kind of match and who plays */}
+            <div className="hidden md:flex px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 flex-wrap items-center gap-2">
+              {setupControls}
+              <button onClick={presentation.toggle}
+                className="ml-auto h-9 px-3 inline-flex items-center gap-1.5 text-xs font-bold rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition-opacity">
+                <Maximize2 size={14} /> Pantalla completa
+              </button>
+            </div>
+
+            {/* Tools, grouped by what they do */}
+            <div className="order-3 md:order-none border-t md:border-t-0 md:border-b border-slate-200 dark:border-slate-800 px-1.5 py-1.5 md:px-4 md:py-3">
+              <div className="grid grid-cols-7 gap-1 md:flex md:flex-wrap md:items-end md:gap-x-4 md:gap-y-2">
+                {GROUPS.map((g, gi) => (
+                  <div key={gi} className="contents md:block md:shrink-0">
+                    {g.title && <p className="hidden md:block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">{g.title}</p>}
+                    <div className="contents md:flex md:gap-1.5">
+                      {g.ids.map(id => {
+                        const t = TOOLS.find(x => x.id === id)!
+                        return (
+                          <button key={id} onClick={() => pick(id)} aria-pressed={tool===id}
+                            className={`h-12 md:h-9 px-0 md:px-3 min-w-0 whitespace-nowrap inline-flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-1.5 rounded-lg text-[10px] md:text-xs font-semibold border transition-all ${
+                              tool===id
+                                ? "bg-blue-600 text-white border-blue-600 shadow ring-2 ring-blue-300 dark:ring-blue-500/40"
+                                : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600"
+                            }`}>
+                            {t.icon} <span className="md:hidden">{t.short ?? t.label}</span><span className="hidden md:inline">{t.label}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+                <button onClick={undo} disabled={undoCount===0} title="Deshacer (Ctrl+Z)"
+                  className="hidden md:inline-flex md:ml-auto h-10 md:h-9 px-3 shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 disabled:opacity-30 transition-colors">
+                  <Undo2 size={14} /> Deshacer
+                </button>
+              </div>
+              <p className="hidden md:block text-xs text-slate-500 dark:text-slate-400 mt-2">{toolHint}</p>
+            </div>
+
+            {/* Phones: one compact bar with the actions a coach reaches for mid-drawing */}
+            <div className="md:hidden order-0 flex items-center gap-1.5 px-2 pt-2">
+              <button onClick={undo} disabled={undoCount===0} aria-label="Deshacer"
+                className="h-11 w-11 shrink-0 inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 disabled:opacity-30">
+                <Undo2 size={18} />
+              </button>
+              <div className="flex-1 min-w-0 px-1">
+                <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{playName}</p>
+                <p className="text-[11px] truncate">{dirty ? <span className="text-amber-600">Sin guardar</span> : activeId ? <span className="text-emerald-600">Guardada</span> : <span className="text-slate-400">{format === "11" ? "Fútbol 11" : "Fútbol 7"} · {formationKey}</span>}</p>
+              </div>
+              {playing ? (
+                <button onClick={resetAnim} className="h-11 px-3 shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-red-500 text-white text-sm font-bold">
+                  <Square size={15} /> Detener
+                </button>
+              ) : (
+                <button onClick={startPlay} disabled={lines.length===0}
+                  className="h-11 px-3 shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 text-white text-sm font-bold disabled:opacity-40">
+                  <Play size={15} /> Ver
+                </button>
+              )}
+              <button onClick={presentation.toggle} aria-label="Pantalla completa"
+                className="h-11 w-11 shrink-0 inline-flex items-center justify-center rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900">
+                <Maximize2 size={18} />
+              </button>
+              <button onClick={() => setSheetOpen(true)} aria-label="Ajustes y jugadas" aria-expanded={sheetOpen}
+                className="h-11 w-11 shrink-0 inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200">
+                <SlidersHorizontal size={18} />
+              </button>
+            </div>
+
+            {/* Pitch */}
+            <div
+              ref={presentation.ref}
+              className={presentation.active
+                ? "pres-root fixed inset-0 z-[100] bg-black flex flex-col p-2 sm:p-4"
+                : "tac-stage-wrap order-1 md:order-none p-2 md:p-4"}
+            >
+              {!presentation.active && <p className="md:hidden text-[11px] text-slate-500 dark:text-slate-400 mb-1.5 px-1 truncate">{toolHint}</p>}
+              {presentation.active && (
+                <div className="pres-rail shrink-0">
+                <div className="pres-head w-full flex items-center justify-between gap-2 mb-2 shrink-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs font-bold text-white/90 truncate">{playName}</span>
+                    {category && <span className="text-[10px] text-white/50 shrink-0">{category}</span>}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {playing ? (
+                      <button onClick={resetAnim} className="h-10 px-4 inline-flex items-center gap-1.5 rounded-xl bg-white/15 text-white text-xs font-bold">
+                        <Square size={14} /> Detener
+                      </button>
+                    ) : (
+                      <button onClick={startPlay} disabled={lines.length===0}
+                        className="h-10 px-4 inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 text-white text-xs font-bold disabled:opacity-40">
+                        <Play size={14} /> Ver jugada
+                      </button>
+                    )}
+                    <button onClick={presentation.exit} className="h-10 px-4 rounded-xl bg-white/15 text-white text-xs font-bold">
+                      Salir
+                    </button>
+                  </div>
+                </div>
+
+                {/* Drawing tools stay reachable while presenting: a board you can
+                    only look at is a slideshow. This is where a coach draws the
+                    instruction mid-talk. */}
+                <div className="pres-tools w-full flex flex-wrap items-center gap-1.5 mb-2 shrink-0">
+                  {TOOLS.map(tItem => (
+                    <button key={tItem.id} onClick={() => pick(tItem.id)}
+                      className={`h-10 px-3 inline-flex items-center gap-1.5 rounded-xl text-[11px] font-bold transition-colors ${
+                        tool===tItem.id ? "bg-white text-slate-900" : "bg-white/15 text-white/80"
+                      }`}>
+                      {tItem.icon} {tItem.label}
+                    </button>
+                  ))}
+                  <button onClick={undo} disabled={undoCount===0}
+                    className="h-10 px-3 inline-flex items-center gap-1.5 rounded-xl bg-white/15 text-white/80 text-[11px] font-bold ml-auto disabled:opacity-30">
+                    <Undo2 size={14} /> Deshacer
+                  </button>
+                </div>
+                </div>
+              )}
+              <div className={presentation.active ? "pres-stage" : "tac-stage"}>
+              <div className={presentation.active
+                  ? "relative rounded-lg overflow-hidden shadow-2xl"
+                  : "relative mx-auto rounded-xl overflow-hidden shadow-lg"}
+                style={presentation.active
+                  ? {aspectRatio:vertical?`${dims.h}/${dims.w}`:`${dims.w}/${dims.h}`,width:`min(100cqw, calc(100cqh * ${vertical ? dims.h / dims.w : dims.w / dims.h}))`,background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}
+                  : {["--pr" as string]:vertical?dims.h/dims.w:dims.w/dims.h,maxWidth:vertical?400:720,aspectRatio:vertical?`${dims.h}/${dims.w}`:`${dims.w}/${dims.h}`,background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}}>
+                {/* grass stripes */}
+                <div className="absolute inset-0 opacity-[0.12]"
+                  style={{backgroundImage:`repeating-linear-gradient(${vertical?180:90}deg,transparent,transparent 55px,rgba(0,0,0,1) 55px,rgba(0,0,0,1) 110px)`}}/>
+
+                {notice && (
+                  <div role="status" className="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 z-10 max-w-[90%] text-center bg-slate-900/85 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow">
+                    {notice}
+                  </div>
+                )}
+
+                <svg ref={svgRef} viewBox={vertical ? `0 0 ${dims.h} ${dims.w}` : `0 0 ${dims.w} ${dims.h}`} className="absolute inset-0 w-full h-full"
+                  style={{cursor:tool==="move"?"grab":"crosshair",touchAction:"none"}}
+                  onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}>
+
+                  <defs>
+                    <marker id="ar" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+                      <path d="M0,0.5 L4.5,2.5 L0,4.5 Z" fill="#38bdf8"/>
+                    </marker>
+                    <marker id="ap" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+                      <path d="M0,0.5 L4.5,2.5 L0,4.5 Z" fill="#fbbf24"/>
+                    </marker>
+                  </defs>
+
+                  <g ref={planeRef} transform={vertical ? `translate(0 ${dims.w}) rotate(-90)` : undefined}>
+                  {format==="11" ? <Pitch11SVG/> : <Pitch7SVG/>}
+                  {showZones && <ZoneGrid dims={dims} vertical={vertical}/>}
+
+                  {/* Lines */}
+                  {lines.map((l,li)=>(
+                    <g key={l.id}>
+                      <polyline points={l.pts.map(p=>p.join(",")).join(" ")}
+                        stroke={l.type==="pass"?"#fbbf24":"#38bdf8"} strokeWidth={(l.type==="pass"?0.9:0.75)*scale}
+                        fill="none" strokeLinecap="round" strokeLinejoin="round"
+                        markerEnd={l.type==="pass"?"url(#ap)":"url(#ar)"} opacity={0.9}/>
+                      {(()=>{
+                        // Step number badge — shown on every line (pass or run) so the
+                        // shared play order is visible on the pitch, not just in the side panel.
+                        const mid=l.pts[Math.floor(l.pts.length/2)]
+                        const active=playing&&activeStep===li
+                        const passColor = l.type==="pass"
+                        const fillIdle = passColor ? "rgba(251,191,36,0.25)" : "rgba(56,189,248,0.25)"
+                        const strokeIdle = passColor ? "rgba(251,191,36,0.5)" : "rgba(56,189,248,0.5)"
+                        const fillActive = passColor ? "#fbbf24" : "#38bdf8"
+                        const strokeActive = passColor ? "#f59e0b" : "#0ea5e9"
+                        const textIdle = passColor ? "rgba(251,191,36,0.9)" : "rgba(56,189,248,0.9)"
+                        return (
+                          <g>
+                            <circle cx={vertical?mid[0]+3*scale:mid[0]} cy={vertical?mid[1]:mid[1]-3*scale} r={2.3*scale}
+                              fill={active?fillActive:fillIdle}
+                              stroke={active?strokeActive:strokeIdle} strokeWidth={0.3*scale}/>
+                            <text x={vertical?mid[0]+3*scale:mid[0]} y={vertical?mid[1]:mid[1]-3*scale} transform={upright(vertical?mid[0]+3*scale:mid[0], vertical?mid[1]:mid[1]-3*scale)} textAnchor="middle" dominantBaseline="middle"
+                              fontSize={1.8*scale} fontWeight="bold" fill={active?"#1e293b":textIdle}>
+                              {li+1}
+                            </text>
+                          </g>
+                        )
+                      })()}
+                    </g>
+                  ))}
+
+                  {/* Drawing preview */}
+                  {drawing&&drawing.length>=2&&(
+                    <polyline points={drawing.map(p=>p.join(",")).join(" ")}
+                      stroke={tool==="pass"?"#fbbf24":"#38bdf8"} strokeWidth={0.8*scale}
+                      fill="none" strokeLinecap="round" strokeDasharray="2 1.5" opacity={0.65}/>
+                  )}
+
+                  {/* Players — with the real player's first name when assigned */}
+                  {dispMarkers.filter(m=>m.team!=="ball").map(m=>{
+                    const name = playerName(m.player_id)
+                    return (
+                      <g key={m.id}>
+                        <ellipse cx={vertical?m.x-3.8*scale:m.x} cy={vertical?m.y:m.y+3.8*scale} rx={(vertical?0.7:2.5)*scale} ry={(vertical?2.5:0.7)*scale} fill="rgba(0,0,0,0.18)"/>
+                        <circle cx={m.x} cy={m.y} r={3.4*scale}
+                          fill={m.team==="home"?"#1d4ed8":"#dc2626"} stroke="white" strokeWidth={0.6*scale}/>
+                        {m.label&&<text x={m.x} y={m.y+0.9*scale} transform={upright(m.x,m.y)} textAnchor="middle" dominantBaseline="middle"
+                          fontSize={2.2*scale} fontWeight="bold" fill="white" style={{userSelect:"none"}}>{m.label}</text>}
+                        {name&&<text x={vertical?m.x-5.9*scale:m.x} y={vertical?m.y:m.y+5.9*scale} transform={upright(vertical?m.x-5.9*scale:m.x, vertical?m.y:m.y+5.9*scale)} textAnchor="middle" dominantBaseline="middle"
+                          fontSize={1.9*scale} fontWeight="bold" fill="white" stroke="rgba(0,0,0,0.55)" strokeWidth={0.45*scale}
+                          paintOrder="stroke" style={{userSelect:"none",pointerEvents:"none"}}>{name}</text>}
+                      </g>
+                    )
+                  })}
+
+                  {/* Ball */}
+                  {ballPos&&(
+                    <g>
+                      <ellipse cx={vertical?ballPos[0]-2.5*scale:ballPos[0]} cy={vertical?ballPos[1]:ballPos[1]+2.5*scale} rx={(vertical?0.55:1.8)*scale} ry={(vertical?1.8:0.55)*scale} fill="rgba(0,0,0,0.18)"/>
+                      <circle cx={ballPos[0]} cy={ballPos[1]} r={2.4*scale} fill="white" stroke="#cbd5e1" strokeWidth={0.4*scale}/>
+                      <circle cx={ballPos[0]} cy={ballPos[1]} r={2.4*scale} fill="none" stroke="#94a3b8" strokeWidth={0.25*scale} strokeDasharray="1.2 1.1"/>
+                      <circle cx={ballPos[0]} cy={ballPos[1]} r={0.7*scale} fill="#94a3b8"/>
+                    </g>
+                  )}
+                </g>
+                </svg>
+              </div>
+
+              </div>
+
+              {/* Playback */}
+              <div className={`flex-wrap items-center justify-center gap-3 mt-4 ${presentation.active ? "hidden" : "hidden md:flex"}`}>
+                {playing ? (
+                  <button onClick={resetAnim}
+                    className="h-11 px-6 inline-flex items-center gap-2 rounded-xl bg-red-500 text-white text-sm font-bold shadow hover:bg-red-600 transition-colors">
+                    <Square size={15} /> Detener
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={startPlay} disabled={lines.length===0}
+                      title={lines.length===0 ? "Dibuja al menos un pase o movimiento" : undefined}
+                      className="h-11 px-7 inline-flex items-center gap-2 rounded-xl bg-emerald-600 text-white text-sm font-bold shadow-lg hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+                      <Play size={15} /> Ver jugada
+                    </button>
+                    {playbackExtras}
+                  </>
+                )}
+              </div>
+
+              {/* Legend */}
+              <div className={`flex-wrap items-center justify-center gap-x-4 gap-y-1 mt-3 text-[11px] text-slate-400 font-medium ${presentation.active ? "hidden" : "hidden md:flex"}`}>
+                <span className="flex items-center gap-1.5">{dot("bg-blue-700 border-white")}Local</span>
+                <span className="flex items-center gap-1.5">{dot("bg-red-600 border-white")}Rival</span>
+                <span className="flex items-center gap-1.5">{dot("bg-white border-slate-300")}Balón</span>
+                <span className="flex items-center gap-1.5"><span className="w-5 h-0.5 bg-amber-400 inline-block"/>Pase</span>
+                <span className="flex items-center gap-1.5"><span className="w-5 h-0.5 bg-sky-400 inline-block"/>Movimiento</span>
+                <span>Los números indican el orden</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Side panel ── */}
+          <div className="hidden md:block xl:w-80 shrink-0 space-y-4">
+            {sidePanelContent}
           </div>
         </div>
       </div>
+
+      {/* Phones: everything that is not drawing lives in a sheet, so the board itself never needs scrolling */}
+      {sheetOpen && (
+        <div className="md:hidden fixed inset-0 z-[80]" role="dialog" aria-modal="true" aria-label="Ajustes y jugadas">
+          <button aria-label="Cerrar" className="absolute inset-0 bg-black/40" onClick={() => setSheetOpen(false)} />
+          <div className="absolute inset-x-0 bottom-0 max-h-[86dvh] overflow-y-auto overscroll-contain rounded-t-3xl bg-slate-50 dark:bg-slate-950 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl animate-fade-in">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">Ajustes y jugadas</h2>
+              <button onClick={() => setSheetOpen(false)} aria-label="Cerrar" className="h-10 w-10 inline-flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"><X size={18} /></button>
+            </div>
+            <div className="space-y-4">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 flex flex-wrap items-center gap-2">{setupControls}</div>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 flex flex-wrap items-center gap-3">{playbackExtras}</div>
+              {sidePanelContent}
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   )
 }
