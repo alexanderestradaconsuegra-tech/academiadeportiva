@@ -198,3 +198,19 @@ input:focus-visible, textarea:focus-visible, select:focus-visible { outline: non
   /* Remove outer padding when printing */
   .animate-fade-in { padding: 0 !important; }
 }
+
+/* ── Tactics board, presentation mode ──
+   Portrait / large screens: bars on top, pitch in the remaining space.
+   Phone turned sideways: a slim tool column on the left, the pitch takes everything else. */
+.pres-stage { flex:1 1 0; min-height:0; min-width:0; container-type:size; display:grid; place-items:center; }
+@media (orientation:landscape) and (max-height:520px) {
+  .pres-root { flex-direction:row !important; gap:8px; padding:max(6px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)) !important; }
+  .pres-rail { width:150px; flex:none; display:flex; flex-direction:column; gap:6px; overflow-y:auto; scrollbar-width:none; }
+  .pres-rail::-webkit-scrollbar { display:none; }
+  .pres-head { flex-direction:column !important; align-items:stretch !important; gap:6px !important; margin:0 !important; }
+  .pres-head > div { flex-direction:column; align-items:stretch !important; gap:6px !important; min-width:0; }
+  .pres-head > div:first-child { display:none; }
+  .pres-head button { height:38px !important; width:100%; justify-content:center; padding-inline:8px !important; }
+  .pres-tools { display:grid !important; grid-template-columns:1fr 1fr; gap:6px !important; margin:0 !important; }
+  .pres-tools button { height:46px !important; width:100%; flex-direction:column; justify-content:center; gap:3px !important; padding:0 2px !important; font-size:10px !important; line-height:1.1; margin-left:0 !important; text-align:center; }
+}

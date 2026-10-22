@@ -306,6 +306,22 @@ export default function TacticsPage() {
   // Pantalla completa para mostrarle el tablero al equipo en la cancha.
   const presentation = usePresentationMode<HTMLDivElement>()
 
+  // Turning the phone sideways is the signal that the coach wants the pitch
+  // to fill the screen: enter presentation mode by itself, leave it when the
+  // phone goes back upright. A mode the user chose by hand is left alone.
+  const autoPresenting = useRef(false)
+  useEffect(() => {
+    const mq = window.matchMedia("(orientation: landscape) and (max-height: 520px)")
+    const apply = () => {
+      if (mq.matches && !presentation.active) { autoPresenting.current = true; void presentation.enter() }
+      else if (!mq.matches && autoPresenting.current) { autoPresenting.current = false; presentation.exit() }
+    }
+    apply()
+    mq.addEventListener("change", apply)
+    return () => mq.removeEventListener("change", apply)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const svgRef = useRef<SVGSVGElement>(null)
   const toSVG = useCallback((cx:number,cy:number):[number,number]=>{
     const s=svgRef.current; if(!s) return [0,0]
@@ -746,12 +762,13 @@ export default function TacticsPage() {
             <div
               ref={presentation.ref}
               className={presentation.active
-                ? "fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-2 sm:p-4"
+                ? "pres-root fixed inset-0 z-[100] bg-black flex flex-col p-2 sm:p-4"
                 : "order-1 md:order-none p-2 md:p-4"}
             >
               {!presentation.active && <p className="md:hidden text-xs text-slate-500 dark:text-slate-400 mb-2 px-1">{toolHint}</p>}
               {presentation.active && (
-                <div className="w-full flex items-center justify-between gap-2 mb-2 shrink-0">
+                <div className="pres-rail shrink-0">
+                <div className="pres-head w-full flex items-center justify-between gap-2 mb-2 shrink-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-xs font-bold text-white/90 truncate">{playName}</span>
                     {category && <span className="text-[10px] text-white/50 shrink-0">{category}</span>}
@@ -772,13 +789,11 @@ export default function TacticsPage() {
                     </button>
                   </div>
                 </div>
-              )}
 
-              {/* Drawing tools stay reachable while presenting: a board you can
-                  only look at is a slideshow. This is where a coach draws the
-                  instruction mid-talk. */}
-              {presentation.active && (
-                <div className="w-full flex flex-wrap items-center gap-1.5 mb-2 shrink-0">
+                {/* Drawing tools stay reachable while presenting: a board you can
+                    only look at is a slideshow. This is where a coach draws the
+                    instruction mid-talk. */}
+                <div className="pres-tools w-full flex flex-wrap items-center gap-1.5 mb-2 shrink-0">
                   {TOOLS.map(tItem => (
                     <button key={tItem.id} onClick={() => pick(tItem.id)}
                       className={`h-10 px-3 inline-flex items-center gap-1.5 rounded-xl text-[11px] font-bold transition-colors ${
@@ -792,12 +807,14 @@ export default function TacticsPage() {
                     <Undo2 size={14} /> Deshacer
                   </button>
                 </div>
+                </div>
               )}
+              <div className={presentation.active ? "pres-stage" : "contents"}>
               <div className={presentation.active
-                  ? "relative rounded-lg overflow-hidden shadow-2xl w-full"
+                  ? "relative rounded-lg overflow-hidden shadow-2xl"
                   : "relative mx-auto rounded-xl overflow-hidden shadow-lg"}
                 style={presentation.active
-                  ? {aspectRatio:`${dims.w}/${dims.h}`,maxHeight:"100%",maxWidth:`calc((100vh - 9rem) * ${dims.w / dims.h})`,background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}
+                  ? {aspectRatio:`${dims.w}/${dims.h}`,width:`min(100cqw, calc(100cqh * ${dims.w / dims.h}))`,background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}
                   : {maxWidth:720,aspectRatio:`${dims.w}/${dims.h}`,background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}}>
                 {/* grass stripes */}
                 <div className="absolute inset-0 opacity-[0.12]"
@@ -892,6 +909,8 @@ export default function TacticsPage() {
                     </g>
                   )}
                 </svg>
+              </div>
+
               </div>
 
               {/* Playback */}
