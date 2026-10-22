@@ -133,7 +133,7 @@ function Pitch7SVG() {
   )
 }
 
-function ZoneGrid({ dims }: { dims: { w: number; h: number } }) {
+function ZoneGrid({ dims, vertical = false }: { dims: { w: number; h: number }; vertical?: boolean }) {
   const { w, h } = dims
   const s = "rgba(167,139,250,0.55)"
   return (
@@ -146,10 +146,11 @@ function ZoneGrid({ dims }: { dims: { w: number; h: number } }) {
         <line x1={0} y1={3*h/5} x2={w} y2={3*h/5} />
         <line x1={0} y1={4*h/5} x2={w} y2={4*h/5} />
       </g>
-      <g fill={s} fontSize={h*0.045} fontWeight="bold" textAnchor="middle">
-        <text x={w/6}     y={h-1}>Defensiva</text>
-        <text x={w/2}     y={h-1}>Media</text>
-        <text x={5*w/6}   y={h-1}>Ofensiva</text>
+      <g fill={s} fontSize={h*0.045} fontWeight="bold" textAnchor={vertical ? "end" : "middle"}>
+        {([[w/6,"Defensiva"],[w/2,"Media"],[5*w/6,"Ofensiva"]] as [number,string][]).map(([x,label]) => {
+          const y = vertical ? h-1.5 : h-1
+          return <text key={label} x={x} y={y} transform={vertical ? `rotate(90 ${x} ${y})` : undefined}>{label}</text>
+        })}
       </g>
     </g>
   )
@@ -322,13 +323,29 @@ export default function TacticsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // On a phone held upright the pitch is drawn vertically (goals top and
+  // bottom) so it uses the tall screen; everywhere else it stays horizontal.
+  // Everything lives in pitch coordinates inside one group that is rotated, so
+  // saved plays are unaffected and touches map back through that group.
+  const [vertical, setVertical] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px) and (orientation: portrait)")
+    const apply = () => setVertical(mq.matches)
+    apply()
+    mq.addEventListener("change", apply)
+    return () => mq.removeEventListener("change", apply)
+  }, [])
+
   const svgRef = useRef<SVGSVGElement>(null)
+  const planeRef = useRef<SVGGElement>(null)
   const toSVG = useCallback((cx:number,cy:number):[number,number]=>{
-    const s=svgRef.current; if(!s) return [0,0]
+    const s=svgRef.current, g=planeRef.current; if(!s||!g) return [0,0]
     const p=s.createSVGPoint(); p.x=cx; p.y=cy
-    const {x,y}=p.matrixTransform(s.getScreenCTM()!.inverse())
+    const {x,y}=p.matrixTransform(g.getScreenCTM()!.inverse())
     return [Math.max(0,Math.min(dims.w,x)), Math.max(0,Math.min(dims.h,y))]
   },[dims.w, dims.h])
+  // Counter-rotation so numbers and names stay readable on the rotated pitch.
+  const upright = (x:number,y:number) => vertical ? `rotate(90 ${x} ${y})` : undefined
 
   // ── Stop & reset animation completely ────────────────────────────────────
   const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -814,11 +831,11 @@ export default function TacticsPage() {
                   ? "relative rounded-lg overflow-hidden shadow-2xl"
                   : "relative mx-auto rounded-xl overflow-hidden shadow-lg"}
                 style={presentation.active
-                  ? {aspectRatio:`${dims.w}/${dims.h}`,width:`min(100cqw, calc(100cqh * ${dims.w / dims.h}))`,background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}
-                  : {maxWidth:720,aspectRatio:`${dims.w}/${dims.h}`,background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}}>
+                  ? {aspectRatio:vertical?`${dims.h}/${dims.w}`:`${dims.w}/${dims.h}`,width:`min(100cqw, calc(100cqh * ${vertical ? dims.h / dims.w : dims.w / dims.h}))`,background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}
+                  : {maxWidth:vertical?400:720,aspectRatio:vertical?`${dims.h}/${dims.w}`:`${dims.w}/${dims.h}`,background:"linear-gradient(160deg,#1a6b3a,#1d7a40 50%,#1a6b3a)"}}>
                 {/* grass stripes */}
                 <div className="absolute inset-0 opacity-[0.12]"
-                  style={{backgroundImage:"repeating-linear-gradient(90deg,transparent,transparent 55px,rgba(0,0,0,1) 55px,rgba(0,0,0,1) 110px)"}}/>
+                  style={{backgroundImage:`repeating-linear-gradient(${vertical?180:90}deg,transparent,transparent 55px,rgba(0,0,0,1) 55px,rgba(0,0,0,1) 110px)`}}/>
 
                 {notice && (
                   <div role="status" className="pointer-events-none absolute top-2 left-1/2 -translate-x-1/2 z-10 max-w-[90%] text-center bg-slate-900/85 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow">
@@ -826,7 +843,7 @@ export default function TacticsPage() {
                   </div>
                 )}
 
-                <svg ref={svgRef} viewBox={`0 0 ${dims.w} ${dims.h}`} className="absolute inset-0 w-full h-full"
+                <svg ref={svgRef} viewBox={vertical ? `0 0 ${dims.h} ${dims.w}` : `0 0 ${dims.w} ${dims.h}`} className="absolute inset-0 w-full h-full"
                   style={{cursor:tool==="move"?"grab":"crosshair",touchAction:"none"}}
                   onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp}>
 
@@ -839,8 +856,9 @@ export default function TacticsPage() {
                     </marker>
                   </defs>
 
+                  <g ref={planeRef} transform={vertical ? `translate(0 ${dims.w}) rotate(-90)` : undefined}>
                   {format==="11" ? <Pitch11SVG/> : <Pitch7SVG/>}
-                  {showZones && <ZoneGrid dims={dims}/>}
+                  {showZones && <ZoneGrid dims={dims} vertical={vertical}/>}
 
                   {/* Lines */}
                   {lines.map((l,li)=>(
@@ -862,10 +880,10 @@ export default function TacticsPage() {
                         const textIdle = passColor ? "rgba(251,191,36,0.9)" : "rgba(56,189,248,0.9)"
                         return (
                           <g>
-                            <circle cx={mid[0]} cy={mid[1]-3*scale} r={2.3*scale}
+                            <circle cx={vertical?mid[0]+3*scale:mid[0]} cy={vertical?mid[1]:mid[1]-3*scale} r={2.3*scale}
                               fill={active?fillActive:fillIdle}
                               stroke={active?strokeActive:strokeIdle} strokeWidth={0.3*scale}/>
-                            <text x={mid[0]} y={mid[1]-3*scale} textAnchor="middle" dominantBaseline="middle"
+                            <text x={vertical?mid[0]+3*scale:mid[0]} y={vertical?mid[1]:mid[1]-3*scale} transform={upright(vertical?mid[0]+3*scale:mid[0], vertical?mid[1]:mid[1]-3*scale)} textAnchor="middle" dominantBaseline="middle"
                               fontSize={1.8*scale} fontWeight="bold" fill={active?"#1e293b":textIdle}>
                               {li+1}
                             </text>
@@ -887,12 +905,12 @@ export default function TacticsPage() {
                     const name = playerName(m.player_id)
                     return (
                       <g key={m.id}>
-                        <ellipse cx={m.x} cy={m.y+3.8*scale} rx={2.5*scale} ry={0.7*scale} fill="rgba(0,0,0,0.18)"/>
+                        <ellipse cx={vertical?m.x-3.8*scale:m.x} cy={vertical?m.y:m.y+3.8*scale} rx={(vertical?0.7:2.5)*scale} ry={(vertical?2.5:0.7)*scale} fill="rgba(0,0,0,0.18)"/>
                         <circle cx={m.x} cy={m.y} r={3.4*scale}
                           fill={m.team==="home"?"#1d4ed8":"#dc2626"} stroke="white" strokeWidth={0.6*scale}/>
-                        {m.label&&<text x={m.x} y={m.y+0.9*scale} textAnchor="middle" dominantBaseline="middle"
+                        {m.label&&<text x={m.x} y={m.y+0.9*scale} transform={upright(m.x,m.y)} textAnchor="middle" dominantBaseline="middle"
                           fontSize={2.2*scale} fontWeight="bold" fill="white" style={{userSelect:"none"}}>{m.label}</text>}
-                        {name&&<text x={m.x} y={m.y+5.9*scale} textAnchor="middle" dominantBaseline="middle"
+                        {name&&<text x={vertical?m.x-5.9*scale:m.x} y={vertical?m.y:m.y+5.9*scale} transform={upright(vertical?m.x-5.9*scale:m.x, vertical?m.y:m.y+5.9*scale)} textAnchor="middle" dominantBaseline="middle"
                           fontSize={1.9*scale} fontWeight="bold" fill="white" stroke="rgba(0,0,0,0.55)" strokeWidth={0.45*scale}
                           paintOrder="stroke" style={{userSelect:"none",pointerEvents:"none"}}>{name}</text>}
                       </g>
@@ -902,12 +920,13 @@ export default function TacticsPage() {
                   {/* Ball */}
                   {ballPos&&(
                     <g>
-                      <ellipse cx={ballPos[0]} cy={ballPos[1]+2.5*scale} rx={1.8*scale} ry={0.55*scale} fill="rgba(0,0,0,0.18)"/>
+                      <ellipse cx={vertical?ballPos[0]-2.5*scale:ballPos[0]} cy={vertical?ballPos[1]:ballPos[1]+2.5*scale} rx={(vertical?0.55:1.8)*scale} ry={(vertical?1.8:0.55)*scale} fill="rgba(0,0,0,0.18)"/>
                       <circle cx={ballPos[0]} cy={ballPos[1]} r={2.4*scale} fill="white" stroke="#cbd5e1" strokeWidth={0.4*scale}/>
                       <circle cx={ballPos[0]} cy={ballPos[1]} r={2.4*scale} fill="none" stroke="#94a3b8" strokeWidth={0.25*scale} strokeDasharray="1.2 1.1"/>
                       <circle cx={ballPos[0]} cy={ballPos[1]} r={0.7*scale} fill="#94a3b8"/>
                     </g>
                   )}
+                </g>
                 </svg>
               </div>
 
