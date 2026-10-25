@@ -3,7 +3,8 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useApp } from "@/context/AppContext"
 import { supabase } from "@/lib/supabase"
-import { Trophy, Eye, EyeOff, Lock, Mail, AlertCircle, User, Building2, KeyRound } from "lucide-react"
+import { Lock, Mail, AlertCircle, User, Building2, KeyRound } from "lucide-react"
+import { LoginBackground, GlassCard, GlowTitle, GlassInput, GlassPasswordInput, GlassButton } from "@/components/ui/login-glass"
 import { useT } from "@/lib/i18n/useT"
 import { login as loginDict } from "@/lib/i18n/dictionaries/login"
 import type { Language } from "@/lib/types"
@@ -26,7 +27,6 @@ export default function LoginPage() {
   const [academyName, setAcademyName] = useState("")
   const [language, setLanguage] = useState<Language>("es")
   const [activationCode, setActivationCode] = useState("")
-  const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -89,206 +89,92 @@ export default function LoginPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen flex">
-      {/* Left panel — branding */}
-      <div className="hidden lg:flex w-[55%] relative overflow-hidden flex-col justify-between p-12" style={{ backgroundImage: "url('/login-bg.avif')", backgroundSize: "cover", backgroundPosition: "center" }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-[#05122F]/80 to-[#0a2647]/60" />
+  const errorBox = error && (
+    <div role="alert" className="flex items-center gap-2 rounded-xl border border-red-400/30 bg-red-500/15 px-3 py-2.5 text-sm text-red-100">
+      <AlertCircle size={15} className="shrink-0" />{error}
+    </div>
+  )
 
-        <div className="relative z-10">
-          <img src="/logo-metrikas.png" alt="Metrikas" className="h-20 w-auto object-contain" />
+  return (
+    <div className="relative isolate min-h-[100dvh] w-full flex flex-col items-center justify-center px-4 py-10 bg-[#05122F]">
+      <LoginBackground src="/login-cancha.webp" />
+
+      <div className="w-full max-w-md animate-fade-in">
+        <div className="mb-6 flex justify-center">
+          <img src="/logo-metrikas-login.webp" alt="Metrikas" width="520" height="83" className="h-9 sm:h-10 w-auto object-contain drop-shadow-[0_4px_18px_rgba(0,0,0,0.6)]" />
         </div>
 
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-4 py-1.5 mb-6">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-slow" />
-            <span className="text-white/80 text-xs font-medium">{t("premiumBadge")}</span>
-          </div>
-          <h1 className="text-4xl xl:text-5xl font-black text-white leading-tight mb-5">
-            {t("heroTitle1")}<br />
-            <span className="text-blue-200">{t("heroTitle2")}</span>
-          </h1>
-          <p className="text-blue-100/70 text-base max-w-sm leading-relaxed">
-            {t("heroSubtitle")}
-          </p>
-          <div className="flex flex-wrap gap-2 mt-8">
-            {[t("featureRealtime"), t("featureCharts"), t("featureReports"), t("featureSupabase")].map(f => (
-              <span key={f} className="bg-white/10 backdrop-blur text-white/80 text-xs font-medium px-3 py-1.5 rounded-full border border-white/10">
-                {f}
-              </span>
+        <GlassCard>
+          {/* Tabs */}
+          <div className="mb-6 flex gap-1 rounded-xl border border-white/10 bg-white/5 p-1" role="tablist">
+            {(["login", "register"] as const).map(t2 => (
+              <button
+                key={t2}
+                role="tab"
+                aria-selected={tab === t2}
+                onClick={() => { setTab(t2); setError("") }}
+                className={`h-10 flex-1 rounded-lg text-sm font-semibold transition-all ${tab === t2 ? "bg-white text-[#05122F] shadow" : "text-white/70 hover:text-white"}`}
+              >
+                {t2 === "login" ? "Iniciar sesión" : "Crear academia"}
+              </button>
             ))}
           </div>
-        </div>
 
-        <div className="grid grid-cols-3 gap-4 relative z-10">
-          {[
-            { value: "∞", label: "Academias" },
-            { value: "Multi", label: "Idiomas" },
-            { value: "100%", label: "Seguro" },
-          ].map(s => (
-            <div key={s.label} className="bg-white/8 backdrop-blur rounded-2xl p-4 border border-white/10 text-center">
-              <p className="text-2xl font-black text-white">{s.value}</p>
-              <p className="text-blue-200/60 text-xs font-medium mt-0.5">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Right panel — form */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-[#F5F7FB]">
-        <div className="w-full max-w-md animate-fade-in">
-          {/* Mobile logo */}
-          <div className="flex lg:hidden items-center justify-center mb-10">
-            <img src="/logo-metrikas.png" alt="Metrikas" className="h-20 w-auto object-contain" />
-          </div>
-
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-xl shadow-slate-200/60 border border-slate-100 dark:border-slate-800">
-            {/* Tabs */}
-            <div className="flex rounded-xl bg-slate-100 dark:bg-slate-800 p-1 mb-7 gap-1">
-              {(["login", "register"] as const).map(t2 => (
-                <button
-                  key={t2}
-                  onClick={() => { setTab(t2); setError("") }}
-                  className={`flex-1 h-9 rounded-lg text-sm font-semibold transition-all ${tab === t2 ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"}`}
-                >
-                  {t2 === "login" ? t("welcomeBack") : "Crear academia"}
-                </button>
-              ))}
-            </div>
-
-            {tab === "login" ? (
-              <>
-                <div className="mb-6">
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">{t("welcomeBack")}</h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">{t("accessPanel")}</p>
+          {tab === "login" ? (
+            <>
+              <GlowTitle subtitle={t("accessPanel")}>{t("welcomeBack")}</GlowTitle>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <GlassInput label={t("email")} icon={<Mail size={18} />} type="email" autoComplete="email" inputMode="email"
+                  value={email} onChange={e => setEmail(e.target.value)} required placeholder="tu@correo.com" />
+                <GlassPasswordInput label={t("password")} icon={<Lock size={18} />} autoComplete="current-password"
+                  value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" />
+                <div className="flex justify-end">
+                  <a href="/forgot-password" className="text-sm text-white/75 transition-colors hover:text-lime-300">¿Olvidaste tu contraseña?</a>
                 </div>
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">{t("email")}</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">{t("password")}</label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} required
-                        className="w-full h-11 pl-10 pr-11 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all" />
-                      <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                        {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
-                  </div>
-                  {error && (
-                    <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 dark:bg-red-500/10 rounded-xl px-3 py-2.5">
-                      <AlertCircle size={14} />{error}
-                    </div>
-                  )}
-                  <button type="submit" disabled={loading}
-                    className="w-full h-11 bg-lime-400 text-[#05122F] rounded-xl font-semibold text-sm hover:bg-lime-700 transition-all shadow-md shadow-lime-400/40 disabled:opacity-60 flex items-center justify-center gap-2">
-                    {loading ? (
-                      <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>{t("signingIn")}</>
-                    ) : t("signIn")}
-                  </button>
-                  <div className="text-center">
-                    <a href="/forgot-password" className="text-xs text-slate-400 hover:text-lime-700 dark:hover:text-lime-400 transition-colors">
-                      ¿Olvidaste tu contraseña?
-                    </a>
-                  </div>
-                </form>
-
-              </>
-            ) : (
-              <>
-                <div className="mb-6">
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Crear tu academia</h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">Configura tu espacio en segundos</p>
+                {errorBox}
+                <GlassButton type="submit" loading={loading} loadingText={t("signingIn")}>{t("signIn")}</GlassButton>
+              </form>
+              <p className="mt-6 text-center text-sm text-white/70">
+                ¿Aún no tienes cuenta?{" "}
+                <button type="button" onClick={() => { setTab("register"); setError("") }} className="font-semibold text-white transition-colors hover:text-lime-300">Crear academia</button>
+              </p>
+            </>
+          ) : (
+            <>
+              <GlowTitle subtitle="Configura tu espacio en segundos">Crea tu academia</GlowTitle>
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div>
+                  <GlassInput label="Código de activación" icon={<KeyRound size={18} />} type="text" className="font-mono tracking-wider"
+                    value={activationCode} onChange={e => setActivationCode(e.target.value.trim())} required placeholder="Te lo envía Metrikas" />
+                  <p className="mt-1.5 text-xs text-white/60">¿No tienes código? <a href="https://wa.me/56992103974" target="_blank" rel="noopener noreferrer" className="font-semibold text-lime-300 hover:underline">Escríbenos por WhatsApp</a></p>
                 </div>
-                <form onSubmit={handleRegister} className="space-y-4">
+                <GlassInput label="Nombre de la academia" icon={<Building2 size={18} />} type="text" autoComplete="organization"
+                  value={academyName} onChange={e => setAcademyName(e.target.value)} required placeholder="Academia FC" />
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3">
+                  <GlassInput label="Tu nombre" icon={<User size={18} />} type="text" autoComplete="name"
+                    value={fullName} onChange={e => setFullName(e.target.value)} required placeholder="Juan García" />
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">
-                      Código de activación
-                    </label>
-                    <div className="relative">
-                      <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input
-                        type="text"
-                        value={activationCode}
-                        onChange={e => setActivationCode(e.target.value.trim())}
-                        required
-                        placeholder="Te lo envía Metrikas al contratar"
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all font-mono tracking-wider"
-                      />
-                    </div>
-                    <p className="text-[11px] text-slate-400 mt-1">¿No tienes código? <a href="https://wa.me/56992103974" target="_blank" rel="noopener noreferrer" className="text-lime-700 dark:text-lime-400 hover:underline">Escríbenos por WhatsApp</a></p>
+                    <label htmlFor="reg-language" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-white/70">Idioma</label>
+                    <select id="reg-language" value={language} onChange={e => setLanguage(e.target.value as Language)}
+                      className="h-12 w-full cursor-pointer rounded-xl border border-white/15 bg-white/[0.07] px-3 text-[15px] text-white outline-none focus:border-lime-400/70 focus:ring-2 focus:ring-lime-400/25">
+                      {LANG_OPTIONS.map(l => <option key={l.value} value={l.value} className="text-slate-900">{l.label}</option>)}
+                    </select>
                   </div>
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">Nombre de la academia</label>
-                    <div className="relative">
-                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input type="text" value={academyName} onChange={e => setAcademyName(e.target.value)} required placeholder="Academia FC"
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">Tu nombre</label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} required placeholder="Juan García"
-                          className="w-full h-11 pl-10 pr-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">Idioma</label>
-                      <select value={language} onChange={e => setLanguage(e.target.value as Language)}
-                        className="w-full h-11 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 outline-none cursor-pointer">
-                        {LANG_OPTIONS.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">{t("email")}</label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                        className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wide block mb-1.5">{t("password")}</label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <input type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} required minLength={6}
-                        className="w-full h-11 pl-10 pr-11 rounded-xl border border-slate-200 dark:border-slate-700 text-sm bg-white dark:bg-slate-900 focus:border-lime-600 dark:focus:border-lime-400 focus:ring-2 focus:ring-lime-100 outline-none transition-all" />
-                      <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                        {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
-                  </div>
-                  {error && (
-                    <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 dark:bg-red-500/10 rounded-xl px-3 py-2.5">
-                      <AlertCircle size={14} />{error}
-                    </div>
-                  )}
-                  <button type="submit" disabled={loading}
-                    className="w-full h-11 bg-lime-400 text-[#05122F] rounded-xl font-semibold text-sm hover:bg-lime-700 transition-all shadow-md shadow-lime-400/40 disabled:opacity-60 flex items-center justify-center gap-2">
-                    {loading ? (
-                      <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Creando academia...</>
-                    ) : "Crear mi academia"}
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
+                </div>
+                <GlassInput label={t("email")} icon={<Mail size={18} />} type="email" autoComplete="email" inputMode="email"
+                  value={email} onChange={e => setEmail(e.target.value)} required placeholder="tu@correo.com" />
+                <GlassPasswordInput label={t("password")} icon={<Lock size={18} />} autoComplete="new-password" minLength={6}
+                  value={password} onChange={e => setPassword(e.target.value)} required placeholder="Mínimo 6 caracteres" />
+                {errorBox}
+                <GlassButton type="submit" loading={loading} loadingText="Creando academia...">Crear mi academia</GlassButton>
+              </form>
+            </>
+          )}
+        </GlassCard>
 
-          <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-6">
-            © 2024 Metrikas · {t("footer")}
-          </p>
-        </div>
+        <p className="mt-6 text-center text-xs text-white/60">
+          © {new Date().getFullYear()} Metrikas · {t("footer")}
+        </p>
       </div>
     </div>
   )
