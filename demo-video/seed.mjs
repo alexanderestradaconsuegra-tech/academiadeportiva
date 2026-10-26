@@ -7,6 +7,10 @@ export const ACADEMY_ID = "0d3e7a10-0000-4000-8000-00000000a001"
 export const COACH_ID = "0d3e7a10-0000-4000-8000-00000000c001"
 export const COACH_EMAIL = "entrenador@losaromos.example"
 export const COACH_PASSWORD = "demo-2026"
+// A player account (fictional student) for the "what the player sees" clips.
+export const PLAYER_USER_ID = "0d3e7a10-0000-4000-8000-00000000c002"
+export const PLAYER_EMAIL = "agustin@losaromos.example"
+export const PLAYER_PASSWORD = "demo-2026"
 
 const pad = (n) => String(n).padStart(2, "0")
 const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -141,8 +145,63 @@ export function buildSeed(today = new Date()) {
   }))
   t.matches = [{ id: uuid("8", 1), academy_id: ACADEMY_ID, opponent: "Club Ejemplo Norte", competition: "Liga formativa", date: iso(addDays(today, 5)), time: "10:00", location: "Cancha 2", is_home: true, category: "Sub-12", our_score: null, opponent_score: null, video_url: "", notes: "", created_at: created }]
 
+  // The player account belongs to Agustín Pavez (Sub-12, right winger).
+  const agustin = t.players[3]
+  t.profiles.push({ id: PLAYER_USER_ID, academy_id: ACADEMY_ID, full_name: agustin.name, role: "player", category: "Sub-12", player_id: agustin.id, created_at: created })
+
+  // Call-up for the upcoming Sub-12 match, laid out with the app's "F8 · 2-2-3" formation.
+  const convId = uuid("9", 1)
+  t.convocatorias = [{ id: convId, match_id: t.matches[0].id, academy_id: ACADEMY_ID, formation: "F8 · 2-2-3", notes: "Llegar 45 minutos antes con canilleras.\nVamos con camiseta blanca.", created_at: iso(addDays(today, -1)) + "T19:00:00Z" }]
+  const lineup = [
+    [1, "POR", 50, 8, true], [4, "DFC", 65, 28, true], [8, "DFC", 35, 28, null], [10, "MC", 65, 50, true],
+    [6, "MC", 35, 50, true], [3, "EXD", 78, 74, null], [0, "DC", 50, 78, true], [9, "EXI", 22, 74, null],
+  ]
+  t.convocatoria_players = lineup.map(([pi, label, x, y, confirmed], k) => ({
+    id: uuid("9", 100 + k), convocatoria_id: convId, player_id: t.players[pi].id, position_label: label, x, y,
+    instruction: pi === 3 ? "Abre la cancha por la derecha y busca el centro atrás." : "",
+    confirmed, created_at: t.convocatorias[0].created_at,
+  }))
+
+  // Two plays saved on the tactics board (fútbol 7, 64×42 pitch, attacking to the right).
+  const sub12 = (i) => t.players[i].id
+  t.tactic_plays = [
+    {
+      id: uuid("a", 1), academy_id: ACADEMY_ID, name: "Salida por la derecha", format: "7", category: "Sub-12",
+      markers: [
+        { id: "gk", x: 6, y: 21, team: "home", label: "P", player_id: sub12(1) },
+        { id: "d1", x: 18, y: 8, team: "home", label: "1", player_id: sub12(8) },
+        { id: "d2", x: 18, y: 21, team: "home", label: "2", player_id: sub12(4) },
+        { id: "d3", x: 18, y: 34, team: "home", label: "3", player_id: sub12(10) },
+        { id: "m1", x: 34, y: 13, team: "home", label: "4", player_id: sub12(6) },
+        { id: "m2", x: 34, y: 30, team: "home", label: "5", player_id: sub12(3) },
+        { id: "st", x: 48, y: 21, team: "home", label: "6", player_id: sub12(0) },
+        { id: "r1", x: 28, y: 24, team: "away" }, { id: "r2", x: 42, y: 30, team: "away" },
+        { id: "r3", x: 46, y: 14, team: "away" }, { id: "r4", x: 58, y: 21, team: "away" },
+        { id: "ball", x: 8.5, y: 21, team: "ball" },
+      ],
+      lines: [
+        { id: "l1", type: "pass", pts: [[18, 32.5]] },
+        { id: "l2", type: "run", pts: [[34, 30], [42, 36], [50, 37]] },
+        { id: "l3", type: "pass", pts: [[34, 36], [49, 36.5]] },
+        { id: "l4", type: "run", pts: [[48, 21], [54, 25], [57, 26]] },
+        { id: "l5", type: "pass", pts: [[56.5, 25.5]] },
+      ],
+      created_at: created, updated_at: iso(addDays(today, -2)) + "T21:00:00Z",
+    },
+    {
+      id: uuid("a", 2), academy_id: ACADEMY_ID, name: "Córner corto", format: "7", category: "Sub-12",
+      markers: [
+        { id: "a", x: 63, y: 41, team: "home", label: "4" }, { id: "b", x: 57, y: 37, team: "home", label: "5" },
+        { id: "c", x: 55, y: 22, team: "home", label: "6" }, { id: "k", x: 61, y: 21, team: "away" },
+        { id: "ball", x: 63, y: 40, team: "ball" },
+      ],
+      lines: [{ id: "l1", type: "pass", pts: [[57, 36.5]] }, { id: "l2", type: "pass", pts: [[55.5, 23]] }],
+      created_at: created, updated_at: iso(addDays(today, -9)) + "T21:00:00Z",
+    },
+  ]
+
   // Everything else the app reads starts empty.
-  for (const name of ["exercises", "exercise_assignments", "session_loads", "training_schedules", "training_exercises", "training_schedule_skips", "convocatorias", "convocatoria_players", "health_profiles", "live_sessions", "position_samples", "match_player_stats", "physical_tests", "injuries", "tactic_plays", "push_subscriptions", "activation_codes", "academy_payment_credentials"]) t[name] = t[name] ?? []
+  for (const name of ["exercises", "exercise_assignments", "session_loads", "training_schedules", "training_exercises", "training_schedule_skips", "health_profiles", "live_sessions", "position_samples", "match_player_stats", "physical_tests", "injuries", "push_subscriptions", "activation_codes", "academy_payment_credentials"]) t[name] = t[name] ?? []
 
   return t
 }

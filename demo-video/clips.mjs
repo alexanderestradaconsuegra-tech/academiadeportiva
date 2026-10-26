@@ -1,9 +1,11 @@
 // The six takes. Each one starts after its page is fully loaded (nothing is
 // recorded while loading), begins and ends with the cursor at the same resting
 // spot, and only uses what the app really does.
-import { COACH_EMAIL, COACH_PASSWORD } from "./seed.mjs"
+import { COACH_EMAIL, COACH_PASSWORD, PLAYER_EMAIL, PLAYER_PASSWORD } from "./seed.mjs"
 
 const LUCAS = "0d3e7a10-0000-4000-8000-100000000003" // Lucas Ferrada (fictional)
+const MATCH = "0d3e7a10-0000-4000-8000-800000000001" // upcoming Sub-12 match
+const PLAYER = { email: PLAYER_EMAIL, password: PLAYER_PASSWORD } // Agustín Pavez (fictional)
 
 export const DESKTOP = { viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, colorScheme: "light", locale: "es-CL" }
 export const MOBILE = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true, colorScheme: "light", locale: "es-CL" }
@@ -200,6 +202,64 @@ export const CLIPS = [
       await d.pause(1000)
       await d.scrollTo(0, 1000)
       await d.pause(800)
+    },
+  },
+  {
+    id: "07-convocatoria",
+    title: "El jugador: su convocatoria y la alineación",
+    device: MOBILE,
+    account: PLAYER,
+    start: `/matches/${MATCH}`,
+    rest: { x: 300, y: 690 },
+    cursorSize: 34,
+    poster: 0.62,
+    async run(d, page) {
+      await d.pause(700)
+      await d.click(page.getByRole("link", { name: /Ver mi convocatoria/ }))
+      await page.getByText("¡Estás convocado/a!").waitFor()
+      await d.pause(900)
+      await d.hover(page.getByText("Instrucción del entrenador:"), { ax: 0.9, dy: 30 })
+      await d.pause(1000)
+      await d.click(page.getByRole("button", { name: /Voy a ir/ }))
+      await page.getByText("✓ Confirmado").first().waitFor()
+      await d.pause(1000)
+      const top = await page.getByText(/^Formación/).evaluate((el) => el.getBoundingClientRect().top + scrollY - 70)
+      await d.scrollTo(top, 1300)
+      await d.pause(400)
+      await d.hover(page.locator("div.bg-amber-400").first(), { speed: 0.9 })
+      await d.pause(1300)
+      await d.goHome()
+      await d.scrollTo(top + 420, 1100)
+      await d.pause(1600)
+    },
+  },
+  {
+    id: "08-tactica",
+    title: "El jugador: la jugada animada en el tablero",
+    device: MOBILE,
+    account: PLAYER,
+    start: "/tactics",
+    rest: { x: 300, y: 640 },
+    cursorSize: 34,
+    poster: 0.7,
+    async run(d, page) {
+      await d.pause(700)
+      await d.click(page.getByRole("button", { name: "Ajustes y jugadas" }))
+      const sheet = page.getByRole("dialog", { name: "Ajustes y jugadas" })
+      await sheet.waitFor()
+      await d.pause(700)
+      await d.click(sheet.getByRole("button", { name: /^Salida por la derecha/ }), { ax: 0.35 })
+      await d.pause(600)
+      await d.click(sheet.getByRole("button", { name: "Cerrar" }).last())
+      await sheet.waitFor({ state: "detached" })
+      await d.pause(1100)
+      await d.click(page.getByRole("button", { name: "Ver", exact: true }))
+      // The play runs, holds its last frame for a moment, then the button reads "Ver" again.
+      await page.getByRole("button", { name: /Detener/ }).first().waitFor()
+      await page.getByRole("button", { name: "Ver", exact: true }).waitFor({ timeout: 15000 })
+      await d.pause(400)
+      await d.goHome({ speed: 0.8 })
+      await d.pause(900)
     },
   },
 ]

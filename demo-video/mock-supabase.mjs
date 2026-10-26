@@ -2,7 +2,7 @@
 // app to sign in, read its tables and accept writes during the recording.
 // It never talks to the real project and keeps nothing on disk.
 import http from "node:http"
-import { buildSeed, COACH_ID, COACH_EMAIL, COACH_PASSWORD } from "./seed.mjs"
+import { buildSeed, COACH_ID, COACH_EMAIL, COACH_PASSWORD, PLAYER_USER_ID, PLAYER_EMAIL, PLAYER_PASSWORD } from "./seed.mjs"
 
 const b64u = (o) => Buffer.from(typeof o === "string" ? o : JSON.stringify(o)).toString("base64url")
 function fakeJwt(sub, email) {
@@ -11,10 +11,22 @@ function fakeJwt(sub, email) {
   // nothing real accepts it. Valid for 12 hours so it never expires mid-take.
   return [b64u({ alg: "HS256", typ: "JWT" }), b64u({ sub, email, role: "authenticated", aud: "authenticated", iat: now, exp: now + 43200, session_id: "demo" }), b64u("demo-signature")].join(".")
 }
-const USER = { id: COACH_ID, aud: "authenticated", role: "authenticated", email: COACH_EMAIL, email_confirmed_at: "2026-01-01T00:00:00Z", app_metadata: { provider: "email" }, user_metadata: {}, created_at: "2026-01-01T00:00:00Z" }
-function session() {
-  const access_token = fakeJwt(COACH_ID, COACH_EMAIL)
-  return { access_token, token_type: "bearer", expires_in: 43200, expires_at: Math.floor(Date.now() / 1000) + 43200, refresh_token: "demo-refresh", user: USER }
+// Two fictional accounts: the coach and one player.
+const ACCOUNTS = [
+  { id: COACH_ID, email: COACH_EMAIL, password: COACH_PASSWORD },
+  { id: PLAYER_USER_ID, email: PLAYER_EMAIL, password: PLAYER_PASSWORD },
+]
+const userOf = (a) => ({ id: a.id, aud: "authenticated", role: "authenticated", email: a.email, email_confirmed_at: "2026-01-01T00:00:00Z", app_metadata: { provider: "email" }, user_metadata: {}, created_at: "2026-01-01T00:00:00Z" })
+function session(a) {
+  const access_token = fakeJwt(a.id, a.email)
+  return { access_token, token_type: "bearer", expires_in: 43200, expires_at: Math.floor(Date.now() / 1000) + 43200, refresh_token: "demo-refresh." + a.id, user: userOf(a) }
+}
+// The account behind a request: from the bearer token, or the refresh token.
+function accountFrom(req, body) {
+  const refresh = body?.refresh_token?.split(".")[1]
+  if (refresh) return ACCOUNTS.find((a) => a.id === refresh)
+  const token = (req.headers.authorization || "").replace(/^Bearer /, "").split(".")[1]
+  try { const sub = JSON.parse(Buffer.from(token, "base64url").toString()).sub; return ACCOUNTS.find((a) => a.id === sub) } catch { return undefined }
 }
 
 const CORS = {
@@ -76,10 +88,14 @@ export function startMock(port = 54321) {
     // ── Auth ──
     if (url.pathname === "/auth/v1/token") {
       const grant = url.searchParams.get("grant_type")
-      if (grant === "password" && (body?.email !== COACH_EMAIL || body?.password !== COACH_PASSWORD)) return send(res, 400, { error: "invalid_grant", error_description: "Invalid login credentials" })
-      return send(res, 200, session())
+      const account = grant === "password" ? ACCOUNTS.find((a) => a.email === body?.email && a.password === body?.password) : accountFrom(req, body)
+      if (!account) return send(res, 400, { error: "invalid_grant", error_description: "Invalid login credentials" })
+      return send(res, 200, session(account))
     }
-    if (url.pathname === "/auth/v1/user") return send(res, 200, USER)
+    if (url.pathname === "/auth/v1/user") {
+      const account = accountFrom(req)
+      return account ? send(res, 200, userOf(account)) : send(res, 401, { message: "invalid token" })
+    }
     if (url.pathname === "/auth/v1/logout") return send(res, 204)
     if (url.pathname.startsWith("/auth/v1/")) return send(res, 200, {})
     if (url.pathname.startsWith("/storage/v1/")) return send(res, 200, [])
@@ -105,6 +121,13 @@ export function startMock(port = 54321) {
       }
       const limit = url.searchParams.get("limit")
       if (limit !== null) out = out.slice(0, Number(limit))
+      // Embedded children, e.g. select=*,convocatoria_players(*): rows of that
+      // table whose "<parent>_id" points at each row (convocatorias → convocatoria_id).
+      const embeds = [...(url.searchParams.get("select") || "").matchAll(/([a-z_]+)\(\*\)/g)].map((m) => m[1])
+      if (embeds.length) {
+        const fk = table.replace(/s$/, "") + "_id"
+        out = out.map((r) => ({ ...r, ...Object.fromEntries(embeds.map((e) => [e, (db[e] ?? []).filter((c) => c[fk] === r.id)])) }))
+      }
       if (wantsObject) return out.length === 1 ? send(res, 200, out[0]) : send(res, 406, { code: "PGRST116", message: "JSON object requested, multiple (or no) rows returned" })
       return send(res, 200, out, { "Content-Range": `0-${Math.max(out.length - 1, 0)}/${out.length}` })
     }

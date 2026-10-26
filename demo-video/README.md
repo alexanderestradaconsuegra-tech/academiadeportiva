@@ -50,6 +50,8 @@ arriba. El diseño de la página es el mismo que a dpr 2.
 | `04-pagos` | Pagos: vencidos $140.000 (4) → marcar pagado a 2 alumnos → vencidos $70.000 (2) | Escritorio |
 | `05-reporte` | Ficha → Ver reporte → reporte del jugador listo para "Descargar PDF" (no se imprime nada) | Escritorio |
 | `06-movil` | En el teléfono: ingreso y panel con alerta de pagos | Teléfono |
+| `07-convocatoria` | Cuenta de un jugador: abre su convocatoria, lee la instrucción del entrenador, confirma "Voy a ir" y ve su lugar en la alineación | Teléfono |
+| `08-tactica` | Cuenta de un jugador: abre una jugada guardada en el tablero táctico y la ve animada | Teléfono |
 
 Salidas en `out/<clip>/`: escritorio en 840, 1280 y 1680 px; teléfono en 560 y
 828 px. `out/FILES.md` lista duración, peso y ruta de cada archivo y
@@ -62,6 +64,8 @@ Todo es inventado. No hay ninguna academia, alumno, apoderado ni foto real.
 - Academia: **Club Deportivo Los Aromos** (Santiago), mensualidad $35.000.
 - Entrenador: **Profe Andrés Vera**, `entrenador@losaromos.example` / `demo-2026`
   (dominio `.example`, reservado y que no existe).
+- Cuenta de jugador: **Agustín Pavez** (Sub-12, extremo derecho),
+  `agustin@losaromos.example` / `demo-2026`.
 - 18 jugadores con nombres inventados y avatares SVG con iniciales (sin fotos):
   - Sub-12: Martín Ossandón, Benjamín Lagos, Lucas Ferrada, Agustín Pavez, Vicente Moya,
     Joaquín Aedo, Maximiliano Tapia, Felipe Urrutia, Cristóbal Henríquez, Diego Salgado,
@@ -76,6 +80,9 @@ Todo es inventado. No hay ninguna academia, alumno, apoderado ni foto real.
 - Pagos: 3 meses de mensualidades. Este mes deben 4 alumnos (Lucas Ferrada,
   Maximiliano Tapia, Diego Salgado, Simón Carrasco), vencidos desde el día 5.
 - 2 gastos, 8 actividades y 1 partido contra "Club Ejemplo Norte".
+- Convocatoria para ese partido en formación "F8 · 2-2-3" con 8 jugadores, notas
+  del entrenador y una instrucción para Agustín.
+- 2 jugadas guardadas en el tablero táctico ("Salida por la derecha" y "Córner corto").
 
 Las fechas se calculan a partir del día de grabación, así que "hoy", "este mes"
 y "vencido" siempre cuadran.

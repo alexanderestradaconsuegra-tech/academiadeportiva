@@ -14,12 +14,14 @@ export function chromiumPath() {
   return `${base}/chromium-1194/chrome-linux/chrome`
 }
 
-async function signIn(page, appUrl) {
+async function signIn(page, appUrl, account = { email: COACH_EMAIL, password: COACH_PASSWORD }) {
   await page.goto(appUrl + "/login", { waitUntil: "networkidle" })
-  await page.getByLabel("Correo electrónico").fill(COACH_EMAIL)
-  await page.getByRole("textbox", { name: "Contraseña" }).fill(COACH_PASSWORD)
+  await page.getByLabel("Correo electrónico").fill(account.email)
+  await page.getByRole("textbox", { name: "Contraseña" }).fill(account.password)
   await page.getByRole("button", { name: "Ingresar al panel" }).click()
-  await page.waitForURL("**/dashboard")
+  // Coaches land on the dashboard, players on their own profile.
+  await page.waitForURL((url) => !url.pathname.startsWith("/login"))
+  await page.waitForLoadState("networkidle")
 }
 
 export async function recordClips({ appUrl, ids, beforeEach }) {
@@ -35,7 +37,7 @@ export async function recordClips({ appUrl, ids, beforeEach }) {
       const page = await context.newPage()
       const errors = []
       page.on("pageerror", (e) => errors.push(e.message))
-      if (clip.loggedIn !== false) await signIn(page, appUrl)
+      if (clip.loggedIn !== false) await signIn(page, appUrl, clip.account)
 
       // Preload the starting screen fully before the camera rolls.
       await page.goto(appUrl + clip.start, { waitUntil: "networkidle" })
