@@ -182,8 +182,8 @@ export class Director {
   }
 
   /** A step label pinned to the bottom of the screen; text "" hides it. */
-  async caption(text, { step } = {}) {
-    await this.page.evaluate(([label, n]) => {
+  async caption(text, { step, top, bottom } = {}) {
+    await this.page.evaluate(([label, n, pos]) => {
       let el = document.getElementById("__demo_caption")
       if (!label) { el?.style.setProperty("opacity", "0"); return }
       if (!el) {
@@ -193,10 +193,14 @@ export class Director {
         el.style.cssText = "position:fixed;left:50%;bottom:" + (innerWidth < 600 ? "88px" : "30px") + ";transform:translateX(-50%);z-index:2147483645;pointer-events:none;display:flex;align-items:center;gap:" + (innerWidth < 600 ? "9px" : "12px") + ";max-width:calc(100vw - 32px);padding:" + (innerWidth < 600 ? "9px 15px 9px 9px" : "11px 22px 11px 11px") + ";border-radius:999px;background:rgba(5,18,47,.92);color:#fff;font:600 " + (innerWidth < 600 ? "13.5px" : "19px") + "/1.25 Inter,system-ui,sans-serif;box-shadow:0 14px 40px -10px rgba(2,6,23,.55),0 0 0 1px rgba(255,255,255,.14);opacity:0;transition:opacity .35s ease"
         document.documentElement.appendChild(el)
       }
+      // Where it sits can change from scene to scene, so it never covers a button.
+      const small = innerWidth < 600
+      if (pos.top != null) { el.style.top = pos.top + "px"; el.style.bottom = "auto" }
+      else { el.style.top = "auto"; el.style.bottom = (pos.bottom ?? (small ? 14 : 30)) + "px" }
       const badge = n ? `<b style="display:grid;place-items:center;flex:none;width:${innerWidth < 600 ? 24 : 32}px;height:${innerWidth < 600 ? 24 : 32}px;border-radius:50%;background:#a3e635;color:#05122f;font-weight:800">${n}</b>` : ""
       el.innerHTML = badge + `<span>${label}</span>`
       requestAnimationFrame(() => { el.style.opacity = "1" })
-    }, [text, step ?? null])
+    }, [text, step ?? null, { top, bottom }])
   }
 
   async replaceValue(text) {

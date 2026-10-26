@@ -56,6 +56,7 @@ arriba. El diseño de la página es el mismo que a dpr 2.
 | `07-convocatoria` | Cuenta de un jugador: abre su convocatoria, lee la instrucción del entrenador, confirma "Voy a ir" y ve su lugar en la alineación | Teléfono |
 | `08-tactica` | Cuenta de un jugador: abre una jugada guardada en el tablero táctico y la ve animada | Teléfono |
 | `09-cuenta-demo` | Cómo abrir una cuenta demo (54 s, con subtítulos de paso): pedir el código en metrikas.pro → el correo con el código → crear la academia en app.metrikas.pro → panel con "Acceso de demo — 14 días restantes" | Escritorio |
+| `10-cuenta-demo-movil` | El mismo recorrido de cuenta demo en pantalla de celular (43 s), con subtítulos que no tapan botones | Teléfono |
 
 Salidas en `out/<clip>/`: escritorio en 840, 1280 y 1680 px; teléfono en 560 y
 828 px. `out/FILES.md` lista duración, peso y ruta de cada archivo y
