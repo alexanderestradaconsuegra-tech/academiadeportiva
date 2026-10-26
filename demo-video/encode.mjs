@@ -42,19 +42,20 @@ function encodeWidth(clip, master, seconds, w) {
   const base = path.join(dir, `${clip.id}-${w}`)
   const scale = `scale=${w}:-2:flags=lanczos`
   const capped = w === 1280
+  const limit = clip.capBytes ? Math.round(clip.capBytes * 0.96) : LIMIT_1280
   // Start from a quality setting and back off only if the 1280 cap is exceeded.
   let crf = 19
   for (;;) {
     run(["-i", master, "-vf", scale, "-c:v", "libx264", "-preset", "slow", "-profile:v", "high", "-tune", "animation",
       "-crf", String(crf), "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-an", base + ".mp4"])
-    if (!capped || fs.statSync(base + ".mp4").size <= LIMIT_1280 || crf >= 34) break
+    if (!capped || fs.statSync(base + ".mp4").size <= limit || crf >= 34) break
     crf += 1
   }
   let vcrf = 31
   for (;;) {
     run(["-i", master, "-vf", scale, "-c:v", "libvpx-vp9", "-crf", String(vcrf), "-b:v", "0", "-row-mt", "1",
       "-deadline", "good", "-cpu-used", "2", "-pix_fmt", "yuv420p", "-an", base + ".webm"])
-    if (!capped || fs.statSync(base + ".webm").size <= LIMIT_1280 || vcrf >= 50) break
+    if (!capped || fs.statSync(base + ".webm").size <= limit || vcrf >= 50) break
     vcrf += 2
   }
   run(["-ss", (seconds * clip.poster).toFixed(2), "-i", master, "-frames:v", "1", "-vf", scale, "-q:v", "2", base + ".jpg"])

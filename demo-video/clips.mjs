@@ -1,6 +1,7 @@
 // The six takes. Each one starts after its page is fully loaded (nothing is
 // recorded while loading), begins and ends with the cursor at the same resting
 // spot, and only uses what the app really does.
+import { emailPage } from "./lib/demo-email.mjs"
 import { COACH_EMAIL, COACH_PASSWORD, PLAYER_EMAIL, PLAYER_PASSWORD } from "./seed.mjs"
 
 const LUCAS = "0d3e7a10-0000-4000-8000-100000000003" // Lucas Ferrada (fictional)
@@ -260,6 +261,99 @@ export const CLIPS = [
       await d.pause(400)
       await d.goHome({ speed: 0.8 })
       await d.pause(900)
+    },
+  },
+  {
+    id: "09-cuenta-demo",
+    title: "Cómo abrir una cuenta demo",
+    device: DESKTOP,
+    web: true,
+    font: "Host Grotesk",
+    loggedIn: false,
+    start: "/",
+    rest: { x: 1130, y: 640 },
+    poster: 0.5,
+    capBytes: 2_600_000, // a 45 s walkthrough, not a 15 s clip
+    async run(d, page, { appUrl, mock }) {
+      const FIC = { email: "profe.andres@losaromos.example", academy: "Club Deportivo Los Aromos", coach: "Andrés Vera", password: "Aromos2026", code: "DEMO-K7QM4X9T" }
+      const expires = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toLocaleDateString("es-CL")
+
+      // Nothing here reaches the real service: the two server calls are answered locally.
+      await page.route("https://app.metrikas.pro/api/demo/request", async (route) => {
+        const cors = { "access-control-allow-origin": "*", "access-control-allow-headers": "content-type" }
+        if (route.request().method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors })
+        await new Promise((r) => setTimeout(r, 1100))
+        await route.fulfill({ status: 200, headers: cors, contentType: "application/json", body: JSON.stringify({ ok: true, message: "Código enviado a tu email" }) })
+      })
+      await page.route("**/api/auth/create-academy-account", async (route) => {
+        const body = route.request().postDataJSON()
+        await new Promise((r) => setTimeout(r, 1300))
+        const ids = mock.registerAcademy({ email: body.email, password: body.password, coachName: body.coachName, academyName: body.academyName, language: body.language })
+        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, message: "Academia creada exitosamente", ...ids }) })
+      })
+      await page.route("https://correo.demo.example/**", (route) =>
+        route.fulfill({ status: 200, contentType: "text/html; charset=utf-8", body: emailPage({ to: FIC.email, academy: FIC.academy, code: FIC.code, expires }) }))
+
+      // 1 · ask for the code on the website
+      await d.pause(900)
+      await d.caption("Pide tu código en metrikas.pro", { step: 1 })
+      await d.pause(900)
+      await d.click(page.locator("button.hero2-primary"))
+      const modal = page.getByRole("dialog", { name: /14 días gratis/ })
+      await modal.waitFor()
+      await d.pause(700)
+      await d.click(modal.getByLabel("Tu email"))
+      await d.type(FIC.email)
+      await d.click(modal.getByLabel("Nombre de tu academia"))
+      await d.type(FIC.academy)
+      await d.pause(300)
+      await d.click(modal.getByRole("checkbox"))
+      await d.pause(500)
+      await d.click(modal.getByRole("button", { name: /Enviar código a mi email/ }))
+      await modal.getByText("Código enviado a tu email").waitFor()
+      await d.pause(1700)
+      await d.click(modal.getByRole("button", { name: "Listo, cerrar" }))
+      await d.pause(500)
+
+      // 2 · the e-mail with the code
+      await d.caption("")
+      await d.pause(350)
+      await page.goto("https://correo.demo.example/inbox", { waitUntil: "networkidle" })
+      await page.evaluate(() => document.fonts.ready)
+      await d.caption("Te llega un correo con tu código", { step: 2 })
+      await d.pause(1300)
+      await d.tripleClick(page.getByText(FIC.code, { exact: true }))
+      await d.pause(1500)
+
+      // 3 · create the academy in the app with that code
+      await d.caption("")
+      await d.pause(300)
+      await page.goto(appUrl + "/login", { waitUntil: "networkidle" })
+      await page.evaluate(() => document.fonts.ready)
+      await d.caption("Ingrésalo en app.metrikas.pro y crea tu academia", { step: 3 })
+      await d.pause(900)
+      await d.click(page.getByRole("tab", { name: "Crear academia" }))
+      await d.pause(600)
+      await d.click(page.getByLabel("Código de activación"))
+      await d.type(FIC.code)
+      await d.click(page.getByLabel("Nombre de la academia"))
+      await d.type(FIC.academy, { fast: true })
+      await d.click(page.getByLabel("Tu nombre"))
+      await d.type(FIC.coach, { fast: true })
+      await d.click(page.getByLabel("Correo electrónico"))
+      await d.type(FIC.email, { fast: true })
+      await d.click(page.getByRole("textbox", { name: "Contraseña" }))
+      await d.type(FIC.password)
+      await d.pause(500)
+      await d.click(page.getByRole("button", { name: "Crear mi academia" }))
+      await page.waitForURL("**/dashboard", { timeout: 20000 })
+      await page.getByText(/Acceso de demo/).waitFor()
+      await d.caption("¡Listo! 14 días con todo incluido", { step: "✓" })
+      await d.pause(1000)
+      await d.hover(page.getByText(/Acceso de demo/), { ax: 0.5 })
+      await d.pause(1600)
+      await d.goHome()
+      await d.pause(800)
     },
   },
 ]

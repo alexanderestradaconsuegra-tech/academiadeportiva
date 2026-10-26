@@ -84,7 +84,12 @@ export async function settle(page, extra = 400) {
   await page.waitForLoadState("networkidle").catch(() => {})
   await page.evaluate(async () => {
     await document.fonts.ready
-    await Promise.all([...document.images].filter((i) => !i.complete).map((i) => new Promise((r) => { i.onload = i.onerror = r })))
+    // Only images on screen matter (lazy ones below the fold never load until scrolled to).
+    const onScreen = [...document.images].filter((i) => { const r = i.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight && r.width > 0 })
+    await Promise.race([
+      Promise.all(onScreen.filter((i) => !i.complete).map((i) => new Promise((r) => { i.onload = i.onerror = r }))),
+      new Promise((r) => setTimeout(r, 5000)),
+    ])
   })
   await wait(extra)
 }
@@ -133,6 +138,7 @@ export class Director {
 
   async pointOf(locator, { ax = 0.5, ay = 0.5, dx = 0, dy = 0 } = {}) {
     await locator.waitFor({ state: "visible" })
+    await locator.scrollIntoViewIfNeeded()
     const b = await locator.boundingBox()
     if (!b) throw new Error("element has no box: " + locator)
     return { x: b.x + b.width * ax + dx, y: b.y + b.height * ay + dy }
@@ -151,6 +157,15 @@ export class Director {
     await this.page.mouse.up()
   }
 
+  /** Selects a whole paragraph (what a person does to pick out a code). */
+  async tripleClick(locator, opts = {}) {
+    await this.hover(locator, opts)
+    await wait(120)
+    for (const n of [1, 2, 3]) {
+      await this.page.mouse.down({ clickCount: n }); await wait(45); await this.page.mouse.up({ clickCount: n }); await wait(60)
+    }
+  }
+
   /** Clicks where the cursor already is (repeated taps on the same control). */
   async tap(gap = 260) {
     await this.page.mouse.down(); await wait(80); await this.page.mouse.up(); await wait(gap)
@@ -159,11 +174,29 @@ export class Director {
   async goHome(opts) { await this.moveTo(this.rest.x, this.rest.y, opts) }
 
   /** Types key by key at a human pace (about 8–12 characters per second). */
-  async type(text) {
+  async type(text, { fast = false } = {}) {
     for (const ch of text) {
       await this.page.keyboard.type(ch)
-      await wait(55 + this.rand() * 65 + (/[\s@.]/.test(ch) ? 45 : 0))
+      await wait(fast ? 32 + this.rand() * 38 : 55 + this.rand() * 65 + (/[\s@.]/.test(ch) ? 45 : 0))
     }
+  }
+
+  /** A step label pinned to the bottom of the screen; text "" hides it. */
+  async caption(text, { step } = {}) {
+    await this.page.evaluate(([label, n]) => {
+      let el = document.getElementById("__demo_caption")
+      if (!label) { el?.style.setProperty("opacity", "0"); return }
+      if (!el) {
+        el = document.createElement("div")
+        el.id = "__demo_caption"
+        el.setAttribute("aria-hidden", "true")
+        el.style.cssText = "position:fixed;left:50%;bottom:" + (innerWidth < 600 ? "88px" : "30px") + ";transform:translateX(-50%);z-index:2147483645;pointer-events:none;display:flex;align-items:center;gap:" + (innerWidth < 600 ? "9px" : "12px") + ";max-width:calc(100vw - 32px);padding:" + (innerWidth < 600 ? "9px 15px 9px 9px" : "11px 22px 11px 11px") + ";border-radius:999px;background:rgba(5,18,47,.92);color:#fff;font:600 " + (innerWidth < 600 ? "13.5px" : "19px") + "/1.25 Inter,system-ui,sans-serif;box-shadow:0 14px 40px -10px rgba(2,6,23,.55),0 0 0 1px rgba(255,255,255,.14);opacity:0;transition:opacity .35s ease"
+        document.documentElement.appendChild(el)
+      }
+      const badge = n ? `<b style="display:grid;place-items:center;flex:none;width:${innerWidth < 600 ? 24 : 32}px;height:${innerWidth < 600 ? 24 : 32}px;border-radius:50%;background:#a3e635;color:#05122f;font-weight:800">${n}</b>` : ""
+      el.innerHTML = badge + `<span>${label}</span>`
+      requestAnimationFrame(() => { el.style.opacity = "1" })
+    }, [text, step ?? null])
   }
 
   async replaceValue(text) {

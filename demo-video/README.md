@@ -15,6 +15,9 @@ npm run record       # build + grabación + codificación → out/
 - `npm run record -- --skip-build` reutiliza el último build de demo.
 - `npm run record -- 04-pagos` graba solo ese clip (se pueden pasar varios).
 
+El clip `09-cuenta-demo` también necesita la web ya compilada (repo `web-metrikas`, `npx vinext build`) en una carpeta hermana, o `DEMO_WEB_DIR=/ruta`.
+Ninguna llamada sale a los servicios reales: las dos respuestas del servidor (pedir código y crear academia) se simulan en la grabación y el correo se arma con la plantilla real de `src/app/api/demo/request/route.ts` con datos ficticios.
+
 Requisitos: Node 20+, ffmpeg con libx264 y libvpx-vp9, y el Chromium que trae
 Playwright (`PLAYWRIGHT_BROWSERS_PATH`). No hace falta `playwright install`.
 
@@ -52,6 +55,7 @@ arriba. El diseño de la página es el mismo que a dpr 2.
 | `06-movil` | En el teléfono: ingreso y panel con alerta de pagos | Teléfono |
 | `07-convocatoria` | Cuenta de un jugador: abre su convocatoria, lee la instrucción del entrenador, confirma "Voy a ir" y ve su lugar en la alineación | Teléfono |
 | `08-tactica` | Cuenta de un jugador: abre una jugada guardada en el tablero táctico y la ve animada | Teléfono |
+| `09-cuenta-demo` | Cómo abrir una cuenta demo (54 s, con subtítulos de paso): pedir el código en metrikas.pro → el correo con el código → crear la academia en app.metrikas.pro → panel con "Acceso de demo — 14 días restantes" | Escritorio |
 
 Salidas en `out/<clip>/`: escritorio en 840, 1280 y 1680 px; teléfono en 560 y
 828 px. `out/FILES.md` lista duración, peso y ruta de cada archivo y
@@ -82,6 +86,7 @@ Todo es inventado. No hay ninguna academia, alumno, apoderado ni foto real.
 - 2 gastos, 8 actividades y 1 partido contra "Club Ejemplo Norte".
 - Convocatoria para ese partido en formación "F8 · 2-2-3" con 8 jugadores, notas
   del entrenador y una instrucción para Agustín.
+- Cuenta que se abre en el clip de cuenta demo: academia "Club Deportivo Los Aromos", `profe.andres@losaromos.example`, código de ejemplo `DEMO-K7QM4X9T` (no existe en ninguna base).
 - 2 jugadas guardadas en el tablero táctico ("Salida por la derecha" y "Córner corto").
 
 Las fechas se calculan a partir del día de grabación, así que "hoy", "este mes"

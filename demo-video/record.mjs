@@ -24,7 +24,7 @@ async function signIn(page, appUrl, account = { email: COACH_EMAIL, password: CO
   await page.waitForLoadState("networkidle")
 }
 
-export async function recordClips({ appUrl, ids, beforeEach }) {
+export async function recordClips({ appUrl, webUrl, ids, mock, beforeEach }) {
   // The UI language and LANG make native controls (date inputs) use dd/mm/aaaa.
   const browser = await chromium.launch({ executablePath: chromiumPath(), args: ["--lang=es-CL"], env: { ...process.env, LANG: "es_CL.UTF-8" } })
   const results = []
@@ -40,10 +40,12 @@ export async function recordClips({ appUrl, ids, beforeEach }) {
       if (clip.loggedIn !== false) await signIn(page, appUrl, clip.account)
 
       // Preload the starting screen fully before the camera rolls.
-      await page.goto(appUrl + clip.start, { waitUntil: "networkidle" })
+      await page.goto((clip.web ? webUrl : appUrl) + clip.start, { waitUntil: "networkidle" })
       await settle(page, 900)
-      const fontOk = await page.evaluate(() => document.fonts.check("600 16px Inter") && getComputedStyle(document.body).fontFamily.includes("Inter"))
-      if (!fontOk) throw new Error(`${clip.id}: Inter is not the active font`)
+      // The website uses its own typeface (Host Grotesk); everything else is Inter.
+      const family = clip.font ?? "Inter"
+      const fontOk = await page.evaluate((f) => document.fonts.check(`600 16px "${f}"`) && getComputedStyle(document.body).fontFamily.includes(f), family)
+      if (!fontOk) throw new Error(`${clip.id}: ${family} is not the active font`)
       const d = new Director(page, { rest: clip.rest, seed: clip.id.length * 97 })
       await d.park()
       await settle(page, 300)
@@ -52,7 +54,7 @@ export async function recordClips({ appUrl, ids, beforeEach }) {
       const scale = clip.device.deviceScaleFactor
       const cap = await startCapture(page, path.join(ROOT, "work", clip.id), { width: width * scale, height: height * scale })
       const t0 = Date.now()
-      await clip.run(d, page)
+      await clip.run(d, page, { appUrl, webUrl, mock })
       const info = await cap.stop()
       if (errors.length) console.warn(`  ! ${clip.id} page errors:`, errors)
       console.log(`  ● ${clip.id}: ${info.seconds.toFixed(1)} s, ${info.count} frames (~${info.fps.toFixed(0)} fps), script ${(Date.now() - t0) / 1000} s`)

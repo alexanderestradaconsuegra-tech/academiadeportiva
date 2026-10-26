@@ -164,9 +164,28 @@ export function startMock(port = 54321) {
     }
     return send(res, 405, {})
   })
+  // What the server does when a coach redeems a demo code: a brand-new, empty
+  // academy with a 14-day trial, and a login for the new coach. Everything the
+  // clip then shows (empty dashboard, "14 días restantes") comes from this.
+  const registerAcademy = ({ email, password, coachName, academyName, language = "es" }) => {
+    const id = `0d3e7a10-0000-4000-8000-b${String(idSeq++).padStart(11, "0")}`
+    const academyId = `0d3e7a10-0000-4000-8000-a${String(idSeq++).padStart(11, "0")}`
+    ACCOUNTS.push({ id, email, password })
+    const now = new Date()
+    for (const k of Object.keys(db)) db[k] = []
+    db.team_settings = [{
+      id: academyId, name: academyName, logo_url: null, city: "", founded_year: null, description: "", language,
+      updated_at: now.toISOString(), monthly_fee: 0, subscription_status: null, subscription_current_period_end: null,
+      trial_expires_at: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString(), activation_code: null,
+      mp_payment_id: null, mp_plan: null, mp_preapproval_id: null,
+      calib_p0_lat: null, calib_p0_lng: null, calib_p1_lat: null, calib_p1_lng: null, calib_p2_lat: null, calib_p2_lng: null,
+    }]
+    db.profiles = [{ id, academy_id: academyId, full_name: coachName, role: "coach", category: null, player_id: null, created_at: now.toISOString() }]
+    return { userId: id, academyId }
+  }
   // Put every table back to the seed state, so each clip starts from the same data.
-  const reset = () => { for (const k of Object.keys(db)) delete db[k]; Object.assign(db, buildSeed()); log.length = 0 }
-  return new Promise((resolve) => server.listen(port, "127.0.0.1", () => resolve({ server, db, log, reset, url: `http://127.0.0.1:${port}` })))
+  const reset = () => { for (const k of Object.keys(db)) delete db[k]; Object.assign(db, buildSeed()); log.length = 0; ACCOUNTS.length = 2 }
+  return new Promise((resolve) => server.listen(port, "127.0.0.1", () => resolve({ server, db, log, reset, registerAcademy, url: `http://127.0.0.1:${port}` })))
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
