@@ -8,7 +8,7 @@ import { execFileSync } from "node:child_process"
 const ROOT = path.dirname(new URL(import.meta.url).pathname)
 const WORK = path.join(ROOT, "work")
 const OUT = path.join(ROOT, "out")
-const LIMIT_1280 = 1.2 * 1024 * 1024
+const LIMIT_1280 = 1_150_000 // bytes: stays under 1.2 MB with margin, in either unit
 const FADE = 0.6
 
 const run = (args) => execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", ...args], { stdio: ["ignore", "inherit", "inherit"] })

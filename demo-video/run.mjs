@@ -12,7 +12,7 @@ import { spawn, spawnSync } from "node:child_process"
 import { startMock } from "./mock-supabase.mjs"
 import { recordClips } from "./record.mjs"
 import { CLIPS } from "./clips.mjs"
-import { encodeClip, contactSheet, probeSeconds } from "./encode.mjs"
+import { encodeClip, contactSheet, probeSeconds, widthsFor } from "./encode.mjs"
 
 const ROOT = path.dirname(new URL(import.meta.url).pathname)
 const APP = path.resolve(ROOT, "..")
@@ -62,20 +62,22 @@ try {
 
 console.log("encoding…")
 const done = CLIPS.filter((c) => !ids.length || ids.includes(c.id))
-const encoded = done.map((c) => { const r = encodeClip(c); console.log("  ✓", c.id); return r })
+for (const c of done) { encodeClip(c); console.log("  ✓", c.id) }
 const sheet = contactSheet(CLIPS.filter((c) => fs.existsSync(path.join(ROOT, "work", c.id, "master.mp4"))))
 
-// File list with duration, weight and path.
+// File list with duration, weight and path, for every clip in out/ (not only
+// the ones encoded in this run).
 const rows = []
-for (const r of encoded) for (const f of r.files) for (const kind of ["mp4", "webm", "jpg"]) {
-  const file = f[kind]
-  rows.push({ clip: r.clip.id, width: f.width, kind, seconds: kind === "jpg" ? null : Number(probeSeconds(file).toFixed(2)), kb: Math.round(fs.statSync(file).size / 1024), path: path.relative(ROOT, file) })
+for (const c of CLIPS) for (const width of widthsFor(c)) for (const kind of ["mp4", "webm", "jpg"]) {
+  const file = path.join(OUT, c.id, `${c.id}-${width}.${kind}`)
+  if (!fs.existsSync(file)) continue
+  rows.push({ clip: c.id, width, kind, seconds: kind === "jpg" ? null : Number(probeSeconds(file).toFixed(2)), kb: Math.round(fs.statSync(file).size / 1024), path: path.relative(ROOT, file) })
 }
 fs.writeFileSync(path.join(OUT, "files.json"), JSON.stringify(rows, null, 2))
 const md = ["| Clip | Ancho | Tipo | Duración | Peso | Ruta |", "|---|---|---|---|---|---|",
   ...rows.map((r) => `| ${r.clip} | ${r.width} | ${r.kind} | ${r.seconds == null ? "—" : r.seconds.toFixed(2) + " s"} | ${r.kb} KB | \`${r.path}\` |`)]
 fs.writeFileSync(path.join(OUT, "FILES.md"), md.join("\n") + "\n")
-const over = rows.filter((r) => r.width === 1280 && r.kind !== "jpg" && r.kb > 1.2 * 1024)
+const over = rows.filter((r) => r.width === 1280 && r.kind !== "jpg" && r.kb * 1024 > 1_200_000)
 console.log(md.join("\n"))
 console.log("contact sheet:", path.relative(ROOT, sheet))
 if (over.length) { console.error("Over the 1.2 MB cap at 1280:", over.map((r) => r.path)); process.exitCode = 1 }

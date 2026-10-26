@@ -23,7 +23,8 @@ async function signIn(page, appUrl) {
 }
 
 export async function recordClips({ appUrl, ids, beforeEach }) {
-  const browser = await chromium.launch({ executablePath: chromiumPath() })
+  // The UI language and LANG make native controls (date inputs) use dd/mm/aaaa.
+  const browser = await chromium.launch({ executablePath: chromiumPath(), args: ["--lang=es-CL"], env: { ...process.env, LANG: "es_CL.UTF-8" } })
   const results = []
   try {
     for (const clip of CLIPS.filter((c) => !ids?.length || ids.includes(c.id))) {
