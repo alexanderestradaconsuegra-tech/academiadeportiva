@@ -1,0 +1,13 @@
+{
+  "name": "metrikas-demo-video",
+  "private": true,
+  "description": "Automated screen recording of Métrikas against a local fake Supabase with fictional data. Not part of the app build.",
+  "type": "module",
+  "scripts": {
+    "record": "node run.mjs"
+  },
+  "dependencies": {
+    "@fontsource/inter": "5.1.0",
+    "playwright-core": "1.56.1"
+  }
+}
